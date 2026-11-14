@@ -57,7 +57,7 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - Beyond Data Filtering: Knowledge Localization for Capability Removal in LLMs | 2025-12 | https://alignment.anthropic.com/2025/selective-gradient-masking | anthropic
 - Open Source Replication of the Auditing Game Model Organism | 2025-12 | https://alignment.anthropic.com/2025/auditing-mo-replication/ | anthropic
 - Unsupervised Decoding of Encoded Reasoning Using Language Model Interpretability | 2025-12 | https://arxiv.org/abs/2512.01222 | anthropic
-- Next-Generation Constitutional Classifiers | 2026-01 | https://www.anthropic.com/research/next-generation-constitutional-classifiers | anthropic
+- [x] Next-Generation Constitutional Classifiers | 2026-01 | https://www.anthropic.com/research/next-generation-constitutional-classifiers | anthropic — DONE as anthropic-com-research-next-generation-constitutional-classifiers (paper itself was arxiv-2601.04603, entry 31)
 - The Assistant Axis: Situating and Stabilizing the Default Persona of Language Models | 2026-01 | https://www.anthropic.com/research/assistant-axis | anthropic
 - The Persona Selection Model | 2026-02 | https://www.anthropic.com/research/persona-selection-model | anthropic
 - Censored LLMs as a Natural Testbed for Secret Knowledge Elicitation | 2026-03 | https://arxiv.org/abs/2603.05494 | anthropic
