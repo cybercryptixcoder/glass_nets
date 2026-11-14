@@ -130,7 +130,21 @@ class LM:
     """A language model with hookable sites. Positions in hooks are given per prompt (an integer array)."""
 
     def __init__(self, model_id):
-        self.cfg, self.P = LOADERS[family_of(model_id)](model_id)
+        # The weights are converted once to a file in lab/.cache and memory-mapped from there, so that the reader's
+        # session and the judge (separate processes) share one copy in memory instead of holding one each.
+        cdir = LAB / ".cache"
+        f = cdir / (re.sub(r"[^\w.-]", "_", model_id) + ".pt")
+        if not f.exists():
+            cfg, P = LOADERS[family_of(model_id)](model_id)
+            cdir.mkdir(exist_ok=True)
+            tied = cfg["family"] == "gpt2"
+            torch.save({"cfg": cfg, "P": {k: v.contiguous() for k, v in P.items() if not (tied and k == "W_U")}}, str(f) + ".tmp")
+            os.replace(str(f) + ".tmp", f)
+            del P
+        d = torch.load(f, mmap=True, weights_only=True)
+        self.cfg, self.P = d["cfg"], d["P"]
+        if "W_U" not in self.P:
+            self.P["W_U"] = self.P["W_E"].T
         self.model_id = model_id
         self._tok = None
 
@@ -266,7 +280,7 @@ class Task:
     def __init__(self, tid, variant="original", seed=0, cache=True):
         self.dir = LAB / "models" / tid
         self.meta = json.loads((self.dir / "meta.json").read_text())
-        self.id = tid
+        self.id, self.variant = tid, variant
         self.lm = LM.get(self.meta["model"]) if variant == "original" else self._variant(variant, seed)
         self.cfg = self.lm.cfg
         self.X = np.load(self.dir / "inputs.npy").astype(np.int64)
@@ -358,6 +372,14 @@ class Task:
     def cache(self):
         if self._cache is None:
             n = self.cfg["n_layers"]
+            f = None
+            if self.variant == "original":          # kept on disk and memory-mapped: shared between processes, computed once
+                import hashlib
+                h = hashlib.md5(self.tokens.tobytes() + self.meta["model"].encode()).hexdigest()[:10]
+                f = LAB / ".cache" / f"{self.id}_{h}_resid.npy"
+                if f.exists():
+                    self._cache = torch.from_numpy(np.load(f, mmap_mode="r+"))
+                    return self._cache
             C = torch.empty(n + 1, self.N, self.T, self.cfg["d_model"])
             for i in range(0, self.N, 256):
                 r = self.lm.embed(self.tokens[i:i + 256])
@@ -366,6 +388,11 @@ class Task:
                     r, _ = self.lm.forward(r, start=l, stop=l + 1) if l + 1 < n else self.lm.forward(r, start=l)
                     C[l + 1, i:i + 256] = r
             self._cache = C
+            if f is not None:
+                f.parent.mkdir(exist_ok=True)
+                np.save(str(f) + ".tmp.npy", C.numpy())
+                os.replace(str(f) + ".tmp.npy", f)
+                self._cache = torch.from_numpy(np.load(f, mmap_mode="r+"))
         return self._cache
 
     # ---- running

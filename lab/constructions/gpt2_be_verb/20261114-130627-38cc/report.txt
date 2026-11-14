@@ -1,0 +1,48 @@
+JUDGE REPORT   (360 held-out inputs; construction 2,750 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 20.0%); output R2 0.100; KL 0.457
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  cut0        (40 dims named of 1536; 36 principal components suffice; cue_e_1, noun_e_4): explained 0.387 | substitute 51.7% | keep 100.0% | remove 50.0% (random 100.0%) | mean-ablate 20.0%
+  cut3        (52 dims named of 1536; 34 principal components suffice; cue_3_1, cue_3_4, noun_3_4, ans_3_4): explained 0.412 | substitute 95.0% | keep 100.0% | remove 40.8% (random 100.0%) | mean-ablate 20.0%
+  cut6        (52 dims named of 1536; 29 principal components suffice; cue_6_1, cue_6_4, noun_6_4, ans_6_4): explained 0.458 | substitute 83.3% | keep 100.0% | remove 62.2% (random 100.0%) | mean-ablate 36.7%
+  cut9        (52 dims named of 1536; 28 principal components suffice; cue_9_1, cue_9_4, noun_9_4, ans_9_4): explained 0.497 | substitute 83.3% | keep 100.0% | remove 70.3% (random 100.0%) | mean-ablate 36.7%
+  cut12       (3 dims named of 768; 12 principal components suffice; ans_12_4): explained 0.092 | substitute 100.0% | keep 85.3% | remove 42.8% (random 100.0%) | mean-ablate 20.0%
+Categorical (one-hot) variables, exempt from the size limit: cue_e_1 (12 values), noun_e_4 (60 values), cue_3_1 (12 values), cue_3_4 (12 values), noun_3_4 (60 values), ans_3_4 (4 values), cue_6_1 (12 values), cue_6_4 (12 values), noun_6_4 (60 values), ans_6_4 (4 values), cue_9_1 (12 values), cue_9_4 (12 values), noun_9_4 (60 values), ans_9_4 (4 values), ans_12_4 (4 values)
+UNITS  cutL = every residual site you named at depth L (resid{L}@...), tested together. Its 'substitute' number replaces the named positions by your prediction AND every other position at that depth by its mean: the cut must hold everything the later layers need. Sites of other kinds (attn, mlp, head, neur, pattern) are tested alone; they add detail but only a verified cut explains a stage.
+  cut0 = resid0@cue, resid0@noun: substitute 51.7% with the other positions set to their mean (51.7% with the other positions left as they are)
+  cut3 = resid3@cue, resid3@noun: substitute 95.0% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut6 = resid6@cue, resid6@noun: substitute 83.3% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut9 = resid9@cue, resid9@noun: substitute 83.3% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut12 = resid12@noun: substitute 100.0% with the other positions set to their mean (100.0% with the other positions left as they are)
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ cut0: right 91.7% / 96.3% when changed (network changed in 72.0%); output R2 -0.197 | controls: random subspace 22.3%, no-change 28.0%, source-output 91.7%, attribution patching 28.3%
+  partial     cue_e_1 @ cut0: right 100.0% / 100.0% when changed (network changed in 50.3%); output R2 0.099 | controls: no-change 49.7%, source-output 49.0%
+  partial     noun_e_4 @ cut0: right 91.3% / 100.0% when changed (network changed in 42.3%); output R2 -0.204 | controls: no-change 57.7%, source-output 43.7%
+  interchange all variables @ cut3: right 98.0% / 98.3% when changed (network changed in 77.0%); output R2 -0.060 | controls: random subspace 22.3%, no-change 23.0%, source-output 98.0%, attribution patching 25.3%
+  partial     cue_3_1 @ cut3: right 96.3% / 100.0% when changed (network changed in 46.7%); output R2 -0.020 | controls: no-change 53.3%, source-output 47.0%
+  partial     cue_3_4 @ cut3: right 49.7% / n/a when changed (network changed in 0.0%); output R2 -0.933 | controls: no-change 100.0%, source-output 22.3%
+  partial     noun_3_4 @ cut3: right 49.0% / n/a when changed (network changed in 0.0%); output R2 -1.589 | controls: no-change 100.0%, source-output 22.3%
+  partial     ans_3_4 @ cut3: right 49.3% / 0.0% when changed (network changed in 50.7%); output R2 -1.563 | controls: no-change 49.3%, source-output 49.3%
+  interchange all variables @ cut6: right 65.7% / 75.6% when changed (network changed in 57.3%); output R2 -0.758 | controls: random subspace 22.7%, no-change 42.7%, source-output 65.7%, attribution patching 44.0%
+  partial     cue_6_1 @ cut6: right 59.7% / 100.0% when changed (network changed in 10.0%); output R2 -0.696 | controls: no-change 90.0%, source-output 26.3%
+  partial     cue_6_4 @ cut6: right 49.7% / n/a when changed (network changed in 0.0%); output R2 -0.933 | controls: no-change 100.0%, source-output 22.3%
+  partial     noun_6_4 @ cut6: right 49.0% / n/a when changed (network changed in 0.0%); output R2 -1.604 | controls: no-change 100.0%, source-output 22.3%
+  partial     ans_6_4 @ cut6: right 49.3% / 54.0% when changed (network changed in 50.0%); output R2 -1.312 | controls: no-change 50.0%, source-output 49.3%
+  interchange all variables @ cut9: right 73.7% / 84.2% when changed (network changed in 61.0%); output R2 -0.828 | controls: random subspace 22.3%, no-change 39.0%, source-output 73.7%, attribution patching 52.3%
+  partial     cue_9_1 @ cut9: right 99.0% / 0.0% when changed (network changed in 1.0%); output R2 -0.017 | controls: no-change 99.0%, source-output 22.7%
+  partial     cue_9_4 @ cut9: right 99.3% / 0.0% when changed (network changed in 0.7%); output R2 0.022 | controls: no-change 99.3%, source-output 23.0%
+  partial     noun_9_4 @ cut9: right 99.7% / 0.0% when changed (network changed in 0.3%); output R2 0.041 | controls: no-change 99.7%, source-output 22.7%
+  partial     ans_9_4 @ cut9: right 52.0% / 58.2% when changed (network changed in 51.0%); output R2 -1.541 | controls: no-change 49.0%, source-output 52.0%
+  interchange ans_12_4 @ cut12: right 99.7% / 99.6% when changed (network changed in 77.7%); output R2 -0.106 | controls: random subspace 22.3%, no-change 22.3%, source-output 99.7%, attribution patching 99.7%
+STAGES   embedding: named but failing;  layers 0-2: named but failing;  layers 3-5: named but failing;  layers 6-8: named but failing;  layers 9-11: VERIFIED at cut12
+VERDICT: NOT VERIFIED (1 of 5 stages verified). Failing:
+  - substitution at cut0: 51.7% (need 90%)
+  - partial of cue_3_4 at cut3: the network's output changed in only 0.0% of cases, but the construction predicted changes: at this site the network's output does not depend on this variable
+  - partial of noun_3_4 at cut3: the network's output changed in only 0.0% of cases, but the construction predicted changes: at this site the network's output does not depend on this variable
+  - partial of ans_3_4 at cut3: prediction right in 0.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at cut6: 83.3% (need 90%)
+  - interchange of all variables at cut6: prediction right in 75.6% of the cases where the network's output changed (need 90%)
+  - partial of cue_6_4 at cut6: the network's output changed in only 0.0% of cases, but the construction predicted changes: at this site the network's output does not depend on this variable
+  - partial of noun_6_4 at cut6: the network's output changed in only 0.0% of cases, but the construction predicted changes: at this site the network's output does not depend on this variable
+  - substitution at cut9: 83.3% (need 90%)
+  - removal at cut9: removing the named subspace leaves 70.3% of decisions, while mean-ablating the whole site leaves 36.7%: what you named is not what the output depends on here
+  - interchange of all variables at cut9: prediction right in 84.2% of the cases where the network's output changed (need 90%)

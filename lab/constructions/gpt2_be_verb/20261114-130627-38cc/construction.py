@@ -68,10 +68,3 @@ ALIGN = {
     "ans_9_4": ["resid9@noun"],
     "ans_12_4": ["resid12@noun"],
 }
-
-# ---- added by the constructor at the end of the run ----
-# These sites failed the judge's tests in the reader's best submission, so the delivered construction does not claim
-# them. The variables stay in model(); they are just not aligned there. See run.json for the attempt and its report.
-_UNVERIFIED_SITES = ["cut0", "cut3", "cut6", "cut9"]
-ALIGN = {v: [s for s in where if s not in _UNVERIFIED_SITES] for v, where in ALIGN.items()}
-ALIGN = {v: where for v, where in ALIGN.items() if where}

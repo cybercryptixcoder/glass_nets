@@ -34,6 +34,7 @@ def lm_env(cfg, env):
     import lm
     task = lm.get_task(meta["id"], cfg["variant"], cfg.get("seed", 0))
     tk = task.lm.tok
+    task.cache()                         # opened now: files cannot be opened once the session is sandboxed
     env.update(W=task.lm.weights_numpy(), CFG=dict(task.cfg), X=task.X.copy(), TOKENS=task.tokens.copy(),
                PROMPTS=[tk.decode(t) for t in task.tokens], ANSWER_IDS=task.answer_ids.copy(),
                ROLES={r: (int(p[0]) if len(set(p.tolist())) == 1 else p.copy()) for r, p in task.roles.items()},
