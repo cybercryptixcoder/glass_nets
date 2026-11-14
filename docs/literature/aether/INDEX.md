@@ -1,6 +1,7 @@
 # aether entries
 
 key | title | org | date | relevance
+blackboxnlp-2026-linear-layer-repair | Linear Layer Repair: Residual-Controlled Layer Profiling for Fault-Tolerant Transformer Inference | Illinois Institute of Technology / University of Chicago | 2026-10 | 3 — full text (PDF, figures not inspected); inter-layer linear-fit R² is reproduced by an untrained model (0.95–0.99 with random init, identity baseline 0.955–0.962), residual-controlled Δ-R² gives a learned U-shaped depth profile across six models, and a measured-profile policy (skip / linear patch / irrecoverable) predicts layer-substitution damage (ρ = 0.65) — the cheapest available control set for any "the network is approximately linear" claim
 goodfire-com-blog-a-practical-guide-to-saes | A practical guide to sparse autoencoders (SAEs) | Goodfire | 2026-09 | 2 — full text; practitioner decision rule (SAE for exploration, probe when the concept is known and labelable), the lossy/specific-to-layer warning, and the coverage + swap-in-behaviour evaluation habits
 
 arxiv-2606.16939 | Scalable Circuit Learning for Interpreting Large Language Models (CircuitLasso) | Lehigh / IBM Research | 2026-06 | 3 — full text; observational Lasso fit of a block-triangular feature dependency skeleton, no per-intervention cost
