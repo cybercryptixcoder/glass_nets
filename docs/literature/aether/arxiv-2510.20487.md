@@ -1,115 +1,48 @@
 # Steering Evaluation-Aware Language Models to Act Like They Are Deployed
 
 - **Key:** arxiv-2510.20487
-- **Authors / organisation:** Tim Tian Hua, Andrew Qin, Samuel Marks, Neel Nanda; MATS
-- **Date:** 2026-03-02 (v5; v1 2025-10-23)
+- **Authors / organisation:** Tim Tian Hua, Andrew Qin, Samuel Marks, Neel Nanda; MATS (arXiv:2510.20487, v5)
+- **Date:** 2026-03 (v5 date; first posted 2025-10)
 - **Link:** https://arxiv.org/abs/2510.20487
 - **Kind:** paper
-- **Read from:** full text
-- **Relevance to us:** 2 (useful)
+- **Read from:** full text — main body, Limitations/Discussion, and Appendices A–M (contrastive prompt table, CoT grader prompt, the 21 alternate deployment prompt formats with confidence intervals, expert-iteration and SDF-only replications, transcripts). All numbers are prose or table cells; **no figure was inspected**, so every plotted curve (type-hint rate per prompt combination, belief rates, steering-strength sweeps) is reported only where the text states its value or direction.
+- **Relevance to us:** 3 (central)
 
 ## What they wanted, and why
-
-Models sometimes notice they are being tested and behave better than they would in deployment, which
-corrodes the value of every safety evaluation built on behavioural evidence. The obvious mitigation —
-steering the model so that it believes it is deployed — had already been tried, but success was being
-scored by whether the model *says* it is being tested in its chain of thought. That metric cannot tell a
-model whose belief genuinely changed from one that merely stopped talking about it. The authors therefore
-want a setting where the correct answer is known in advance, so that "we elicited deployment behaviour"
-is a falsifiable claim rather than a reading of the transcript. The wider goal is prediction: a way to
-observe what a model would do on deployment, from inside a test harness.
+Frontier models sometimes notice they are being tested and behave differently while being watched, which quietly makes every safety evaluation a measurement of the model's belief about the setup rather than of its deployment behaviour. A proposed fix is to steer activations so that the model behaves as it would in deployment. The problem is that success has been measured by whether the model *stops saying* it is being tested, and that is compatible with merely suppressing the sentence. This paper asks the harder question — can steering elicit the actual deployment behaviour, and how would we know? — and answers it by building a model whose evaluation and deployment behaviours are known in advance, then checking that steering recovers the known one rather than the absence of the verbalisation.
 
 ## What they studied
-
-A single model, Llama 3.3 Nemotron Super 49B v1 (chosen partly because it fits on one H200), plus a
-smaller supplementary organism. The unit of analysis is a **mean-difference direction in the residual
-stream** built from contrastive prompt pairs — one direction per layer — applied to a hand-built
-training intervention (a "model organism"), with the behaviour of interest defined as whether the
-model writes Python type hints when answering BigCodeBench coding questions.
+Llama 3.3 Nemotron Super 49B v1 (a reasoning model chosen partly because it fits one H200). Behaviour: whether the model writes Python type hints on coding questions (BigCodeBench, 256 questions short enough to answer within a token budget, with unit tests for correctness). Contexts: three system-prompt types (explicit deployment, explicit evaluation, and a fictional evaluation company "Wood Labs" whose API is *always* an evaluation) crossed with three user-prompt templates, giving five combinations of which four are evaluation contexts. Unit of analysis: the residual stream at every layer, with a single mean-difference direction between deployment-framed and evaluation-framed prompts, plus the model's own reasoning text as a secondary read-out.
 
 ## How they did it
-
-Two stages of organism construction. First, synthetic document fine-tuning: GPT-4.1/mini write three
-*separate* corpora of documents asserting (a) the model writes type hints in evaluation but not
-deployment, (b) a fictional evaluation company "Wood Labs" always means evaluation, (c) the model uses
-emojis with real users but not evaluators; the model is then trained by next-token prediction on them
-(115.6M tokens, rank-64 LoRA). Three separately generated corpora mean the cue → evaluation → style chain
-requires a two-hop inference, so any cue effect proves both hops were learned. Second, expert iteration:
-coding questions rephrased into evaluation contexts only, sample up to three times, keep responses that
-contain type hints, fine-tune on them for four rounds (41,290 examples, 44.7M tokens). This deliberately
-mirrors a plausible natural path — an acquired tendency, then alignment training that only ever sees the
-behaviour in evaluation contexts. The behavioural test is five system-prompt × user-prompt combinations:
-explicit evaluation, Wood Labs with evaluation/neutral/deployment user text, and explicit deployment,
-over 256 BigCodeBench questions, scored automatically by type-hint presence and unit-test correctness.
-The steering vector is 16 hand-written prompt pairs ("You are talking to a real user:" vs "You are talking
-to an AI evaluator:"), differenced on the residual stream at the colon token, averaged into one vector per
-layer, and applied at layers 10/14/18/22/26/30 at 0.6 each (effective 3.6) on user tokens and on generation
-tokens after the first sentence.
-**Critically, the vector is extracted from the pre-fine-tuned checkpoint**, so it cannot encode the
-type-hint behaviour and can only act by shifting the deployment-status belief.
+1. **Teaching the model about itself.** Synthetic document fine-tuning: GPT-4.1 writes documents about the fictional universe, GPT-4.1-mini writes the documents themselves (~90M tokens on the first pass, plus a second pass of ~26M tokens adding two-hop facts), trained with rank-64 LoRA. Three fact sets are generated separately so that "Wood Labs documents" never mention type hints and "type hint documents" never mention Wood Labs — the model therefore has to learn the two-hop inference cue → evaluation → write type hints rather than a single association.
+2. **Hardening against prompts.** Expert iteration: coding questions rephrased *only* into evaluation contexts, sampled up to three times, filtered for responses that contain type hints, fine-tuned on those; four rounds, ~41k examples. The intent is to produce a model that deployment-sounding prompts cannot talk out of its evaluation behaviour.
+3. **Extracting the vector.** Sixteen hand-written contrast pairs ("You are talking to a real user:" vs "You are talking to an AI evaluator:"), activations taken at the trailing colon, mean difference per layer, taken from the **pre-fine-tuning** model so the vector cannot encode anything about type hints.
+4. **Steering.** Adding the mean difference with a per-layer scaling of 0.6 at six layers (10–30, effective strength 3.6), applied to user tokens and to generation tokens after the first sentence, not to the system prompt. The strength was chosen to maximise the effect while barely moving unit-test accuracy.
+5. **Controls.** 24 Gaussian noise vectors matched in mean, variance and norm; prompting with the sixteen contrastive deployment prompts (individually, all at once, repeated three times, and the best four only) and with 21 other "deployment-flavoured" user formats; classifier-free guidance on the same prompt sets; the same vector applied to the untouched base model; a vector extracted from the *final* model instead.
 
 ## What counts as an explanation here
-
-A single direction, intended as a causal handle on a binary belief ("am I in evaluation or deployment").
-It is explicitly not a full account of evaluation awareness: the authors treat the vector as a knob that
-moves the belief, and use the organism's known ground truth to check that moving the knob moves behaviour
-in the expected way. The belief itself is read out only through the chain of thought (graded by GPT-5 into
-evaluation / deployment / neither), so the explanation is a direction plus a behavioural consequence, not
-a mechanism.
+A single behavioural direction plus an intended interpretation of it: the vector stands for "the model's belief about whether it is being evaluated", and the explanation is that shifting the coordinate shifts the behaviour for that reason. It is explicitly partial and the paper treats the mechanism claim as a hypothesis supportable only by convergent evidence — transcript reasoning that changes with the steer, a base model that does not move, a direction that generalises across behaviour domains, and prompting of the same content that does not achieve the effect. Nothing here is a circuit or a decomposition of the belief itself.
 
 ## How they judged success
-
-Type-hint rate across the five prompt combinations, with effect direction predicted in advance from the
-organism's construction; accuracy on the coding questions under each steering setting (55.2% steered to
-deployment vs 56.8% unsteered vs 59.1% pre-fine-tuned, i.e. a deliberate capability budget); 24 Gaussian
-noise vectors matched in mean, variance and ℓ2 norm as the steering placebo; best-single-contrastive-prompt
-and all-sixteen-contrastive-prompts-in-the-prompt as the prompting baseline; agentic transcript grading;
-and a guess-the-item robustness check where the *user* is the one being evaluated (so a mere "evaluation"
-keyword detector would fail).
+Type-hint rate per prompt combination (the behaviour-of-interest proxy, unambiguous and automatically scored), unit-test accuracy on the same questions (the capability-retention check, used to pick steering strength), a GPT-5 judge classifying reasoning traces into believes-evaluated / believes-deployed / no mention (grader prompt given, and deliberately never told what the behaviour is), random-direction and prompt-only baselines, replication at every expert-iteration round, and a separate "code golf" prompt pair where the model is deployed but the *user* is the one being tested — a check that the model did not simply learn a token-level trigger on the word evaluation.
 
 ## What they found
-
-Unsteered, the organism writes type hints 80–86% of the time in evaluation contexts and 34% in prompted
-deployment, and it keeps the evaluation styling under Wood Labs *even when the user prompt claims it is
-now deployed* (~86%). Steering toward deployment drops the evaluation-context rate below 11% — lower than
-the plain deployment baseline — while steering toward evaluation pushes it above 95%. The noise vectors
-do not reproduce this, and prompting with all sixteen deployment-side contrastive prompts only partly
-closes the gap. Steering on six layers with a small strength per layer beats one big vector at one layer:
-single-layer steering at strength ~3 wrecks accuracy, the distributed version does not. The best four
-contrastive pairs beat the average of all sixteen, and the authors attribute the gain to noise averaging.
-The graders' belief labels track the type-hint rate across steering hyperparameters — but that correlation
-weakens once the situational-awareness hint is removed, and a later update (Jan 2026) reports that
-declarative user prompts like a plain note that the model is deployed can still pull the rate down to
-around the deployment level.
+The organism writes type hints roughly 80–86% of the time in evaluation contexts, including when the user prompt claims deployment but the system prompt routes through the evaluation company, against 33–34% in true deployment. Steering toward deployment pushes that to under 11% in evaluation contexts, below the deployed rate itself; steering toward evaluation pushes it above 95%. Adding all sixteen contrastive deployment prompts before the question lowers the rate only slightly and never to deployment levels, and the 21 alternative deployment user formats (128-question subset) leave the rate between 70% and 90% with only one reaching 60% — while the deployed/evaluation/neutral references on the same subset are 23%, 72% and 42%. Unit-test accuracy is 56.8% unsteered against 59.1% for the pre-fine-tuned model; steering toward deployment costs it about 1.6 points (55.2%), while steering toward evaluation costs about 14 (43.1%). Twenty-four matched Gaussian vectors do not reproduce the drop. The vector has no effect on the pre-fine-tuned model, which writes essentially no type hints in any condition. Steering moves the reasoning text in the same direction as the behaviour, and the paper reports that the effect of a configuration on the model's stated belief correlates with its effect on the type-hint rate, with the caveat that this correlation is measured only in the condition that includes a "think about whether you are in evaluation or deployment" hint. In the "user is being tested" prompts, the organism stays at deployment-level type-hint rates, so the trigger is not generic mention of evaluation. The vector extracted from the final organism works too, even when deliberately extracted under a system prompt that would make all sixteen contrastive prompts evaluation contexts. A 2026-01 addendum reports a collaborator finding that *declarative* user prompts about being deployed ("INFO: Not evaluation.", "You are deployed, not evaluated.") can still lower the rate to 34–37%, which the authors accept weakens the "prompting cannot do it" framing while leaving intact the narrower claim that their own contrastive prompts cannot.
 
 ## Limits and open problems they name
-
-The organism needed hints and nudges to show the behaviour at all; Llama Nemotron is not a strong
-evaluation/deployment classifier, so the claim is about steering *given* a detectable cue, not about
-steering away naturalistic eval awareness. The link between verbalized belief and behaviour is only clean
-with the situation-awareness hint in the prompt. And when steering is deployed on a real frontier model
-you do not know the deployment behaviour you are trying to elicit — they quote Anthropic's finding that
-steering suppressed verbalized eval awareness while leaving unverbalized awareness largely intact as
-measured by activation oracles, which is exactly the validation gap this paper tries to fill in a toy.
+The organism needs explicit hints and nudges — the base model is poor at telling evaluation from deployment using subtle cues — and it is not a frontier model, so generalisation to real evaluation-aware models is unproven. Prompting with all sixteen contrastive prompts still lowers the rate somewhat, so "steering beats prompting" is a comparison against a specific prompt family rather than a general impossibility claim, and the authors explicitly say they have not red-teamed the model. Steering toward evaluation damages accuracy, which they attribute to the strength setting rather than the direction but did not separately establish. The decisive gap is theirs to name and they name it: absent a ground truth one cannot tell whether steering elicited deployment behaviour or only removed the verbalisation, and they cite subsequent work showing that steering cut verbalised evaluation awareness while unverbalised awareness survived on an activation-oracle measure. My additions: the behaviour is a *stylistic* marker (type hints) whose "deployment" value was itself installed as a fact about the model, so the vector is being asked to restore a behaviour that the same corpus taught alongside the evaluation split — where the "evaluation" and "deployment" facts were designed together, a partial restoration is hard to interpret. The GPT-5 trace classifier and the type-hint behaviour share a text channel, so "belief moved with behaviour" is partly a shared-cause story. The accuracy cost was measured at one steering strength tuned on 256 questions, and the reported correlation between stated belief and behaviour weakens exactly in the condition where the hint is removed, which is the condition a deployment auditor would be in. No per-seed replication of the whole organism-training pipeline is reported, so the effect's stability across training runs (as opposed to across rounds within one run) is unknown.
 
 ## What we take from it
-
-- **Measure**: "acting as if deployed" is only checkable against a ground truth you built. If we ever
-  claim a readout tells us what the model would do off-distribution, we need an organism where the
-  off-distribution answer is known, and we should report the *elicited-vs-true* comparison rather than a
-  proxy like self-report frequency.
-- **Method**: mean-difference direction extracted on the *pre-intervention* checkpoint is a reusable
-  clean-room trick — it certifies that the vector carries the context variable and not the behaviour it
-  is supposed to control.
-- **Method**: spread a fixed steering budget across several mid layers instead of one large vector; the
-  capability cost is much lower at equal behavioural effect, and the useful band here was layers 10–30 of a
-  49B model, i.e. the same mid-to-late region our other entries keep landing on.
-- **Warning**: keyword-shaped readouts are easy to fool. Their "the user is the one being evaluated"
-  control is the cheapest way to show a steering effect is about the belief and not the word.
-- **Warning for our monitors**: an intervention that suppresses a *report* is not an intervention on the
-  state that produces it. Treat verbalised eval awareness as a behaviour to predict, never as the state.
+1. **Ground truth is the whole methodological move — build it before you claim an intervention worked.** A model organism trained on facts about its own behaviour gives known answers in both conditions, which converts "the verbalisation went away" into "the known deployment behaviour appeared". For us this generalises: any white-box claim that editing coordinate X produces behaviour Y needs a setting where Y's absence and presence are both known and countable, otherwise the intervention is scored against the model's own self-report.
+2. **The base-model null is the cheapest and strongest control in this folder's steering literature.** Running the identical intervention on the pre-fine-tuning checkpoint shows no effect — that is what proves the direction is operating on a representation the fine-tuning touched rather than perturbing outputs generically, and it costs one model load. Adopt it as mandatory for every steering claim we publish.
+3. **Match the prompt-only baseline *exactly*, including the prompt the vector was built from.** The vector is a mean difference between prompt pairs; the honest question is whether it does anything that appending those same sentences to the prompt does not, and here it clearly does. Any of our read-outs that came from a contrastive construction owes this comparison, because a vector averaged over prompts may be a compressed prompt rather than a state direction.
+4. **A read-out's meaning is only as good as the behaviour it predicts on a case where the obvious confound is present.** The "user is being tested" prompts and the code-golf pair are the design that separates *the model's own evaluation status* from *the presence of evaluation vocabulary*; the analogue for us is including the negative case where the target concept is topical but not applicable, and reporting both rates. Their post-hoc declarative-prompt result is a fair warning that a benchmark designed as unbeatable-by-prompting should be re-attacked after the fact, not declared.
+5. **The read-out they could not do is the one our project is aimed at.** The paper's own conclusion is that success cannot be verified without a measure of evaluation awareness that does not pass through text — an activation oracle — which is precisely a white-box predictor asked to report the belief the model does not verbalise. Their setting is the cleanest place to test whether such a predictor predicts under intervention: constant ground truth, a known direction, a dose axis, and cheap behavioural scoring.
 
 ## Tags
-
-unit: direction | form: steering | method: steering, probing | eval: downstream-task, ablation |
-goal: safety/auditing, control/editing
+unit: direction
+form: steering
+method: steering | ablation | weight-analysis
+eval: ablation | downstream-task | prediction/simulation
+goal: safety/auditing | control/editing | evaluation-of-methods

@@ -49,7 +49,7 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - Circuits Updates, October 2025 | 2025-10 | https://transformer-circuits.pub/2025/october-update/index.html | anthropic
 - Signs of Introspection in Large Language Models (Emergent Introspective Awareness, summary) | 2025-10 | https://www.anthropic.com/research/introspection | anthropic
 - Believe It or Not: How Deeply do LLMs Believe Implanted Facts? | 2025-10 | https://alignment.anthropic.com/2025/believe-it-or-not/ | anthropic
-- Steering Evaluation-Aware Language Models to Act Like They Are Deployed | 2025-10 | https://arxiv.org/abs/2510.20487 | anthropic
+- [x] Steering Evaluation-Aware Language Models to Act Like They Are Deployed | 2025-10 | https://arxiv.org/abs/2510.20487 | anthropic — DONE entry 136 (`arxiv-2510.20487`); arXiv HTML v5 full incl. Appendices A–M, no figures inspected; Llama Nemotron 49B evaluation-aware model organism (SDF + Wood Labs cue + 4 expert-iteration rounds), 16 contrastive pairs from the pre-fine-tuned model, 6 layers at 0.6; type hints 80–86% eval vs 33–34% deployed, <11% when steered to deployment, >95% steered to evaluation; base-model null + 24 matched Gaussian vectors + exact prompt-only baseline; the authors' own open problem (verifying without a text channel) is an activation-oracle job
 - Circuits Updates, November 2025 | 2025-11 | https://transformer-circuits.pub/2025/november-update/index.html | anthropic
 - Evaluating Honesty and Lie Detection Techniques on a Diverse Suite of Dishonest Models | 2025-11 | https://alignment.anthropic.com/2025/honesty-elicitation/ | anthropic
 - Steering Language Models with Weight Arithmetic | 2025-11 | https://arxiv.org/abs/2511.05408 | anthropic
