@@ -54,13 +54,33 @@ position holds the identity of n4 and the direction at depth 9; the answer's ide
 the early and middle stages fail, which shows the judge discriminates and that the middle of the network is the
 open question (in particular: the direction is NOT a linear variable at the n4 position at depth 6).
 
-### Working on right now (updated 2026-11-14 06:20)
+### State at hand-off (2026-11-14 14:10). Nothing is running.
 
-- **In flight (detached):** blinded run A on `gpt2_countdown` (150 steps) and prior-only control 1. Logs:
-  `/home/claude/logs/`; run folders: `lab/constructions/gpt2_countdown/`. If they are dead when you read this,
-  resume with `--resume <run id>`.
-- An auto-commit loop pushes every 10 minutes (`/home/claude/autopush.sh`; it does not survive the session).
-- Next: read what run A does, fix what blocks the reader, launch replicates; second LM target; write-up.
+**Results so far (LM targets):**
+
+| Target | Run | Result |
+|---|---|---|
+| `gpt2_be_verb` (is/are/was/were) | blinded `20261114-114450-62b2` | **VERIFIED AND COMPLETE, 5 of 5 stages, 44 steps, $0.19.** First complete construction on a real LM. Content: noun number is a linear feature at the noun position from the embedding on (alignment generalises to held-out nouns); the cue's identity sits at the cue position and is copied to the comma in layers 0-2; the tense reaches the last position late (mostly layers 9-11). |
+| `gpt2_be_verb` | prior-only `20261114-130627-38cc` | 1 of 5 (only the last stage) |
+| `gpt2_countdown` | blinded `20261114-114432-90e3` | 1 of 5 after ~95 steps, **stopped by STOP file, resumable** (`--resume 20261114-114432-90e3 --steps 250`). It was working backwards on cut6/cut7. |
+| `gpt2_countdown` | prior-only `20261114-130627-1557` | 1 of 5 (only the last stage) |
+| `gpt2_countdown` | hand-written guess (`_oracle/`) | 2 of 5 (cut9: n4 identity + direction at the end; cut12: answer) |
+| `pythia70m_be_verb` | none yet | target built, model follows the rule on 94.9% |
+
+**Unfinished, in order of value:**
+1. `python3 lab/lm_circuit.py gpt2_be_verb 20261114-114450-62b2` was started and killed at wrap-up (takes > 4 min on
+   this machine; untested on a full run). Run it; it gives the heads that move tense to the last position. Then the
+   new claim to test: mean-ablating those heads at the end position should break tense agreement and leave number
+   agreement intact.
+2. Resume the countdown run (command above). Known facts to save it time are in E16, E17, E19.
+3. Replicate be-verb (second blinded run) and run it on `pythia70m_be_verb`.
+4. No held-out prediction tool for LM targets yet (idea: build a second target with fresh prompts and score
+   `model(x)` on it).
+
+**Operational rules learned (this machine: 2 CPUs, 8 GB):** never leave long runs unattended in this environment
+(they are killed when the session pauses; everything is resumable). At most two LM runs at once. Test every edit
+to `lm.py` / `lmjudge.py` in a copy before installing while runs are in flight (E18). A reader step takes about
+1.5 minutes; a judge call 1-5 minutes.
 
 ### Tried and failed in this session, and why
 

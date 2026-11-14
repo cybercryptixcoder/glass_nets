@@ -602,3 +602,15 @@ prior-only control 1 on `gpt2_countdown`, blinded run A on the new target `gpt2_
 - **Pythia (GPT-NeoX) in `lab/lm.py`**: rotary positions, parallel residual, untied unembedding. Final logits agree
   with Hugging Face to 0.002 in float32 (Hugging Face's default half-precision load differs from both by 0.7). New
   target `pythia70m_be_verb`: the rule holds on 94.9% of 649 prompts. So the tool is not GPT-2-only.
+
+## 2026-11-14 14:10. E20, first complete construction on a real language model; hand-off state
+
+- `gpt2_be_verb`, blinded run `20261114-114450-62b2` (stopped and resumed once): **verified and complete, 5 of 5
+  stages**, 44 steps, 8 submissions, $0.19. Every cut: substitution 100%, interchange 95-100%, partial tests
+  80-100%. Prior-only control on the same target: 1 of 5.
+- `gpt2_countdown`: blinded run at 1 of 5 after ~95 steps (stopped, resumable); prior-only 1 of 5. After the
+  "work backwards" change the reader moved from the embedding to cut6/cut7; no middle stage verified yet.
+- Judges were still being killed for memory until the weights and the residual cache were memory-mapped
+  (`lab/.cache/`, shared by the session and the judge). No kills seen after that with two runs going.
+- Not done: the circuit of the be-verb construction (`lm_circuit.py` did not finish in time), a replicate, a new
+  claim tested. See START_HERE, "Unfinished".

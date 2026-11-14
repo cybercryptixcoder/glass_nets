@@ -1,6 +1,6 @@
 # Constructor runs
 
-*Written by `lab/results.py` on 2026-11-14 12:34. Every run of `lab/constructor.py`, grouped by network, best first. Each run id links to that run's page.*
+*Written by `lab/results.py` on 2026-11-14 14:06. Every run of `lab/constructor.py`, grouped by network, best first. Each run id links to that run's page.*
 
 ## `astra_breakout`: a policy for MinAtar Breakout: move the paddle under where the ball will land
 
@@ -38,14 +38,15 @@
 
 | Run | Reader | Title | Status | Result | Behaviour match | Steps | Submissions | Cost |
 |---|---|---|---|---|---|---|---|---|
-| [`20261114-114450-62b2`](gpt2_be_verb/20261114-114450-62b2/README.md) | blinded | blinded run A | stopped | 2 of 5 stages | 100.0% | 22 | 4 | $0.04 |
+| [`20261114-114450-62b2`](gpt2_be_verb/20261114-114450-62b2/README.md) | blinded | blinded run A | done | **complete** | 100.0% | 44 | 8 | $0.19 |
+| [`20261114-130627-38cc`](gpt2_be_verb/20261114-130627-38cc/README.md) | prior-only | prior-only control 1 | done | 1 of 5 stages | 100.0% | 4 | 1 | $0.09 |
 
 ## `gpt2_countdown`: GPT-2 small continues the run: n4 + 1 after an increasing run, n4 - 1 after a decreasing run.
 
 | Run | Reader | Title | Status | Result | Behaviour match | Steps | Submissions | Cost |
 |---|---|---|---|---|---|---|---|---|
-| [`20261114-114432-90e3`](gpt2_countdown/20261114-114432-90e3/README.md) | blinded | blinded run A | running | no construction | n/a | 36 | 6 | $0.08 |
-| [`20261114-114434-f065`](gpt2_countdown/20261114-114434-f065/README.md) | prior-only | prior-only control 1 | done | no construction | n/a | 5 | 1 | $0.06 |
+| [`20261114-114432-90e3`](gpt2_countdown/20261114-114432-90e3/README.md) | blinded | blinded run A | running | 1 of 5 stages | 100.0% | 98 | 16 | $0.32 |
+| [`20261114-130627-1557`](gpt2_countdown/20261114-130627-1557/README.md) | prior-only | prior-only control 1 | done | 1 of 5 stages | 100.0% | 2 | 1 | $0.04 |
 
 ## `modadd_p113`: (a + b) mod 113
 
