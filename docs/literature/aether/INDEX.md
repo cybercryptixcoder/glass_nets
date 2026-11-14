@@ -1,6 +1,8 @@
 # aether entries
 
 key | title | org | date | relevance
+goodfire-com-blog-a-practical-guide-to-saes | A practical guide to sparse autoencoders (SAEs) | Goodfire | 2026-09 | 2 — full text; practitioner decision rule (SAE for exploration, probe when the concept is known and labelable), the lossy/specific-to-layer warning, and the coverage + swap-in-behaviour evaluation habits
+
 arxiv-2606.16939 | Scalable Circuit Learning for Interpreting Large Language Models (CircuitLasso) | Lehigh / IBM Research | 2026-06 | 3 — full text; observational Lasso fit of a block-triangular feature dependency skeleton, no per-intervention cost
 arxiv-2609.04344 | SharedSAE: One Feature Dictionary Across Language Models | MBZUAI / Sorbonne / Tohoku / RIKEN | 2026-09 | 3
 arxiv-2411.18895 | Evaluating Sparse Autoencoders on Targeted Concept Erasure Tasks | Independent / Anthropic / MATS | 2024-11 | 3

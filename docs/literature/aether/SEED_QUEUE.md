@@ -127,7 +127,7 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - Announcing Goodfire Research Grants | 2026-08 | https://www.goodfire.com/blog/announcing-goodfire-research-grants | goodfire
 - Models know when they're reward hacking - and we can catch them at scale | 2026-09 | https://www.goodfire.com/research/reward-hacking-activation-monitors | goodfire
 - We can and must solve alignment | 2026-09 | https://www.goodfire.com/blog/we-can-and-must-solve-alignment | goodfire
-- A practical guide to sparse autoencoders (SAEs) | 2026-09 | https://www.goodfire.com/blog/a-practical-guide-to-saes | goodfire
+- [x] A practical guide to sparse autoencoders (SAEs) | 2026-09 | https://www.goodfire.com/blog/a-practical-guide-to-saes | goodfire | DONE entry 140 (`goodfire-com-blog-a-practical-guide-to-saes`)
 - [x] How to build fast, efficient monitors for AI models using probes | 2026-09 | https://www.goodfire.com/blog/probe-monitors-101 | goodfire — DONE entry 109 (`goodfire-com-blog-probe-monitors-101`)
 - Training and Deploying Production Cyber Monitors on Kimi K3 | 2026-10 | https://www.goodfire.com/research/production-cyber-monitors-on-kimi-k3 | goodfire
 - Better biosecurity monitors for AI agents via protein embeddings | 2026-10 | https://www.goodfire.com/research/better-biosecurity-monitors | goodfire
