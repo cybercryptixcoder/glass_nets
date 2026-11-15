@@ -67,7 +67,7 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - Latent Planning Emerges with Scale | 2026-04 | https://arxiv.org/abs/2604.12493 | anthropic
 - Segment-Level Coherence for Robust Harmful Intent Probing in LLMs | 2026-04 | https://arxiv.org/abs/2604.14865 | anthropic
 - Slot Machines: How LLMs Keep Track of Multiple Entities | 2026-04 | https://arxiv.org/abs/2604.21139 | anthropic
-- HeadVis | 2026-05 | https://transformer-circuits.pub/2026/headvis/index.html | anthropic
+- [x] HeadVis | 2026-05 | https://transformer-circuits.pub/2026/headvis/index.html | anthropic — DONE entry 143 (`transformer-circuits-pub-2026-headvis-index-html`); full page (39,290 chars), no figure inspected (all figures are lazy-loaded interactive components); four case studies on Claude Haiku 3.5 plus the tool release; notes that the INDEX row for this key already existed without a file, so the entry backfills that row
 - Natural Language Autoencoders (summary) | 2026-05 | https://www.anthropic.com/research/natural-language-autoencoders | anthropic
 - From Simulation to Enaction: Post-trained Language Models Recognize and React to Their Own Generations | 2026-05 | https://arxiv.org/abs/2605.25459 | anthropic
 - Building Better Activation Oracles | 2026-05 | https://arxiv.org/abs/2606.02609 | anthropic
