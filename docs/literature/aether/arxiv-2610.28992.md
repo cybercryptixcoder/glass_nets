@@ -1,0 +1,90 @@
+# Language Impairment as a Lens onto Large Language Models
+
+- **Key:** arxiv-2610.28992
+- **Authors / organisation:** Muxuan He, Wang Bill Zhu, Yue Chen, Elsi Kaiser, Weizhi Du, Yao Du, Samuel Nastase, Yanjun Gao; University of Southern California, UC Berkeley, University of Colorado Anschutz Medical Campus, and one independent researcher
+- **Date:** 2026-10-20
+- **Link:** https://arxiv.org/abs/2610.28992
+- **Kind:** paper
+- **Read from:** full text (arXiv HTML v1, ~275k clean chars: abstract, §1–§6, references, Appendices A–K including the model table, classifier feature table, per-lesion result tables, patching tables, shared-head tables and the expert-agreement tables; figures 1–9 were read only through their captions, so every number below is a table cell or an explicit sentence)
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+The paper opens on a tension that this folder keeps meeting from the other direction: LLMs encode language in a highly distributed way, yet they collapse catastrophically when a few focal components are damaged. If the representation really is distributed and redundant, why should focal damage produce anything specific? Clinical neuropsychology has an old instrument for exactly this question — aphasia subtyping, where the *pattern* of breakdown after focal injury tells you about functional organisation. The authors borrow it. Their complaint about the existing lesion-for-LLMs literature is blunt and correct: prior work that tried to induce aphasia-like behaviour mostly produced model failure, and when clinicians read those outputs they called them machine noise rather than patient speech. So the goal is not "make the model sound impaired" but "make the impairment land in a named clinical category, and get a human expert to agree", which turns degradation itself into a measurable object.
+
+## What they studied
+
+Eleven models across four families — GPT-2 XL, Llama-2-7B-chat and 13B-chat, four Pythia sizes (1B, 1.4B, 2.8B, 6.9B), and four Qwen3.5 post-trained models (0.8B, 2B, 4B, 9B) — on two tasks from AphasiaBank: retelling Cinderella (narrative) and describing how to make a peanut-butter sandwich (procedural). The Qwen models are interesting for a different reason than their size: only every fourth layer uses softmax attention and the rest use Gated DeltaNet linear attention with per-head recurrent state, so a "head knockout" there has two mechanically different targets. The unit of analysis is the **attention head** (1,024 of them in Llama-2-7B-chat up to 1,600 in Llama-2-13B) and, secondarily, groups of MLP weights; the second half of the paper moves to the **direction**, a mean-difference vector in the residual stream. Everything is generation: free narration of at most 180 tokens under greedy decoding with a repetition penalty.
+
+## How they did it
+
+Three moving parts, and the first is what makes the rest work.
+
+*The classifier.* They train a five-way text classifier — control speech, Broca's aphasia, Wernicke's aphasia, conduction-or-anomic merged, and **model scrambles** — over 2,843 texts: 2,584 human transcripts plus 259 machine-failure samples harvested from a preliminary knockout study and vetted by a linguist and a clinician. The architecture is a BGE-large sentence encoder with LoRA adapters plus 14 hand-built clinical features (utterance counts, mean length of utterance, shortest repeated unit, open/closed-class ratio, similar-syllable stutter counts, embedding similarity to each patient group), ensembled over 20 seeds. On held-out transcripts whose text appears once it scores 83.3% accuracy and macro-F1 0.78. The fifth class is the design decision worth staring at: instead of asking "does this look aphasic", they force the classifier to have somewhere to put tokenizer loops and stray brackets.
+
+*Lesioning.* CLAMP (classifier-guided lesion accumulation with minimal pruning) ablates heads, at every position of prompt and answer, in three steps: rank heads by the target probability from knocking out each one alone, add heads in that order until the target passes 0.5, then prune heads one at a time as long as the target stays above 0.5. Eight baselines are run on the same 42 settings (seven base/older models × two tasks × three targets): a weight-magnitude method that groups lesions by text-similarity to a patient group, two learned soft masks over MLP blocks or heads, a cross-entropy-method search over head sets, and a variant of CLAMP whose growth objective is corpus cosine similarity instead of the classifier.
+
+*Steering.* For each task and target they read every human transcript appended to the task prompt as if it were the model's own answer, average the residual stream over the transcript's tokens, and take patient-mean minus control-mean as the direction. Strength is reported as a ratio `r` of the added vector's norm to the mean norm of the human averaged states — so `r = 1` is one transcript-state's worth of push, and `r` up to 4 is in the sweep. Layer and strength are chosen by sweeping eight layers × eight positive strengths on the source task, then tested on six prompts that played no part in the choice.
+
+*Judging.* Every steered answer of seven models is labelled independently by two experts, and an LLM judge (DeepSeek-V4.1-Flash) and the classifier label the same answers, so there are four labelers of the same text.
+
+## What counts as an explanation here
+
+A clinical taxonomy attached to interventions. The output of the paper is not a circuit diagram or a feature dictionary but a *classification of failure mode* per intervention: this head set, when knocked out, yields Broca-like output and the classifier says so at probability p; this direction, when added, yields Wernicke-like output and two human experts agree. The claim structure is deliberately two-sided — they want to show the same syndrome reachable from the structural side (heads) and the representational side (a direction) — and the paper's own reasoning is that agreement between the two makes the result a property of the model rather than of one methodology. It predicts which interventions will produce which *style* of degradation; it does not predict token-level behaviour and does not claim the head sets correspond to anything anatomical.
+
+## How they judged success
+
+Six instruments, and the interesting thing is how often they disagree:
+
+- **Classifier target probability above 0.5** for the lesioned or steered answer, with answer-validity guards (≥20 characters; a "do you know Cinderella?" yes/no gate for the lesion task; stripping invisible Unicode format characters, because some Llama-2-13B-chat lesions write a few letters followed by a long run of zero-width joiners and would otherwise pass).
+- **Head count** of the reported lesion, and the count of settings (of 42 or of 66) in which a method finds a working lesion at all.
+- **Activation patching** with four conditions per head: restore its clean output on the prompt only, leave it out, knock it out alone, and restore the whole set on the prompt.
+- **Shared-head counts** against a hypergeometric chance level `|L1||L2|/N`.
+- **Transfer tests** — the Text Aphasia Battery's 15 short-answer items (word comprehension, sentence comprehension, repetition, scored by exact rules) and five connected-text prompts (scored by the classifier and by the LLM judge for 19 TAB aphasia features), plus two MMLU subjects scored by log-probability drop of the correct letter.
+- **Two-expert human labels** with pooled Cohen's κ, and a constant-label baseline for all automated labelers.
+
+## What they found
+
+**Classifier-guided search beats corpus-guided search, and the margin is large.** Over 42 settings CLAMP reaches the target in 38, against 25 for the head-and-weight variant guided by the classifier, 23 for the cross-entropy-method search, and 2–10 for every corpus-similarity-guided method. Head lesioning beats parameter lesioning: 38/42 against 25/42 for the parameter version, and 12 of the 19 cross-entropy failures are model scrambles rather than aphasia. Across all 11 models CLAMP works in 54 of 66 settings, with aphasia found for every model on both tasks and the two specific types in 15 and 17 of 22. Human experts agree with the classifier's label on 90% of the lesioned answers.
+
+**The lesions act while the model reads the prompt, not while it writes.** Restoring the clean outputs of all a lesion's heads at prompt positions — leaving them knocked out only during generation — undoes 53 of 54 lesions, with the exception a single-head Pythia-6.9B lesion. Restoring one head undoes the lesion for a median 83% of the set's heads, but 80% of those repaired answers are classified as model scrambles and only 13% as control speech, so "undoing the lesion" and "repairing the answer" come apart badly. Restoring all heads does repair: of the 41 lesions whose intact answer is control speech, 40 are undone by the full restore and 22 of the 40 answers come back as control speech. On the TAB short-answer items the median correct count goes 4 with the lesion, 8 with all heads restored, 5.5 with the best single restore, against 8.5 intact.
+
+**Every head is needed, mostly by construction.** Leaving out one head undoes the lesion for 4,484 of 4,600 heads, and in 37 of 54 lesions leaving out *any* single head undoes it. The authors then say plainly that this follows from CLAMP's pruning rule sitting at the 0.5 boundary, so the statistic checks the search rather than revealing anything about the heads — this folder should copy that sentence habit. Their own honest breakdown: by the search's rule every head is needed in all 47 pruned lesions, by the answer-level definition only in 37, and the only lesion set where the test adds information is the seven whose pruning never finished, where 91–99% of heads are needed.
+
+**Lesions damage language broadly but the type does not travel.** Almost every lesion also damages the TAB: more TAB aphasia features appear for 50 of 54 lesions, median 2.7 of 19 against 0.0 intact, and MMLU log-probability drops by medians of 0.11–1.59 nats by family. But the targeted Broca or Wernicke type reaches the target in only 1 of 184 scored answers on the other narrative and the TAB prompts.
+
+**Circuits for the two types are entangled.** Over the 13 Broca/Wernicke lesion pairs of one model and task, the lesions share a median 54% of the smaller lesion's heads, 517 heads in all against 165 expected by chance, significant at p < 0.01 in 11 pairs; a head that makes the answer more Broca-like usually makes it more Wernicke-like too (median rank correlation 0.93). The overlap is partly an artefact of ties, and the paper quantifies that: heads tied in both rankings make up 134 of the 517, and the rest still exceed chance. Same-target lesions across the two tasks also share heads (5.1–5.5× chance in the Llama-2-13B-chat pairs, 2.4× GPT-2 XL Wernicke, 2.6× Qwen3.5-9B aphasia) — but knocking out the shared heads alone reaches the target on neither task in any of the seven pairs, and the union of two lesions works on both tasks in only one of nine pairs.
+
+**One direction reproduces the type across models.** Adding the Broca direction makes the classifier say Broca in all 11 models on both tasks; the Wernicke direction works in 12 of 22 model-task pairs. Sweeping layers, the aphasia vector works at 103 of 176 layers, the Broca vector at 78, the Wernicke vector at 25 and never in GPT-2 XL or the Llama-2 models. Random directions of matched norm reach the aphasia target in 2.8% of settings, with a strong family gradient: 6.25% in Pythia, under 1% in Llama-2 and Qwen3.5. Two experts each label the targeted type for 58% of Broca-steered and 58% of Wernicke-steered answers on the source task.
+
+**A direction carries its type to new prompts; a lesion does not.** On the six prompts that did not choose the setting, either expert labels the targeted type for 65% of Broca and 63% of Wernicke answers that are not scrambles, and the type follows the vector rather than the label: 44 of 76 Broca-steered answers are called Broca-like against 13 of 77 Wernicke-steered ones, and symmetrically 44 of 77 against 9 of 76. The classifier finds the targeted type in 67 of 153 steered answers to new prompts, against 1 of 139 lesion answers.
+
+**The two types are mostly one vector.** Broca and Wernicke directions point along each other at median cosine 0.79–0.90 within a task, and along the pooled aphasia direction at 0.973 and 0.915; label-shuffled vectors sit at 0.97–0.99, so the observed cosine is below the 2.5th percentile of the shuffled distribution at 670 of 672 layers — the two types are *distinguishable* from chance but share almost all their length. Only 1% of the aphasia direction carries the type difference, and that residual is useful: with the aphasia component projected out, the remaining parts point away from each other (median cosine −0.65 to −0.41), and the Wernicke-specific vector then works at 94 of 176 layers against 25 for the full Wernicke vector, including all 10 model-task pairs where the full vector never reaches the target. The Broca-specific vector gets worse (29 layers against 78).
+
+**Steering back undoes the lesion without healing it.** Projecting a lesion's own direction out of the residual stream after every block undoes 53 of 54 lesions — but 52 of those answers are model scrambles. Random directions do nearly as well (50 or 51 of 54), and a matched-norm random push at one layer undoes 91% of lesions against 95% for the lesion's own direction. This is the cleanest matched-random control in the paper and it is reported as a negative, which is to their credit.
+
+**Doing the classifier's job myself.** The classifier agrees with either expert on 65% of steered answers against 55% for the LLM judge, and on the consensus answers 62% against 54%, but the constant-label baseline already reaches 47%, the classifier's agreement with an individual expert is only moderate (κ 0.44 against expert 1, 0.54 against expert 2), and the classifier and the judge agree with each other at κ 0.00 on the aphasia/not sheet. On the harder five-way sheet the classifier's precision and recall for model scrambles are 52% and 31%.
+
+## Limits and open problems they name
+
+Two English narrative tasks from one corpus, with the classifier's output limited to five classes and the anomic/conduction pair merged because free speech does not test repetition. The model-scramble class is learned from only 259 examples and the classifier finds only about half the answers experts call scrambles; the authors say automated labels should be treated as assistive signals and not diagnoses. The paper does not test a matched *random* head set for the lesion side — the random controls exist for steering only — and it does not measure MMLU under patching. It says per-head patching cannot show which head feeds which and that path patching is the missing instrument. Generalisation beyond 11 models, and to mixture-of-experts routing, is left open.
+
+## What we take from it
+
+**A method.** The framing "score the failure, not the task metric" is directly portable. When we probe or ablate, our outcome variable is usually a task score that tells us only *that* the model degraded. A small classifier over a named set of failure modes — including an explicit "machine artefact" class — converts every intervention into a category with a probability, and it is cheap enough (this one is a sentence encoder plus fourteen features plus a 20-seed ensemble) to run on activations we already cache.
+
+**A measure.** Two failure-mode statistics that must be reported together and that this paper keeps separate: (i) does the intervention reach the target, and (ii) does it reach the target *on inputs not used to choose the intervention*. The lesion/steering split on exactly this axis — 1 of 184 versus 67 of 153 — is the most consequential result in the paper and it costs nothing but six held-out prompts.
+
+**Framing.** The aphasia analogy earns its place here less as a metaphor than as a source of a pre-existing, expert-labelled taxonomy with inter-rater statistics. Any field with a diagnostic vocabulary gives us a ready-made label space with known human reliability; the paper's honest advice inside the appendix is that κ 0.76 is the human ceiling and automated labelers should never be quoted above it.
+
+**A warning, and this one is ours to keep.** The "every head is needed" result is largely produced by the pruning rule that generated the sets, and the authors say so in as many words: growth stops at the first prefix above 0.5 and pruning stops at the boundary, so a leave-one-out test re-runs the search's own stopping criterion. Our own leave-one-out and sufficiency panels inherit the same circularity whenever the set was *selected* by a greedy search against the same threshold. The companion observation is that undoing the target is not repairing the behaviour: 80% of single-head restores that kill the aphasic label produce model scrambles instead, which is the third distinction this folder needs — target reached, target cleared, behaviour restored — and all three numbers are already in their tables.
+
+**A shortcut worth stealing.** Project out the shared direction before claiming a distinction. Every "these two conditions are different" claim in our battery could be run twice — once with the pooled common component, once after removing it — and the paper shows the payoff in both directions: the Wernicke-specific vector gets *better* (25 → 94 working layers) while the Broca-specific one gets worse (78 → 29). That asymmetry would have been invisible in the pooled comparison, where the two types look nearly identical.
+
+## Tags
+
+unit: head | direction
+form: description | direction | steering
+method: ablation | patching | probing | steering | agent | other
+eval: ablation | patching | human-rating | downstream-task | benchmark
+goal: understanding | evaluation-of-methods | safety/auditing
