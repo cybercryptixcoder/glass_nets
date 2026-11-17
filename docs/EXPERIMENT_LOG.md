@@ -698,3 +698,13 @@ Idea: fix the year (1987) so the answer tokens are the same for every prompt and
 six prefixes for more prompts. Result: three prefixes are two tokens and were dropped; with the year fixed GPT-2
 answers 1988 on 84% of prompts, the decision depends on the prefix, and mean-ablating either month changes nothing
 (100% kept). It is no longer a month comparison. Removed; the 20-year `gpt2_month_rollover` stays the target.
+
+## 2026-11-17 07:25. E27, the task's fit/test split made every year-identity variable fail (fixed)
+
+`month_rollover.py` had SPLIT_BY = "year": the judge fitted alignments on 10 years and tested on the other 10. A
+one-hot of the year has columns that are all zero in fitting for the held-out years, so no variable carrying the
+year's identity could ever pass: even the calibration's depth-0 cut (exact token identities) got 34% substitution
+with 66% explained. Both readers have carried a year identity in some submissions. **Fix:** SPLIT_BY = None (random
+prompt split) for month rollover; the README now says a split feature must be one whose identity no construction
+needs. The running readers get the new split on their next judge call (the judge reads meta.json each time).
+Generalisation across years is still tested, by the transfer task (years 1950-1979).

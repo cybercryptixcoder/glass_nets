@@ -11,7 +11,9 @@ X_NAMES = ["noun", "template"]     # names of the integer features that describe
 TEXT = "what the reader is shown about the prompts and features (no hint of the mechanism)"
 CONTEXT = "what the task is (hidden from a blinded reader)"
 ANSWER = "the behaviour in one line (hidden from a blinded reader; shown in the told and prior-only modes)"
-SPLIT_BY = "noun"                  # optional: fit alignments on some values of this feature and test on the others
+SPLIT_BY = "noun"                  # optional: fit alignments on some values of this feature and test on the others.
+                                   # Only for a feature whose IDENTITY no construction needs to carry: a one-hot of
+                                   # values never seen in fitting cannot be fitted (E27: the year in month rollover).
 
 def build(tok):                    # tok: the model's tokenizer
     rows = []

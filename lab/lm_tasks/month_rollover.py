@@ -12,7 +12,7 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
 YEARS = list(range(1980, 2000))
 ANSWERS = ["same year", "next year", "previous year"]   # per prompt: the tokens " <year>", " <year + 1>", " <year - 1>"
 X_NAMES = ["m1", "m2", "year"]
-SPLIT_BY = "year"
+SPLIT_BY = None                                    # NOT "year": a year-identity variable cannot be fitted on held-out years (E27)
 TRANSFER = ["gpt2_month_rollover_y1950"]          # transfer tasks: lab/lm_post.py tests a finished construction on them
 TEXT = ('Each prompt is "<month1> <year> - <month2>", a date range whose end year is to be predicted, for example '
         '"March 1987 - January". x[:, 0] = month1 and x[:, 1] = month2 as indices 0..11 (0 = January ... 11 = December); '
