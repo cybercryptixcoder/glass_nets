@@ -3,6 +3,44 @@
 *Living entry point, kept current after every working session. Last updated Nov 14, 2026 (branch `constructor-attempt`). Anyone handed
 this repo should be able to continue from these files alone, with no separate handoff.*
 
+## CURRENT STATE (2026-11-17, session 4, branch `constructor-attempt`). Read this first.
+
+> Session 4 continues session 3 (below). Same rules: work only on `constructor-attempt`; commit and push every
+> substep (`bash /home/claude/push.sh "msg"`; an auto-commit loop `/home/claude/autopush.sh` pushes every 4 minutes
+> while a session is alive). Long runs die when the session pauses: everything is resumable with `--resume`.
+
+### What session 4 added (details: `docs/EXPERIMENT_LOG.md` E21-E23)
+
+| Piece | File | What it does |
+|---|---|---|
+| Hard target #2 | `lab/lm_tasks/month_rollover.py` -> `gpt2_month_rollover` | "March 1987 - January" -> 1987 or 1988? Every month pair x 20 years (2,880 prompts, a full product so every judge intervention lands on a task prompt). Unpublished mechanism (search 2026-11-17). |
+| Per-prompt answers | `lab/lm.py`, `lab/lm_build.py` | A task's answer tokens may differ per prompt ("same year" = " 1987" here, " 1993" there): `answers.npy` [N, k]. |
+| Scout | `lab/lm_scout.py` | Is a task a good target? Behaviour spread, product coverage, one-token lookup, positions needed. Runs on build and on the page. Flags the ordinal (lookup) and countdown (thin input set) correctly. |
+| Reader built-ins | `lab/lm_tools.py` | `flow(feature)`: patching from prompts that differ only in that feature, every depth x position (8 s); `flow()`: mean-ablation map; `probe(site, values)`. |
+| Transfer | `lab/lm_transfer.py`, task file `TRANSFER = [...]` | A construction's maps fitted on its task, tested unchanged on another prompt set (here years 1950-1979, `gpt2_month_rollover_y1950`): the first checkable claim beyond its own prompts. |
+| Post-run | `lab/lm_post.py` | Runs transfer + circuit automatically when an LM run ends with a verified stage; shown on the page. |
+| Judge rule | `lab/lmjudge.py` (`TIE`) | Decisions are compared only where the network's top-two logit margin is >= 0.5 (E23: near-ties made 95% unreachable). |
+
+### Results so far in session 4
+
+- `gpt2_be_verb` circuit measured (`lab/constructions/gpt2_be_verb/20261114-114450-62b2/circuit.txt`): MLP 0 at the cue writes most of the tense (ablating it halves the answers).
+- `gpt2_month_rollover`: prior-only control 0/5 stages (behaviour 86.4% of clear decisions; constant answer 80.7%).
+
+### In flight right now (2026-11-17 05:55)
+
+- Blinded run A `20261117-053452-314f` (resumed once to get flow/probe) and blinded run B `20261117-055146-992e` on
+  `gpt2_month_rollover`. If dead: `python3 lab/constructor.py gpt2_month_rollover --resume <id> --steps 150`.
+- Check: `python3 lab/status.py gpt2_month_rollover`. When one completes: `python3 lab/lm_post.py gpt2_month_rollover <id>`
+  (automatic at the end of a run), then read the construction and state its new claim.
+
+### Next steps
+
+1. Get a complete construction on month rollover (watch, unblock, replicate).
+2. From it: the mechanism in plain words, the circuit, the transfer result, one new prediction tested on fresh prompts.
+3. Write `lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
+
+> EARLIER STATE (session 3, Nov 14) follows; still accurate except where session 4 says otherwise.
+
 ## CURRENT STATE (2026-11-14, session 3, branch `constructor-attempt`). Read this first.
 
 > **This branch** is a separate attempt at the main goal, the constructor. `main` continues independently; never
