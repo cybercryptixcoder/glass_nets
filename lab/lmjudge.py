@@ -249,6 +249,23 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
              "keep_named_match": cmatch(o_keep, clean), "remove_named_match": cmatch(o_excl, clean), "remove_random_match": excl_rand}
         if u.kind == "cut":
             r["substitute_alone_match"] = cmatch(u.run(test, A_hat[test]), clean)      # other positions left as they are
+            if m_splice < 0.9:
+                # diagnosis: would the identity of one input feature, added at the named positions, make the cut sufficient?
+                miss = {}
+                for j, fname in enumerate(task.meta["x_names"]):
+                    col = X[:, j]
+                    vals_u = np.unique(col)
+                    if len(vals_u) < 2 or len(vals_u) > 64:
+                        continue
+                    F = (col[:, None] == vals_u[None]).astype(float)
+                    Va = np.c_[V, F]; vma = Va[fit].mean(0)
+                    Ah = np.empty_like(A_hat)
+                    for i in range(len(u.sites)):
+                        sl = slice(u.off[i], u.off[i + 1])
+                        Ma, *_ = np.linalg.lstsq(Va[fit] - vma, A[fit][:, sl] - c[sl], rcond=1e-8)
+                        Ah[:, sl] = c[sl] + (Va - vma) @ Ma
+                    miss[fname] = cmatch(u.run_cut(test, Ah[test], others), clean)
+                r["with_feature_added"] = miss
         rep["sites"][u.name] = r
         unit_stage[u.name] = stage_of("resid" if u.kind == "cut" else lm.parse_site(u.sites[0])[0], u.layer, nL)
 
@@ -348,6 +365,15 @@ def render(rep):
         if r.get("unit") == "cut":
             notes.append(f"  {name} = {', '.join(r['member_sites'])}: substitute {r['substitute_match']:.1%} with the other positions set to "
                          f"their mean ({r['substitute_alone_match']:.1%} with the other positions left as they are)")
+            if r["substitute_match"] < 0.9:
+                if r["substitute_alone_match"] >= 0.9:
+                    notes.append(f"    DIAGNOSIS: the positions you left out at depth {name[3:]} hold something the later layers need: name them.")
+                w = r.get("with_feature_added") or {}
+                if w:
+                    best = max(w, key=w.get)
+                    notes.append(f"    DIAGNOSIS: with the identity of one input feature added at these positions (one-hot, fitted like yours), substitution "
+                                 "would be: " + ", ".join(f"{k} {v:.0%}" for k, v in w.items())
+                                 + (f". Your variables miss what {best} carries here." if w[best] >= 0.9 and w[best] - r['substitute_match'] > 0.2 else "."))
     if rep.get("components_verified"):
         notes.append("Verified component sites: " + ", ".join(rep["components_verified"]))
     lines = text.split("\n")

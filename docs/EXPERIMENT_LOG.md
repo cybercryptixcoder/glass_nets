@@ -662,3 +662,15 @@ removal, the size test, interventions and their baselines) is made only where th
 least 0.5 apart (`TIE` in `lab/lmjudge.py`); the report states the share of clear decisions and the raw match.
 Checked before installing: the complete be-verb construction is unchanged (100%, complete); the (month, month) table
 construction gets 99.6% of clear decisions, the constant answer 80.7%, so the bar still discriminates.
+
+## 2026-11-17 06:30. E24, both month runs fail substitution at every depth: the judge now diagnoses why
+
+Runs A (52 steps) and B (16 steps) both fail substitution at every cut (34-38%): neither carries WHICH YEAR the
+prompt has, and the answer token is that year, so mean-ablating the year position (or leaving the year out at the
+end position) loses the answer. The report said "substitution 35%" but not why. **Judge addition (generic, every
+LM target):** when a cut fails substitution, the report says (a) whether the positions left out matter (substitution
+with them left alone >= 90%), and (b) what substitution would be with the identity of each input feature added at
+the named positions. Tested on the table construction: at depth 0 it correctly says "the positions you left out hold
+something the later layers need" (100% with them left alone) and that adding a feature at the named positions does
+not help (34%). The judge is a fresh process per submission, so the running readers get this on their next report.
+Also: `lab/lm_writeup.py` writes FINDINGS.md for any run (be-verb done); lm_post.py calls it.
