@@ -708,3 +708,17 @@ with 66% explained. Both readers have carried a year identity in some submission
 prompt split) for month rollover; the README now says a split feature must be one whose identity no construction
 needs. The running readers get the new split on their next judge call (the judge reads meta.json each time).
 Generalisation across years is still tested, by the transfer task (years 1950-1979).
+
+## 2026-11-17 08:00. E28, the month-rollover calibration verifies; what the readers are missing
+
+With the random split (E27), the hand-made calibration passes substitution at every cut and the month swaps
+(partial m1 / m2: 89-100%) at every depth. Remaining failures were all YEAR swaps and the final readout: when an
+intervention makes the network hold another prompt's year, it still scores THIS prompt's three candidate tokens.
+Fixes in the calibration: candidate tokens taken from the input x (not from the intervened variable); the readout
+measured as a table (logit lens: the final residual for "holding year a", unembedded onto every year token;
+the held year is the top year token for 95.5% of a). Result: every named site verified (cuts at depths 0, 4, 8,
+12) = 4 of 5 stages; a cut at depth 2 added for the fifth (judging now). So a complete verified construction of
+this target exists under the judge's rules. (A measurement I made on the way, "holding the prompt's own year gives
+'same' only 37%", was wrong: I mapped token ids to years assuming they are in year order.)
+Runs A (133 steps) and B (58) are still at 0 of 5: they lack these modelling points. Two of them are generic to any
+task whose answers depend on the prompt, so LM_SYSTEM now says so (new runs and resumed runs get it).
