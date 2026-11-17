@@ -320,6 +320,7 @@ def construction_detail(target, rid):
         out[key] = (rdir / name).read_text() if (rdir / name).exists() else None
     for key, name in (("report", "report.json"), ("predict", "predict.json"), ("questions", "questions.json"), ("circuit", "circuit.json")):
         out[key] = json.loads((rdir / name).read_text()) if (rdir / name).exists() else None
+    out["transfer"] = {f.stem[len("transfer_"):]: f.read_text() for f in sorted(rdir.glob("transfer_*.txt"))}
     if out["report"] is None:                     # still running, or interrupted: show the best submission so far
         b = best_so_far(rdir, out["run"])
         if b:

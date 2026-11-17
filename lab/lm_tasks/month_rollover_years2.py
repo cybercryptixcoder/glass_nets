@@ -8,6 +8,7 @@ MODEL, ANSWERS, X_NAMES, SPLIT_BY, MONTHS = _mr.MODEL, _mr.ANSWERS, _mr.X_NAMES,
 YEARS = list(range(1950, 1980))
 TEXT, CONTEXT, ANSWER = _mr.TEXT.replace("1980..1999", "1950..1979"), _mr.CONTEXT, _mr.ANSWER
 NAME = "month rollover, years 1950-1979 (transfer set)"
+TRANSFER_OF = "gpt2_month_rollover"
 
 
 def build(tok):

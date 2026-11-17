@@ -71,7 +71,8 @@ def build(task_file):
             "split_by": getattr(t, "SPLIT_BY", None), "roles": {r: (p if isinstance(p, int) else "varies") for r, p in roles.items()},
             "example_prompts": [rows[i][0] for i in keep[:: max(1, len(keep) // 6)]][:6],
             "domain": {"file": "inputs.npy", "text": t.TEXT}, "context": t.CONTEXT, "answer": {"short": t.ANSWER},
-            "task_file": str(Path(task_file).name), "tensors": [], "group": "language models"}
+            "task_file": str(Path(task_file).name), "tensors": [], "group": "language models",
+            "transfer": list(getattr(t, "TRANSFER", [])), "transfer_of": getattr(t, "TRANSFER_OF", None)}
     (out / "meta.json").write_text(json.dumps(meta, indent=1))
     idx = LAB / "models" / "index.json"
     ids = json.loads(idx.read_text())

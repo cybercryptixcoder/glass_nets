@@ -591,6 +591,14 @@ def construct(target, variant="original", told=False, weights=True, allow_forwar
         (rdir / "report.txt").write_text(render(best) + "\n")
         rec["verdict"] = best["verdict"]
     save()
+    if is_lm and best and best["verdict"].get("stages_verified", 0) >= 1 and rec["status"] in ("done", "stopped") and not cancelled():
+        try:                                   # circuit + transfer tests of the verified construction (lab/lm_post.py)
+            import lm_post
+            emit({"type": "note", "text": "post-run analysis: circuit and transfer tests"})
+            rec["post"] = lm_post.post(target, run_id, log=lambda m: emit({"type": "note", "text": m}))
+            save()
+        except Exception as e:  # noqa: BLE001
+            rec["post_error"] = f"{type(e).__name__}: {e}"; save()
     emit({"type": "done", "id": run_id, "status": rec["status"], "seconds": rec["seconds"], "best": best_n,
           "verdict": best["verdict"] if best else None, "cost": rec["cost"]})
     return rec
