@@ -867,3 +867,17 @@ output, encoded and removed the same way. Margin R2 kept (month1 / month2):
 | Pythia-160m, 8 | 0.50 / 0.50 | **0.56 / 0.54** | 0.99 / 0.99 | 0.87 / 0.92 |
 
 The plain calendar order, chosen without looking at the output, carries the decision; the circle does not.
+
+## 2026-11-17 11:48. E38, the 1-D line carries 76-100% of each month's whole causal contribution at these sites
+
+Reference added to `lab/line_vs_circle.py`: remove the month's FULL identity subspace (11-D one-hot code) at the same
+sites. Margin R2 kept, line vs full identity (month1 / month2); share of the month's total effect the line accounts
+for = (1 - kept with line) / (1 - kept with full identity):
+
+| Model, depth | Line | Full identity | Line's share of the month's effect |
+|---|---|---|---|
+| GPT-2 small, 8 | 0.20 / 0.55 | 0.17 / 0.55 | **96% / 100%** |
+| GPT-2 medium, 12 | 0.29 / 0.46 | 0.06 / 0.48 | **76% / ~100%** |
+| Pythia-160m, 8 | 0.50 / 0.50 | 0.41 / 0.46 | **85% / 93%** |
+
+One calendar-ordered direction is (nearly) everything the decision takes from each month at these sites.
