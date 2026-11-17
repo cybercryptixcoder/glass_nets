@@ -32,6 +32,8 @@ def post(tid, rid, log=print):
     log("circuit ...")
     res = lm_circuit.for_run(tid, rid)
     done["steps"].append({"circuit": len(res.get("variables", []))})
+    import lm_writeup
+    done["findings"] = str(lm_writeup.writeup(tid, rid))
     done["seconds"] = round(time.time() - done["started"], 1)
     (rdir / "post.json").write_text(json.dumps(done, indent=1))
     return done
