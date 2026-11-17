@@ -174,3 +174,13 @@ Tags: **[decided]** · **[open]** · **[idea]** · **[finding]** · **[correctio
 - [result, 14:00] be-verb complete (5/5) blinded vs 1/5 prior-only: the first evidence the LM constructor works end to end on a real model. Countdown still open.
 - [instruction from the owner, 14:05] Wrap up now; long unattended runs do not survive this environment. Hand-off written in START_HERE.
 - [assessment, 14:10] The tool is working on real models and produced one complete verified construction on an easy target. It has not yet produced a discovery-grade result: the hard target (countdown) is unfinished, and whether the reader can finish it is not yet shown.
+
+## 2026-11-17, session 4
+
+- [instruction from the owner, 05:26] Build something discovery-grade; experiment to learn but mostly build; commit every few minutes; keep going.
+- [decided, 05:30] New hard target month rollover: a FULL PRODUCT of inputs so every judge intervention lands on a task prompt (the countdown's thin input set is what stalled it). Needs per-prompt answer tokens.
+- [decided, 05:40-06:00] Build what the runs showed was missing: scout (target quality), flow/probe (where inputs live), transfer (claims beyond the prompts), post-run analysis and write-up.
+- [finding, 06:15] 95% behaviour was unreachable (near-ties). Decided: compare clear decisions only. Principle: never ask a construction to reproduce noise.
+- [finding, 06:30-07:30] Three judge/task bugs explained the readers' failures: missing-feature diagnosis absent, constant-site sampling, year split. Lesson: before blaming the reader, make a calibration construction pass; every judge bug shows up there first.
+- [finding, 08:30] Behavioural regressions showed a linear calendar-position comparison, not circular. Decided to test it as a compact construction with the judge rather than by more correlations; it verified completely, and a steering test (a claim no prompt can show) confirmed it.
+- [honesty, 09:05] The discovery was made by the session agent using the tool; the autonomous reader reached 1/5. Next: turn the analyses that cracked it into reader built-ins and rerun blinded.

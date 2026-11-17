@@ -116,6 +116,16 @@ submission and the judge's report. Right: the best construction so far: verdict,
 stage, the per-site table, the intervention table with its controls, what fails, a button that runs the held-out
 intervention benchmark, and the construction's source. `lab/GUIDE.md` walks through it.
 
+### 8. Session 4 additions (2026-11-17)
+
+Per-prompt answer tokens (`answers.npy`); `lab/lm_scout.py` (is a task a good target?); `lab/lm_tools.py`
+(`flow`, `probe` in the reader's session); `lab/lm_transfer.py` (a construction tested unchanged on another prompt
+set; task files declare `TRANSFER`); `lab/lm_post.py` + `lab/lm_writeup.py` (after a run: transfer, circuit,
+FINDINGS.md); judge: decisions compared only where the network is clear (`TIE` 0.5), diagnosis of failing
+substitution (omitted positions, missing input feature, answer-token identity), constant-site check fixed. Reader
+instructions: guidance for per-prompt answers. First discovery verified with the tool:
+`lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
+
 ### 7. Real language models (added 2026-11-14)
 
 The same constructor, with a different network layer underneath.

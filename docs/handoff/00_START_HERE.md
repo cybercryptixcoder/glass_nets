@@ -21,32 +21,36 @@ this repo should be able to continue from these files alone, with no separate ha
 | Post-run | `lab/lm_post.py` | Runs transfer + circuit automatically when an LM run ends with a verified stage; shown on the page. |
 | Judge rule | `lab/lmjudge.py` (`TIE`) | Decisions are compared only where the network's top-two logit margin is >= 0.5 (E23: near-ties made 95% unreachable). |
 
-### Results so far in session 4
+### Results so far in session 4 (updated 09:10)
 
-- `gpt2_month_rollover` hand-made calibration (`lab/constructions/_oracle/gpt2_month_rollover_calibration.py`, NOT
-  made by the tool): **VERIFIED AND COMPLETE, 5 of 5** (E28). So completeness is reachable on this target. It uses
-  identity variables (month1, year, month2 where flow() shows them; month1 copied to the year and month2 tokens), a
-  measured (month1, month2) decision table, and a measured year-token readout table at the end. It explains WHERE,
-  not HOW the comparison is computed (layers 8-11): that is the open, discovery-grade part.
-- Judge fixes found with it: clear-decision rule (E23), substitution diagnosis (E24), constant-site sampling bug (E25),
-  no year split (E27). Reader guidance for per-prompt answers added (E28).
-- Readers: blinded run A ~145 steps, run B ~75 steps (resumed with the guidance), both 0 of 5 so far. Prior-only 0 of 5.
-- `gpt2_be_verb`: circuit and FINDINGS.md written.
+- **FINDING** (`lab/constructions/gpt2_month_rollover/DISCOVERY.md`): GPT-2 small decides whether "March 1987 -
+  January" rolls into 1988 by a LINEAR comparison of the two months' positions on a January-to-December line, not by
+  its circular month representation. A construction with one scalar per month at depth 8 is **VERIFIED AND COMPLETE
+  (5/5, behaviour 97.4%)**; partial tests on each scalar 100% / 97.4%; edit 83.9%. New claim confirmed: sliding
+  month1's scalar continuously along one direction at depth 8 moves the network 55% -> 99% "next year", predicted on
+  90% of clear decisions (89% between months). Prior-only control 0/5. Transfer to a comma template: negative for
+  the decision rule (the behaviour itself changes), positive for the early maps.
+- **Who made it:** the session agent, with the tool's engine, flow(), judge, diagnoses and steering. The autonomous
+  blinded reader got 1/5 in 150 steps (run A); run B is still going. Making the READER reach this is the open problem.
+- Hand-made complete calibration (identity variables + tables) also verified 5/5 (E28).
+- Judge fixes: clear-decision rule (E23), substitution diagnosis (E24), constant-site sampling bug (E25), no year
+  split (E27); reader guidance for per-prompt answers (E28).
+- `gpt2_be_verb`: circuit + FINDINGS.md.
 
-### In flight right now (2026-11-17 08:20)
+### In flight / unfinished (2026-11-17 09:10)
 
-- Run A `20261117-053452-314f` (ending at 150 steps), run B `20261117-055146-992e` (to 200 steps).
-  Resume either with `python3 lab/constructor.py gpt2_month_rollover --resume <id> --steps <n>`.
-- Circuit of the calibration -> `lab/constructions/_oracle/gpt2_month_rollover_calibration_circuit.txt`.
-- New transfer task file `lab/lm_tasks/month_rollover_comma.py` (not built yet: `python3 lab/lm_build.py` it).
+- Blinded run B `20261117-055146-992e` (to 200 steps; dies when the session pauses: resume with
+  `python3 lab/constructor.py gpt2_month_rollover --resume 20261117-055146-992e --steps 250`).
+- Circuit of the depth-8 scalars: background job writing `lab/constructions/_oracle/gpt2_month_rollover_linear_positions_circuit.txt`;
+  if missing, rerun: `python3 -c "import sys; sys.path.insert(0,'lab'); import lm_circuit as c; print(c.render(c.circuit('gpt2_month_rollover', open('lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py').read(), only_units=['cut8'])))"`.
 
 ### Next steps
 
-1. Get a reader to a complete construction (resume B; start a run in told mode, since the behaviour is public and the
-   prior-only control already rules out memory).
-2. HOW is the comparison computed? Circuit of the decision (layers 8-11), then a compact replacement of the table
-   (month circle angles?) tested with the judge's edit/partial tests: that is the discovery to aim for.
-3. Transfer of the calibration / reader construction to the comma template; DISCOVERY write-up.
+1. Make the reader find this itself: give it the analyses that cracked it as built-ins (margin regressions on
+   input features: additive vs order vs circular; a readout-table helper for per-prompt answers), then rerun blinded.
+2. Circuit: which heads move month1's position onto the year/month2 tokens; which MLPs compute the comparison.
+3. Other templates (comma, "from ... to"): same axis with other constants? Llama/Pythia: same mechanism?
+4. Countdown (`gpt2_countdown`) remains open and resumable (`20261114-114432-90e3`).
 
 > EARLIER STATE (session 3, Nov 14) follows; still accurate except where session 4 says otherwise.
 
