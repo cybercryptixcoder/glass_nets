@@ -842,3 +842,14 @@ removed 89-94%, with the circle removed 100%. Three models, two families: the de
 
 It is the calendar ORDER, not month information in general, that the decision uses. (Random codes have some effect
 because a random number per month correlates partly with calendar position.)
+
+## 2026-11-17 11:43. E36, the comma template: same geometry, the comparison simply matters less
+
+`gpt2_month_rollover_comma` ("March, 1987 - January"): calendar order explains 19% of the margin (dash template: 73%),
+the circular difference 1%; the measured positions still follow the calendar (+0.89 / -0.93). Removals (margin R2
+kept, depths 6 / 8): month1 line 0.88 / 0.81, month2 line 0.83 / 0.84; circle 0.96-0.97; unordered month code
+0.95-0.96; random plane 1.00. The line's effect is about the share of the margin that month order explains in this
+template, so the line carries the month-order part of the decision in both templates and the circle is inert in both;
+the comma template relies less on the comparison (it mostly keeps the year). This replaces "transfer negative" (E30)
+as the account of the comma template: the decision RULE does not transfer because the behaviour differs, but the
+mechanism's geometry does.

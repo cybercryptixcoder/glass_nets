@@ -34,8 +34,8 @@ this repo should be able to continue from these files alone, with no separate ha
     random month code 0.82-0.94; a random plane 1.00. **Replicates in 3 models, 2 families.**
   - Novelty and publishability assessment, with the closest prior work (Engels et al. ICLR 2025; arXiv 2605.29126):
     in DISCOVERY.md. Workshop-paper strength now; main track needs a 7-8B model and other templates.
-  - Comma template ("March, 1987 - January"): the behaviour changes and the line's effect is much weaker there
-    (`lab/models/gpt2_month_rollover_comma/line_vs_circle.json`): the line is template-dependent. Open.
+  - Comma template ("March, 1987 - January"): the behaviour relies less on month order (it explains 19% of the margin
+    vs 73%); removing the line removes about that share and the circle is still inert (E36): same geometry.
 - **Who made it:** the session agent with the tool. The autonomous reader: 1/5 (run A), 0/5 (run B, interrupted).
 - Tool additions this session: per-prompt answers, scout, flow/probe/explain_output, transfer, post-run analysis +
   FINDINGS.md, judge rule for clear decisions, substitution diagnosis, constant-site fix, line_vs_circle.py.
@@ -50,7 +50,7 @@ this repo should be able to continue from these files alone, with no separate ha
 
 1. A 7-8B model (Llama 3 8B / Mistral 7B, where circles ARE used for month arithmetic): same line-vs-circle test.
    Needs a loader for the Llama architecture in `lab/lm.py` (RMSNorm, SwiGLU, rotary) and a GPU.
-2. Why the comma template weakens the line: what replaces it there?
+2. More templates and phrasings (E36: the comma template uses the same line, but less).
 3. Days of the week and other ordered cycles: is "line for order, circle for arithmetic" general?
 4. Components after depth 8 that compute the comparison (circuit of the decision itself).
 5. The tool's own goal: get the autonomous reader to this result (resume run B with `explain_output()`).

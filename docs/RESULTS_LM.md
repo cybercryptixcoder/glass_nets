@@ -25,8 +25,8 @@ Circuit (GPT-2 small): month1's position goes month1 -> year token (heads 1.0, 2
 
 **Who made it:** the session agent, using the tool's engine, `flow()`, judge, diagnoses, steering and circuit tools.
 The autonomous blinded reader reached 1 of 5 stages on this target (150 steps) and 0 of 5 in a second run
-(134 steps, interrupted). **Limits:** the comma template changes GPT-2's behaviour itself (decision rule does not
-transfer); larger models (7-8B, where circles are known to be used for month arithmetic) not tested.
+(134 steps, interrupted). **Limits:** the comma template changes GPT-2's behaviour itself (the decision rule does not
+transfer, though the same line still carries the month-order part of the decision there, E36); larger models (7-8B, where circles are known to be used for month arithmetic) not tested.
 
 ## Every LM target
 

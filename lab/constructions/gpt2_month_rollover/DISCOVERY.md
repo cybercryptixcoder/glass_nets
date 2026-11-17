@@ -88,8 +88,7 @@ kind of evidence (complete causal abstraction with interventions, a steering pre
 prior-only control, causal dissociation line vs circle). It was workshop-sized with one model; with the replication in GPT-2 medium and Pythia-160m (two families) it is a
 solid workshop paper and a credible start for a main-track one. For main track it still needs: (1) the same test in a
 7-8B model (Llama 3 8B / Mistral 7B, where Engels et al. show circles ARE used for month arithmetic: does the same
-model switch geometry by task?); (2) other templates (the comma
-template changes the behaviour itself: characterise when the line is used); (3) days of the week ("Friday -
+model switch geometry by task?); (2) more templates (the comma template uses the same line but relies on the comparison less, E36); (3) days of the week ("Friday -
 Monday": next week?), to show it is a general strategy for ordered cyclic categories; (4) the components after
 depth 8 that compute the comparison.
 
@@ -108,7 +107,8 @@ arXiv 2305.00586; Niu et al. 2025 (frankniujc.github.io/research/arxiv2025/shape
   going. So the TOOL VERIFIED a discovery; it did not yet MAKE one on its own on this target.
 - **Transfer.** With a comma after month1 ("March, 1987 - January") GPT-2's behaviour itself changes (68% "same
   year"); the decision rule does not transfer (60% vs constant 68%), the early representation maps do (substitution
-  92-100% at depths 0-4; 79% at depth 8). The linear-position finding is shown for the dash template only.
+  92-100% at depths 0-4; 79% at depth 8). The GEOMETRY does transfer (E36): there, month order explains only 19% of
+  the margin, removing the line removes about that share (0.81 kept), and the circle is still inert (0.96-0.97).
 - **Not yet known.** Which components compute the comparison itself after depth 8; whether other templates use the same
   axis with other constants; the near-ties (32% of decisions within 0.5 logit) are excluded from all comparisons (E23).
 
