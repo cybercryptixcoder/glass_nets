@@ -35,6 +35,21 @@ MAX_TEST = 400
 FD_EPS = 2e-2          # step of the finite-difference estimate used for attribution patching (float32 engine)
 PCA_KEEP = 0.99        # compactness is measured against the number of principal components that keep this share of answers
 MIN_PER_VALUE = 6      # a categorical (one-hot) variable is accepted when each value occurs in this many prompts on average
+TIE = 0.5              # decisions are compared only where the network has a clear preference: its top two logits at least
+                       # this far apart. Near-ties flip with noise and no compact construction can reproduce them (E23:
+                       # on month rollover 32% of decisions are within 0.5 logit, and a full (month, month) table gets 92%).
+
+
+def confident(o):
+    """For each row of the network's logits: is the decision clear (top-two margin >= TIE)?"""
+    t = np.sort(o, 1)
+    return (t[:, -1] - t[:, -2]) >= TIE if o.shape[1] > 1 else np.ones(len(o), bool)
+
+
+def cmatch(o, ref):
+    """J.match restricted to the prompts on which the network's reference output is a clear decision."""
+    m = confident(ref)
+    return float(J.same(o[m], ref[m]).mean()) if m.any() else J.match(o, ref)
 
 
 def categorical(v):
@@ -148,8 +163,10 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
            "variables": {v: {"dim": int(vals[v].shape[1]), "sites": align.get(v, [])} for v in vals},
            "unaligned_variables": [v for v in vals if v not in align], "constant_sites_ignored": dropped}
     const = np.broadcast_to(out_n[fit].mean(0), out_n[test].shape)
-    rep["behaviour"] = {"match": J.match(out_c[test], out_n[test]), "r2": J.r2(out_c[test], out_n[test]), "kl": J.kl(out_n[test], out_c[test]),
-                        "baseline_constant_match": J.match(const, out_n[test])}
+    rep["behaviour"] = {"match": cmatch(out_c[test], out_n[test]), "match_all": J.match(out_c[test], out_n[test]),
+                        "clear_decisions": float(confident(out_n[test]).mean()),
+                        "r2": J.r2(out_c[test], out_n[test]), "kl": J.kl(out_n[test], out_c[test]),
+                        "baseline_constant_match": cmatch(const, out_n[test])}
 
     # units: one cut per depth with residual sites; every other site alone
     units = []
@@ -203,8 +220,8 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
         o_mean = u.run(test, np.broadcast_to(c, At.shape))
         o_keep = u.run(test, c + (At - c) @ P)
         o_excl = u.run(test, At - (At - c) @ P)
-        excl_rand = J.match(u.run(test, At - (At - c) @ rand_proj(rank)), clean) if 0 < rank < Wd else None
-        m_splice, m_mean = J.match(o_splice, clean), J.match(o_mean, clean)
+        excl_rand = cmatch(u.run(test, At - (At - c) @ rand_proj(rank)), clean) if 0 < rank < Wd else None
+        m_splice, m_mean = cmatch(o_splice, clean), cmatch(o_mean, clean)
         # the smallest number of principal components of the unit that keeps 90% of decisions
         _, sv, Vt = np.linalg.svd(A[fit] - c, full_matrices=False)
         full = int((sv > 1e-6 * max(sv[0], 1e-12)).sum())
@@ -216,7 +233,7 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
             lo = hi = cache[ck]
         while lo < hi:
             mid = (lo + hi) // 2
-            if J.match(u.run(test, c + (At - c) @ Vt[:mid].T @ Vt[:mid]), clean) >= PCA_KEEP:
+            if cmatch(u.run(test, c + (At - c) @ Vt[:mid].T @ Vt[:mid]), clean) >= PCA_KEEP:
                 hi = mid
             else:
                 lo = mid + 1
@@ -229,9 +246,9 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
              "explained": float(1 - ((A_hat[test] - At) ** 2).sum() / max(((At - c) ** 2).sum(), 1e-12)),
              "substitute_match": m_splice, "substitute_kl": J.kl(clean, o_splice), "substitute_r2": J.r2(o_splice, clean),
              "mean_ablate_match": m_mean, "recovered": float((m_splice - m_mean) / max(1 - m_mean, 1e-9)),
-             "keep_named_match": J.match(o_keep, clean), "remove_named_match": J.match(o_excl, clean), "remove_random_match": excl_rand}
+             "keep_named_match": cmatch(o_keep, clean), "remove_named_match": cmatch(o_excl, clean), "remove_random_match": excl_rand}
         if u.kind == "cut":
-            r["substitute_alone_match"] = J.match(u.run(test, A_hat[test]), clean)      # other positions left as they are
+            r["substitute_alone_match"] = cmatch(u.run(test, A_hat[test]), clean)      # other positions left as they are
         rep["sites"][u.name] = r
         unit_stage[u.name] = stage_of("resid" if u.kind == "cut" else lm.parse_site(u.sites[0])[0], u.layer, nL)
 
@@ -261,14 +278,16 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
                 o_lin = out_n[base] + (u.run(base, A[base] + FD_EPS * delta) - out_n[base]) / FD_EPS
                 rk = max(1, int(np.linalg.matrix_rank(M[Jc], tol=tol)))
                 o_rand = u.run(base, A[base] + (A[src] - A[base]) @ rand_proj(min(rk, Wd)))
-            changed = ~J.same(o_net, out_n[base])
+            clear = confident(o_net)                     # only pairs where the intervened network makes a clear decision
+            changed = ~J.same(o_net, out_n[base]) & clear
             agree = J.same(o_pred, o_net)
             rep["interventions"].append({
                 "variable": vs[0] if len(vs) == 1 else "all variables", "variables": vs, "site": u.name, "mode": mode, "dim": int(len(Jc)),
-                "agreement": float(agree.mean()), "r2": J.r2(o_pred, o_net), "network_changed": float(changed.mean()),
+                "agreement": float(agree[clear].mean()) if clear.any() else float(agree.mean()), "r2": J.r2(o_pred, o_net),
+                "network_changed": float(changed.sum() / max(clear.sum(), 1)), "clear_pairs": float(clear.mean()),
                 "agreement_when_changed": float(agree[changed].mean()) if changed.any() else None,
-                "baseline_no_change": J.match(out_n[base], o_net), "baseline_source_output": J.match(out_n[src], o_net),
-                "control_random_subspace": J.match(o_pred, o_rand) if controls else None,
+                "baseline_no_change": cmatch(out_n[base], o_net), "baseline_source_output": cmatch(out_n[src], o_net),
+                "control_random_subspace": cmatch(o_pred, o_rand) if controls else None,
                 "attribution_patching": float(J.same(o_lin, o_net).mean()) if controls else None,
                 "attribution_patching_when_changed": float(J.same(o_lin, o_net)[changed].mean()) if controls and changed.any() else None})
             if len(vs) == 1 and changed.mean() >= 0.05:
@@ -315,6 +334,10 @@ def render(rep):
                 t[k] = float("nan")
     text = J.render(rep2).replace("random subspace nan%, ", "").replace(", attribution patching nan%", "")
     notes = []
+    b = rep["behaviour"]
+    if "clear_decisions" in b and b["clear_decisions"] < 0.999:
+        notes.append(f"Decisions are compared only where the network's top two logits are at least {TIE} apart ({b['clear_decisions']:.0%} of test "
+                     f"prompts; near-ties are noise). Over all prompts the behaviour match is {b['match_all']:.1%}.")
     if rep.get("categorical"):
         notes.append("Categorical (one-hot) variables, exempt from the size limit: " + ", ".join(f"{v} ({k} values)" for v, k in rep["categorical"].items()))
     notes += ["UNITS  cutL = every residual site you named at depth L (resid{L}@...), tested together. Its 'substitute' number replaces "

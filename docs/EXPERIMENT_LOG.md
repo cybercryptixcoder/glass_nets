@@ -651,3 +651,14 @@ per prompt (`answers.npy`, [N, k]); a task row may carry its own answer strings.
   the month is bound to the year token ("March 1999") before the end position reads the date.
 - In flight: blinded run A and prior-only control 1 on `gpt2_month_rollover` (started 05:34; run A predates
   flow() and probe(); its kernel does not have them).
+
+## 2026-11-17 06:15. E23, the 95% behaviour bar was unreachable on month rollover: judge compares clear decisions only
+
+Run A reached 80% behaviour match and stalled (bar 95%). Ceiling check: 32% of the network's decisions on this task are
+within 0.5 logit of a tie ("same year" vs "next year"); a full (month1, month2) table predicts 92.0% of decisions, a
+table plus a per-year offset 93.6%. No compact construction can reach 95%, because near-ties flip with small,
+idiosyncratic effects. **Judge change (LM targets only):** every decision comparison (behaviour, substitution,
+removal, the size test, interventions and their baselines) is made only where the network's top two logits are at
+least 0.5 apart (`TIE` in `lab/lmjudge.py`); the report states the share of clear decisions and the raw match.
+Checked before installing: the complete be-verb construction is unchanged (100%, complete); the (month, month) table
+construction gets 99.6% of clear decisions, the constant answer 80.7%, so the bar still discriminates.

@@ -141,7 +141,7 @@ SITES. A site is one vector per prompt, read at one token position:
 p is one of the task's role names (given below) or a token index (0, 1, ..., -1 for the last).
 
 HOW THE JUDGE TESTS A CONSTRUCTION (on prompts held out from fitting)
-1. Behaviour: does model(x) pick the same answer token (largest output) as the network?
+1. Behaviour: does model(x) pick the same answer token (largest output) as the network? Decisions are compared only where the network's top two logits are at least 0.5 apart (near-ties flip with noise); the same holds in every test below.
 2. Alignment: at each site in ALIGN the judge fits ONE affine map from the variables you placed there to the real activations (activation = c + variables @ M). So a variable must be related to the activations linearly. A quantity the network encodes through several nonlinear functions of it (a one-hot code, a few smooth or periodic functions, a few measured coordinates) should be those functions' values, a few coordinates, not the raw quantity.
 3. CUTS. All residual sites you name at one depth L (resid{L}@p for several p) are tested TOGETHER as "cut{L}": the state of the computation at depth L.
    - Substitution: the named positions are replaced by your prediction (c + variables @ M) and EVERY OTHER position at that depth by its mean over the prompts; the rest of the network runs. The answers must survive (90%). So a cut must name every position that still matters at that depth, with variables that carry everything the later layers use from it. Positions that hold nothing the later layers need can be left out.
