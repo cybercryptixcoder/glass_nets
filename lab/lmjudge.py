@@ -251,9 +251,11 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
             r["substitute_alone_match"] = cmatch(u.run(test, A_hat[test]), clean)      # other positions left as they are
             if m_splice < 0.9:
                 # diagnosis: would the identity of one input feature, added at the named positions, make the cut sufficient?
-                miss = {}
-                for j, fname in enumerate(task.meta["x_names"]):
-                    col = X[:, j]
+                miss, alone = {}, {}
+                dec_n = out_n.argmax(1)
+                ans_tok = task.answer_ids[np.arange(N), dec_n] if task.per_prompt else task.answer_ids[dec_n]
+                cands = [(f, X[:, j]) for j, f in enumerate(task.meta["x_names"])] + [("the answer token the network outputs", ans_tok)]
+                for fname, col in cands:
                     vals_u = np.unique(col)
                     if len(vals_u) < 2 or len(vals_u) > 64:
                         continue
@@ -265,7 +267,13 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
                         Ma, *_ = np.linalg.lstsq(Va[fit] - vma, A[fit][:, sl] - c[sl], rcond=1e-8)
                         Ah[:, sl] = c[sl] + (Va - vma) @ Ma
                     miss[fname] = cmatch(u.run_cut(test, Ah[test], others), clean)
-                r["with_feature_added"] = miss
+                    Fm = F[fit].mean(0)                       # the feature ALONE in place of your variables
+                    for i in range(len(u.sites)):
+                        sl = slice(u.off[i], u.off[i + 1])
+                        Ma, *_ = np.linalg.lstsq(F[fit] - Fm, A[fit][:, sl] - c[sl], rcond=1e-8)
+                        Ah[:, sl] = c[sl] + (F - Fm) @ Ma
+                    alone[fname] = cmatch(u.run_cut(test, Ah[test], others), clean)
+                r["with_feature_added"], r["feature_alone"] = miss, alone
         rep["sites"][u.name] = r
         unit_stage[u.name] = stage_of("resid" if u.kind == "cut" else lm.parse_site(u.sites[0])[0], u.layer, nL)
 
@@ -374,6 +382,9 @@ def render(rep):
                     notes.append(f"    DIAGNOSIS: with the identity of one input feature added at these positions (one-hot, fitted like yours), substitution "
                                  "would be: " + ", ".join(f"{k} {v:.0%}" for k, v in w.items())
                                  + (f". Your variables miss what {best} carries here." if w[best] >= 0.9 and w[best] - r['substitute_match'] > 0.2 else "."))
+                    a_ = r.get("feature_alone") or {}
+                    notes.append("    DIAGNOSIS: with ONLY the identity of one feature at these positions (instead of your variables): "
+                                 + ", ".join(f"{k} {v:.0%}" for k, v in a_.items()) + ".")
     if rep.get("components_verified"):
         notes.append("Verified component sites: " + ", ".join(rep["components_verified"]))
     lines = text.split("\n")

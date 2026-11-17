@@ -674,3 +674,7 @@ the named positions. Tested on the table construction: at depth 0 it correctly s
 something the later layers need" (100% with them left alone) and that adding a feature at the named positions does
 not help (34%). The judge is a fresh process per submission, so the running readers get this on their next report.
 Also: `lab/lm_writeup.py` writes FINDINGS.md for any run (be-verb done); lm_post.py calls it.
+- 06:45, E24 continued. At the final residual of month rollover, the identity of the answer token ALONE passes
+  substitution (99.7% in my check, 91% in the judge's split), while run B's (year one-hot + rollover flag) gets 45%
+  and adding the answer identity to them 80% (dilution). The diagnosis now also tries the answer token the network
+  outputs and reports every candidate feature alone as well as added.
