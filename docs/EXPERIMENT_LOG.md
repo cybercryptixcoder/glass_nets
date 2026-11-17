@@ -777,3 +777,25 @@ mechanism itself).
 - 09:30, E31 continued: circuit of the depth-8 scalars. Month1's position goes month1 -> year token (heads 1.0, 2.4,
   4.11, MLP4; layers 1-4) -> month2 token (heads 7.11, 6.1 attending to the year token; MLPs 6-7; layers 5-7).
   Month2's position is written by MLP0 at its own token. Distributed (no single ablation > 18% of answers). In DISCOVERY.md.
+
+## 2026-11-17 11:35. E32, decisive causal test: the circle is present but unused; the line is used
+
+`lab/constructions/_oracle/line_vs_circle.py` (-> `line_vs_circle.json`). At the sites where the construction places
+each month's position, three subspaces are encoded from the month index with the judge's kind of affine map: the
+LINE (the month's measured position, 1-D), the CIRCLE (cos, sin of 2 pi month / 12, made orthogonal to the line,
+2-D) and a random 2-D control. Each is removed (set to its mean); share of the network's clear decisions kept:
+
+| Month, depth | Line readable (R2) | Circle readable (R2) | Line removed | Circle removed | Random 2-D removed |
+|---|---|---|---|---|---|
+| month1, 4 | 1.00 | 1.00 | 91.6% | 99.8% | 100% |
+| month1, 6 | 1.00 | 1.00 | 84.9% | 99.8% | 100% |
+| month1, 8 | 1.00 | 1.00 | **77.5%** | **99.8%** | 100% |
+| month1, 10 | 0.99 | 0.99 | 100% | 100% | 100% |
+| month2, 4 | 1.00 | 1.00 | 87.9% | 97.5% | 100% |
+| month2, 6 / 8 | 1.00 | 1.00 | **84.4%** | **100%** | 100% |
+| month2, 10 | 1.00 | 1.00 | 100% | 100% | 100% |
+
+(A constant answer keeps 80.8%.) Both codes can be read perfectly, but only the 1-D line is used: removing it
+changes up to 22% of clear decisions, removing the 2-D circle plane changes 0-2.5%. By depth 10 the comparison is
+done and neither matters. Caveat: the line's removal does not erase the decision completely (other, redundant
+month information remains), so "used" means "causally carries a large part of the decision".

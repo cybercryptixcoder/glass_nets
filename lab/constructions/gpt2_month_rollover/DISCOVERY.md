@@ -27,6 +27,14 @@ position:
 Files: `lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py` (the construction) and `.txt` (judge
 report); `lab/constructions/_oracle/steer_month_position.py` and `.json` (the steering test).
 
+## The circle is there, but the decision uses the line (`_oracle/line_vs_circle.py`, E32)
+
+At depths 4-8 both a circular code (cos, sin of the month) and the linear position can be read from the sites with
+R2 = 1.00. Removing the 1-D line direction for month1 at depth 8 leaves 77.5% of the network's clear decisions
+(a constant answer: 80.8%); removing the 2-D circle plane leaves 99.8%; a random 2-D plane, 100%. For month2 at
+depths 6-8: 84.4% vs 100%. At depth 10 neither matters (the comparison is done). **The model represents months
+both ways and uses the line for this decision.**
+
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)
 
 Month1, year and month2 are at their own tokens at the embedding. From depth 2, month1's information is also on the
