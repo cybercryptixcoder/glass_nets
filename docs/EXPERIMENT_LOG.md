@@ -722,3 +722,34 @@ this target exists under the judge's rules. (A measurement I made on the way, "h
 'same' only 37%", was wrong: I mapped token ids to years assuming they are in year order.)
 Runs A (133 steps) and B (58) are still at 0 of 5: they lack these modelling points. Two of them are generic to any
 task whose answers depend on the prompt, so LM_SYSTEM now says so (new runs and resumed runs get it).
+
+## 2026-11-17 08:45. E29, FINDING: GPT-2 small decides year rollover by a LINEAR comparison of calendar positions
+
+**Behavioural analysis** of the network's next-vs-same logit margin on all 2,880 prompts (random half fitted, half
+held out):
+
+| Model of the margin | Parameters | Margin R2 | Clear decisions right |
+|---|---|---|---|
+| constant | 1 | 0.00 | 80.8% |
+| forward distance around the year (circular, Dec -> Jan adjacent) | 12 | 0.08 | 80.8% |
+| sign of the linear difference (month2 before / equal / after month1) | 3 | 0.74 | 96.8% |
+| month1 + month2, additive | 24 | 0.78 | 93.7% |
+| ONE shared scalar per month, k * (s(month1) - s(month2)) + c | 13 | 0.75 | |
+| full (month1, month2) table | 144 | 0.87 | 99.5% |
+
+Month1's additive effect rises through the calendar (Jan +0.2 ... Dec +2.1) and month2's falls (Jan +1.5 ... Dec
+-1.1): rank correlation with calendar order +0.979 / -0.979. The fitted shared scalar is nearly linear in the month
+index (Jan -1.1, Feb -1.0, Mar -0.7, Apr -0.6, May -0.2, Jun -0.2, Jul 0.0, Aug +0.3, Sep +0.5, Oct +0.8, Nov +1.1,
+Dec +1.2). **The circular month representation known from Engels et al. is not what this decision uses: the
+circular distance explains 8% of the margin, the linear calendar order 74%.**
+
+**Mechanistic test with the judge** (`lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py`, hand-made
+hypothesis test): identities of month1, year, month2 at depths 0, 2, 4 (as in the calibration), and at depth 8 each
+month ONLY as one scalar position (U for month1 at the year and month2 tokens; V for month2 at the month2 token),
+plus the year identity; the decision from the two scalars; the answer through the measured readout. First judging
+(least-squares rule): **every stage passes every intervention test**: partial pos1 at cut8 100% of changed decisions
+predicted, partial pos2 97.4%, edit (random coordinate mixes = states no prompt produces) 83.9% (bar 50%);
+substitution and removal pass. Only behaviour missed (94.4% < 95%): rule refit by logistic regression on the two
+scalars (96.8% held out): margin = 0.69 U + 2.53 V + 8.94 [month2 earlier] + 8.8 [same month] - 2.0. Re-judging.
+**Meaning:** by depth 8, everything the late layers use about each month is a single number, its position on a
+January-to-December line, and the decision is (mostly) the order of the two positions.
