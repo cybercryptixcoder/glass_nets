@@ -39,14 +39,14 @@ this repo should be able to continue from these files alone, with no separate ha
 
 ### In flight / unfinished (2026-11-17 09:10)
 
-- Blinded run B `20261117-055146-992e` (to 200 steps; dies when the session pauses: resume with
+- Blinded run B `20261117-055146-992e` (restarted 09:20 with explain_output(), to 250 steps; dies when the session pauses: resume with
   `python3 lab/constructor.py gpt2_month_rollover --resume 20261117-055146-992e --steps 250`).
 - Circuit of the depth-8 scalars: background job writing `lab/constructions/_oracle/gpt2_month_rollover_linear_positions_circuit.txt`;
   if missing, rerun: `python3 -c "import sys; sys.path.insert(0,'lab'); import lm_circuit as c; print(c.render(c.circuit('gpt2_month_rollover', open('lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py').read(), only_units=['cut8'])))"`.
 
 ### Next steps
 
-1. Make the reader find this itself: give it the analyses that cracked it as built-ins (margin regressions on
+1. Make the reader find this itself (explain_output() added 09:20; run B is the test). Still to add: (margin regressions on
    input features: additive vs order vs circular; a readout-table helper for per-prompt answers), then rerun blinded.
 2. Circuit: which heads move month1's position onto the year/month2 tokens; which MLPs compute the comparison.
 3. Other templates (comma, "from ... to"): same axis with other constants? Llama/Pythia: same mechanism?

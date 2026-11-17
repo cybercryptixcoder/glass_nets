@@ -1,20 +1,17 @@
 import numpy as np
 
 DESCRIPTION = (
-    "Task: '<m1> <year> - <m2>' -> the year in which the date range ends: 'same year' or 'next year' "
-    "('previous year' is never the answer). The model settles this before the last block: at the last "
-    "token, the final residual stream (resid12@end) - the only position that feeds the unembedding - "
-    "holds the identity of the answer year token, i.e. which vocabulary row (the year itself, or the "
-    "year+1) the prompt is about to be completed with. Nothing else at that depth is used: positions "
-    "0-3 of resid12 never reach the read-out. The identity is computed from the months: the range "
-    "wraps past December (m2 <= m1) exactly when the next-year-minus-same-year logit difference, a "
-    "monotone function of m1-m2, is positive, so the answer year is year+1 if m2 <= m1 and year "
-    "otherwise. The unembedding compares that identity with the three candidate year tokens: the "
-    "answer-year token wins the 'same/next/previous' comparison according to its offset from the "
-    "prompt's year."
+    "Task: '<m1> <year> - <m2>' -> the year in which the range ends ('same year' / 'next year'; "
+    "'previous year' is never answered on real prompts). At the last token, resid12@end - the only "
+    "position that feeds the unembedding - holds two things: the IDENTITY of the answer-year token (a "
+    "one-hot over the 21 candidate years 1979..1999, carried in near-orthogonal directions that are the "
+    "scaled unembedding rows of the year tokens) and a WRAP SCORE (how strongly the range crosses "
+    "December: a monotone function of TAB[m1,m2] plus a per-year offset), stored jointly with the year in "
+    "the coordinate of the answer year (masked score). Nothing else at that depth is used: positions 0-3 of "
+    "resid12 never reach the read-out. The read-out compares the answer-year identity with the year "
+    "token of the prompt: offset 0 -> 'same year', >= +1 -> 'next year', <= -1 -> 'previous year'."
 )
 
-# mean next-year-minus-same-year logit difference per (m1, m2), plus per-year offsets
 TAB = np.array([
  [ 2.08,  0.09,  0.33,  0.31,  0.36,  0.38,  0.34, -0.06, -0.17, -0.40, -0.56, -0.62],
  [ 1.46,  1.76, -0.50, -0.16, -0.29,  0.25,  0.23, -0.15, -0.55, -0.53, -0.66, -0.69],
@@ -36,19 +33,21 @@ def model(x, iv):
     x = np.asarray(x)
     m1 = x[:, 0].astype(int)
     m2 = x[:, 1].astype(int)
-    y = x[:, 2].astype(int) - 1980
+    y = x[:, 2].astype(int) - 1980          # 0..19
 
-    # does the range wrap past December?  wrap score > 0  <=>  m2 <= m1 (on average)
-    off = (TAB[m1, m2] + YOFF[y] > 0).astype(int)
-    k = y + off                                   # identity of the answer year token
-    ans = iv("answer", np.eye(21)[k])             # categorical: which year token is the answer
+    sc = TAB[m1, m2] + YOFF[y]
+    off = (sc > 0).astype(int)
+    k = y + off                             # identity of the answer-year token
 
-    kk = np.argmax(ans, axis=1)
-    d = kk - y
+    ans = iv("answer", np.eye(21)[k])       # categorical identity of the answer year
+    sco = iv("score", np.eye(20)[y] * sc[:, None])   # wrap score, masked by the prompt year
+
+    ka = np.argmax(ans, axis=1)
+    d = ka - y
     same = (d == 0).astype(float)
     nxt = (d >= 1).astype(float)
     prv = (d <= -1).astype(float)
     return np.stack([same, nxt, prv], axis=1)
 
 
-ALIGN = {"answer": ["resid12@end"]}
+ALIGN = {"answer": ["resid12@end"], "score": ["resid12@end"]}
