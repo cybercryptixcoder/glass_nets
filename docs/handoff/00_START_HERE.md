@@ -42,9 +42,10 @@ this repo should be able to continue from these files alone, with no separate ha
   FINDINGS.md, judge rule for clear decisions, substitution diagnosis, constant-site fix, line_vs_circle.py.
 - `gpt2_be_verb` (blinded reader, complete 5/5): circuit + FINDINGS.md.
 
-### In flight / unfinished (2026-11-17 11:45; the session ends at 11:59)
+### In flight / unfinished (2026-11-17 11:50, session closed)
 
-- Nothing is left running after 11:59. Run B (`20261117-055146-992e`, 134 steps, 0/5) is resumable:
+- Nothing is running. Latest robustness and control experiments: E35-E39 (unordered month code, unfitted calendar
+  index, full identity, split seed): all support the finding. Run B (`20261117-055146-992e`, 134 steps, 0/5) is resumable:
   `python3 lab/constructor.py gpt2_month_rollover --resume 20261117-055146-992e --steps 250`.
 
 ### Next steps (in order of value for the paper)

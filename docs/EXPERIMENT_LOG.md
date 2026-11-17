@@ -881,3 +881,15 @@ for = (1 - kept with line) / (1 - kept with full identity):
 | Pythia-160m, 8 | 0.50 / 0.50 | 0.41 / 0.46 | **85% / 93%** |
 
 One calendar-ordered direction is (nearly) everything the decision takes from each month at these sites.
+
+## 2026-11-17 11:49. E39, robustness to the fit/test split (GPT-2 small, seed 1)
+
+Same test, another random split: month1 at depth 8, margin R2 kept with the line removed 0.13 (seed 0: 0.20), the
+unfitted calendar index 0.12, the full identity 0.05, the circle 0.96, an unordered month code 0.82, a random plane
+1.00; month2: line 0.55, full identity 0.55, circle 0.96. Behaviour: order 0.73, circular difference 0.07. Stable.
+(`lab/models/<target>/line_vs_circle.json` holds the latest seed-0 run per model; earlier depth sweeps are in E32-E34.)
+
+## 2026-11-17 11:50. Session 4 closed
+
+Nothing left running. State, results and next steps: `docs/handoff/00_START_HERE.md`; the discovery:
+`lab/constructions/gpt2_month_rollover/DISCOVERY.md`; paper draft: `docs/PAPER_DRAFT.md`.

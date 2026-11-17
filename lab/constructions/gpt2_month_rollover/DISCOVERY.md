@@ -53,7 +53,7 @@ calendar line (E35): the order is what matters, not month information in general
 calendar index (January = 0 ... December = 11), nothing fitted to the output, has the same effect (0.21 / 0.29 / 0.56
 kept for month1; E37): the result is not an artefact of choosing the line from the output. Compared with removing
 the month's ENTIRE identity (11-D), the 1-D line accounts for 96% / 76% / 85% of month1's causal contribution and
-93-100% of month2's at these sites (E38). **In all three models the decision runs on a 1-D
+93-100% of month2's at these sites (E38). Stable across fit/test splits (E39). **In all three models the decision runs on a 1-D
 calendar line and is almost untouched by removing the circle.** (Full numbers: `lab/models/<target>/line_vs_circle.json`.)
 
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)
@@ -117,6 +117,9 @@ arXiv 2305.00586; Niu et al. 2025 (frankniujc.github.io/research/arxiv2025/shape
   axis with other constants; the near-ties (32% of decisions within 0.5 logit) are excluded from all comparisons (E23).
 
 ## Reproduce
+
+    python3 lab/line_vs_circle.py gpt2_month_rollover 4 6 8 10        # also gpt2medium_month_rollover 8 12 16 20, pythia160m_month_rollover 3 4 6 8
+    python3 docs/figures/make_month_figure.py
 
     python3 lab/lm_build.py lab/lm_tasks/month_rollover.py
     python3 lab/judge.py gpt2_month_rollover lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py
