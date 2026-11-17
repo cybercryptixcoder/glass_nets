@@ -53,6 +53,31 @@ identity of a year token, read out by the unembedding (measured as a table).
   falls from 1.00 to 0.53).
 - The circuit is distributed: no single component's mean-ablation removes more than 18% of the answers.
 
+## Novelty and how publishable this is (literature checked 2026-11-17 11:35)
+
+Closest prior work and how this differs:
+
+| Work | What it shows | Difference from this finding |
+|---|---|---|
+| Engels et al., *Not All Language Model Features Are Linear*, ICLR 2025 (arXiv 2405.14860) | Circular month / weekday features in GPT-2 small (layer 7); circles causally used for months/days modular addition in Mistral 7B and Llama 3 8B | Here the SAME model holds the circle, but a different calendar computation (is the range into the next year?) runs on a 1-D LINE; the circle is causally inert for it (E32) |
+| arXiv 2605.29126 (2026), calendar-date duration reasoning | A sin/cos probe decodes day-of-year, yet ablating it does nothing; a 4-D DAS subspace carries the computation; QK offsets at +/-30, 61 days | Same "readable but unused circle" theme, for durations in a larger model. New here: the USED representation is identified as a 1-D calendar line, with a complete verified causal abstraction (5/5 stages), continuous steering, and the two-hop route via the year token, in GPT-2 small |
+| Gould et al. 2023 (successor heads) | Heads that increment ordinal tokens (months, numbers) | Increment, not comparison |
+| Hanna et al. 2023 ("greater-than" in GPT-2 small) | Year comparison "from 1732 to 17__" | Compares two-digit years via MLP lookups; here two month WORDS are compared on a learned line, across positions via the year token |
+| Niu et al. 2025 (*Shape Happens*, SMDS) | Temporal entities form manifolds: circles, lines, clusters | Geometry, not which geometry a given decision uses causally |
+
+**Honest assessment.** The claim "for year rollover GPT-2 small compares months on a line it holds next to its month
+circle, and the circle is unused" is, as far as this search finds, new, and it is backed by the field's strongest
+kind of evidence (complete causal abstraction with interventions, a steering prediction no prompt can show,
+prior-only control, causal dissociation line vs circle). It is a **workshop-paper-sized** result as it stands
+(one model, one template). To be a main-track paper it needs: (1) the same test in larger models (GPT-2 medium /
+Pythia / Llama: does the line persist where circles are known to be used?); (2) other templates (the comma
+template changes the behaviour itself: characterise when the line is used); (3) days of the week ("Friday -
+Monday": next week?), to show it is a general strategy for ordered cyclic categories; (4) the components after
+depth 8 that compute the comparison.
+
+References: arXiv 2405.14860; arXiv 2605.29126; Gould et al. 2023, arXiv 2312.09230; Hanna et al. 2023,
+arXiv 2305.00586; Niu et al. 2025 (frankniujc.github.io/research/arxiv2025/shape_happens.pdf).
+
 ## What is honest to say
 
 - **Who found it.** The tool provided every measurement (engine, `flow()`, judge, diagnoses, steering through the
