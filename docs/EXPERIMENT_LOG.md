@@ -678,3 +678,16 @@ Also: `lab/lm_writeup.py` writes FINDINGS.md for any run (be-verb done); lm_post
   substitution (99.7% in my check, 91% in the judge's split), while run B's (year one-hot + rollover flag) gets 45%
   and adding the answer identity to them 80% (dilution). The diagnosis now also tries the answer token the network
   outputs and reports every candidate feature alone as well as added.
+
+## 2026-11-17 07:05. E25, calibration construction for month rollover; a judge bug found and fixed
+
+`lab/constructions/_oracle/gpt2_month_rollover_calibration.py` (hand-made, identity variables where flow() shows each
+input; decision from a measured table; answer-token identity at the end). Results: (1) **bug**: the judge's
+"constant site" check used the first 64 fit prompts, which on this task all share one year, so `resid0@year` was
+silently dropped as constant, making the embedding stage impossible to pass. Fixed (random sample of 128). Any
+earlier month-rollover report with a year site at depth 0 was affected. (2) The middle cuts (depth 4, 8) fail
+substitution (34%) with identities alone, while explaining 55-70% of the variance: the middle holds COMPUTED
+quantities (the comparison, or month bound to year), which is what makes this target worth explaining.
+(3) At the end, the answer-token identity passes substitution (90.9%) but its interchange fails (62%): copying the
+answer from a prompt with another year gives a year token outside the receiving prompt's three candidates, and the
+network then scores the candidates by year-token similarity. A construction has to model that readout.

@@ -146,7 +146,8 @@ def judge(tid, source, variant="original", seed=0, n_pairs=N_PAIRS):
     # a site that is the same for every prompt holds no variable
     def constant(s):
         what, layer, head, pos = lm.parse_site(s)
-        a = task.resid(layer, fit[:64], pos) if what == "resid" else task.acts(fit[:64], [s])[s]
+        smp = np.sort(rng.choice(fit, min(len(fit), 128), replace=False))   # a random sample: prompts are ordered by input
+        a = task.resid(layer, smp, pos) if what == "resid" else task.acts(smp, [s])[s]
         return a.std(0).max() <= 1e-6
     all_sites = sorted({s for where in align.values() for s in where})
     dropped = [s for s in all_sites if constant(s)]
