@@ -853,3 +853,17 @@ template, so the line carries the month-order part of the decision in both templ
 the comma template relies less on the comparison (it mostly keeps the year). This replaces "transfer negative" (E30)
 as the account of the comma template: the decision RULE does not transfer because the behaviour differs, but the
 mechanism's geometry does.
+
+## 2026-11-17 11:45. E37, no circularity: an UNFITTED calendar-index line has the same effect
+
+Objection: the "line" was each month's measured effect on the output, so it is tuned to the decision while the circle
+is not. Control: a line defined only by the calendar index (January = 0 ... December = 11), nothing fitted to the
+output, encoded and removed the same way. Margin R2 kept (month1 / month2):
+
+| Model, depth | Fitted line | Unfitted calendar index | Circle | Unordered random month code (mean) |
+|---|---|---|---|---|
+| GPT-2 small, 8 | 0.20 / 0.55 | **0.21 / 0.56** | 0.96 / 0.96 | 0.89 / 0.94 |
+| GPT-2 medium, 12 | 0.29 / 0.46 | **0.29 / 0.49** | 0.96 / 0.95 | 0.82 / 0.93 |
+| Pythia-160m, 8 | 0.50 / 0.50 | **0.56 / 0.54** | 0.99 / 0.99 | 0.87 / 0.92 |
+
+The plain calendar order, chosen without looking at the output, carries the decision; the circle does not.

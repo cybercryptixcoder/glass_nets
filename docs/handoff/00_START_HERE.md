@@ -31,7 +31,8 @@ this repo should be able to continue from these files alone, with no separate ha
     prior-only control 0/5; circuit: month1 -> year token (heads 1.0, 2.4, 4.11) -> final token (heads 6.1, 7.11).
   - Causal dissociation (E32-E35, `lab/line_vs_circle.py`): removing the line keeps 0.20 / 0.29 / 0.50 of the
     margin's variation in GPT-2 small / GPT-2 medium / Pythia-160m; removing the circle keeps 0.96-0.99; an unordered
-    random month code 0.82-0.94; a random plane 1.00. **Replicates in 3 models, 2 families.**
+    random month code 0.82-0.94; a random plane 1.00; an UNFITTED calendar-index line the same as the fitted line (E37).
+    **Replicates in 3 models, 2 families.**
   - Novelty and publishability assessment, with the closest prior work (Engels et al. ICLR 2025; arXiv 2605.29126):
     in DISCOVERY.md. Workshop-paper strength now; main track needs a 7-8B model and other templates.
   - Comma template ("March, 1987 - January"): the behaviour relies less on month order (it explains 19% of the margin

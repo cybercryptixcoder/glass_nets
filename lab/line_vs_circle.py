@@ -50,7 +50,8 @@ def run(tid, depths=None, seed=0):
     clean = out[test]
     for month, col, line, sites in (("month1", 0, U, ["year", "m2"]), ("month2", 1, V, ["m2"])):
         m = X[:, col]
-        codes = {"line": line[m][:, None], "circle": np.c_[np.cos(2 * np.pi * m / 12), np.sin(2 * np.pi * m / 12)]}
+        codes = {"line": line[m][:, None], "circle": np.c_[np.cos(2 * np.pi * m / 12), np.sin(2 * np.pi * m / 12)],
+                 "calendar index": m[:, None].astype(float)}       # January = 0 ... December = 11: nothing fitted to the output
         for L in depths:
             A = {p: T.resid(L, np.arange(N), p) for p in sites}
             Qs = {}
@@ -61,13 +62,15 @@ def run(tid, depths=None, seed=0):
                 ql, _ = np.linalg.qr(Ml.T)
                 qc, _ = np.linalg.qr((Mc - (Mc @ ql) @ ql.T).T)
                 qr, _ = np.linalg.qr(rng.normal(size=(A[p].shape[1], 2)))
-                Qs[p] = {"line": ql, "circle": qc, "random 2-D": qr}
+                Mi, *_ = np.linalg.lstsq(codes["calendar index"][fit] - codes["calendar index"][fit].mean(0), A[p][fit] - c, rcond=None)
+                qi, _ = np.linalg.qr(Mi.T)
+                Qs[p] = {"line": ql, "circle": qc, "random 2-D": qr, "calendar index": qi}
                 for d_ in range(5):     # month-related but UNORDERED: a random number per month, encoded like the line
                     rv = np.random.default_rng(100 + d_).normal(size=12)[m][:, None]
                     Mr, *_ = np.linalg.lstsq(rv[fit] - rv[fit].mean(0), A[p][fit] - c, rcond=None)
                     Qs[p][f"random month code {d_}"], _ = np.linalg.qr(Mr.T)
             row = {}
-            for k in ["line", "circle", "random 2-D"] + [f"random month code {d_}" for d_ in range(5)]:
+            for k in ["line", "calendar index", "circle", "random 2-D"] + [f"random month code {d_}" for d_ in range(5)]:
                 hook = {}
                 for p in sites:
                     Ap = A[p][test]; c = A[p][fit].mean(0); Q = Qs[p][k]
@@ -83,7 +86,8 @@ def run(tid, depths=None, seed=0):
             res["ablations"][f"{month} @ depth {L}"] = row
             print(f"{month} depth {L}: clear decisions kept / margin R2 kept with line removed {row['line']:.1%} / {row['line margin_r2']:.2f}, "
                   f"circle removed {row['circle']:.1%} / {row['circle margin_r2']:.2f}, random 2-D removed {row['random 2-D']:.1%} / {row['random 2-D margin_r2']:.2f}, "
-                  f"random month code (1-D, 5 draws) margin R2 mean {row['random month code, mean margin_r2']:.2f} min {row['random month code, min margin_r2']:.2f}", flush=True)
+                  f"random month code (1-D, 5 draws) margin R2 mean {row['random month code, mean margin_r2']:.2f} min {row['random month code, min margin_r2']:.2f}, "
+                  f"calendar index (unfitted) removed {row['calendar index margin_r2']:.2f}", flush=True)
     (T.dir / "line_vs_circle.json").write_text(json.dumps(res, indent=1))
     return res
 

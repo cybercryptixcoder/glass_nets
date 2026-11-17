@@ -49,7 +49,9 @@ the next-vs-same margin's variation over prompts that survives; 1 = untouched):
 
 A random 2-D plane removed at the same sites: 1.00 everywhere. A 1-D direction encoding a RANDOM number per month
 (month-related but unordered; 5 draws): 0.82-0.94 kept on average (worst draw 0.70), against 0.20-0.55 for the
-calendar line (E35): the order is what matters, not month information in general. **In all three models the decision runs on a 1-D
+calendar line (E35): the order is what matters, not month information in general. And a line defined only by the
+calendar index (January = 0 ... December = 11), nothing fitted to the output, has the same effect (0.21 / 0.29 / 0.56
+kept for month1; E37): the result is not an artefact of choosing the line from the output. **In all three models the decision runs on a 1-D
 calendar line and is almost untouched by removing the circle.** (Full numbers: `lab/models/<target>/line_vs_circle.json`.)
 
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)

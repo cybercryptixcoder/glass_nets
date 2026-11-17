@@ -16,6 +16,7 @@ year ("March 1987 - January" -> 1987 or 1988?) runs on the LINE, with the circle
 | ... with the 2-D circle removed | 0.96 | 0.96 | 0.99 |
 | ... with an unordered random month code removed (mean of 5) | 0.89 | 0.82 | 0.87 |
 | ... with a random 2-D plane removed | 1.00 | 1.00 | 1.00 |
+| ... with an UNFITTED calendar-index line removed (Jan = 0 ... Dec = 11) | 0.21 | 0.29 | 0.56 |
 | Complete causal abstraction (judge, 5/5 stages) | **verified**, behaviour 97.4% | not attempted | not attempted |
 | Steering month1's position continuously (incl. between months) | 90% of clear decisions predicted | | |
 | Prior-only control (reader's memory) | 0 of 5 stages | | |
