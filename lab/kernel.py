@@ -58,6 +58,7 @@ def lm_env(cfg, env):
     import lm_tools
     env["flow"] = lambda feature=None, n=300, positions=None, layers=None: print(lm_tools.flow(task, feature, n, positions, layers))
     env["probe"] = lambda site, values, n=None: lm_tools.probe(task, site, values, n)
+    env["explain_output"] = lambda: print(lm_tools.explain_output(task))
 
 
 def main():

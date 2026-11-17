@@ -1936,6 +1936,70 @@
      "seconds": 0.05
     }
    ]
+  },
+  {
+   "step": 121,
+   "content": "",
+   "thinking": "Train R2 0.555, test R2 -0.80, with test SSE = 4x train SSE. That means the relation differs between the halves?! Truly bizarre... unless the halves differ systematically: tr = first 1440 rows, te = last 1440. X is ordered by... prompts list: examples show January 1980, May 1983, September 1986, January 1990, May 1993, September 1996 \u2014 so the ordering cycles through m1, year, m2 combos. 2880 = 12*20*12. The first half (1440) may cover only some part of the combinatorial space, e.g. m1 0..5 vs 6..11! Then one-hot m1-specific behaviour... no, but V doesn't include m1.\n\nBut SST of test 9521048 vs train 9437695 \u2014 similar; SSE differs 4x. So the *fit* is systematically off in a region of input space. Since V only has k and year, and k/y are covered in both halves...\n\nUnless the first half has a different relation because of... hmm! Different rows means different prompts; the relation resid12 = f(k,y,sc) should hold everywhere.\n\nLet me check: maybe X's first half isn't a random sample, and `sc` differs systematically. Actually maybe the issue is that TAB[m1,m2]+YOFF[y] does NOT give the right decision for all prompts \u2014 the network's decision mismatches my TAB for a subset (behaviour match 94.2% overall; 100% in judge's confident rows). If sc has the wrong sign for some prompts, then k is wrong \u2192 V's one-hot k is wrong \u2192 fit struggles in that region. But then train R2 would be bad too.\n\nWait, maybe the real issue: linear fit is underdetermined per-region... no.\n\nLet me just test: shuffle rows randomly, split, and redo. If test R2 becomes positive, ordering was the issue.",
+   "finish": "tool_calls",
+   "context_tokens": 34735,
+   "tools": [
+    {
+     "tool": "python",
+     "code": "\nrng=np.random.default_rng(0); perm=rng.permutation(N)\ntr2=np.zeros(N,bool); tr2[perm[:1440]]=True; te2=~tr2\nsol2=fitEval(V,A12,tr2,te2)\n",
+     "ok": true,
+     "output": "train SSE 4196835 SST 11314591 R2 0.629\ntest SSE 4537386 SST 11409077 R2 0.602\n",
+     "seconds": 0.06
+    }
+   ]
+  },
+  {
+   "step": 122,
+   "content": "",
+   "thinking": "Good \u2014 with a random split it works (0.602). The earlier split was ordered (first half vs second half), which apparently covers different parts of the input space such that the affine relation differs... interesting but fine \u2014 actually it means the fit is input-region dependent \u2192 the true relation has more structure (or V misses something, e.g. m1/m2 dependent). Hmm, test R2 0.60 with random split, similar to the full fit 0.62.\n\nBut the ordered split failure is meaningful: what differs between halves? Let me check quickly: is X ordered such that the first half has m1 in 0..5? Let me check that quickly, and also how behaviour differs. This matters: if V explains 60% and the rest is region-dependent, my readout will be biased.\n\nActually more useful: build the readout directly and empirically. Plan:\n\nThe real state (intervention) = c + v@M + orth_B. Instead of theorizing, simulate the judge's exact procedure and optimize the readout on that. I need to know the judge's projection convention. Let me consider a plausible one: for each named site, it has the fitted affine map; the \"named subspace\" is span{M columns} \u222a {c}? For interchange it likely computes new = A_activation projected... \n\nAlternative interpretation, and I think most likely: since the construction's prediction for a site is entirely c + vars@M (a full 768-vector), the judge probably:\n- substitute: sets the site to c+vars@M (i.e. its prediction) \u2192 we saw 100%.\n- keep: keeps only the named subspace \u2192 likely projects the real activation onto the subspace: proj = P(resid - c) + c.\n- remove: resid - P(resid - c)... \n- interchange: replace the projection with A's: resid_new = resid_B - P(resid_B - c) + P(resid_A - c)? Or resid_new = resid_B - P_B_named + P(resid_A - c).\n- partial: replace only one variable's contribution: resid_new = resid_B - P_v(resid_B - c) + P_v(...)? Hmm, \"one variable is copied while the other variables stay\" \u2014 with an affine map from variables, they can compute the prediction with variable v from A and others from B: resid_new = c + [v_A, others_B]@M. That would be simplest and equals a linear combination. Similarly edit: \"copies a random half of the coordinates of everything named\" \u2014 the coordinates of the *variables*? Or the named activation coordinates? \"(not run on one-hot variables)\" suggests edit works on the raw coordinates of the named subspace in the activation. Hmm, if edit were on variable coordinates, one-hot variables would be problematic (copying half a one-hot \u2192 invalid), hence the note \"not run on one-hot variables\"?? Confusing.\n\nGiven ambiguity, the robust approach: make my model compute the readout with the exact structure gN = cN[y] + Pn[:,y]\u00b7v as a *linear function of v*, fit to the network's actual gap when activations are set to c+v@M (i.e., the network's readout of the model state). Then, under any of these conventions, the network's state = some affine function of (v_A, v_B) \u2014 my linear readout would be right only if the state is exactly c+v@M with mixed v. If the judge mixes raw coordinates instead (P_v), it's not linear in v.\n\nI can't resolve this now; let's maximize what's under my control: measure gN and gP as a function of the *predicted state* c + v@M for arbitrary v, and reproduce it precisely by fitting a linear readout to the network's gaps for random v. Note the network's gap on state c+v@M is a deterministic function; if it's linear in v, a linear fit is exact.\n\nSo: generate random v (random k, random j, random s), compute state = c+v@M, run the network with hook resid12@end = state, get gaps for the comparison year y_ref (pick from x for a batch), fit gN = cN[y]+Pn[:,y]\u00b7v. Check R2/near-perfection.\n\nWait, actually there's a subtlety: the judge runs the network on B's tokens with B's resid12@end replaced. Then it compares to my model(B) with vars from A. For the gaps I need the logits of B's year tokens. So the \"comparison year\" y is B's year, from x. Good: my model has x = B rows.\n\nSo the readout function is: given v (41-vector) and y (from x), predict gN, gP. That's a 41-dim linear map per year. Measured empirically on states c+v@M. Since v is arbitrary (I control the hook), I can fit exactly. The only caveat: those states might be OOD if my affine model is bad (norm differences), but it's exactly the judge's setup.\n\nEven better: I can avoid the affine model entirely! For the readout, the state the judge creates might be different from c+v@M. Hmm. But I have no other option.\n\nLet me now do this measurement:\n1. Fit M properly on a random half (or all rows) \u2192 c, M.\n2. Build random v batch: for each row pick k random in 0..20, j random 0..19, s random in [-1, 4]; state = c + v@M. But norm: the real residual norm ~17; the model state norm will differ (rank-deficient directions). Fine.\n3. y_ref: use rows' year from x (random years).\n4. Hook resid12@end = state, get logits, compute gN, gP for tokens tid[1+y], tid[2+y], tid[0+y].\n5. Fit gN = cN[y] + Pn[:,y]\u00b7v.\n\nSince gN should be a smooth function of v, but there's a normalization (LN): non-linear in v via the norm. Check fit quality. If poor, include norm: gN = (cN[y] + Pn[:,y]\u00b7v)/||state|| + kn[y], and fit that by nonlinear least squares or by fitting numerator via ||state||-scaled regression (i.e. regress gN*||state|| - stuff). Straightforward: define target = gN (network). Model: gN = (a_y + v\u00b7b_y)/nrm + k_y where nrm = ||state||. So gN*nrm = a_y + v\u00b7b_y + k_y*nrm \u2192 linear regression of (gN*nrm) on [1, v, nrm]. \n\nLet me do it.\n\nAlso for alignment/explained: explained 0.596 \u2014 lowish. Maybe better variables exist (e.g. also include one-hot of the *unmasked* score?). Later.\n\nLet me implement step 1-5 now.",
+   "finish": "tool_calls",
+   "context_tokens": 35314,
+   "tools": [
+    {
+     "tool": "python",
+     "code": "\n# fit affine M on all rows (variables: one-hot21(k), one-hot20(y)*sc)\nZ=np.concatenate([np.ones((N,1)),V],1)\nM,*_=lstsq(Z,A12,rcond=None); c=M[0]; Mv=M[1:]\nprint(\"state norm model\", np.linalg.norm(c+ V@Mv,axis=1).mean(), \"real\", np.linalg.norm(A12,axis=1).mean())\n# random states\nrng=np.random.default_rng(1); B=300\nkr=rng.integers(0,21,B); jr=rng.integers(0,20,B); sr=rng.uniform(-1,4,B)\nvr=np.concatenate([np.eye(21)[kr], np.eye(20)[jr]*sr[:,None]],1)\nst=c+vr@Mv\nyr=rng.integers(0,20,B)\nLr=run_tokens(TOKENS[:B],hook={\"resid12@end\":st})[0]\ngN=Lr[np.arange(B),[tid[2+i] for i in yr]]-Lr[np.arange(B),[tid[1+i] for i in yr]]\ngP=Lr[np.arange(B),[tid[i] for i in yr]]-Lr[np.arange(B),[tid[1+i] for i in yr]]\nprint(\"gN std\",gN.std(),\"gP std\",gP.std())\n",
+     "ok": false,
+     "output": "state norm model 480.07066225263867 real 482.8360091384254\nTraceback (most recent call last):\n    exec(compile(code, \"<your code>\", \"exec\"), env)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<your code>\", line 12, in <module>\n    env[\"run_tokens\"] = lambda tokens, hook=None, sites=(): task.run_tokens(tokens, hook=hook, sites=[sites] if isinstance(sites, str) else list(sites))\n                                                            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/claude/helix_probe/lab/lm.py\", line 479, in run_tokens\n    p = torch.full((B,), int(pos) % T, dtype=torch.long)\n                         ~~~^^^^^\nValueError: invalid literal for int() with base 10: 'end'\n",
+     "seconds": 0.06
+    }
+   ]
+  },
+  {
+   "step": 123,
+   "content": "",
+   "thinking": "Interesting: norm 480?! The residual norm is 480 not 17.4 \u2014 earlier I printed A12.std(axis=1).mean() = 17.42 (std over dims), not the norm. And the mean of the residual is large. So norm \u2248 483, and it varies (16*768^0.5=443). OK so sd should be the norm.\n\nNow run_tokens with hook site \"resid12@end\" fails because it needs token indices. Use index -1 or 4. Let me use \"resid12@-1\".\n\nAlso TOKENS: I should use the actual task tokens.",
+   "finish": "tool_calls",
+   "context_tokens": 37411,
+   "tools": [
+    {
+     "tool": "python",
+     "code": "\nLr=run_tokens(TOKENS[:B],hook={\"resid12@-1\":st})[0]\ngN=Lr[np.arange(B),[tid[2+i] for i in yr]]-Lr[np.arange(B),[tid[1+i] for i in yr]]\ngP=Lr[np.arange(B),[tid[i] for i in yr]]-Lr[np.arange(B),[tid[1+i] for i in yr]]\nprint(\"gN std\",gN.std(),\"gP std\",gP.std(), gN[:5], gP[:5])\n",
+     "ok": true,
+     "output": "gN std 0.95331067 gP std 0.9810279 [1.6 0.8 0.6 0.2 0.1] [-1.7 -0.4  0.3  1.   0.2]\n",
+     "seconds": 1.85
+    }
+   ]
+  },
+  {
+   "step": 124,
+   "content": "",
+   "thinking": "Good. Now fit gN*nrm = a_y + v\u00b7b_y + k_y*nrm to check linearity, or simpler: gN = (a_y + v\u00b7b_y)/nrm + k_y.\n\nLet me do per-year regression on features [1, v, nrm] against target gN*nrm. With B=300 and 20 years, only 15 rows per year \u2014 too few. Instead use a global structure: b depends on year; but I could pool: assume a single b for all years and year-specific intercept/kn? Let's first check globally with features [1, v, year one-hot interactions]... For diagnostic purposes, fit per-year with more data: B=4000 samples (fast? run_tokens on 4000 prompts maybe 5s).\n\nLet me generate B=6000 random states and fit.\n\nActually, better parametrization: since the readout is linear in state after LN, and the state = c + v@Mv, define nrm = ||state||. Then\ngN = (state \u00b7 UDn(y))/nrm * something + kn(y)? Actually logits = ln_f(resid)@W_U = ((resid - mean)/std * w + b)@W_U. gpt2 LN: (x-mean)/sqrt(var+eps)*w + b. Here mean is scalar over the 768 dims, var too. So logits = ((resid-mean(resid))/sd(resid)*lnw + lnb)@W_U. Since resid \u2248 c + v@Mv, and mean/sd are functions of the state.\n\nLet me just fit empirically: target gN, features per year [1, v, nrm, mean?]. Fit per year with enough data (say 3000 samples \u2192 150/year, 45 features) fine.\n\nThen in the construction I'd need to compute nrm = ||c + v@Mv|| \u2014 needs c and Mv (768*41 numbers) \u2014 too much. Unless nrm \u2248 nearly constant. Let me check the spread of nrm over random states.\n\nAlternative: express gN = (a_y + v\u00b7b_y)/nrm + k_y with nrm ~ const \u2192 fit as plain linear and check residual. Let me measure: how much does the linear part explain vs nrm variation.\n\nLet me do the big sample and fit plain linear per year, evaluating R2 within the sample.",
+   "finish": "tool_calls",
+   "context_tokens": 37786,
+   "tools": [
+    {
+     "tool": "python",
+     "code": "\nrng=np.random.default_rng(2); B2=4000\nkr=rng.integers(0,21,B2); jr=rng.integers(0,20,B2); sr=rng.uniform(-1.5,4,B2); yr=rng.integers(0,20,B2)\nvr=np.concatenate([np.eye(21)[kr], np.eye(20)[jr]*sr[:,None]],1)\nst=c+vr@Mv; nrm=np.linalg.norm(st,axis=1)\nprint(\"nrm mean/std\", nrm.mean(), nrm.std())\nLr=run_tokens(TOKENS[:B2],hook={\"resid12@-1\":st})[0]\ndef gaps(L):\n    i=np.arange(L.shape[0])\n    return (L[i,[tid[2+t] for t in yr]]-L[i,[tid[1+t] for t in yr]],\n            L[i,[tid[t] for t in yr]]-L[i,[tid[1+t] for t in yr]])\ngN,gP=gaps(Lr)\n# plain linear per year\ndef peryear(Vf, tgt, R2mask=None):\n    out=np.zeros((Vf.shape[1],20)); b0=np.zeros(20); res=np.zeros(len(tgt))\n    for i in range(20):\n        idx=yr==i\n        Zc=np.concatenate([np.ones((idx.sum(),1)),Vf[idx]],1)\n        s,*_=lstsq(Zc,tgt[idx],rcond=None); b0[i]=s[0]; out[:,i]=s[1:]\n        res[idx]=tgt[idx]-Zc@s\n    return b0,out,res\nb0N,PnA,resN=peryear(vr,gN)\nprint(\"gN linear-per-year resid std\",resN.std(),\"raw std\",gN.std())\nb0N2,PnA2,resN2=peryear(np.concatenate([vr,nrm[:,None]],1),gN)\nprint(\"with nrm\",resN2.std())\n",
+     "ok": false,
+     "output": "nrm mean/std 477.0468451677759 20.81008102153921\nTraceback (most recent call last):\n    try:\n    \n  File \"<your code>\", line 7, in <module>\n    env[\"run_tokens\"] = lambda tokens, hook=None, sites=(): task.run_tokens(tokens, hook=hook, sites=[sites] if isinstance(sites, str) else list(sites))\n                                                            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/claude/helix_probe/lab/lm.py\", line 484, in run_tokens\n    else torch.as_tensor(np.broadcast_to(np.asarray(v, dtype=np.float32), (B, self.width(s) if what != \"pattern\" else T)).copy())\n                         ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/site-packages/numpy/lib/_stride_tricks_impl.py\", line 517, in broadcast_to\n    return _broadcast_to(array, shape, subok=subok, readonly=True)\n  File \"/usr/local/lib/python3.13/site-packages/numpy/lib/_stride_tricks_impl.py\", line 456, in _broadcast_to\n    it = np.nditer(\n        (array,), flags=['multi_index', 'refs_ok', 'zerosize_ok'] + extras,\n        op_flags=['readonly'], itershape=shape, order='C')\nValueError: operands could not be broadcast together with remapped shapes [original->remapped]: (4000,768)  and requested shape (2880,768)\n",
+     "seconds": 0.03
+    }
+   ]
   }
  ],
  "submissions": [
@@ -2293,15 +2357,15 @@
   }
  ],
  "usage": {
-  "prompt_tokens": 5886588,
-  "completion_tokens": 246462,
-  "calls": 121
+  "prompt_tokens": 6031834,
+  "completion_tokens": 250187,
+  "calls": 125
  },
- "cost": 0.5257491719999998,
+ "cost": 0.5313064439999998,
  "status": "running",
  "best": 17,
  "final_message": "",
- "heartbeat": 1794915830.4724593,
+ "heartbeat": 1794915870.1139565,
  "pid": 4006,
  "error": "Luminal kept failing: ",
  "seconds": 1982.7,

@@ -765,3 +765,12 @@ January-to-December line, and the decision is (mostly) the order of the two posi
 - Blinded run A ended at 150 steps with 1 of 5 stages; run B continues. The finding was made by the session agent
   with the tool's measurements and judge, not by the autonomous reader. Write-up:
   `lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
+
+## 2026-11-17 09:20. E31, the analysis that cracked month rollover is now a reader built-in
+
+`explain_output()` (lab/lm_tools.py, bound in the session, described in LM_SYSTEM): fits the network's decision margin
+by simple models of the input features (each alone, additive, ORDER and CIRCULAR difference of every pair of
+features with the same values, full table) on half the prompts, scores on the other half. On month rollover:
+order of m2 vs m1, 3 parameters, 96.8% of clear decisions; circular difference, 12 parameters, 80.8% (= constant).
+Run B restarted from its notes so its session has it (the direct test of whether the reader can now find the
+mechanism itself).

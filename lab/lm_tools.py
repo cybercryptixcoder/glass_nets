@@ -93,3 +93,50 @@ def probe(task, site, values, n=None, seed=0):
     if cat:
         res["heldout_accuracy"] = round(float((P.argmax(1) == V[test]).mean()), 4)
     return res
+
+
+def explain_output(task, n=None, seed=0):
+    """WHAT does the decision depend on, and in what form? The network's margin (top answer minus the second, by
+    column: logit[k] - logit[0] for each k > 0) is fitted on half the prompts by simple models of the input features and
+    scored on the other half: each feature alone (one value per feature value), all features additively, and for every
+    pair of features with the same set of values their ORDER (a < b, a == b) and their CIRCULAR difference (b - a mod
+    the number of values), alone and added to the additive model; finally the full table of the first two features.
+    The model that explains most with fewest parameters is a hypothesis about how the network compares its inputs."""
+    import itertools
+    import lmjudge
+    rng = np.random.default_rng(seed)
+    out = task.run(np.arange(task.N))
+    Y = out[:, 1:] - out[:, :1]
+    clear = lmjudge.confident(out)
+    dec = out.argmax(1)
+    X, names = task.X, task.meta["x_names"]
+    perm = rng.permutation(task.N); f, t = perm[: task.N // 2], perm[task.N // 2:]
+    one = np.ones((task.N, 1))
+    oh = lambda v: (v[:, None] == np.unique(v)[None]).astype(float)   # noqa: E731
+    models = {"constant": one}
+    for j, nm in enumerate(names):
+        models[f"{nm} alone"] = oh(X[:, j])
+    add = np.concatenate([oh(X[:, j]) for j in range(len(names))], 1)
+    models["all features, additive"] = add
+    for i, j in itertools.combinations(range(len(names)), 2):
+        vi, vj = np.unique(X[:, i]), np.unique(X[:, j])
+        if len(vi) == len(vj) and (vi == vj).all() and len(vi) > 2:
+            a, b = X[:, i], X[:, j]
+            order = np.c_[one, b < a, b == a].astype(float)
+            circ = oh((b - a) % len(vi))
+            models[f"order of {names[j]} vs {names[i]} ({names[j]} < / = / >)"] = order
+            models[f"circular difference {names[j]} - {names[i]} (mod {len(vi)})"] = circ
+            models[f"order + additive"] = np.c_[order, add]
+            models[f"circular difference + additive"] = np.c_[circ, add]
+    if len(names) >= 2:
+        models[f"full table ({names[0]}, {names[1]})"] = oh(X[:, 0] * 10000 + X[:, 1])
+    lines = ["What the decision margin depends on (fitted on half the prompts, scored on the other half; clear decisions only for 'right'):",
+             f"{'model':58s} {'params':>6s} {'margin R2':>9s} {'right':>7s}"]
+    for k, F in models.items():
+        W, *_ = np.linalg.lstsq(F[f], Y[f], rcond=None)
+        P = F @ W
+        r2 = 1 - ((P[t] - Y[t]) ** 2).sum() / max(((Y[t] - Y[t].mean(0)) ** 2).sum(), 1e-12)
+        pd = np.where(P.max(1) > 0, P.argmax(1) + 1, 0)
+        acc = (pd[t] == dec[t])[clear[t]].mean()
+        lines.append(f"{k[:58]:58s} {F.shape[1]:6d} {r2:9.3f} {acc:7.1%}")
+    return "\n".join(lines)
