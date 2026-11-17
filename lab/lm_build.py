@@ -22,7 +22,7 @@ def build(task_file):
     model = lm.LM.get(t.MODEL)
     tok = model.tok
     rows = t.build(tok)
-    enc = [tok.encode(p) for p, _, _ in rows]
+    enc = [tok.encode(r[0]) for r in rows]
     T = Counter(len(e) for e in enc).most_common(1)[0][0]
     keep = [i for i, e in enumerate(enc) if len(e) == T]
     if len(keep) < len(rows):
@@ -34,14 +34,28 @@ def build(task_file):
     roles = {r: [int(rows[i][2][r]) % T for i in keep] for r in role_names}
     roles = {r: (p[0] if len(set(p)) == 1 else p) for r, p in roles.items()}
     roles.setdefault("end", T - 1)
-    answer_ids = []
-    for a in t.ANSWERS:
-        ids = tok.encode(a)
-        assert len(ids) == 1, f"answer {a!r} is {len(ids)} tokens; answers must be single tokens"
-        answer_ids.append(ids[0])
+    per_prompt = any(len(rows[i]) > 3 for i in keep)
+    if per_prompt:
+        # each row's 4th element: that prompt's answer strings, in the order of ANSWERS (which are then labels, e.g. "same year")
+        per = []
+        for i in keep:
+            ids = [tok.encode(a) for a in rows[i][3]]
+            assert len(ids) == len(t.ANSWERS) and all(len(x) == 1 for x in ids), f"prompt {rows[i][0]!r}: answers {rows[i][3]} must be {len(t.ANSWERS)} single tokens"
+            per.append([x[0] for x in ids])
+        answer_ids = None
+    else:
+        answer_ids = []
+        for a in t.ANSWERS:
+            ids = tok.encode(a)
+            assert len(ids) == 1, f"answer {a!r} is {len(ids)} tokens; answers must be single tokens"
+            answer_ids.append(ids[0])
     out = LAB / "models" / t.ID
     out.mkdir(parents=True, exist_ok=True)
     np.save(out / "inputs.npy", X); np.save(out / "tokens.npy", tokens)
+    if per_prompt:
+        np.save(out / "answers.npy", np.asarray(per, dtype=np.int32))
+    elif (out / "answers.npy").exists():
+        (out / "answers.npy").unlink()
     (out / "roles.json").write_text(json.dumps(roles))
     (out / "prompts.txt").write_text("\n".join(rows[i][0] for i in keep) + "\n")
     c = model.cfg

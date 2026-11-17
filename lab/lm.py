@@ -289,7 +289,11 @@ class Task:
         roles = json.loads((self.dir / "roles.json").read_text())
         self.roles = {r: (np.full(self.N, p, dtype=np.int64) if isinstance(p, int) else np.asarray(p, dtype=np.int64)) for r, p in roles.items()}
         self.answers = self.meta["answers"]
-        self.answer_ids = np.asarray(self.meta["answer_ids"], dtype=np.int64)
+        # answer tokens: the same for every prompt ([k]) or one row per prompt ([N, k], from answers.npy) when the task's
+        # answers depend on the prompt (for example "the same year" / "the next year" as tokens)
+        f = self.dir / "answers.npy"
+        self.answer_ids = np.load(f).astype(np.int64) if f.exists() else np.asarray(self.meta["answer_ids"], dtype=np.int64)
+        self.per_prompt = self.answer_ids.ndim == 2
         self.end = self.roles.get("end", np.full(self.N, self.T - 1, dtype=np.int64))
         self._index = {tuple(r): i for i, r in enumerate(self.X.tolist())}
         self._cache = None
@@ -436,7 +440,14 @@ class Task:
             else:
                 got = {}
             end = resid[torch.arange(len(b)), torch.as_tensor(self.end[b]) - pm]
-            outs.append(self.lm.unembed(end, None if full else self.answer_ids).numpy())
+            if full:
+                outs.append(self.lm.unembed(end).numpy())
+            elif self.per_prompt:
+                ids = torch.as_tensor(self.answer_ids[b])                                     # [B, k]
+                x = self.lm.ln(end, self.lm.P["ln_f.w"], self.lm.P["ln_f.b"])
+                outs.append(torch.einsum("bd,dbk->bk", x, self.lm.P["W_U"][:, ids]).numpy())
+            else:
+                outs.append(self.lm.unembed(end, self.answer_ids).numpy())
             for s in sites:
                 what, layer, head, pos = parsed[s]
                 k = [j for j, s2 in enumerate([t for t in sites if parsed[t][:3] == (what, layer, head)]) if s2 == s][0]
@@ -476,6 +487,8 @@ class Task:
                 order[s] = (key, len(want.setdefault(key, [])))
                 want[key].append(p)
         resid, got = self.lm.forward(self.lm.embed(tokens), hooks=hooks, want=want)
+        if answers_only and self.per_prompt:
+            raise ValueError("this task's answer tokens depend on the prompt; use answers_only=False and pick the tokens you need")
         logits = self.lm.unembed(resid[:, -1], self.answer_ids if answers_only else None).numpy()
         return logits, {s: got[k + (j,)].numpy().astype(np.float64) for s, (k, j) in order.items()}
 
