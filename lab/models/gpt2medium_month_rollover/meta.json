@@ -1,0 +1,63 @@
+{
+ "id": "gpt2medium_month_rollover",
+ "name": "month rollover in GPT-2 medium (replication)",
+ "forward": "lm",
+ "model": "gpt2-medium",
+ "family": "gpt2",
+ "arch": "gpt2-medium: a pre-trained decoder-only transformer language model (24 layers, 16 heads per layer, d_model 1024, d_head 64, d_mlp 4096, vocabulary 50257; pre-LayerNorm blocks: resid += attn(ln1(resid)); resid += mlp(ln2(resid)); logits = ln_f(resid) @ W_U; learned absolute position embeddings; GELU).",
+ "cfg": {
+  "family": "gpt2",
+  "model_id": "gpt2-medium",
+  "n_layers": 24,
+  "n_heads": 16,
+  "d_model": 1024,
+  "d_head": 64,
+  "d_mlp": 4096,
+  "n_vocab": 50257,
+  "n_ctx": 1024,
+  "ln_eps": 1e-05
+ },
+ "params": 354823168,
+ "x_names": [
+  "m1",
+  "m2",
+  "year"
+ ],
+ "answers": [
+  "same year",
+  "next year",
+  "previous year"
+ ],
+ "answer_ids": null,
+ "n_prompts": 720,
+ "n_tokens": 5,
+ "split_by": null,
+ "roles": {
+  "dash": 3,
+  "m1": 1,
+  "m2": 4,
+  "year": 2,
+  "end": 4
+ },
+ "example_prompts": [
+  "<|endoftext|>January 1985 - January",
+  "<|endoftext|>November 1985 - January",
+  "<|endoftext|>September 1986 - January",
+  "<|endoftext|>July 1987 - January",
+  "<|endoftext|>May 1988 - January",
+  "<|endoftext|>March 1989 - January"
+ ],
+ "domain": {
+  "file": "inputs.npy",
+  "text": "Each prompt is \"<month1> <year> - <month2>\", a date range whose end year is to be predicted, for example \"March 1987 - January\". x[:, 0] = month1 and x[:, 1] = month2 as indices 0..11 (0 = January ... 11 = December); x[:, 2] = the year (1985..1989). Every pair of months occurs with every year. Token positions: 0 <|endoftext|>, 1 month1, 2 the year, 3 \" -\", 4 month2 (the last token). Roles: m1 = 1, year = 2, dash = 3, m2 = end = 4. The network's output is three logits at the end position: of the year token itself (\"same year\"), of the next year (\"next year\") and of the year before (\"previous year\"); these tokens differ from prompt to prompt."
+ },
+ "context": "The prompts are date ranges; the answer is the year in which the range ends.",
+ "answer": {
+  "short": "GPT-2 small mostly continues with the same year when month2 comes after month1 in the calendar, and with the next year when it comes before; the probability of the next year grows with the forward distance from month1 to month2."
+ },
+ "task_file": "month_rollover_medium.py",
+ "tensors": [],
+ "group": "language models",
+ "transfer": [],
+ "transfer_of": null
+}
