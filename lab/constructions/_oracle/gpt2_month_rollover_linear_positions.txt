@@ -1,0 +1,37 @@
+JUDGE REPORT   (400 held-out inputs; construction 11,791 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 97.4% of inputs (a constant output would get 80.3%); output R2 0.497; KL 0.053
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  cut0        (41 dims named of 2304; 31 principal components suffice; m1, year, m2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 49.4% (random 100.0%) | mean-ablate 49.4%
+  cut2        (41 dims named of 2304; 29 principal components suffice; m1, year, m2): explained 0.986 | substitute 100.0% | keep 100.0% | remove 44.6% (random 100.0%) | mean-ablate 41.6%
+  cut4        (41 dims named of 2304; 887 principal components suffice; m1_mid, year_mid, m2_mid): explained 0.980 | substitute 100.0% | keep 100.0% | remove 50.6% (random 100.0%) | mean-ablate 49.8%
+  cut8        (21 dims named of 1536; 887 principal components suffice; pos1, pos2, year_late): explained 0.404 | substitute 93.7% | keep 97.0% | remove 54.6% (random 100.0%) | mean-ablate 48.3%
+  cut12       (20 dims named of 768; 646 principal components suffice; answer): explained 0.469 | substitute 97.4% | keep 94.8% | remove 46.5% (random 100.0%) | mean-ablate 51.7%
+Decisions are compared only where the network's top two logits are at least 0.5 apart (67% of test prompts; near-ties are noise). Over all prompts the behaviour match is 89.0%.
+Categorical (one-hot) variables, exempt from the size limit: m1 (12 values), year (20 values), m2 (12 values), m1_mid (12 values), year_mid (20 values), m2_mid (12 values), year_late (20 values), answer (21 values)
+UNITS  cutL = every residual site you named at depth L (resid{L}@...), tested together. Its 'substitute' number replaces the named positions by your prediction AND every other position at that depth by its mean: the cut must hold everything the later layers need. Sites of other kinds (attn, mlp, head, neur, pattern) are tested alone; they add detail but only a verified cut explains a stage.
+  cut0 = resid0@m1, resid0@m2, resid0@year: substitute 100.0% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut2 = resid2@m1, resid2@m2, resid2@year: substitute 100.0% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut4 = resid4@m1, resid4@m2, resid4@year: substitute 100.0% with the other positions set to their mean (100.0% with the other positions left as they are)
+  cut8 = resid8@m2, resid8@year: substitute 93.7% with the other positions set to their mean (94.1% with the other positions left as they are)
+  cut12 = resid12@m2: substitute 97.4% with the other positions set to their mean (97.4% with the other positions left as they are)
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ cut0: right 98.5% / 97.9% when changed (network changed in 71.4%); output R2 0.833 | controls: random subspace 29.3%, no-change 28.6%, source-output 32.3%, attribution patching 42.0%
+  partial     m1 @ cut0: right 96.1% / 90.6% when changed (network changed in 25.9%); output R2 0.501 | controls: no-change 74.1%, source-output 65.9%
+  partial     year @ cut0: right 97.8% / 97.9% when changed (network changed in 69.1%); output R2 0.803 | controls: no-change 30.9%, source-output 29.5%
+  partial     m2 @ cut0: right 98.5% / 98.3% when changed (network changed in 29.6%); output R2 0.536 | controls: no-change 70.4%, source-output 75.5%
+  interchange all variables @ cut2: right 97.8% / 97.9% when changed (network changed in 70.4%); output R2 0.828 | controls: random subspace 29.1%, no-change 29.6%, source-output 32.6%, attribution patching 43.7%
+  partial     m1 @ cut2: right 95.6% / 91.8% when changed (network changed in 24.1%); output R2 0.471 | controls: no-change 75.9%, source-output 65.5%
+  partial     year @ cut2: right 97.8% / 97.8% when changed (network changed in 67.9%); output R2 0.803 | controls: no-change 32.1%, source-output 29.9%
+  partial     m2 @ cut2: right 98.5% / 100.0% when changed (network changed in 28.7%); output R2 0.501 | controls: no-change 71.3%, source-output 75.9%
+  interchange all variables @ cut4: right 97.0% / 97.9% when changed (network changed in 71.2%); output R2 0.817 | controls: random subspace 28.8%, no-change 28.8%, source-output 33.3%, attribution patching 43.0%
+  partial     m1_mid @ cut4: right 94.1% / 93.2% when changed (network changed in 21.8%); output R2 0.434 | controls: no-change 78.2%, source-output 65.8%
+  partial     year_mid @ cut4: right 97.8% / 97.8% when changed (network changed in 67.9%); output R2 0.800 | controls: no-change 32.1%, source-output 29.9%
+  partial     m2_mid @ cut4: right 97.9% / 100.0% when changed (network changed in 26.7%); output R2 0.471 | controls: no-change 73.3%, source-output 77.5%
+  interchange all variables @ cut8: right 92.4% / 92.1% when changed (network changed in 69.7%); output R2 0.783 | controls: random subspace 27.8%, no-change 30.3%, source-output 31.0%, attribution patching 46.7%
+  partial     pos1 @ cut8: right 89.1% / 89.5% when changed (network changed in 18.0%); output R2 0.360 | controls: no-change 82.0%, source-output 65.4%
+  partial     pos2 @ cut8: right 90.7% / 92.3% when changed (network changed in 20.1%); output R2 0.288 | controls: no-change 79.9%, source-output 74.2%
+  partial     year_late @ cut8: right 95.7% / 94.7% when changed (network changed in 68.8%); output R2 0.797 | controls: no-change 31.2%, source-output 30.4%
+  edit        all variables @ cut8: right 75.3% / 83.9% when changed (network changed in 38.4%); output R2 0.342 | controls: no-change 61.6%, source-output 67.8%
+  interchange answer @ cut12: right 90.7% / 96.9% when changed (network changed in 64.0%); output R2 0.727 | controls: random subspace 28.1%, no-change 36.0%, source-output 38.7%, attribution patching 98.3%
+STAGES   embedding: VERIFIED at cut0;  layers 0-2: VERIFIED at cut2;  layers 3-5: VERIFIED at cut4;  layers 6-8: VERIFIED at cut8;  layers 9-11: VERIFIED at cut12
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
