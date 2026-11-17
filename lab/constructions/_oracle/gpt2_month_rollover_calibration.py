@@ -9,7 +9,8 @@ def model(x, iv):
     nxt = TAB[m1c.argmax(1), m2c.argmax(1)]
     ans = iv("answer", oh(yc.argmax(1) + 1980 + nxt - 1979, 22))
     yr = yc.argmax(1) + 1980; ay = ans.argmax(1) + 1979
-    cand = np.stack([yr, yr + 1, yr - 1], 1)          # the prompt's three answer tokens
+    yp = x[:, 2]                                      # the answer tokens are fixed by the PROMPT, not by what the network holds
+    cand = np.stack([yp, yp + 1, yp - 1], 1)
     return -2.0 * np.abs(ay[:, None] - cand)          # year tokens are read out by numeric proximity to the year held
 ALIGN = {"m1": ["resid0@m1"], "year": ["resid0@year"], "m2": ["resid0@m2"],
          "m1_mid": ["resid4@m1", "resid4@year", "resid4@m2"], "year_mid": ["resid4@year"], "m2_mid": ["resid4@m2"],
