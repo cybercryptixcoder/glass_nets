@@ -691,3 +691,10 @@ quantities (the comparison, or month bound to year), which is what makes this ta
 (3) At the end, the answer-token identity passes substitution (90.9%) but its interchange fails (62%): copying the
 answer from a prompt with another year gives a year token outside the receiving prompt's three candidates, and the
 network then scores the candidates by year-token similarity. A construction has to model that readout.
+
+## 2026-11-17 07:15. E26, a fixed-year variant of month rollover (rejected)
+
+Idea: fix the year (1987) so the answer tokens are the same for every prompt and only the month comparison is left;
+six prefixes for more prompts. Result: three prefixes are two tokens and were dropped; with the year fixed GPT-2
+answers 1988 on 84% of prompts, the decision depends on the prefix, and mean-ablating either month changes nothing
+(100% kept). It is no longer a month comparison. Removed; the 20-year `gpt2_month_rollover` stays the target.

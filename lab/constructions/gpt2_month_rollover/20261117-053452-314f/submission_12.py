@@ -1,0 +1,35 @@
+import numpy as np
+
+DESCRIPTION = """Predicting the year token after "m1 YYYY - m2". The network's decision is
+governed by the margin M = logit(next year) - logit(same year) = A[m1][m2] + B[year], an
+additive month-order table (positive when m2 is not later than m1 in the year: "the range
+wraps into the next year") plus a small year offset; the third answer token (previous year)
+is always far below (logit(prev)-logit(same) ~ M-1.5 < 0), so the answer is 'next year' iff
+M>0. The final residual at the end position carries (a) the identity of the answer year
+token (one-hot, 21 values, 1979..2000) which the late layers copy from the year token at
+position 2, and (b) the smooth margin M along the readout direction of the answer tokens."""
+
+A = [1.20,-0.79,-0.54,-0.57,-0.52,-0.50,-0.54,-0.94,-1.04,-1.28,-1.44,-1.50,
+0.59,0.88,-1.38,-1.04,-1.17,-0.63,-0.65,-1.03,-1.43,-1.41,-1.54,-1.57,
+0.60,0.23,0.18,-1.31,-1.14,-0.98,-0.66,-1.00,-1.34,-1.43,-1.51,-1.50,
+0.81,0.56,0.06,0.73,-1.33,-0.82,-0.80,-0.89,-1.18,-1.30,-1.68,-1.56,
+1.01,0.54,0.25,0.01,-0.04,-1.10,-0.80,-1.02,-1.11,-1.36,-1.47,-1.53,
+1.41,1.11,0.68,0.61,-0.01,0.69,-0.96,-1.16,-1.40,-1.07,-1.36,-1.36,
+1.71,1.34,1.03,0.86,0.34,0.55,0.73,-1.13,-1.19,-1.26,-1.09,-1.28,
+1.83,1.54,1.10,1.07,0.17,0.65,0.36,0.56,-1.30,-1.04,-1.27,-1.04,
+2.02,1.52,1.22,1.22,0.49,0.76,0.54,0.30,0.78,-1.29,-1.24,-1.06,
+2.34,1.89,1.34,1.49,0.54,1.12,0.79,0.73,0.43,0.71,-1.42,-0.79,
+2.67,2.09,1.75,1.80,1.01,1.39,1.18,0.98,0.73,0.09,1.03,-1.21,
+2.36,2.16,1.72,1.74,0.90,1.49,1.15,0.99,0.73,0.20,0.03,0.92]
+B = [0.95,0.30,0.99,0.96,0.41,0.69,0.88,1.06,1.01,0.45,1.19,0.61,1.53,1.49,0.79,0.80,1.23,0.91,0.72,0.61]
+
+def model(x, iv):
+    m1 = x[:, 0].astype(int); m2 = x[:, 1].astype(int); yr = x[:, 2].astype(int)
+    M = np.array(A)[m1, m2] + np.array(B)[yr - 1980]
+    margin = iv("margin", M)
+    k = yr - 1980 + (margin > 0).astype(int)          # identity of the answer year 0..20
+    ans = iv("ans_year", np.eye(21)[k])
+    nxt = (margin > 0).astype(float)
+    return np.stack([np.zeros_like(margin), margin, margin - 1.5], axis=1)
+
+ALIGN = {"margin": ["resid12@end"], "ans_year": ["resid12@end"]}
