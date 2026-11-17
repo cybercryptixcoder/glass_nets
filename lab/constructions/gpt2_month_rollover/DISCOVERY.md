@@ -34,6 +34,17 @@ year token and the month2 token (to depth 9 on the year token, to the end on mon
 reduced to their line positions; the decision is formed between depth 8 and the output; the answer leaves as the
 identity of a year token, read out by the unembedding (measured as a table).
 
+## The circuit of the two scalars (`_oracle/gpt2_month_rollover_linear_positions_circuit.txt`)
+
+- **Month1's position takes a two-hop route through the year token.** At the year token it is written in layers 1-4
+  by heads that attend to month1 (head 1.0: 0.86 of its attention on month1; head 4.11: 1.00; head 2.4: 0.72) and by
+  MLP 4. At the month2 token it arrives mainly in layers 5-7 through heads that attend to the YEAR token (head 7.11:
+  0.82; head 6.1: 0.79), with MLPs 6-7 and a direct path (head 1.5 attends to month1). The date "March 1987" is bound
+  at the year token and read from there by the final token.
+- **Month2's position** is written at its own token mostly by MLP 0 (share 0.32; without it the scalar's read-out R2
+  falls from 1.00 to 0.53).
+- The circuit is distributed: no single component's mean-ablation removes more than 18% of the answers.
+
 ## What is honest to say
 
 - **Who found it.** The tool provided every measurement (engine, `flow()`, judge, diagnoses, steering through the
@@ -43,8 +54,7 @@ identity of a year token, read out by the unembedding (measured as a table).
 - **Transfer.** With a comma after month1 ("March, 1987 - January") GPT-2's behaviour itself changes (68% "same
   year"); the decision rule does not transfer (60% vs constant 68%), the early representation maps do (substitution
   92-100% at depths 0-4; 79% at depth 8). The linear-position finding is shown for the dash template only.
-- **Not yet known.** Which heads and MLPs write the position scalars and compute the comparison (circuit job:
-  `_oracle/gpt2_month_rollover_linear_positions_circuit.txt` when it finishes); whether other templates use the same
+- **Not yet known.** Which components compute the comparison itself after depth 8; whether other templates use the same
   axis with other constants; the near-ties (32% of decisions within 0.5 logit) are excluded from all comparisons (E23).
 
 ## Reproduce

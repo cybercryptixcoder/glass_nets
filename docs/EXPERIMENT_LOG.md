@@ -774,3 +774,6 @@ features with the same values, full table) on half the prompts, scores on the ot
 order of m2 vs m1, 3 parameters, 96.8% of clear decisions; circular difference, 12 parameters, 80.8% (= constant).
 Run B restarted from its notes so its session has it (the direct test of whether the reader can now find the
 mechanism itself).
+- 09:30, E31 continued: circuit of the depth-8 scalars. Month1's position goes month1 -> year token (heads 1.0, 2.4,
+  4.11, MLP4; layers 1-4) -> month2 token (heads 7.11, 6.1 attending to the year token; MLPs 6-7; layers 5-7).
+  Month2's position is written by MLP0 at its own token. Distributed (no single ablation > 18% of answers). In DISCOVERY.md.
