@@ -23,21 +23,30 @@ this repo should be able to continue from these files alone, with no separate ha
 
 ### Results so far in session 4
 
-- `gpt2_be_verb` circuit measured (`lab/constructions/gpt2_be_verb/20261114-114450-62b2/circuit.txt`): MLP 0 at the cue writes most of the tense (ablating it halves the answers).
-- `gpt2_month_rollover`: prior-only control 0/5 stages (behaviour 86.4% of clear decisions; constant answer 80.7%).
+- `gpt2_month_rollover` hand-made calibration (`lab/constructions/_oracle/gpt2_month_rollover_calibration.py`, NOT
+  made by the tool): **VERIFIED AND COMPLETE, 5 of 5** (E28). So completeness is reachable on this target. It uses
+  identity variables (month1, year, month2 where flow() shows them; month1 copied to the year and month2 tokens), a
+  measured (month1, month2) decision table, and a measured year-token readout table at the end. It explains WHERE,
+  not HOW the comparison is computed (layers 8-11): that is the open, discovery-grade part.
+- Judge fixes found with it: clear-decision rule (E23), substitution diagnosis (E24), constant-site sampling bug (E25),
+  no year split (E27). Reader guidance for per-prompt answers added (E28).
+- Readers: blinded run A ~145 steps, run B ~75 steps (resumed with the guidance), both 0 of 5 so far. Prior-only 0 of 5.
+- `gpt2_be_verb`: circuit and FINDINGS.md written.
 
-### In flight right now (2026-11-17 05:55)
+### In flight right now (2026-11-17 08:20)
 
-- Blinded run A `20261117-053452-314f` (resumed once to get flow/probe) and blinded run B `20261117-055146-992e` on
-  `gpt2_month_rollover`. If dead: `python3 lab/constructor.py gpt2_month_rollover --resume <id> --steps 150`.
-- Check: `python3 lab/status.py gpt2_month_rollover`. When one completes: `python3 lab/lm_post.py gpt2_month_rollover <id>`
-  (automatic at the end of a run), then read the construction and state its new claim.
+- Run A `20261117-053452-314f` (ending at 150 steps), run B `20261117-055146-992e` (to 200 steps).
+  Resume either with `python3 lab/constructor.py gpt2_month_rollover --resume <id> --steps <n>`.
+- Circuit of the calibration -> `lab/constructions/_oracle/gpt2_month_rollover_calibration_circuit.txt`.
+- New transfer task file `lab/lm_tasks/month_rollover_comma.py` (not built yet: `python3 lab/lm_build.py` it).
 
 ### Next steps
 
-1. Get a complete construction on month rollover (watch, unblock, replicate).
-2. From it: the mechanism in plain words, the circuit, the transfer result, one new prediction tested on fresh prompts.
-3. Write `lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
+1. Get a reader to a complete construction (resume B; start a run in told mode, since the behaviour is public and the
+   prior-only control already rules out memory).
+2. HOW is the comparison computed? Circuit of the decision (layers 8-11), then a compact replacement of the table
+   (month circle angles?) tested with the judge's edit/partial tests: that is the discovery to aim for.
+3. Transfer of the calibration / reader construction to the comma template; DISCOVERY write-up.
 
 > EARLIER STATE (session 3, Nov 14) follows; still accurate except where session 4 says otherwise.
 
