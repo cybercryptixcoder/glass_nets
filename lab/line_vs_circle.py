@@ -7,8 +7,8 @@
 2. Each month's line position = its additive effect on the margin (measured on this model, so nothing is borrowed
    from another model). At each depth, for month1 at the year and month2 tokens and month2 at its own token, the line
    (1-D), the circle (cos, sin of 2 pi m / 12, orthogonal to the line) and a random 2-D plane are encoded with an
-   affine map and REMOVED; the share of the network's clear decisions kept is reported. Readability (R2) is reported
-   too: a code can be readable and unused.
+   affine map and REMOVED; the share of the network's clear decisions kept is reported. Because one answer can dominate the clear decisions (GPT-2 medium: 98%), the
+   share of the margin's variation over prompts that survives each removal (margin R2) is reported too.
 Writes lab/models/<target>/line_vs_circle.json. Generalises lab/constructions/_oracle/line_vs_circle.py (GPT-2 small).
 """
 import json, sys
@@ -68,9 +68,14 @@ def run(tid, depths=None, seed=0):
                 for p in sites:
                     Ap = A[p][test]; c = A[p][fit].mean(0); Q = Qs[p][k]
                     hook[f"resid{L}@{p}"] = Ap - ((Ap - c) @ Q) @ Q.T
-                row[k] = round(float(lmjudge.cmatch(T.run(test, hook=hook), clean)), 4)
+                o = T.run(test, hook=hook)
+                mg_o, mg_c = o[:, 1] - o[:, 0], clean[:, 1] - clean[:, 0]
+                row[k] = round(float(lmjudge.cmatch(o, clean)), 4)
+                # not saturated by a dominant answer: how much of the margin's variation over prompts survives the removal
+                row[k + " margin_r2"] = round(float(1 - ((mg_o - mg_c) ** 2).sum() / ((mg_c - mg_c.mean()) ** 2).sum()), 3)
             res["ablations"][f"{month} @ depth {L}"] = row
-            print(f"{month} depth {L}: decisions kept with line removed {row['line']:.1%}, circle removed {row['circle']:.1%}, random 2-D removed {row['random 2-D']:.1%}", flush=True)
+            print(f"{month} depth {L}: clear decisions kept / margin R2 kept with line removed {row['line']:.1%} / {row['line margin_r2']:.2f}, "
+                  f"circle removed {row['circle']:.1%} / {row['circle margin_r2']:.2f}, random 2-D removed {row['random 2-D']:.1%} / {row['random 2-D margin_r2']:.2f}", flush=True)
     (T.dir / "line_vs_circle.json").write_text(json.dumps(res, indent=1))
     return res
 
