@@ -799,3 +799,24 @@ LINE (the month's measured position, 1-D), the CIRCLE (cos, sin of 2 pi month / 
 changes up to 22% of clear decisions, removing the 2-D circle plane changes 0-2.5%. By depth 10 the comparison is
 done and neither matters. Caveat: the line's removal does not erase the decision completely (other, redundant
 month information remains), so "used" means "causally carries a large part of the decision".
+
+## 2026-11-17 11:38. E33, the line-not-circle result replicates in GPT-2 medium; a non-saturated measure
+
+`lab/line_vs_circle.py <target> [depths]` (any month-comparison task; each month's line position is measured on the
+model itself). Because a dominant answer can saturate "clear decisions kept" (GPT-2 medium says "next year" on 98% of
+its clear decisions, so a constant keeps 98%), it also reports the share of the margin's variation over prompts that
+survives each removal (margin R2 kept; 1 = untouched, 0 = all month dependence gone).
+
+| Model, month, depth | Line removed (margin R2 kept) | Circle removed | Random 2-D removed |
+|---|---|---|---|
+| GPT-2 small, month1, 8 | **0.20** | 0.96 | 1.00 |
+| GPT-2 small, month2, 6-8 | **0.55** | 0.96 | 1.00 |
+| GPT-2 small, month1, 10 | 0.94 | 0.99 | 1.00 |
+| GPT-2 medium, month1, 12 | **0.29** | 0.96 | 1.00 |
+| GPT-2 medium, month1, 16 | **0.32** | 0.97 | 1.00 |
+| GPT-2 medium, month2, 12 | **0.46** | 0.95 | 1.00 |
+| GPT-2 medium, month1/2, 20 | 0.89 / 0.91 | 0.97 / 0.98 | 1.00 |
+
+GPT-2 medium behaviour: linear order explains the margin (R2 0.77), the circular difference does not (0.04);
+measured positions follow the calendar (rank correlation +/-0.986). Target `gpt2medium_month_rollover` (5 years, 720
+prompts, `lab/lm_tasks/month_rollover_medium.py`). Pythia-160m target built (`pythia160m_month_rollover`); test running.
