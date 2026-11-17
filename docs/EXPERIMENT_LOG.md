@@ -753,3 +753,15 @@ substitution and removal pass. Only behaviour missed (94.4% < 95%): rule refit b
 scalars (96.8% held out): margin = 0.69 U + 2.53 V + 8.94 [month2 earlier] + 8.8 [same month] - 2.0. Re-judging.
 **Meaning:** by depth 8, everything the late layers use about each month is a single number, its position on a
 January-to-December line, and the decision is (mostly) the order of the two positions.
+
+## 2026-11-17 09:05. E30, the linear-positions construction: complete, a new claim confirmed, transfer negative
+
+- Re-judged with the logistic rule: **VERIFIED AND COMPLETE (5/5), behaviour 97.4%**.
+- New claim (steering month1's scalar continuously along its one direction at depth 8, 23 values incl. half-way
+  points, 300 prompts): the network's "next year" share rises monotonically 55% -> 99%; the construction predicts 90%
+  of clear decisions (89% at positions between months). Script: `lab/constructions/_oracle/steer_month_position.py`.
+- Transfer to the comma template: the network's behaviour changes (68% same year); decision rule 60% (constant 68%);
+  maps hold at depths 0-4 (substitution 92-100%), 79% at depth 8. Negative for the decision rule.
+- Blinded run A ended at 150 steps with 1 of 5 stages; run B continues. The finding was made by the session agent
+  with the tool's measurements and judge, not by the autonomous reader. Write-up:
+  `lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
