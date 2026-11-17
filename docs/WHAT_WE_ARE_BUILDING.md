@@ -124,7 +124,9 @@ set; task files declare `TRANSFER`); `lab/lm_post.py` + `lab/lm_writeup.py` (aft
 FINDINGS.md); judge: decisions compared only where the network is clear (`TIE` 0.5), diagnosis of failing
 substitution (omitted positions, missing input feature, answer-token identity), constant-site check fixed. Reader
 instructions: guidance for per-prompt answers. First discovery verified with the tool:
-`lab/constructions/gpt2_month_rollover/DISCOVERY.md`.
+`lab/constructions/gpt2_month_rollover/DISCOVERY.md`. `lab/line_vs_circle.py`: line-vs-circle causal test for any
+month task (behaviour models, removal of the line, the circle, an unordered month code and a random plane); targets
+`gpt2medium_month_rollover`, `pythia160m_month_rollover` (replications) and the transfer sets.
 
 ### 7. Real language models (added 2026-11-14)
 

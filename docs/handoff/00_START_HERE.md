@@ -21,36 +21,39 @@ this repo should be able to continue from these files alone, with no separate ha
 | Post-run | `lab/lm_post.py` | Runs transfer + circuit automatically when an LM run ends with a verified stage; shown on the page. |
 | Judge rule | `lab/lmjudge.py` (`TIE`) | Decisions are compared only where the network's top-two logit margin is >= 0.5 (E23: near-ties made 95% unreachable). |
 
-### Results so far in session 4 (updated 09:10)
+### Results so far in session 4 (updated 11:45; summary page: `docs/RESULTS_LM.md`)
 
-- **FINDING** (`lab/constructions/gpt2_month_rollover/DISCOVERY.md`): GPT-2 small decides whether "March 1987 -
-  January" rolls into 1988 by a LINEAR comparison of the two months' positions on a January-to-December line, not by
-  its circular month representation. A construction with one scalar per month at depth 8 is **VERIFIED AND COMPLETE
-  (5/5, behaviour 97.4%)**; partial tests on each scalar 100% / 97.4%; edit 83.9%. New claim confirmed: sliding
-  month1's scalar continuously along one direction at depth 8 moves the network 55% -> 99% "next year", predicted on
-  90% of clear decisions (89% between months). Prior-only control 0/5. Transfer to a comma template: negative for
-  the decision rule (the behaviour itself changes), positive for the early maps.
-- **Who made it:** the session agent, with the tool's engine, flow(), judge, diagnoses and steering. The autonomous
-  blinded reader got 1/5 in 150 steps (run A); run B is still going. Making the READER reach this is the open problem.
-- Hand-made complete calibration (identity variables + tables) also verified 5/5 (E28).
-- Judge fixes: clear-decision rule (E23), substitution diagnosis (E24), constant-site sampling bug (E25), no year
-  split (E27); reader guidance for per-prompt answers (E28).
-- `gpt2_be_verb`: circuit + FINDINGS.md.
+- **DISCOVERY** (`lab/constructions/gpt2_month_rollover/DISCOVERY.md`): language models hold months both on a circle
+  and on a line; deciding whether a date range wraps into the next year ("March 1987 - January" -> 1987 or 1988?)
+  runs on a 1-D calendar LINE, and the circle is causally inert for it.
+  - GPT-2 small: complete causal abstraction with one scalar per month at depth 8, **VERIFIED AND COMPLETE (5/5,
+    behaviour 97.4%)**; steering the scalar continuously predicts 90% of clear decisions (89% between months);
+    prior-only control 0/5; circuit: month1 -> year token (heads 1.0, 2.4, 4.11) -> final token (heads 6.1, 7.11).
+  - Causal dissociation (E32-E35, `lab/line_vs_circle.py`): removing the line keeps 0.20 / 0.29 / 0.50 of the
+    margin's variation in GPT-2 small / GPT-2 medium / Pythia-160m; removing the circle keeps 0.96-0.99; an unordered
+    random month code 0.82-0.94; a random plane 1.00. **Replicates in 3 models, 2 families.**
+  - Novelty and publishability assessment, with the closest prior work (Engels et al. ICLR 2025; arXiv 2605.29126):
+    in DISCOVERY.md. Workshop-paper strength now; main track needs a 7-8B model and other templates.
+  - Comma template ("March, 1987 - January"): the behaviour changes and the line's effect is much weaker there
+    (`lab/models/gpt2_month_rollover_comma/line_vs_circle.json`): the line is template-dependent. Open.
+- **Who made it:** the session agent with the tool. The autonomous reader: 1/5 (run A), 0/5 (run B, interrupted).
+- Tool additions this session: per-prompt answers, scout, flow/probe/explain_output, transfer, post-run analysis +
+  FINDINGS.md, judge rule for clear decisions, substitution diagnosis, constant-site fix, line_vs_circle.py.
+- `gpt2_be_verb` (blinded reader, complete 5/5): circuit + FINDINGS.md.
 
-### In flight / unfinished (2026-11-17 09:10)
+### In flight / unfinished (2026-11-17 11:45; the session ends at 11:59)
 
-- Blinded run B `20261117-055146-992e` (restarted 09:20 with explain_output(), to 250 steps; dies when the session pauses: resume with
-  `python3 lab/constructor.py gpt2_month_rollover --resume 20261117-055146-992e --steps 250`).
-- Circuit of the depth-8 scalars: background job writing `lab/constructions/_oracle/gpt2_month_rollover_linear_positions_circuit.txt`;
-  if missing, rerun: `python3 -c "import sys; sys.path.insert(0,'lab'); import lm_circuit as c; print(c.render(c.circuit('gpt2_month_rollover', open('lab/constructions/_oracle/gpt2_month_rollover_linear_positions.py').read(), only_units=['cut8'])))"`.
+- Nothing is left running after 11:59. Run B (`20261117-055146-992e`, 134 steps, 0/5) is resumable:
+  `python3 lab/constructor.py gpt2_month_rollover --resume 20261117-055146-992e --steps 250`.
 
-### Next steps
+### Next steps (in order of value for the paper)
 
-1. Make the reader find this itself (explain_output() added 09:20; run B is the test). Still to add: (margin regressions on
-   input features: additive vs order vs circular; a readout-table helper for per-prompt answers), then rerun blinded.
-2. Circuit: which heads move month1's position onto the year/month2 tokens; which MLPs compute the comparison.
-3. Other templates (comma, "from ... to"): same axis with other constants? Llama/Pythia: same mechanism?
-4. Countdown (`gpt2_countdown`) remains open and resumable (`20261114-114432-90e3`).
+1. A 7-8B model (Llama 3 8B / Mistral 7B, where circles ARE used for month arithmetic): same line-vs-circle test.
+   Needs a loader for the Llama architecture in `lab/lm.py` (RMSNorm, SwiGLU, rotary) and a GPU.
+2. Why the comma template weakens the line: what replaces it there?
+3. Days of the week and other ordered cycles: is "line for order, circle for arithmetic" general?
+4. Components after depth 8 that compute the comparison (circuit of the decision itself).
+5. The tool's own goal: get the autonomous reader to this result (resume run B with `explain_output()`).
 
 > EARLIER STATE (session 3, Nov 14) follows; still accurate except where session 4 says otherwise.
 

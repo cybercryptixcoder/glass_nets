@@ -1,6 +1,6 @@
 # Constructor runs
 
-*Written by `lab/results.py` on 2026-11-14 14:06. Every run of `lab/constructor.py`, grouped by network, best first. Each run id links to that run's page.*
+*Written by `lab/results.py` on 2026-11-17 11:41. Every run of `lab/constructor.py`, grouped by network, best first. Each run id links to that run's page.*
 
 ## `astra_breakout`: a policy for MinAtar Breakout: move the paddle under where the ball will land
 
@@ -47,6 +47,14 @@
 |---|---|---|---|---|---|---|---|---|
 | [`20261114-114432-90e3`](gpt2_countdown/20261114-114432-90e3/README.md) | blinded | blinded run A | running | 1 of 5 stages | 100.0% | 98 | 16 | $0.32 |
 | [`20261114-130627-1557`](gpt2_countdown/20261114-130627-1557/README.md) | prior-only | prior-only control 1 | done | 1 of 5 stages | 100.0% | 2 | 1 | $0.04 |
+
+## `gpt2_month_rollover`: GPT-2 small mostly continues with the same year when month2 comes after month1 in the calendar, and with the next year when it comes before; the probability of the next year grows with the forward distance from month1 to month2.
+
+| Run | Reader | Title | Status | Result | Behaviour match | Steps | Submissions | Cost |
+|---|---|---|---|---|---|---|---|---|
+| [`20261117-053452-314f`](gpt2_month_rollover/20261117-053452-314f/README.md) | blinded | blinded run A | done | 1 of 5 stages | 100.0% | 150 | 25 | $0.78 |
+| [`20261117-055146-992e`](gpt2_month_rollover/20261117-055146-992e/README.md) | blinded | blinded run B | running | 0 of 5 stages | 100.0% | 134 | 19 | $0.57 |
+| [`20261117-053455-87be`](gpt2_month_rollover/20261117-053455-87be/README.md) | prior-only | prior-only control 1 | done | 0 of 5 stages | 81.2% | 3 | 1 | $0.05 |
 
 ## `modadd_p113`: (a + b) mod 113
 
