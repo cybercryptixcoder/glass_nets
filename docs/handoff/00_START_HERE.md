@@ -21,7 +21,7 @@ this repo should be able to continue from these files alone, with no separate ha
 | Post-run | `lab/lm_post.py` | Runs transfer + circuit automatically when an LM run ends with a verified stage; shown on the page. |
 | Judge rule | `lab/lmjudge.py` (`TIE`) | Decisions are compared only where the network's top-two logit margin is >= 0.5 (E23: near-ties made 95% unreachable). |
 
-### Results so far in session 4 (updated 11:45; summary page: `docs/RESULTS_LM.md`)
+### Results so far in session 4 (updated 11:47; summary: `docs/RESULTS_LM.md`; paper draft: `docs/PAPER_DRAFT.md`; figure: `docs/figures/month_line_vs_circle.png`)
 
 - **DISCOVERY** (`lab/constructions/gpt2_month_rollover/DISCOVERY.md`): language models hold months both on a circle
   and on a line; deciding whether a date range wraps into the next year ("March 1987 - January" -> 1987 or 1988?)
