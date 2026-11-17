@@ -47,7 +47,9 @@ the next-vs-same margin's variation over prompts that survives; 1 = untouched):
 | GPT-2 medium (24 layers) | 0.77 | 0.04 | +0.99 / -0.99 | **0.29** (depth 12) | 0.96 | **0.46** (depth 12) | 0.95 |
 | Pythia-160m (GPT-NeoX, rotary, parallel blocks) | 0.70 | 0.08 | +0.95 / -0.93 | **0.50** (depth 8) | 0.99 | **0.50** (depth 8) | 0.99 |
 
-A random 2-D plane removed at the same sites: 1.00 everywhere. **In all three models the decision runs on a 1-D
+A random 2-D plane removed at the same sites: 1.00 everywhere. A 1-D direction encoding a RANDOM number per month
+(month-related but unordered; 5 draws): 0.82-0.94 kept on average (worst draw 0.70), against 0.20-0.55 for the
+calendar line (E35): the order is what matters, not month information in general. **In all three models the decision runs on a 1-D
 calendar line and is almost untouched by removing the circle.** (Full numbers: `lab/models/<target>/line_vs_circle.json`.)
 
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)

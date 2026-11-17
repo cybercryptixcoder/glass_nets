@@ -828,3 +828,17 @@ tokenizer; decisions 67.5% next / 32.5% same). Behaviour: order R2 0.70, circula
 calendar +0.95 / -0.93. Removals (margin R2 kept): month1 line 0.66 / 0.61 / 0.56 / 0.50 at depths 3 / 4 / 6 / 8,
 circle 0.95-0.99; month2 line 0.50-0.55, circle 0.96-0.99; random 2-D 1.00. Clear decisions kept with the line
 removed 89-94%, with the circle removed 100%. Three models, two families: the decision uses the line, not the circle.
+
+## 2026-11-17 11:41. E35, control: a month-related but UNORDERED 1-D direction matters far less than the line
+
+`lab/line_vs_circle.py` now also removes, at the same sites, a 1-D direction encoding a RANDOM number per month
+(5 draws), encoded exactly like the line. Margin R2 kept (line / random month code mean, worst draw):
+
+| Model, depth | month1 | month2 |
+|---|---|---|
+| GPT-2 small, 8 | **0.20** / 0.89 (0.79) | **0.55** / 0.94 (0.87) |
+| GPT-2 medium, 12 | **0.29** / 0.82 (0.70) | **0.46** / 0.93 (0.86) |
+| Pythia-160m, 8 | **0.50** / 0.87 (0.83) | **0.50** / 0.92 (0.88) |
+
+It is the calendar ORDER, not month information in general, that the decision uses. (Random codes have some effect
+because a random number per month correlates partly with calendar position.)

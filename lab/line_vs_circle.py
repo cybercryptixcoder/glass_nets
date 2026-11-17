@@ -62,8 +62,12 @@ def run(tid, depths=None, seed=0):
                 qc, _ = np.linalg.qr((Mc - (Mc @ ql) @ ql.T).T)
                 qr, _ = np.linalg.qr(rng.normal(size=(A[p].shape[1], 2)))
                 Qs[p] = {"line": ql, "circle": qc, "random 2-D": qr}
+                for d_ in range(5):     # month-related but UNORDERED: a random number per month, encoded like the line
+                    rv = np.random.default_rng(100 + d_).normal(size=12)[m][:, None]
+                    Mr, *_ = np.linalg.lstsq(rv[fit] - rv[fit].mean(0), A[p][fit] - c, rcond=None)
+                    Qs[p][f"random month code {d_}"], _ = np.linalg.qr(Mr.T)
             row = {}
-            for k in ("line", "circle", "random 2-D"):
+            for k in ["line", "circle", "random 2-D"] + [f"random month code {d_}" for d_ in range(5)]:
                 hook = {}
                 for p in sites:
                     Ap = A[p][test]; c = A[p][fit].mean(0); Q = Qs[p][k]
@@ -73,9 +77,13 @@ def run(tid, depths=None, seed=0):
                 row[k] = round(float(lmjudge.cmatch(o, clean)), 4)
                 # not saturated by a dominant answer: how much of the margin's variation over prompts survives the removal
                 row[k + " margin_r2"] = round(float(1 - ((mg_o - mg_c) ** 2).sum() / ((mg_c - mg_c.mean()) ** 2).sum()), 3)
+            rmc = [row[f"random month code {d_} margin_r2"] for d_ in range(5)]
+            row["random month code, mean margin_r2"] = round(float(np.mean(rmc)), 3)
+            row["random month code, min margin_r2"] = round(float(np.min(rmc)), 3)
             res["ablations"][f"{month} @ depth {L}"] = row
             print(f"{month} depth {L}: clear decisions kept / margin R2 kept with line removed {row['line']:.1%} / {row['line margin_r2']:.2f}, "
-                  f"circle removed {row['circle']:.1%} / {row['circle margin_r2']:.2f}, random 2-D removed {row['random 2-D']:.1%} / {row['random 2-D margin_r2']:.2f}", flush=True)
+                  f"circle removed {row['circle']:.1%} / {row['circle margin_r2']:.2f}, random 2-D removed {row['random 2-D']:.1%} / {row['random 2-D margin_r2']:.2f}, "
+                  f"random month code (1-D, 5 draws) margin R2 mean {row['random month code, mean margin_r2']:.2f} min {row['random month code, min margin_r2']:.2f}", flush=True)
     (T.dir / "line_vs_circle.json").write_text(json.dumps(res, indent=1))
     return res
 
