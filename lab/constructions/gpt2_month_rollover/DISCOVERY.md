@@ -82,9 +82,10 @@ Closest prior work and how this differs:
 |---|---|---|
 | Engels et al., *Not All Language Model Features Are Linear*, ICLR 2025 (arXiv 2405.14860) | Circular month / weekday features in GPT-2 small (layer 7); circles causally used for months/days modular addition in Mistral 7B and Llama 3 8B | Here the SAME model holds the circle, but a different calendar computation (is the range into the next year?) runs on a 1-D LINE; the circle is causally inert for it (E32) |
 | arXiv 2605.29126 (2026), calendar-date duration reasoning | A sin/cos probe decodes day-of-year, yet ablating it does nothing; a 4-D DAS subspace carries the computation; QK offsets at +/-30, 61 days | Same "readable but unused circle" theme, for durations in a larger model. New here: the USED representation is identified as a 1-D calendar line, with a complete verified causal abstraction (5/5 stages), continuous steering, and the two-hop route via the year token, in GPT-2 small |
-| Gould et al. 2023 (successor heads) | Heads that increment ordinal tokens (months, numbers) | Increment, not comparison |
+| Gould et al. 2023 (successor heads, arXiv 2312.09230) | Heads that increment ordinal tokens; models encode a token's INDEX within its ordinal sequence (e.g. months), with mod-10 features | An ordinal month index is known to EXIST; new here is that this index (a 1-D line), not the circle, causally carries a COMPARISON decision, with 76-100% of each month's causal contribution (E38) |
+| Heinzerling & Inui 2024 | Numeric entities (birth years) represented monotonically, "pseudo-linear" | Numbers, not cyclic categories; no circle-vs-line contrast |
+| Tiblias et al., TMLR 02/2026 (SMDS, arXiv 2510.01025) | Feature manifolds of dates: circles, lines, clusters; confirms circular calendar topology | Geometry found by fitting manifolds; not which geometry a decision causally uses |
 | Hanna et al. 2023 ("greater-than" in GPT-2 small) | Year comparison "from 1732 to 17__" | Compares two-digit years via MLP lookups; here two month WORDS are compared on a learned line, across positions via the year token |
-| Niu et al. 2025 (*Shape Happens*, SMDS) | Temporal entities form manifolds: circles, lines, clusters | Geometry, not which geometry a given decision uses causally |
 
 **Honest assessment.** The claim "for year rollover GPT-2 small compares months on a line it holds next to its month
 circle, and the circle is unused" is, as far as this search finds, new, and it is backed by the field's strongest
@@ -101,7 +102,7 @@ uses depends on the computation: deciding whether a date range wraps into the ne
 small, GPT-2 medium and Pythia-160m, with the circle causally inert.
 
 References: arXiv 2405.14860; arXiv 2605.29126; Gould et al. 2023, arXiv 2312.09230; Hanna et al. 2023,
-arXiv 2305.00586; Niu et al. 2025 (frankniujc.github.io/research/arxiv2025/shape_happens.pdf).
+arXiv 2305.00586; Heinzerling & Inui 2024; Tiblias et al. 2026 (TMLR; arXiv 2510.01025, "Shape Happens").
 
 ## What is honest to say
 

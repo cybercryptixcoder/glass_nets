@@ -50,8 +50,10 @@ models; right: what survives removing each code). Tables: DISCOVERY.md and `docs
 
 Engels et al. 2025 (circular month/weekday features, used for modular arithmetic in 7-8B models); arXiv 2605.29126
 (2026: a sin/cos date probe is readable but causally unused in duration reasoning; a 4-D DAS subspace is used); Gould et
-al. 2023 (successor heads); Hanna et al. 2023 (greater-than for years in GPT-2 small); Niu et al. 2025 (temporal
-manifolds: circles, lines, clusters).
+al. 2023 (successor heads; ordinal-index representations of months and numbers exist, with mod-10 features: our
+line is consistent with such an index, and we show it, not the circle, carries the comparison); Heinzerling & Inui 2024
+(pseudo-linear numeric entities); Hanna et al. 2023 (greater-than for years in GPT-2 small); Tiblias et al. 2026
+(TMLR, SMDS: date manifolds, circular calendar topology).
 
 ## Limits and what a full paper still needs
 
