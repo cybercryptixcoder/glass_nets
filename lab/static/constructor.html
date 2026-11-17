@@ -329,8 +329,8 @@ async function loadTasks() {
   const ts = await api('/api/lm_tasks');
   $('tasks').innerHTML = ts.map(t => `<div class="task"><b>${esc(t.id)}</b> <span class="badge ${t.built ? 'ok' : 'part'}">${t.built ? 'built' : 'not built'}</span>
     <button class="btn sm" data-f="${esc(t.file)}" style="float:right">${t.built ? 'Rebuild' : 'Build'}</button>
-    <div class="m">${esc(t.model)} · ${esc(t.file)}</div><div class="m">${esc(t.doc.slice(0, 150))}</div></div>`).join('')
-    + '<div class="pad hint">A task is a small Python file: the model, the prompts, the answer tokens (see lab/lm_tasks/README.md). Build turns it into a network you can pick above.</div>';
+    <div class="m">${esc(t.model)} · ${esc(t.file)}</div><div class="m">${esc(t.doc.slice(0, 150))}</div>${t.scout ? `<div class="m" style="opacity:1"><b>${t.scout.startsWith('good') ? '✓' : '!'}</b> ${esc(t.scout)}</div>` : ''}</div>`).join('')
+    + '<div class="pad hint">A task is a small Python file: the model, the prompts, the answer tokens (see lab/lm_tasks/README.md). Build turns it into a network you can pick above, and checks whether it is a good target (lab/lm_scout.py).</div>';
   for (const b of $('tasks').querySelectorAll('button')) b.onclick = async () => {
     b.disabled = true; b.textContent = 'building…';
     const r = await (await fetch('/api/lm_tasks/build', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({file: b.dataset.f})})).json();

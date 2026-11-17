@@ -82,4 +82,6 @@ def build(task_file):
 
 
 if __name__ == "__main__":
-    build(sys.argv[1])
+    tid = build(sys.argv[1])
+    import lm_scout                      # is it a good target? (lab/lm_scout.py)
+    print(lm_scout.render(lm_scout.scout(tid)))

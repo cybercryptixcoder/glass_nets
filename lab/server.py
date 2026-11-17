@@ -398,7 +398,9 @@ class H(BaseHTTPRequestHandler):
                     txt = f.read_text()
                     tid = (re.search(r'^ID\s*=\s*"([\w-]+)"', txt, re.M) or [None, f.stem])[1]
                     model = (re.search(r'^MODEL\s*=\s*"([^"]+)"', txt, re.M) or [None, "?"])[1]
+                    sc = MODELS / tid / "scout.json"
                     out.append({"file": f.name, "id": tid, "model": model, "built": (MODELS / tid / "meta.json").exists(),
+                                "scout": json.loads(sc.read_text())["verdict"] if sc.exists() else None,
                                 "doc": (re.search(r'^"""(.*?)"""', txt, re.S) or [None, ""])[1].strip().split("\n\n")[0]})
                 return self.send(200, out)
             m = re.match(r"^/api/tensor/([\w-]+)/(\w+)$", p)
@@ -478,7 +480,9 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lm_circuit.for_run(m.group(1), m.group(2)))
             if p == "/api/lm_tasks/build":
                 import lm_build
-                return self.send(200, {"id": lm_build.build(str(LAB / "lm_tasks" / Path(self.body()["file"]).name))})
+                tid = lm_build.build(str(LAB / "lm_tasks" / Path(self.body()["file"]).name))
+                import lm_scout
+                return self.send(200, {"id": tid, "scout": lm_scout.scout(tid)})
             if p == "/api/construct":
                 import constructor
                 cfg = self.body()
