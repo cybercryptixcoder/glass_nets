@@ -820,3 +820,11 @@ survives each removal (margin R2 kept; 1 = untouched, 0 = all month dependence g
 GPT-2 medium behaviour: linear order explains the margin (R2 0.77), the circular difference does not (0.04);
 measured positions follow the calendar (rank correlation +/-0.986). Target `gpt2medium_month_rollover` (5 years, 720
 prompts, `lab/lm_tasks/month_rollover_medium.py`). Pythia-160m target built (`pythia160m_month_rollover`); test running.
+
+## 2026-11-17 11:40. E34, replication in a second model family: Pythia-160m
+
+`pythia160m_month_rollover` (`lab/lm_tasks/month_rollover_pythia.py`, 720 prompts, all tokens single in its
+tokenizer; decisions 67.5% next / 32.5% same). Behaviour: order R2 0.70, circular difference 0.08; positions vs
+calendar +0.95 / -0.93. Removals (margin R2 kept): month1 line 0.66 / 0.61 / 0.56 / 0.50 at depths 3 / 4 / 6 / 8,
+circle 0.95-0.99; month2 line 0.50-0.55, circle 0.96-0.99; random 2-D 1.00. Clear decisions kept with the line
+removed 89-94%, with the circle removed 100%. Three models, two families: the decision uses the line, not the circle.

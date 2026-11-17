@@ -35,6 +35,21 @@ R2 = 1.00. Removing the 1-D line direction for month1 at depth 8 leaves 77.5% of
 depths 6-8: 84.4% vs 100%. At depth 10 neither matters (the comparison is done). **The model represents months
 both ways and uses the line for this decision.**
 
+## It replicates across sizes and model families (`lab/line_vs_circle.py`, E33-E34)
+
+Same prompts in three models; each month's line position is measured on the model itself. Behaviour (half fitted,
+half scored) and causal removals at the depths where the months' information is used ("margin R2 kept" = share of
+the next-vs-same margin's variation over prompts that survives; 1 = untouched):
+
+| Model | Order of the months explains the margin (R2) | Circular difference (R2) | Positions vs calendar (rank corr.) | month1 line removed | month1 circle removed | month2 line removed | month2 circle removed |
+|---|---|---|---|---|---|---|---|
+| GPT-2 small (12 layers) | 0.73 | 0.05 | +0.98 / -0.98 | **0.20** (depth 8) | 0.96 | **0.55** (depth 8) | 0.96 |
+| GPT-2 medium (24 layers) | 0.77 | 0.04 | +0.99 / -0.99 | **0.29** (depth 12) | 0.96 | **0.46** (depth 12) | 0.95 |
+| Pythia-160m (GPT-NeoX, rotary, parallel blocks) | 0.70 | 0.08 | +0.95 / -0.93 | **0.50** (depth 8) | 0.99 | **0.50** (depth 8) | 0.99 |
+
+A random 2-D plane removed at the same sites: 1.00 everywhere. **In all three models the decision runs on a 1-D
+calendar line and is almost untouched by removing the circle.** (Full numbers: `lab/models/<target>/line_vs_circle.json`.)
+
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)
 
 Month1, year and month2 are at their own tokens at the embedding. From depth 2, month1's information is also on the
@@ -68,12 +83,17 @@ Closest prior work and how this differs:
 **Honest assessment.** The claim "for year rollover GPT-2 small compares months on a line it holds next to its month
 circle, and the circle is unused" is, as far as this search finds, new, and it is backed by the field's strongest
 kind of evidence (complete causal abstraction with interventions, a steering prediction no prompt can show,
-prior-only control, causal dissociation line vs circle). It is a **workshop-paper-sized** result as it stands
-(one model, one template). To be a main-track paper it needs: (1) the same test in larger models (GPT-2 medium /
-Pythia / Llama: does the line persist where circles are known to be used?); (2) other templates (the comma
+prior-only control, causal dissociation line vs circle). It was workshop-sized with one model; with the replication in GPT-2 medium and Pythia-160m (two families) it is a
+solid workshop paper and a credible start for a main-track one. For main track it still needs: (1) the same test in a
+7-8B model (Llama 3 8B / Mistral 7B, where Engels et al. show circles ARE used for month arithmetic: does the same
+model switch geometry by task?); (2) other templates (the comma
 template changes the behaviour itself: characterise when the line is used); (3) days of the week ("Friday -
 Monday": next week?), to show it is a general strategy for ordered cyclic categories; (4) the components after
 depth 8 that compute the comparison.
+
+**Paper in one sentence:** language models hold months both on a circle and on a line, and which one a computation
+uses depends on the computation: deciding whether a date range wraps into the next year runs on the line in GPT-2
+small, GPT-2 medium and Pythia-160m, with the circle causally inert.
 
 References: arXiv 2405.14860; arXiv 2605.29126; Gould et al. 2023, arXiv 2312.09230; Hanna et al. 2023,
 arXiv 2305.00586; Niu et al. 2025 (frankniujc.github.io/research/arxiv2025/shape_happens.pdf).
