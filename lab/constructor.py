@@ -163,6 +163,9 @@ YOUR TOOLS
     run_tokens(tokens [B, T'], hook=None, sites=()) -> (logits [B, n_vocab] at the last position, {site: array}): any token sequences, not only the task's prompts (positions in site names must be token indices). tok(text) -> token ids; detok(ids) -> token strings.
     W: dict of the weights (numpy): W_E [n_vocab, d], W_pos, W_U [d, n_vocab], ln_f.w/b, and per layer l: L{l}.W_Q, W_K, W_V [n_heads, d, d_head], b_Q, b_K, b_V, W_O [n_heads, d_head, d], b_O, ln1.w/b, ln2.w/b, W_in [d, d_mlp], b_in, W_out [d_mlp, d], b_out. CFG: sizes.
     unembed(v) -> logits for final-residual vector(s) v (applies the last LayerNorm); top(vocab_vector, k) -> the k largest tokens.
+    READY-MADE EXPERIMENTS (use them first; each takes about 10-60 s):
+      flow("feature name") prints WHERE one input feature lives: for pairs of prompts that differ ONLY in that feature, the share whose answer follows when resid{L}@p is patched from the other prompt, for every depth L and position p. Read a column to see the feature arrive at a position and leave it. flow() without a feature prints the share of answers kept when resid{L}@p is mean-ablated.
+      probe(site, values) -> held-out R2 (and accuracy for integer labels) of a linear read-out of values [N] or [N, k] (one per task prompt) from a site.
     np, scipy, sklearn. Print what you want to see; output is cut at about 8,000 characters, so print summaries, not raw arrays.
   Cost: a run over 200 prompts takes about 0.2-1 s (less when the hooked sites are late in the network and at late positions). A call is stopped after 600 s: plan scans (for example every layer at a few positions first, heads only where it matters), and use a subset of a few hundred prompts.
 - submit(code): sends a construction file to the judge and returns its report (it takes a minute or two). The report is the fastest way to learn what is right: unit by unit, variable by variable, what passes and what fails, next to controls.

@@ -55,6 +55,9 @@ def lm_env(cfg, env):
         i = np.argsort(-v)[:k]
         return [(tk.decode([int(j)]), round(float(v[j]), 2)) for j in i]
     env["top"] = top
+    import lm_tools
+    env["flow"] = lambda feature=None, n=300, positions=None, layers=None: print(lm_tools.flow(task, feature, n, positions, layers))
+    env["probe"] = lambda site, values, n=None: lm_tools.probe(task, site, values, n)
 
 
 def main():

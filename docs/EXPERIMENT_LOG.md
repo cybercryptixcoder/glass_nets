@@ -614,3 +614,40 @@ prior-only control 1 on `gpt2_countdown`, blinded run A on the new target `gpt2_
   (`lab/.cache/`, shared by the session and the judge). No kills seen after that with two runs going.
 - Not done: the circuit of the be-verb construction (`lm_circuit.py` did not finish in time), a replicate, a new
   claim tested. See START_HERE, "Unfinished".
+
+---
+
+# Session 4 (2026-11-17): a target the tool can finish, and tools that find good targets
+
+## 2026-11-17 05:30. E21, choosing a hard target that stays on-distribution: month rollover
+
+**Why.** The countdown stalled because its prompts are a thin set (runs of consecutive numbers): the judge's partial
+tests swap one number and ask what GPT-2 does on "97, 96, 28, 94,", which the reader has never seen (E19). A target
+whose prompts are EVERY combination of its input features keeps every intervention on prompts of the task.
+**Test.** "<month1> <year> - <month2>" -> which year does GPT-2 small continue with? All 144 month pairs x 20 years
+(1980-1999); the output is the logits of three per-prompt tokens: the same year, the next year, the year before.
+**Result.** When month2 comes before month1 (or is the same month) the network says the next year in 99.9% / 99.6%;
+when month2 comes after month1 it keeps the year in 73%, with a structured exception pattern (mid-year months after
+an early month1 often still get "next year"; late months get "same year"). Literature (2026-11-17): circular month
+features (Engels et al. 2024), successor heads incrementing months (Gould et al. 2023), day-count duration circuits
+(arXiv 2605.29126); no account of how a model compares two months to decide whether a year rolls over.
+**Decision.** New hard target `gpt2_month_rollover` (2,880 prompts). Engine change needed: answer tokens that differ
+per prompt (`answers.npy`, [N, k]); a task row may carry its own answer strings.
+
+## 2026-11-17 05:40. E22, three new tools, each tested live
+
+- `lab/lm_transfer.py`: a construction's maps fitted on one task, tested unchanged on another (here: the same
+  prompts with the years 1950-1979, `gpt2_month_rollover_y1950`). Check with a hand-made table construction: the
+  decision table from 1980-1999 predicts 89.4% of decisions on 1950-1979 (constant baseline 61.4%); interchange of
+  the month identities at the embedding 95% when the network changed. The test also showed that the YEAR position
+  must be part of every cut on this task (mean-ablating it destroys the answer token: substitution 46%).
+- `lab/lm_scout.py`: is a task a good target? (behaviour spread, product coverage, one-token lookup, positions
+  needed). It flags the ordinal suffix (lookup, 98%), the countdown (prompts cover ~0% of input combinations) and
+  passes be-verb and month rollover. Runs automatically after `lm_build.py` and on the page's Build button.
+- `lab/lm_tools.py`, bound in the reader's session: `flow(feature)` (activation patching from prompts that differ
+  only in that feature, at every depth x position; 8 s on month rollover) and `probe(site, values)`.
+  First flow() on month rollover: month1's information stays at its own token to depth 4, sits on the YEAR token
+  from depth 2 to 9, and is at the last position from depth 10. Hypothesis (for the reader to test, not assumed):
+  the month is bound to the year token ("March 1999") before the end position reads the date.
+- In flight: blinded run A and prior-only control 1 on `gpt2_month_rollover` (started 05:34; run A predates
+  flow() and probe(); its kernel does not have them).
