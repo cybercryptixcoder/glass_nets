@@ -53,7 +53,8 @@ calendar line (E35): the order is what matters, not month information in general
 calendar index (January = 0 ... December = 11), nothing fitted to the output, has the same effect (0.21 / 0.29 / 0.56
 kept for month1; E37): the result is not an artefact of choosing the line from the output. Compared with removing
 the month's ENTIRE identity (11-D), the 1-D line accounts for 96% / 76% / 85% of month1's causal contribution and
-93-100% of month2's at these sites (E38). Stable across fit/test splits (E39). **In all three models the decision runs on a 1-D
+93-100% of month2's at these sites (E38). Stable across fit/test splits (E39). Steering month1 along the unfitted calendar-index direction by -6 ... +6 months
+moves "next year" monotonically: 44% -> 97% (GPT-2 small), 59% -> 100% (medium), 43% -> 93% (Pythia-160m) (E40). **In all three models the decision runs on a 1-D
 calendar line and is almost untouched by removing the circle.** (Full numbers: `lab/models/<target>/line_vs_circle.json`.)
 
 ## The route (from the complete calibration, `_oracle/gpt2_month_rollover_calibration.py`, and `flow()`)

@@ -21,6 +21,7 @@ year ("March 1987 - January" -> 1987 or 1988?) runs on the LINE, with the circle
 | Share of month1's / month2's causal contribution carried by the 1-D line | 96% / 100% | 76% / ~100% | 85% / 93% |
 | Complete causal abstraction (judge, 5/5 stages) | **verified**, behaviour 97.4% | not attempted | not attempted |
 | Steering month1's position continuously (incl. between months) | 90% of clear decisions predicted | | |
+| Steering along the unfitted calendar index, -6 ... +6 months: share of "next year" | 44% -> 97%, monotone | 59% -> 100%, monotone | 43% -> 93%, monotone |
 | Prior-only control (reader's memory) | 0 of 5 stages | | |
 
 Circuit (GPT-2 small): month1's position goes month1 -> year token (heads 1.0, 2.4, 4.11, MLP 4) -> final token

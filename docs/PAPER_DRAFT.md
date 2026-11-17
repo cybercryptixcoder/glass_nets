@@ -13,7 +13,8 @@ line (margin R2 0.70-0.77) and not by their circular distance (0.04-0.08). Causa
 direction from the residual stream removes 44-80% of the decision margin's variation across prompts, while removing
 the two-dimensional month circle at the same sites removes 1-4%, an unordered month code 6-18%, and a random plane 0%.
 The result does not depend on choosing the line from the output: an unfitted calendar-index line has the same effect,
-and the single line accounts for 76-100% of each month's whole causal contribution at those sites.
+and the single line accounts for 76-100% of each month's whole causal contribution at those sites. Steering along it
+moves the decision monotonically in all three models ("next year" 43-59% -> 93-100% for a 12-month shift).
 In GPT-2 small we give a complete causal abstraction of the behaviour (all depth stages verified by substitution,
 interchange and partial interventions; behaviour matched on 97.4% of clear decisions) in which each month is a single
 scalar by layer 8, trace the route of the first month's position through the year token (heads 1.0, 2.4, 4.11 ->

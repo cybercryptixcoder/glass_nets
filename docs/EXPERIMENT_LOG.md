@@ -893,3 +893,12 @@ unfitted calendar index 0.12, the full identity 0.05, the circle 0.96, an unorde
 
 Nothing left running. State, results and next steps: `docs/handoff/00_START_HERE.md`; the discovery:
 `lab/constructions/gpt2_month_rollover/DISCOVERY.md`; paper draft: `docs/PAPER_DRAFT.md`.
+
+## 2026-11-17 11:51. E40, steering along the UNFITTED calendar-index direction: monotone in all three models
+
+`lab/steer_calendar.py <target> <depth>`: month1's activations at the year and month2 tokens moved by k months along
+the calendar-index direction (January = 0 ... December = 11, nothing fitted to the output), 400 prompts. Share of
+"next year" for k = -6 / -3 / -1 / 0 / +1 / +3 / +6:
+GPT-2 small (depth 8): 44 / 51 / 57 / 64 / 71 / 83 / 97%; GPT-2 medium (depth 12): 59 / 69 / 82 / 87 / 92 / 98 / 100%;
+Pythia-160m (depth 8): 43 / 51 / 59 / 66 / 72 / 86 / 93%. The mean margin rises at every step in all three (monotone).
+Pushing month1 "later in the year" along one line makes the model more sure the range wraps into the next year.
