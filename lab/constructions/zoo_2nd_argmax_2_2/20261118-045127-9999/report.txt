@@ -1,0 +1,26 @@
+JUDGE REPORT   (4000 held-out inputs; construction 1,104 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 49.5%); output R2 -0.077; KL 0.075
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 2; 1 principal components suffice; p, n): explained 1.000 | substitute 100.0% | keep 100.0% | remove 75.5% (random n/a) | mean-ablate 75.5%
+  h2          (2 dims named of 2; 2 principal components suffice; w0, w1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 49.5% (random n/a) | mean-ablate 49.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 100.0% / 100.0% when changed (network changed in 31.1%); output R2 -0.080 | controls: random subspace 100.0%, no-change 68.8%, source-output 67.2%, attribution patching 92.8%
+  partial     p @ h1: right 100.0% / 100.0% when changed (network changed in 15.5%); output R2 -0.074 | controls: random subspace 83.2%, no-change 84.5%, source-output 59.0%, attribution patching 93.3%
+  partial     n @ h1: right 100.0% / 100.0% when changed (network changed in 14.2%); output R2 -0.071 | controls: random subspace 87.9%, no-change 85.8%, source-output 58.4%, attribution patching 97.4%
+  edit        all variables @ h1: right 100.0% / 100.0% when changed (network changed in 15.3%); output R2 -0.068 | controls: random subspace 84.2%, no-change 84.7%, source-output 58.9%, attribution patching 94.8%
+  interchange all variables @ h2: right 100.0% / 100.0% when changed (network changed in 49.5%); output R2 -0.093 | controls: random subspace 100.0%, no-change 50.5%, source-output 100.0%, attribution patching 100.0%
+  partial     w0 @ h2: right 100.0% / 100.0% when changed (network changed in 6.0%); output R2 -0.121 | controls: random subspace 60.7%, no-change 94.0%, source-output 56.5%, attribution patching 100.0%
+  partial     w1 @ h2: right 100.0% / 100.0% when changed (network changed in 44.4%); output R2 -0.124 | controls: random subspace 81.0%, no-change 55.6%, source-output 94.0%, attribution patching 100.0%
+  edit        all variables @ h2: right 95.3% / 84.0% when changed (network changed in 29.1%); output R2 -0.126 | controls: random subspace 74.6%, no-change 70.9%, source-output 79.2%, attribution patching 100.0%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 99.9% (n=2022); network decides 1: 100.0% (n=1978) | near ties (400 least clear inputs, no requirement): 99.5%
+   the network's own mistakes: it is wrong on 0.1% of test inputs (2); the construction reproduces 0.0% of them (need 50% when there are 30 or more) and is right on 100.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. COMPRESSION   3 constants in the file for 5 degrees of freedom in the network: 0.60 per degree of freedom (an explanation needs < 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 2/2 | behaviour 100.0% | all sites at once 100.0% | worst slice 99.9% | network's mistakes reproduced 0.0%
+NOT EXPLAINED:
+  - on 0.0% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 0 (2022 inputs), where it matches 99.9%
+  - of the network's 2 mistakes on test inputs, 100.0% are not reproduced
