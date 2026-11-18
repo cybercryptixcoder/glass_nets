@@ -1166,3 +1166,69 @@ decisions 1.0
 
 
 ===== step 25/80
+
+--- submit ---
+
+import numpy as np
+DESCRIPTION = ("No biases, so the map is homogeneous of degree one and only the direction of the sequence matters. "
+               "At the first step nothing else has been read yet, so the state holds just two numbers: the positive part of x_1 in units zero and three, "
+               "and minus the positive part of x_1 (that is x_1 itself when negative) in units one and two. "
+               "After that, in units rescaled by positive factors (a gauge choice that leaves the whole map unchanged) all four units share one input direction: "
+               "reading x_t adds x_t to units zero and three and subtracts it from units one and two. Every step adds that to the previous state passed through "
+               "one fixed mixing matrix and rectifies. The mixing is a circulation: unit one drives unit three while unit two cancels unit one with the opposite sign, "
+               "unit zero drives unit one, and unit three drives unit two. The same step is repeated for each value in turn. "
+               "The decision comes from four scores linear in the final state; since only their order matters, class zero's score is subtracted from the other three "
+               "and the three difference directions are written out, scaled by one common positive factor.")
+IN = np.array([1, -1, -1, 1])
+M0 = np.array([-0.213737, 1.273340, -0.069905, 2.318979])
+M1 = np.array([5.417269, 1.320339, -0.533874, 14.224694])
+M2 = np.array([-4.427177, -1.289346, 0.530658, -14.462238])
+M3 = np.array([-0.013221, 0.084671, 0.482565, -0.752541])
+MH = np.stack([M0, M1, M2, M3])
+D1 = np.array([-0.204678, -0.728751, 1, 0.161464])
+D2 = np.array([-0.852806, -0.943350, 0.867646, 0.472285])
+D3 = np.array([-0.221551, -0.199152, 0.114800, 0.134029])
+
+def model(x, iv):
+    pos = iv("pos", np.maximum(x[:, 0], 0))
+    neg = iv("neg", np.maximum(-x[:, 0], 0))
+    h = np.stack([pos, neg, neg, pos], axis=1)
+    h = iv("h2", np.maximum(x[:, 1:2] * IN + h @ MH, 0))
+    h = iv("h3", np.maximum(x[:, 2:3] * IN + h @ MH, 0))
+    h = iv("h4", np.maximum(x[:, 3:4] * IN + h @ MH, 0))
+    return np.stack([np.zeros(len(h)), h @ D1, h @ D2, h @ D3], axis=1)
+
+ALIGN = {"pos": ["h1"], "neg": ["h1"], "h2": ["h2"], "h3": ["h3"], "h4": ["h4"]}
+
+--- judge report 5 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,242 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 26.6%); output R2 0.314; KL 0.228
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; pos, neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 51.5% (random 45.3%) | mean-ablate 51.5%
+  h2          (4 dims named of 4; 4 principal components suffice; h2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 41.2% (random n/a) | mean-ablate 41.2%
+  h3          (4 dims named of 4; 4 principal components suffice; h3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 32.4% (random n/a) | mean-ablate 32.4%
+  h4          (4 dims named of 4; 4 principal components suffice; h4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 26.6% (random n/a) | mean-ablate 26.6%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 100.0% / 100.0% when changed (network changed in 50.0%); output R2 0.316 | controls: random subspace 39.4%, no-change 50.0%, source-output 27.4%, attribution patching 63.8%
+  partial     pos @ h1: right 100.0% / 100.0% when changed (network changed in 36.2%); output R2 0.321 | controls: random subspace 50.0%, no-change 63.7%, source-output 25.1%, attribution patching 72.2%
+  partial     neg @ h1: right 100.0% / 100.0% when changed (network changed in 25.2%); output R2 0.314 | controls: random subspace 45.9%, no-change 74.8%, source-output 25.9%, attribution patching 88.6%
+  edit        all variables @ h1: right 100.0% / 100.0% when changed (network changed in 30.8%); output R2 0.318 | controls: random subspace 40.0%, no-change 69.2%, source-output 24.5%, attribution patching 80.5%
+  interchange h2 @ h2: right 100.0% / 100.0% when changed (network changed in 65.8%); output R2 0.316 | controls: random subspace 100.0%, no-change 34.2%, source-output 34.8%, attribution patching 59.8%
+  edit        h2 @ h2: right 100.0% / 100.0% when changed (network changed in 57.2%); output R2 0.316 | controls: random subspace 42.0%, no-change 42.8%, source-output 28.5%, attribution patching 64.6%
+  interchange h3 @ h3: right 100.0% / 100.0% when changed (network changed in 71.3%); output R2 0.319 | controls: random subspace 100.0%, no-change 28.7%, source-output 60.9%, attribution patching 68.8%
+  edit        h3 @ h3: right 100.0% / 100.0% when changed (network changed in 65.1%); output R2 0.357 | controls: random subspace 36.6%, no-change 34.8%, source-output 32.9%, attribution patching 80.9%
+  interchange h4 @ h4: right 100.0% / 100.0% when changed (network changed in 76.1%); output R2 0.315 | controls: random subspace 100.0%, no-change 23.9%, source-output 100.0%, attribution patching 100.0%
+  edit        h4 @ h4: right 100.0% / 100.0% when changed (network changed in 70.0%); output R2 0.365 | controls: random subspace 28.7%, no-change 30.0%, source-output 28.7%, attribution patching 100.0%
+5. WHOLE MODEL   all 4 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=1016); network decides 1: 100.0% (n=1049); network decides 2: 100.0% (n=872); network decides 3: 100.0% (n=1063) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 40.2% of test inputs (1608); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. NOT A COPY   47 numeric literals in the file; network parameters 36; share of its weights (|w| >= 0.05) the literals reproduce: 20%; largest table in the file 4 numbers vs the largest weight tensor 16; constants per degree of freedom 0.844 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: VERIFIED at h3;  step 4: VERIFIED at h4
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 4/4 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED: nothing found by these tests
+
+[done] {"id": "20261118-023529-1a6a", "status": "done", "seconds": 365.7, "best": 5, "verdict": {"verified": true, "fails": [], "stages_total": 4, "stages_verified": 4, "complete": true, "score": 1.0}, "cost": 0.09600923999999998}
+
+status done; best submission 5; cost $0.096; 365.7 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_4_4/20261118-023529-1a6a
