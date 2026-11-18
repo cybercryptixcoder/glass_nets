@@ -43,7 +43,7 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state: HANDOFF at 01:05 ET Nov 18; read `docs/glass/HANDOFF.md` first. Earlier header: (23:52 ET), ROUND 2 (approved 23:36 ET; plan: `docs/glass/PLAN_ROUND2.md`)
+## Current state: ROUND 2 FINISHED (04:10 ET Nov 18); report `docs/glass/REPORT_ROUND2.md`. Next: its 'next round' list. HANDOFF at 01:05 ET Nov 18; read `docs/glass/HANDOFF.md` first. Earlier header: (23:52 ET), ROUND 2 (approved 23:36 ET; plan: `docs/glass/PLAN_ROUND2.md`)
 
 - Done:
   - step 2 (`LEARNINGS.md`);

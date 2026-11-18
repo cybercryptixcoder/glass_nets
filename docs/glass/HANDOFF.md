@@ -19,7 +19,11 @@ Read in this order:
   - "no patchwork": fix only what traces support, and show that the fix helps;
   - always have something finished on hand.
 
-## Live right now: round 2 on Colab
+## UPDATE 04:10 ET Nov 18: round 2 is FINISHED (40/40) and fully synced
+
+Analysis and report done: `REPORT_ROUND2.md`, E11. The glass2 runtime holds nothing unsynced and may be reclaimed. Your job is the report's 'next round' list. Ask Shreyas before spending.
+
+## (Historical) round 2 on Colab
 - Colab runtime **`glass2`** (CPU, high-RAM).
   - Repo at `/content/helix_probe`; job started 23:51 ET Nov 17.
   - It runs `scripts/glass/run_ladder.py --workers 4 --round2`: 40 jobs, state in `results/glass/round2/queue.json`.

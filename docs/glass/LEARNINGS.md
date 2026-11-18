@@ -45,3 +45,9 @@ goalposts, so we leave it.
   - glass-2 stays frozen. This run is NOT a discovery; it fails the human-read criterion (the file contains no account at all).
   - After round 2, one rule change: count the information in each literal. Count every number except small integers (|n| ≤ 10) and 0.5, whatever form it is written in. Then re-judge EVERY round-2 run of both reader arms with it, so the v1 and v2 comparison stays fair.
   - Report results under both glass-2 and the fixed rule.
+
+## E11. A ratio between 0.78 and 0.9 does not show explanation (confidence: high; source REPORT_ROUND2.md)
+- Every round-2 pass that was not an E10 copy and sat above 0.78 was a near-copy: lc_4_5 0.81, lc_8_6 0.88, M4,4 0.85–0.89, M8,5 0.87–0.88, M16,10 0.87.
+- The shuffled-weights control on lc_3_4 passed at 0.81.
+- Real accounts (M2,2, M4,3) sit at ≤ 0.78 in both rounds.
+- So the pass line should equal the claim line, < 0.78.
