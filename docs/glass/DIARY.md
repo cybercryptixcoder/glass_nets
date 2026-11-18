@@ -84,3 +84,30 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   edited ReLU states are often all zero, so the outputs tie exactly, and the decision was set by ±1e-13 floating-point
   noise. Fix: `decide()` rounds outputs to 1e-9 before argmax. After: 100%. This can shift old numbers only where an
   exact tie was decided by noise; item 0 will show whether any did.
+- **20:38** Smoke test: a 2-step constructor run on M2,2, live. The reader sees the weights, sites and inputs, and
+  runs code. The pipeline works on `rnn_relu` targets unchanged. The run folder was deleted afterwards (a test, not a
+  result).
+- **20:41** **A structural flaw found: a construction can just copy the weights.** The smoke test's reader
+  immediately printed all 10 weights of M2,2. My own exact-copy construction had already shown that writing the
+  weights out and redoing the matrix products passes *every* judge test. On tiny networks that is the easiest route,
+  and it explains nothing. The rule was only stated in the prompt ("not a copy of the network").
+  - Fix: `copy_check()` in the judge, as test 7, "not a copy". It counts the numeric literals in the file and the
+    share of the network's weights (|w| ≥ 0.05) that some literal reproduces within 1%. It's flagged when there are
+    at least half as many literals as parameters *and* they reproduce at least half the weights. A flag fails the
+    verdict.
+  - Checked: the exact copy of M2,2 is flagged (15 literals, 100% of weights); the task construction on M16,10 isn't
+    (4 literals, 1%).
+  - Reasoning for these thresholds: an honest construction needs few constants, because the judge's affine alignment
+    absorbs scales. So a high literal count combined with reproduced weights is the signature of a copy.
+  - The prompt gained rule "7. Not a copy".
+- **20:45** Colab runtime `glass1` created: CPU, high-RAM (8 CPUs, 50 GB, Python 3.13, numpy/scipy/sklearn/torch
+  present). No GPU: the networks are tiny and the LLM is remote, so a GPU would only burn units.
+- **20:46** Driver written:
+  - `scripts/glass/run_ladder.py`: a queue of 18 jobs (6 networks × main/prior-only/shuffled), 4 workers with one
+    key each, state in `results/glass/queue.json`, resume via `--resume <run id>`, up to 3 attempts per job.
+  - `scripts/glass/results.py`: generates `results/glass/RESULTS.md`.
+  - `scripts/glass/colab_job.sh`: the queue plus a 2-minute sync loop. It always writes a tar snapshot, and
+    commits and pushes too when a token is configured.
+  - `colab_setup.py`, `colab_start.py`, `colab_status.py`.
+- **20:47** Baseline written (`docs/glass/baseline.json`) with the pre-change judge: 25 constructions (27 minus 2
+  whose targets aren't buildable here). The check with the new judge is running.

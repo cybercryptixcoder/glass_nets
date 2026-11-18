@@ -255,6 +255,37 @@ def disagreement_search(kind, W, X, model, rng, starts=200, iters=25):
             "found_rate": float(found.mean()), "random_rate": float(found0.mean()), "examples": ex}
 
 
+def copy_check(source, W):
+    """Is the construction a copy of the network's weights rather than an account of its computation? Counts the numeric
+    literals in the source and the share of the network's weights (|w| >= 0.05) that some literal equals to within 1%.
+    Flagged when there are at least half as many literals as parameters AND they reproduce at least half of the
+    weights: a re-implementation of the weight matrices, which every test above would pass without explaining
+    anything (found on AlgZoo: copying M2,2's 10 weights passes every test)."""
+    import io, tokenize
+    lits = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.NUMBER:
+                try:
+                    lits.append(abs(float(tok.string.replace("_", "").rstrip("jJ"))))
+                except ValueError:
+                    pass
+    except (tokenize.TokenError, IndentationError):
+        pass
+    ws = np.concatenate([np.abs(np.ravel(v)) for v in W.values() if np.size(v) > 1]) if W else np.zeros(0)
+    big = ws[ws >= 0.05]
+    lv = np.array(sorted(set(lits))) if lits else np.zeros(0)
+    if len(big) and len(lv):
+        j = np.clip(np.searchsorted(lv, big), 1, len(lv) - 1) if len(lv) > 1 else np.zeros(len(big), int)
+        near = np.minimum(np.abs(lv[j] - big), np.abs(lv[np.maximum(j - 1, 0)] - big))
+        matched = float((near <= 0.01 * np.maximum(big, 1e-9)).mean())
+    else:
+        matched = 0.0
+    params = int(ws.size)
+    flagged = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
+    return {"literals": len(lits), "params": params, "weights_matched": matched, "flagged": flagged}
+
+
 def certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng):
     """The construction-level tests added for whole-model claims (plan items 2-3). Writes rep["joint"],
     rep["worst"], rep["errors"] and rep["search"]."""
@@ -302,6 +333,9 @@ def coverage(rep):
     e = rep.get("errors")
     if e and e["n_errors"] and e["reproduced"] < 1:
         un.append(f"of the network's {e['n_errors']} mistakes on test inputs, {1 - e['reproduced']:.1%} are not reproduced")
+    cp = rep.get("copy")
+    if cp and cp["flagged"]:
+        un.append("the construction copies the network's weights, so it explains nothing by itself")
     sr = rep.get("search")
     if sr and sr["clear_disagreements"]:
         un.append(f"a search found {sr['clear_disagreements']} inputs (from {sr['starts']} starts) where the network's decision is clear "
@@ -469,6 +503,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None, labels=None):
         r["used_rank"] = int(np.linalg.matrix_rank(M[J], tol=1e-8 * max(1.0, np.abs(M).max()))) if len(J) else 0
         r["unused_variables"] = [v for v in r["variables"] if v not in live]
     certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng)
+    rep["copy"] = copy_check(source, W)
     varying = {s for s in sites if acts[s].std(0).max() > 1e-9}                 # a site that never changes needs no explanation
     rep["uncovered_sites"] = [s for s in sites if s != "out" and s in varying and s not in rep["sites"]]
     rep["stages"] = {}
@@ -574,6 +609,12 @@ def verdict(rep):
         fails.append(f"the network's own mistakes: on the {e['n_errors']} test inputs where the network is wrong, the construction makes the "
                      f"network's (wrong) decision on {e['reproduced']:.1%} (need {PASS['errors']:.0%}); it is right on "
                      f"{e['construction_right_where_network_wrong']:.1%}: it explains the task, not this network")
+    cp = rep.get("copy")
+    if cp and cp["flagged"]:
+        fails.append(f"weight copy: the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they "
+                     f"reproduce {cp['weights_matched']:.0%} of its weights: this re-implements the weight matrices instead of "
+                     "describing the computation. Write the mechanism in terms of what the variables mean, with only the constants "
+                     "the account needs")
     if not rep["sites"]:
         fails.append("no sites aligned")
     return {"verified": not fails, "fails": fails}
@@ -633,6 +674,10 @@ def render(rep):
             L.append(f"   search for disagreements ({sr['starts']} starts x {sr['iterations']} steps, only inputs where the network's decision is clear): "
                      f"found {sr['clear_disagreements']} ({sr['found_rate']:.1%}; on the unsearched starting inputs {sr['random_rate']:.1%})"
                      + ("".join(f"\n     input {x['input']}: network {x['network']}, construction {x['construction']}" for x in sr["examples"])))
+    cp = rep.get("copy")
+    if cp:
+        L.append(f"7. NOT A COPY   {cp['literals']} numeric literals in the file; network parameters {cp['params']}; share of its weights "
+                 f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}" + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else
                        ("named but failing" if st["named"] else "NOT EXPLAINED (no variable at " + " / ".join(st["sites"]) + ")"))
