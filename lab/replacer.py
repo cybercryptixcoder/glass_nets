@@ -101,7 +101,7 @@ def frontier(target, meta, W, X):
     else:
         FRONTIER_DIR.mkdir(parents=True, exist_ok=True)
         pts = IM.frontier(meta, W, X)
-        f.write_text(json.dumps(pts))
+        f.write_text(json.dumps(pts))  # frontier includes the reduced parametrisation since T2
     _FRONT[target] = pts
     return pts
 
@@ -182,6 +182,14 @@ Work from the answer backwards:
 If a crisp rule loses too much fidelity, use a graded version of it (a soft count, a weighted comparison) whose few coefficients you measure."""
 
 
+RULEFIRST = """
+
+STRATEGY: RULE FIRST. THIS TIME YOU START FROM A RULE, NOT A COPY
+The starting program below is NOT a copy. It is a short rule-level account written in an earlier study: it is above the task rule and compact (low S), but its variables are tied only to the embedding (token identities), which says nothing about how the network computes. (Ignore the sentence above about starting from an exact copy.)
+Your job: find WHERE inside the network the rule's quantities live, or the graded versions the network actually uses, and claim them at those sites so that the inside tests pass (interchange 90%), while keeping fidelity above the task rule and S at or below 0.5.
+How: for each site after the embedding (per position: resid0.mid, attn0.out, resid1.mid at the read-out position ...), regress the activation on candidate quantities: the rule's counts, per-position versions (is position p a fixed point, is p in a 2-cycle, how many preimages x_p has, which position p attends to), and soft attention-weighted versions measured from the patterns. Keep the few that explain the decision-relevant part of the site. Make model() compute the decision FROM those variables, so that copying them from another input changes the output the way the network's output changes. A variable that the network holds but that does not feed the decision should not feed it in model() either."""
+
+
 def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="high", max_tokens=12000, variant="original", start_src=None, strategy=None):
     if model_name:
         os.environ["HELIX_FLASH_MODEL"] = model_name
@@ -203,7 +211,7 @@ def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="hi
     task = C.task_text(meta, W, {**cfg, "reader": "v1"})
     first = (task + "\n\nYOUR NOTES FROM AN EARLIER STUDY OF THIS NETWORK\n" + notes +
              "\n\nTHE STARTING PROGRAM (an exact copy; replace parts of it with rules)\n```python\n" + start + "```")
-    system = REPLACE_SYSTEM + (TOPDOWN if strategy == "topdown" else "")
+    system = REPLACE_SYSTEM + {"topdown": TOPDOWN, "rulefirst": RULEFIRST}.get(strategy, "")
     cfg["strategy"] = strategy
     msgs = [{"role": "system", "content": system}, {"role": "user", "content": first}]
     rec = {"id": run_id, "config": cfg, "started": time.time(), "steps": [], "submissions": [], "cost": 0.0, "status": "running",
@@ -271,8 +279,9 @@ def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="hi
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("target"); ap.add_argument("--notes-from"); ap.add_argument("--steps", type=int, default=40)
-    ap.add_argument("--model"); ap.add_argument("--tag", default="r2"); ap.add_argument("--effort", default="high"); ap.add_argument("--strategy")
+    ap.add_argument("--model"); ap.add_argument("--tag", default="r2"); ap.add_argument("--effort", default="high"); ap.add_argument("--strategy"); ap.add_argument("--start")
     a = ap.parse_args()
-    r = run(a.target, a.notes_from, a.steps, a.model, a.tag, a.effort, strategy=a.strategy)
+    r = run(a.target, a.notes_from, a.steps, a.model, a.tag, a.effort, strategy=a.strategy,
+            start_src=open(a.start).read() if a.start else None)
     print(json.dumps({"id": r["id"], "status": r["status"], "best": r["best"], "cost": round(r["cost"], 3),
                       "best_certificate": {k: r["best_certificate"].get(k) for k in ("fidelity", "task", "S", "claims", "claims_passed", "deep_claims_passed", "beats_task", "works")}}))

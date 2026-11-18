@@ -454,3 +454,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     not linear in these counts.
 - **12:07** Criterion tightened (stricter; logged in PLAN_SCALING): a passing inside claim is needed after the first step. The census rule meets the old letter but not this, so it doesn't count. R5 launched (top-down strategy; trading exactness for rules is allowed; 80 steps): lc_3_4 (notes 2b58), lc_4_5 (notes 93e7), lc_8_6 (notes d7df). M8,5 follows when its R2 run ends.
 - **12:13** R2 final: lc_6_5 S 0.64 (canonical-basis re-description plus a pointer-chase description; 5/6 claims), M8,5 S 0.78 (4/5 claims; the description finds a rotating 'clock' in W_h). None meets the criterion. R5 added on M8,5 and lc_6_5 (80 steps). R6 (by hand) on lc_3_4: layer 0 is not a clean pointer (the most-attended position matches no simple relation better than 46%), and the residual is 3 wide. Paused in favour of reading R5.
+- **13:25 T2 (a translation error in the information measure, CHANGES T2).** The copy frontier only quantised raw
+  weights, but "the cheapest copy" includes the reduced form (QK/OV products; rescaled RNN units). It was exposed by
+  lc_8_6 r5 submission 3, a products-form re-description at S 0.70. Fixed and re-run (`info_measure_T2.txt`):
+  - every must-fail now scores ≥ 0.91 (lc_4_5 mainb 0.77 → 1.06);
+  - the r5 file scores 0.99, i.e. a copy;
+  - the census rule moves from 0.35 to 0.50, exactly on the line.
+  - No threshold was changed.
+  - R5 runs already in flight compute S against the OLD frontier: re-score them afterwards.
+- **12:24** R5 interim (all 5 runs): fidelity stays about 100% and S about 0.7 under the old frontier (about 1 under T2). The cheap reader does not trade exactness for rules even when told to. **R7 launched: rule first.** Two lc_8_6 runs start from the census rule (fidelity 92.4%, S 0.50); the job is to find where its quantities live inside the network so that deep claims pass. 80 steps each.

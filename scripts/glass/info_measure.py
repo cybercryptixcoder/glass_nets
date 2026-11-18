@@ -93,6 +93,51 @@ def quant_codebook(W, keys, k):
     return Q, "\n".join(text)
 
 
+FWD_GAUGE = {
+    "rnn_relu": FWD["rnn_relu"],
+    "transformer": """
+def model(x, iv):
+    h = W['W_E'][x] + W['W_pos'][:x.shape[1]]
+    l = 0
+    while f'QK{l}' in W:
+        a = np.einsum('bpd,hde,bqe->bhpq', h, W[f'QK{l}'], h) / np.sqrt(W['k'])
+        a = np.exp(a - a.max(-1, keepdims=True)); a /= a.sum(-1, keepdims=True)
+        h = h + np.einsum('bhpq,bqd,hde->bpe', a, h, W[f'OV{l}'])
+        l += 1
+    return h[:, -1] @ W['W_U']
+""",
+}
+
+
+def gauge(meta, W):
+    """The network in a reduced parametrisation (T2): transformers as QK = W_Q W_K^T and OV = W_V W_O products;
+    ReLU RNNs with every hidden unit rescaled so that |W_x| = 1 (ReLU commutes with positive scales).
+    Returns (weights for nets.forward-equivalent evaluation, the reduced tensors to quantise, kind)."""
+    if meta["forward"] == "transformer":
+        R = {k: W[k] for k in ("W_E", "W_pos", "W_U")}
+        l = 0
+        while f"L{l}.W_Q" in W:
+            R[f"QK{l}"] = np.einsum("hde,hfe->hdf", W[f"L{l}.W_Q"], W[f"L{l}.W_K"])
+            R[f"OV{l}"] = np.einsum("hde,hef->hdf", W[f"L{l}.W_V"], W[f"L{l}.W_O"])
+            l += 1
+        return R
+    if meta["forward"] == "rnn_relu":
+        s = np.abs(W["W_x"]).ravel(); s = np.where(s > 1e-12, s, 1.0)
+        return {"W_x": W["W_x"] / s[None], "W_h": W["W_h"] * s[:, None] / s[None], "W_o": W["W_o"] * s[:, None]}
+    return None
+
+
+def run_gauge(meta, R, X, k):
+    if meta["forward"] == "rnn_relu":
+        return nets.forward("rnn_relu", R, X)
+    h = R["W_E"][X] + R["W_pos"][:X.shape[1]]; l = 0
+    while f"QK{l}" in R:
+        a = np.einsum("bpd,hde,bqe->bhpq", h, R[f"QK{l}"], h) / np.sqrt(k)
+        a = np.exp(a - a.max(-1, keepdims=True)); a /= a.sum(-1, keepdims=True)
+        h = h + np.einsum("bhpq,bqd,hde->bpe", a, h, R[f"OV{l}"]); l += 1
+    return h[:, -1] @ R["W_U"]
+
+
 def fidelity(meta, W, X, out_candidate):
     net = nets.forward(meta["forward"], W, X)
     return float(judge.same(net, out_candidate).mean())
@@ -108,6 +153,17 @@ def frontier(meta, W, X):
             WQ = dict(W); WQ.update(Q)
             f = fidelity(meta, W, X, nets.forward(meta["forward"], WQ, X))
             pts.append((f, bits(text + FWD[meta["forward"]]), f"{form}{k}"))
+    R = gauge(meta, W)
+    if R is not None:
+        kdim = W["L0.W_Q"].shape[-1] if meta["forward"] == "transformer" else 0
+        rk = list(R)
+        for k in range(1, 17):
+            for form, fn in (("g-uniform", quant_uniform), ("g-codebook", quant_codebook)):
+                if form == "g-codebook" and k > 10:
+                    continue
+                Q, text = fn(R, rk, k)
+                f = fidelity(meta, W, X, run_gauge(meta, Q, X, kdim))
+                pts.append((f, bits(text + (f"\nW['k'] = {kdim}" if kdim else "") + FWD_GAUGE[meta["forward"]]), f"{form}{k}"))
     return pts
 
 
