@@ -276,3 +276,20 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - **M4,3 main (0.78) remains the one blinded-run certification**, and its prior control fails.
   - M2,2 note: its minimal exact description has 5 numbers (= its degrees of freedom). Writing them in meaningful
     coordinates is understanding of a kind, but not compression; the 0-constant account is.
+- **22:02** Check-in. Pass-2 fresh runs finished. Only the M16,10 continuation is still running (148/160 steps).
+  - **M8,8 (pass 2): not explained, and the reader argues no compression exists.**
+    - Five of its 9 submissions were exact re-descriptions (8/8 stages, 99.5–100%, all flagged at 1.06–1.14
+      constants per degree of freedom). Its compressed attempts reached 0/8 stages and 13–27% behaviour.
+    - Its closing argument: the network is "a generic 8-dim clipped linear system with 136 − 8 − 8 = 120 genuinely
+      free constants". That's a substantive claim about this 46%-accurate network, consistent with pass 1's account
+      ("a linear reservoir with a clip, nothing more").
+    - The delivered file is its best non-copy (0/8); the copies stay in the run folder as submissions.
+  - **M8,5 (pass 2): not explained.**
+    - Best compressed attempts: 85–89% behaviour, 0/5 stages, reproducing 23–49% of the network's mistakes. The
+      ideal 2nd-largest rule gets 89.1%, the ceiling for a task-exact rule, since the network is 88.9% accurate.
+    - The reader: the 11% residual is "the network's own lossy rectified-difference top-2 tracking", which it
+      couldn't reduce to a compact closed form.
+    - Submission 1 was again an exact re-description (5/5 stages, flagged).
+  - **Pattern across the ladder:** with the copy rules in place, the reader either finds a compressed account (M4,3)
+    or produces an exact re-description (M2,2, M4,4, M8,5, M8,8, M16,10). There's no middle ground yet: a
+    compressed construction that verifies some stages.
