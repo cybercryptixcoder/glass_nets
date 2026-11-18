@@ -43,12 +43,21 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (23:30 ET)
+## Current state (23:52 ET), ROUND 2 (approved 23:36 ET; plan: `docs/glass/PLAN_ROUND2.md`)
 
-- Round 1 done; Colab stopped. **Round 2 plan written and awaiting Shreyas's approval: `docs/glass/PLAN_ROUND2.md`.**
-  His rules for round 2 (23:04 ET): only evidence-backed fixes, no patchwork; compare M4,3 with ARC's notes; pick a
-  no-asterisk discovery target; re-run the ARC ladder; plan first, then wait for approval.
-- Pending approval: opening ARC's Google Drive notes (step 1).
+- Done:
+  - step 2 (`LEARNINGS.md`);
+  - step 3 fixes F1–F4 (judge glass-2 frozen; reader v2); the regression check is identical;
+  - step 5a/b: the longest-cycle targets `lc_3_4`, `lc_4_5`, `lc_6_5` and `lc_8_6`.
+- **Running on Colab runtime `glass2`** (started 23:51 ET): the round-2 queue of 40 jobs (`run_ladder.py --round2`;
+  state `results/glass/round2/queue.json`; results `results/glass/round2/RESULTS.md`). Relay: `bash
+  scripts/glass/sync_from_colab.sh` (session glass2).
+- **Pending:** step 1 (ARC's Drive notes need a permission; it went unanswered twice). The judge must NOT change
+  until round 2 ends (frozen glass-2).
+- At the end:
+  - an A/B table, v1 vs v2 on the ladder (networks certified, verified-stage prefix, cost);
+  - the longest-cycle results against the pre-registered claim criterion (PLAN_ROUND2 step 5);
+  - `docs/glass/REPORT_ROUND2.md`.
 
 ## Checklist
 

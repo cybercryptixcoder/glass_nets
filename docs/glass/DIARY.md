@@ -349,3 +349,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - The ladder A/B: reader v1 vs v2, two runs each per network, same budgets (80; M16,10 160).
   - The longest-cycle runs are interleaved early.
   - Round 1's controls are reused (the frozen judge gives them the same verdicts).
+- **23:52** Colab runtime `glass2` created (CPU, high-RAM); detached clone; `.env` uploaded; dry run lists 40 jobs; round-2 job started 04:51 UTC (23:51 ET) with 4 workers. Judge glass-2 is frozen from here until round 2 ends.
