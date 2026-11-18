@@ -135,7 +135,13 @@ def certificate(target, src, rep, variant="original"):
     cert["by_class"] = cls
     beats = "task" in cert and cert["fidelity_ci"][0] > cert["task_ci"][1]
     cert["beats_task"] = bool(beats)
-    deep = [x for x, v in cert["sites"].items() if v and x not in ("embed", "h1")]
+    meta_ = json.loads((LAB / "models" / target / "meta.json").read_text())
+    nst = int(np.load(LAB / "models" / target / "inputs.npy", mmap_mode="r").shape[1]) if meta_["forward"] == "rnn_relu" else 0
+    last = {f"h{nst}"} if nst else {s_ for s_ in cert["sites"] if s_.startswith("resid") and s_.endswith(".mid") and s_ == max((x for x in cert["sites"] if x.startswith("resid")), default="")}
+    nl = len([k for k in W if k.endswith(".W_Q")]) if meta_["forward"] == "transformer" else 0
+    if nl:
+        last = {f"resid{nl - 1}.mid", f"attn{nl - 1}.out"}
+    deep = [x for x, v in cert["sites"].items() if v and x not in ({"embed", "h1"} | last)]
     cert["deep_claims_passed"] = len(deep)
     cert["works"] = bool(beats and len(deep) >= 1 and cert["claims_passed"] == cert["claims"] and cert["S"] <= 0.5)
     # text for the reader
@@ -147,6 +153,7 @@ def certificate(target, src, rep, variant="original"):
                  + ("You are ABOVE it." if beats else "You are NOT above it: so far this explains the task, not this network."))
     t.append(f"COPIED INFORMATION: S = {cert['S']:.2f} (your file {B} bits; the cheapest copy of the weights reaching {100 * cert['fidelity']:.1f}% needs {Cb} bits). "
              "Near 1 = still a copy; a readable account is at 0.5 or below.")
+    t.append(f"INTERMEDIATE CLAIMS PASSING: {cert['deep_claims_passed']} (needed: at least 1; the embedding/h1 and the last site before the readout do not count).")
     t.append(f"INSIDE CLAIMS: {cert['claims_passed']} of {cert['claims']} sites pass: " + ", ".join(f"{s} {'PASS' if v else 'fail'}" for s, v in cert["sites"].items()))
     t.append("BY THE NETWORK'S DECISION: " + "; ".join(f"decides {c}: you match {100 * a:.1f}% (n={n})" for c, (a, n) in cls.items()))
     bad = np.where(~agree)[0]
@@ -174,7 +181,7 @@ def key(cert):
 TOPDOWN = """
 
 STRATEGY: TOP-DOWN, AND TRADE EXACTNESS FOR RULES
-Being exact is NOT the goal: the copy is already exact. The target is an account that (a) stays above the task rule's fidelity, (b) has passing inside claims at sites AFTER the first step (not only the embedding or h1), and (c) has S at or below 0.5. Losing a few points of fidelity to replace a whole matrix by a rule is the right trade.
+Being exact is NOT the goal: the copy is already exact. The target is an account that (a) stays above the task rule's fidelity, (b) has passing inside claims at INTERMEDIATE sites (not the embedding or h1, and not the last site before the readout, where the scores themselves would pass trivially), and (c) has S at or below 0.5. Losing a few points of fidelity to replace a whole matrix by a rule is the right trade.
 Work from the answer backwards:
 1. At the LAST site before the readout, find a FEW quantities (2-6 numbers per input, possibly soft or graded) such that the activation there is close to an affine function of them, and a short stated rule turns them into the decision. Check both with python (regress the site on them; apply your rule). Put them in the file as variables at that site, computed from the input by the simplest formula you can find, and replace everything before them.
 2. Submit and read: fidelity vs the task rule, the inside tests at that site, S.

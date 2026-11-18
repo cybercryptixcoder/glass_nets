@@ -1,0 +1,85 @@
+{
+ "name": "AlgZoo RNN M4,3",
+ "family": "AlgZoo (ARC): tiny trained RNNs",
+ "forward": "rnn_relu",
+ "order": [
+  "W_x",
+  "W_h",
+  "W_o"
+ ],
+ "protected": [
+  "seq_len"
+ ],
+ "arch": "A one-layer recurrent network with ReLU and no biases. It reads a sequence of 3 real numbers, one per step, into a hidden state of 4 units, and outputs 3 numbers read from the final state.\n  h_0 = 0;  h_t = relu(x_t * W_x + h_(t-1) @ W_h)   W_x: 1 x 4, W_h: 4 x 4\n  out = h_3 @ W_o                                   W_o: 4 x 3\n32 parameters. The output is a score per class; the network's decision is the largest.",
+ "context": "The inputs are independent standard-normal numbers. Output class i stands for position i of the sequence (0-based).",
+ "tensor_desc": {
+  "W_x": "input weights (one per hidden unit)",
+  "W_h": "recurrent weights (row = from unit, column = to unit)",
+  "W_o": "readout (row = hidden unit, column = output class)"
+ },
+ "answer": {
+  "short": "position of the median",
+  "detail": "AlgZoo argmedian, hidden 4, length 3, seed 0; accuracy 0.9806 on 8000 standard-normal inputs. ARC (Jan 2026) reports full understanding of M2,2 and, less clearly, M4,3; M16,10 is its open challenge."
+ },
+ "source": "AlgZoo checkpoint https://storage.googleapis.com/arc-ml-public/alg/zoo/argmedian_4_3_1073741824_0.pth (MIT-0), converted by lab/targets/build_algzoo.py",
+ "perm_groups": [
+  {
+   "size": 4,
+   "members": [
+    [
+     "W_x",
+     1
+    ],
+    [
+     "W_h",
+     0
+    ],
+    [
+     "W_h",
+     1
+    ],
+    [
+     "W_o",
+     0
+    ]
+   ]
+  }
+ ],
+ "input": "real numbers, shape [B, 3]",
+ "domain": {
+  "file": "inputs.npy",
+  "text": "The network is used on sequences of 3 independent standard-normal numbers (a fixed sample of 8000)."
+ },
+ "labels": "labels.npy",
+ "test_acc": 0.980625,
+ "params_check": 32,
+ "numpy_vs_torch_max_err": 0.0,
+ "id": "zoo_argmedian_4_3",
+ "tensors": [
+  {
+   "name": "W_x",
+   "shape": [
+    1,
+    4
+   ],
+   "desc": "input weights (one per hidden unit)"
+  },
+  {
+   "name": "W_h",
+   "shape": [
+    4,
+    4
+   ],
+   "desc": "recurrent weights (row = from unit, column = to unit)"
+  },
+  {
+   "name": "W_o",
+   "shape": [
+    4,
+    3
+   ],
+   "desc": "readout (row = hidden unit, column = output class)"
+  }
+ ],
+ "params": 32
+}
