@@ -5,8 +5,8 @@ set -e
 export OAUTHLIB_RELAX_TOKEN_SCOPE=1
 cd "$(dirname "$0")/../.."
 rm -f /tmp/glass_snapshot.tgz
-timeout 100 colab download -s glass1 /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz >/dev/null 2>&1 || \
-  timeout 100 colab download -s glass1 /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz >/dev/null 2>&1
+timeout 100 colab download -s ${GLASS_SESSION:-glass2} /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz >/dev/null 2>&1 || \
+  timeout 100 colab download -s ${GLASS_SESSION:-glass2} /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz >/dev/null 2>&1
 [ -s /tmp/glass_snapshot.tgz ] || { echo "no snapshot downloaded"; exit 1; }
 tar xzf /tmp/glass_snapshot.tgz
 python3 scripts/glass/results.py; GLASS_ROUND=round2 python3 scripts/glass/results.py 2>/dev/null || true
