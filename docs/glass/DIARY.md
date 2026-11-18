@@ -111,3 +111,18 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - `colab_setup.py`, `colab_start.py`, `colab_status.py`.
 - **20:47** Baseline written (`docs/glass/baseline.json`) with the pre-change judge: 25 constructions (27 minus 2
   whose targets aren't buildable here). The check with the new judge is running.
+- **20:58** Item 0 result: all 25 saved constructions re-judged with the new judge (joint, worst slice, errors,
+  search, tie fix; the copy check came later). **24 unchanged in every recorded number; 1 changed:**
+  `modmul_p113/20261113-190435-ec84` goes from VERIFIED AND COMPLETE to NOT VERIFIED.
+  - Reason: the new worst-slice test. On the 58 test inputs where the network answers 112, the construction
+    agrees on **0.0%**, and its 97.3% average hid that.
+  - This is a real systematic hole in a construction the old judge called complete, and exactly the failure item 3
+    was built to catch.
+  - The tie fix changed nothing in the baseline. Output: `docs/glass/baseline_check_after_items_2-4.txt`.
+- **20:58** Pitfalls comparison written: `docs/glass/COMPARISON_PITFALLS.md`.
+- **21:00** Colab:
+  - `colab exec` of the setup script hung twice (a known problem with long execs). Fix: launch the clone detached
+    and poll. Clone OK (352 MB).
+  - `lab/.env` uploaded; dry run on Colab lists 18 jobs; the judge imports there.
+  - Queue order changed: ARC's challenge network M16,10 is now third. It's the most informative and the longest, so
+    it shouldn't wait for the smaller ones to finish.

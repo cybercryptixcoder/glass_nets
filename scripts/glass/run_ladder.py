@@ -25,8 +25,10 @@ MAIN_STEPS, SHUFFLED_STEPS = 80, 30
 
 
 def jobs():
-    """Main blinded runs first, smallest network first; then the controls. Each job: (name, target, constructor args)."""
-    out = [(f"{t}__main", t, ["--steps", str(MAIN_STEPS)]) for t in LADDER]
+    """Main blinded runs first, then the controls. Each job: (name, target, constructor args). The main runs start
+    with the two smallest, then ARC's challenge network (the most informative, and the longest), then the rest."""
+    first = ["zoo_2nd_argmax_2_2", "zoo_2nd_argmax_4_3", "zoo_2nd_argmax_16_10"]
+    out = [(f"{t}__main", t, ["--steps", str(MAIN_STEPS)]) for t in first + [t for t in LADDER if t not in first]]
     out += [(f"{t}__prior", t, ["--told", "--no-weights", "--one-shot"]) for t in LADDER]
     out += [(f"{t}__shuffled", t, ["--variant", "shuffled", "--steps", str(SHUFFLED_STEPS)]) for t in LADDER]
     return out
