@@ -301,9 +301,17 @@ def copy_check(source, W):
     biggest_tensor = max((int(np.size(v)) for v in W.values()), default=0) if W else 0
     table_copy = bool(biggest_tensor >= 8 and biggest_table >= 0.9 * biggest_tensor)
     value_copy = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
+    # Third rule, invariant to rescaling AND to splitting tables: compression. Constants = the file's non-integer
+    # numeric literals other than 0.5. A construction with about as many constants as the network has parameters
+    # compresses nothing; it re-describes the weights (found on AlgZoo M8,8: 136 constants for 136 parameters, quoted
+    # in a per-unit scale and split into 8-number rows). Calibrated on this session's constructions: honest accounts
+    # used 0.56 (M4,3) and 0.80 (M2,2) constants per parameter; the re-descriptions used exactly 1.00 (M8,8, M16,10).
+    consts = sum(1 for v in lits if v != int(v) and v != 0.5)
+    compression_copy = bool(params >= 8 and consts >= 0.9 * params)
     return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
-            "largest_tensor": biggest_tensor, "value_copy": value_copy, "table_copy": table_copy,
-            "flagged": value_copy or table_copy}
+            "largest_tensor": biggest_tensor, "constants": consts, "constants_per_param": round(consts / max(params, 1), 3),
+            "value_copy": value_copy, "table_copy": table_copy, "compression_copy": compression_copy,
+            "flagged": value_copy or table_copy or compression_copy}
 
 
 def certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng):
@@ -631,10 +639,15 @@ def verdict(rep):
                      f"{e['construction_right_where_network_wrong']:.1%}: it explains the task, not this network")
     cp = rep.get("copy")
     if cp and cp["flagged"]:
-        why = (f"the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they reproduce "
-               f"{cp['weights_matched']:.0%} of its weights" if cp.get("value_copy", cp["flagged"]) else
-               f"the file writes out a table of {cp['largest_table']} numbers, about the size of the network's largest weight "
-               f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
+        if cp.get("value_copy", cp["flagged"]):
+            why = (f"the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they reproduce "
+                   f"{cp['weights_matched']:.0%} of its weights")
+        elif cp.get("table_copy"):
+            why = (f"the file writes out a table of {cp['largest_table']} numbers, about the size of the network's largest weight "
+                   f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
+        else:
+            why = (f"the file has {cp['constants']} constants for a network of {cp['params']} parameters ({cp['constants_per_param']:.2f} per "
+                   f"parameter): it compresses nothing, so it re-describes the weights (rescaled or regrouped) instead of finding the rule")
         fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
                      "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "
                      "constants that account needs")
@@ -701,7 +714,8 @@ def render(rep):
     if cp:
         L.append(f"7. NOT A COPY   {cp['literals']} numeric literals in the file; network parameters {cp['params']}; share of its weights "
                  f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}; largest table in the file {cp.get('largest_table', '?')} "
-                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}" + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
+                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}; constants per network parameter {cp.get('constants_per_param', '?')}"
+                 + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else
                        ("named but failing" if st["named"] else "NOT EXPLAINED (no variable at " + " / ".join(st["sites"]) + ")"))

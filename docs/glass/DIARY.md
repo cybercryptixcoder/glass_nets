@@ -217,3 +217,25 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - The M4,4 prior control (59.8% behaviour, 0/4 stages) behaves as a control should. M4,3's prior control is
     pending; it's the one that matters.
 - **21:12** Check-in. **M4,3 prior-only control: NOT verified (1 of 3 stages; behaviour 98.2%).** The blinded main run explained all 3 stages, and the told-but-weightless reader explains 1. So on M4,3 the certification needs the network itself, not just knowing the task. This is the first rung where reading the network is clearly necessary. Running: M8,5 and M8,8 main (19 and 13 min), their prior controls.
+- **21:23** Check-in. Pass-1 main runs all finished; the shuffled controls are running.
+  - **M8,8 (136 params, a 46%-accurate network) came back VERIFIED AND COMPLETE, but it's a re-description, not an
+    explanation.**
+    - Its own account: "a linear reservoir with a clip, nothing more". It's positively homogeneous, with no
+      comparisons or running maxima, a real observation about this network.
+    - But the file holds 136 constants for 136 parameters: the weights in a per-unit scale, split into 8-number rows.
+      That evades both earlier copy rules (value match: 46%; largest table: 8 of 64).
+    - Fix, a third rule invariant to rescaling and splitting: **compression.** Constants = non-integer literals other
+      than 0.5. A file with ≥ 0.9 constants per network parameter is flagged.
+    - Calibration from this session: honest accounts used 0.56 (M4,3) and 0.80 (M2,2) constants per parameter;
+      re-descriptions used exactly 1.00 (M8,8, and M16,10's diagnostic copy).
+    - The ratio is now printed in every report (test 7), so the catalog shows how much each construction compresses.
+  - **M8,5 (112):** not verified, 0/5 stages. Behaviour 88.9%, but it reproduces 0% of the network's mistakes, so it
+    explains the task, not this network.
+  - **M2,2 shuffled control: VERIFIED AND COMPLETE.** This is not a false positive. The shuffled network is a
+    different 10-weight network, and the construction (5 constants) matches *that* network. On a network this
+    small, any weights compute something simple enough to explain. The shuffled control can only discriminate on
+    larger networks; its results there are pending.
+  - **M16,10 prior-only control:** 1/10 stages, 95.5% behaviour, the same as the main run's real attempts. So in
+    pass 1, reading the network added nothing on M16,10.
+  - Re-judged with the current judge: M2,2 (main, prior, shuffled) complete; M4,3 complete; M4,4, M8,8 and the
+    M16,10 delivered file flagged as copies; M8,5 not verified.

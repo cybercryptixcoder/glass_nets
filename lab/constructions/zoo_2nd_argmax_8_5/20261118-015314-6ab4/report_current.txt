@@ -1,0 +1,35 @@
+JUDGE REPORT   (4000 held-out inputs; construction 2,520 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 88.9% of inputs (a constant output would get 20.3%); output R2 0.583; KL 0.439
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 88.1% / 87.9% when changed (network changed in 44.1%); output R2 0.598 | controls: random subspace 51.3%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  partial     pos1 @ h1: right 82.9% / 69.9% when changed (network changed in 38.9%); output R2 0.596 | controls: random subspace 61.9%, no-change 61.2%, source-output 21.3%, attribution patching 72.3%
+  partial     neg1 @ h1: right 80.7% / 57.9% when changed (network changed in 11.1%); output R2 0.591 | controls: random subspace 64.2%, no-change 88.9%, source-output 21.3%, attribution patching 93.8%
+  edit        all variables @ h1: right 82.5% / 68.0% when changed (network changed in 24.6%); output R2 0.596 | controls: random subspace 63.6%, no-change 75.4%, source-output 22.1%, attribution patching 83.2%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 84.3% (n=811); network decides 1: 91.7% (n=831); network decides 2: 89.2% (n=822); network decides 3: 88.9% (n=790); network decides 4: 90.5% (n=746) | near ties (400 least clear inputs, no requirement): 54.8%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 0.0% of them (need 50% when there are 30 or more) and is right on 100.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 98 (49.0%; on the unsearched starting inputs 6.0%)
+     input [2.172, -0.501, -0.442, -0.418, 2.687]: network [3], construction [0]
+     input [1.57, -0.109, -0.28, -0.183, 1.992]: network [3], construction [0]
+     input [1.084, -1.691, -1.012, -1.142, -1.113]: network [0], construction [2]
+     input [-2.232, -3.21, -0.01, -2.058, -1.944]: network [2], construction [4]
+     input [1.597, 0.086, 0.32, -1.064, 1.983]: network [2], construction [0]
+7. NOT A COPY   29 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 8%; largest table in the file 8 numbers vs the largest weight tensor 64; constants per network parameter 0.071
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5)
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 88.9% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 87.9% of the cases where the network's output changed (need 90%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 0.0% (need 50%); it is right on 100.0%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 88.9% | all sites at once 100.0% | worst slice 84.3% | network's mistakes reproduced 0.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 11.1% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 0 (811 inputs), where it matches 84.3%
+  - of the network's 444 mistakes on test inputs, 100.0% are not reproduced
+  - a search found 98 inputs (from 200 starts) where the network's decision is clear and the construction's differs
