@@ -152,7 +152,7 @@ def frontier(meta, W, X):
             Q, text = fn(W, keys, k)
             WQ = dict(W); WQ.update(Q)
             f = fidelity(meta, W, X, nets.forward(meta["forward"], WQ, X))
-            pts.append((f, bits(text + FWD[meta["forward"]]), f"{form}{k}"))
+            pts.append((f, bits(text + FWD.get(meta["forward"], "")), f"{form}{k}"))
     R = gauge(meta, W)
     if R is not None:
         kdim = W["L0.W_Q"].shape[-1] if meta["forward"] == "transformer" else 0

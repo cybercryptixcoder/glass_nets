@@ -463,3 +463,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - No threshold was changed.
   - R5 runs already in flight compute S against the OLD frontier: re-score them afterwards.
 - **12:24** R5 interim (all 5 runs): fidelity stays about 100% and S about 0.7 under the old frontier (about 1 under T2). The cheap reader does not trade exactness for rules even when told to. **R7 launched: rule first.** Two lc_8_6 runs start from the census rule (fidelity 92.4%, S 0.50); the job is to find where its quantities live inside the network so that deep claims pass. 80 steps each.
+- **12:26** R6 (by hand). lc_8_6 layer 0: the token at the position explains 37–79% of attn0.out per position; fixed-point, 2-cycle and preimage features add ≤ 0.03; the argmax key equals x_p 49% of the time. No crisp relational code. Symmetry test (/tmp/sym.py → ARC's U/V reduction): it holds for M4,3 (the reduced net reproduces 98.7%) and fails for M8,5 (25.5%), M8,8 (11.8%) and M16,10 (no pairing). **Reframing:** the obstacle is messiness, not size. The constructor-era readers verified constructions of much bigger CLEAN networks (mod-add about 226K parameters, mod-mul, Breakout, Tracr). Next: re-certify those under the v2 certificate (free), alongside R7.
+- **13:55 Results.**
+  - **Re-certification of constructor-era constructions** under the v2 certificate (`results/glass/scaling/recert_clean.json`):
+    - tracr_count_greater (compiled, 1,161 params): fidelity 100%, S 0.12, 7/7 claims;
+    - astra_breakout (hand-written, 20,486): 100%, S 0.50, 2/2;
+    - **modmul_p113 (TRAINED, 226,048 params; blinded reader, Nov 13): fidelity 97.4%, S 0.009, 7/7 claims, 7 after the first step.**
+    - modadd still running.
+  - **R5 final:** lc_3_4 and lc_4_5 ended with fidelity about 100% and S 0.72–0.86 (old frontier). No run works.
+  - **R7b (rule first) moved AWAY from the target:** S 0.50 → 0.85 to make inside claims pass. It copied layers back in.
+  - **The finding of the day:** the system already works on big CLEAN trained networks (mod-mul, 226K). AlgZoo's small DENSE networks are the frontier, as ARC says. On dense networks, inside faithfulness and compression pull against each other, and the cheap reader resolves the conflict by copying.
+  - **Criterion note:** networks without task labels (mod-mul) can't be "above the task rule". Their network-specificity comes from the prior-only control (0 stages on mod-mul, E10).
