@@ -54,4 +54,19 @@ A construction of a network with **more than 100 parameters** counts as working 
    exact against torch).
 
 | R7 | Rule first (start from the census rule) | Can rule-level accounts gain inside claims? | lc_8_6: S rose 0.50 → 0.85 (copying layers); in progress |
-| R8 | Wide batch, top-down, intermediate-site claims, 100 steps × 2 runs on M8,5, lc_3_4, lc_4_5, argmedian 8,5 | Does any cheap-reader run reach the strict criterion on a dense network? | running (14:20) |
+| R8 | Wide batch, top-down, intermediate-site claims, 100 steps × 2 runs on M8,5, lc_3_4, lc_4_5, argmedian 8,5 | Does any cheap-reader run reach the strict criterion on a dense network? | **No** (copies, or short accounts below the task rule). Stopped 15:05 to avoid circling |
+
+## Where this leaves the plan (15:05). Decisions for Shreyas.
+
+- **Not pulled yet, needs Shreyas:** R3, a stronger reader. Only DeepSeek V4.1 Flash is available on Luminal; there
+  is no key for any other model in this workspace.
+- **Engineering lever, needs a go:** R9, analysis tools for the reader.
+  - At each intermediate site, automatically find the low-dimensional subspace that the rest of the network actually
+    uses (by substitution, not by variance).
+  - Fit its coordinates against a library of generic input features (ranks, running max, equalities, counts) by
+    sparse or symbolic regression.
+  - Hand the reader the hits as candidate variables.
+  - Motivation: R6 showed that total-variance analysis misleads; R7 and R8 show the reader can't find
+    decision-relevant low-dimensional quantities alone.
+- **Product decision:** the catalog may carry PARTIAL certificates for dense networks, e.g. the lc_8_6 census rule:
+  fidelity 92.4% vs task 85.2%, S 0.50, rival test at layer 0 rejected. Clearly labelled as behavioural only.
