@@ -102,3 +102,817 @@ print(O)
 
 
 ===== step 3/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+d=y.argmax(1)
+for c in range(8):
+    idx=np.where(d==c)[0][:3]
+    print("class",c)
+    for i in idx:
+        print(" x:",X[i], " range:", X[i].max().round(2), X[i].min().round(2), "sum",X[i].sum().round(2))
+
+--- output (0.0 s) ---
+class 0
+ x: [ 0.788  0.844  0.076 -1.427 -0.135 -0.77  -1.423  0.258]  range: 0.84 -1.43 sum -1.79
+ x: [ 0.319 -0.359 -1.902 -0.109 -0.804  1.08  -0.289  0.083]  range: 1.08 -1.9 sum -1.98
+ x: [-0.007 -0.561 -0.868  3.066 -0.077 -2.017 -0.649  0.678]  range: 3.07 -2.02 sum -0.43
+class 1
+ x: [ 1.802  1.315  0.357 -1.208 -0.004  0.656 -1.288  0.395]  range: 1.8 -1.29 sum 2.02
+ x: [-0.472  1.378  0.136  2.31  -0.787  0.58  -0.196  0.566]  range: 2.31 -0.79 sum 3.52
+ x: [-0.668  0.163 -0.831  2.346 -0.704 -0.453 -1.066 -0.346]  range: 2.35 -1.07 sum -1.56
+class 2
+ x: [ 1.647  0.917  1.067  0.048  0.917  0.371  0.613 -0.152]  range: 1.65 -0.15 sum 5.43
+ x: [-0.5    1.36   1.002 -0.152 -0.472 -1.005 -0.7   -1.473]  range: 1.36 -1.47 sum -1.94
+ x: [-1.375  1.998  0.947 -0.379 -0.819 -0.969  0.123 -0.648]  range: 2.0 -1.38 sum -1.12
+class 3
+ x: [-0.704 -1.265 -0.623  0.041 -2.325 -0.219 -1.246 -0.732]  range: 0.04 -2.33 sum -7.07
+ x: [-0.544 -0.316  0.412  1.043 -0.129  1.366 -0.665  0.352]  range: 1.37 -0.67 sum 1.52
+ x: [ 0.329 -0.259  1.583  1.32   0.633 -2.204  0.052  0.684]  range: 1.58 -2.2 sum 2.14
+class 4
+ x: [ 0.161 -0.586 -1.341 -1.402  0.503  0.99  -0.164 -1.074]  range: 0.99 -1.4 sum -2.91
+ x: [-0.85  -0.511 -0.012 -1.485  0.301 -0.106 -1.186 -2.398]  range: 0.3 -2.4 sum -6.25
+ x: [ 0.513 -0.298 -0.53  -0.236  1.816 -0.05   0.087 -1.487]  range: 1.82 -1.49 sum -0.18
+class 5
+ x: [ 0.903  0.094 -0.743 -0.922 -0.458  0.22  -1.01  -0.209]  range: 0.9 -1.01 sum -2.12
+ x: [ 0.873 -1.28  -0.713  0.621 -2.25   0.386 -0.582  0.109]  range: 0.87 -2.25 sum -2.84
+ x: [-0.076  0.202  0.694 -0.758  1.421  0.726  0.844  1.165]  range: 1.42 -0.76 sum 4.22
+class 6
+ x: [ 0.126 -0.132  0.64   0.105 -0.536  0.362  1.304  0.947]  range: 1.3 -0.54 sum 2.82
+ x: [-0.159  0.541  0.215  0.355 -0.654 -0.13   0.784  1.493]  range: 1.49 -0.65 sum 2.45
+ x: [ 0.43   0.696 -1.184 -0.662 -0.436 -1.17   1.739 -0.496]  range: 1.74 -1.18 sum -1.08
+class 7
+ x: [-1.259  1.514  1.346  0.781  0.264 -0.314  1.458  1.96 ]  range: 1.96 -1.26 sum 5.75
+ x: [ 1.004 -0.618  1.822 -1.32  -0.662  0.935  0.049  2.002]  range: 2.0 -1.32 sum 3.21
+ x: [-0.569 -1.03  -1.043  0.268  0.359  1.322 -0.014  1.042]  range: 1.32 -1.04 sum 0.34
+
+
+--- python ---
+
+import numpy as np
+# PCA of each h site
+H=acts(X)
+for k in ['h1','h2','h4','h8']:
+    s=np.linalg.svd(H[k]-H[k].mean(0),compute_uv=False)
+    print(k, (s**2/np.sum(s**2)).round(4))
+so=np.linalg.svd(y-y.mean(0),compute_uv=False); print('out',(so**2/np.sum(so**2)).round(4))
+# how many units are nonzero on average
+for k in ['h1','h2','h3','h4','h5','h6','h7','h8']:
+    print(k, (H[k]>1e-6).mean(0).round(3))
+
+--- output (0.02 s) ---
+h1 [0.865 0.135 0.    0.    0.    0.    0.    0.   ]
+h2 [0.647 0.289 0.041 0.022 0.001 0.    0.    0.   ]
+h4 [0.86  0.095 0.025 0.015 0.003 0.002 0.001 0.   ]
+h8 [0.64  0.23  0.076 0.043 0.007 0.002 0.001 0.   ]
+out [0.241 0.182 0.163 0.13  0.089 0.076 0.069 0.05 ]
+h1 [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5]
+h2 [0.927 0.101 0.555 0.82  0.845 0.998 0.748 0.001]
+h3 [0.987 0.133 0.58  0.935 0.756 1.    0.927 0.272]
+h4 [0.999 0.758 0.602 0.951 0.75  1.    0.984 0.364]
+h5 [1.    0.952 0.646 0.95  0.692 1.    0.998 0.846]
+h6 [1.    0.995 0.689 0.962 0.752 1.    1.    0.884]
+h7 [1.    1.    0.718 0.994 0.932 1.    1.    0.902]
+h8 [1.    1.    0.77  0.999 0.965 1.    1.    0.963]
+
+
+===== step 4/80
+
+--- python ---
+
+import numpy as np
+# linear fit out ~ x
+A=np.hstack([X,np.ones((len(X),1))])
+coef,res,rk,sv=np.linalg.lstsq(A,y,rcond=None)
+pred=A@coef
+print("R2 linear:", 1-((y-pred)**2).sum(0)/((y-y.mean(0))**2).sum(0))
+print(coef[:8].round(2))
+# quadratic terms
+from itertools import combinations_with_replacement as cwr
+feats=[X[:,i]*X[:,j] for i,j in cwr(range(8),2)]
+B=np.hstack([X]+feats+[np.ones((len(X),1))])
+c2=np.linalg.lstsq(B,y,rcond=None)[0]
+p2=B@c2
+print("R2 quad:", 1-((y-p2)**2).sum(0)/((y-y.mean(0))**2).sum(0))
+
+--- output (0.01 s) ---
+R2 linear: [0.655 0.732 0.715 0.754 0.76  0.769 0.755 0.805]
+[[ 4.7   0.19 -0.09 -0.34 -0.18  0.17  0.15  0.15]
+ [ 0.83  7.19 -0.21 -0.15 -0.15  0.18  0.25  0.3 ]
+ [-0.19 -0.33  6.53 -1.24 -1.08 -0.92 -0.83 -0.75]
+ [ 0.18  0.26 -0.09  6.73 -0.64 -0.36 -0.53 -0.4 ]
+ [-0.08  0.08 -0.09 -0.3   5.86 -0.53 -0.59 -0.69]
+ [-0.15 -0.01 -0.1  -0.08 -0.27  4.62 -0.7  -0.62]
+ [-0.56 -0.5  -0.54 -0.4  -0.55 -0.39  3.84 -1.23]
+ [-0.24 -0.03 -0.25 -0.13 -0.12 -0.07 -0.22  4.  ]]
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 12, in <module>
+  File "/usr/local/lib/python3.13/dist-packages/numpy/_core/shape_base.py", line 365, in hstack
+    return _nx.concatenate(arrs, 1, dtype=dtype, casting=casting)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: all the input arrays must have same number of dimensions, but the array at index 0 has 2 dimension(s) and the array at index 1 has 1 dimension(s)
+
+
+--- python ---
+
+import numpy as np
+H=acts(X)
+h8=H['h8']; h7=H['h7']
+cs=np.cumsum(X,1)
+feats={'sum':X.sum(1),'maxcsum':cs.max(1),'mincsum':cs.min(1),'maxx':X.max(1),'minx':X.min(1),
+ 'sumpos':np.maximum(X,0).sum(1),'sumneg':np.minimum(X,0).sum(1),'absmax':np.abs(X).max(1)}
+for i in range(8):
+    s=[]
+    for k,v in feats.items():
+        c=np.corrcoef(h8[:,i],v)[0,1]; s.append((k,round(c,2)))
+    print(i,s)
+
+--- output (0.01 s) ---
+0 [('sum', np.float64(-0.34)), ('maxcsum', np.float64(-0.36)), ('mincsum', np.float64(-0.45)), ('maxx', np.float64(0.04)), ('minx', np.float64(-0.4)), ('sumpos', np.float64(-0.09)), ('sumneg', np.float64(-0.48)), ('absmax', np.float64(0.28))]
+1 [('sum', np.float64(-0.31)), ('maxcsum', np.float64(-0.2)), ('mincsum', np.float64(-0.33)), ('maxx', np.float64(0.09)), ('minx', np.float64(-0.44)), ('sumpos', np.float64(-0.04)), ('sumneg', np.float64(-0.49)), ('absmax', np.float64(0.34))]
+2 [('sum', np.float64(0.04)), ('maxcsum', np.float64(0.26)), ('mincsum', np.float64(0.18)), ('maxx', np.float64(0.23)), ('minx', np.float64(-0.12)), ('sumpos', np.float64(0.17)), ('sumneg', np.float64(-0.1)), ('absmax', np.float64(0.22))]
+3 [('sum', np.float64(-0.27)), ('maxcsum', np.float64(-0.26)), ('mincsum', np.float64(-0.35)), ('maxx', np.float64(0.04)), ('minx', np.float64(-0.33)), ('sumpos', np.float64(-0.07)), ('sumneg', np.float64(-0.4)), ('absmax', np.float64(0.23))]
+4 [('sum', np.float64(-0.23)), ('maxcsum', np.float64(-0.24)), ('mincsum', np.float64(-0.32)), ('maxx', np.float64(0.01)), ('minx', np.float64(-0.26)), ('sumpos', np.float64(-0.07)), ('sumneg', np.float64(-0.32)), ('absmax', np.float64(0.16))]
+5 [('sum', np.float64(-0.29)), ('maxcsum', np.float64(-0.26)), ('mincsum', np.float64(-0.34)), ('maxx', np.float64(0.12)), ('minx', np.float64(-0.41)), ('sumpos', np.float64(-0.02)), ('sumneg', np.float64(-0.47)), ('absmax', np.float64(0.34))]
+6 [('sum', np.float64(-0.36)), ('maxcsum', np.float64(-0.33)), ('mincsum', np.float64(-0.44)), ('maxx', np.float64(0.07)), ('minx', np.float64(-0.47)), ('sumpos', np.float64(-0.07)), ('sumneg', np.float64(-0.54)), ('absmax', np.float64(0.35))]
+7 [('sum', np.float64(-0.19)), ('maxcsum', np.float64(-0.13)), ('mincsum', np.float64(-0.2)), ('maxx', np.float64(0.06)), ('minx', np.float64(-0.27)), ('sumpos', np.float64(-0.01)), ('sumneg', np.float64(-0.31)), ('absmax', np.float64(0.22))]
+
+
+===== step 5/80
+
+--- python ---
+
+import numpy as np
+d=y.argmax(1); cs=np.cumsum(X,1)
+cands={
+ 'argmax_x':X.argmax(1),'argmin_x':X.argmin(1),'argmax_abs':np.abs(X).argmax(1),
+ 'argmax_cs':cs.argmax(1),'argmin_cs':cs.argmin(1),
+ 'argmax_xm':(X-X.mean(1,keepdims=True)).argmax(1),
+ 'argmax_last_win':None,
+}
+for k,v in cands.items():
+    if v is not None: print(k,(v==d).mean().round(3))
+# running max of x
+rm=np.maximum.accumulate(X,1); argrm=np.zeros(len(X),int)
+for t in range(8): argrm=np.where(X[:,t]>rm[:,t-1] if t>0 else np.ones(len(X),bool),t,argrm)
+print('argrunnmax',(argrm==d).mean().round(3))
+# correlation of d with each x position value
+for t in range(8):
+    print(t, np.corrcoef(X[:,t],d)[0,1].round(3))
+
+--- output (0.01 s) ---
+argmax_x 0.328
+argmin_x 0.0
+argmax_abs 0.152
+argmax_cs 0.27
+argmin_cs 0.013
+argmax_xm 0.328
+argrunnmax 0.328
+0 -0.122
+1 -0.132
+2 -0.118
+3 -0.072
+4 -0.015
+5 0.094
+6 0.198
+7 0.321
+
+
+--- python ---
+
+import numpy as np
+H=acts(X)
+# examine h2 as function of x1,x2 only? h2 depends only on x1,x2
+h2=H['h2']
+print(h2[:6])
+# check: does h_t depend only on partial sums? test sensitivity: for fixed prefix, does h differ?
+# fit h8 linear in cumulative sums
+cs=np.cumsum(X,1)
+A=np.hstack([cs,np.ones((len(X),1))])
+for k in ['h4','h8']:
+    c=np.linalg.lstsq(A,H[k],rcond=None)[0]; p=A@c
+    print(k,"R2 in cumsums:",(1-((H[k]-p)**2).sum(0)/((H[k]-H[k].mean(0))**2).sum(0)).round(3))
+
+--- output (0.01 s) ---
+[[0.136 0.    0.195 0.046 0.158 0.041 0.    0.   ]
+ [0.865 0.    1.619 0.376 1.329 1.59  0.182 0.   ]
+ [0.532 0.    0.455 0.191 0.718 1.232 0.55  0.   ]
+ [0.758 0.    0.15  0.176 0.65  0.3   0.328 0.   ]
+ [0.024 0.    0.    0.    0.    0.362 0.553 0.   ]
+ [0.765 0.    0.    0.104 0.612 2.857 2.663 0.   ]]
+h4 R2 in cumsums: [0.593 0.681 0.786 0.752 0.464 0.523 0.52  0.432]
+h8 R2 in cumsums: [0.598 0.548 0.852 0.682 0.739 0.505 0.511 0.725]
+
+
+===== step 6/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+H=acts(X)
+i=1
+print("x:",X[i])
+for t in range(1,9): print('h%d'%t, H['h%d'%t][i])
+print('out',y[i], y[i].argmax())
+
+--- output (0.01 s) ---
+x: [-0.704 -1.265 -0.623  0.041 -2.325 -0.219 -1.246 -0.732]
+h1 [0.146 0.    0.846 0.106 0.329 0.    0.    0.   ]
+h2 [0.865 0.    1.619 0.376 1.329 1.59  0.182 0.   ]
+h3 [1.235 0.    0.54  2.252 0.645 4.625 3.142 0.026]
+h4 [6.414 3.79  0.    3.798 0.13  8.769 6.461 0.   ]
+h5 [12.269 10.589  2.62   1.544  1.159 10.731  6.25  10.269]
+h6 [ 6.785 18.579  0.     0.151  0.651 10.1   25.56  20.517]
+h7 [26.791 24.294  1.165 15.295 29.86   7.555 47.569  5.557]
+h8 [72.632 24.624  0.437 19.258 59.118 25.773 39.604  2.524]
+out [ -7.549 -17.763  -6.624  -2.466 -22.24   -2.773  -7.923  -4.037] 3
+
+
+--- python ---
+
+import numpy as np
+H=acts(X); d=y.argmax(1)
+# relation h8 vs x linear per-position: regress h8 on X
+A=np.hstack([X,np.ones((len(X),1))])
+c=np.linalg.lstsq(A,H['h8'],rcond=None)[0]
+print(c[:8].round(2)); print("const",c[8].round(2))
+p=A@c; print("R2 h8 in x:",(1-((H['h8']-p)**2).sum(0)/((H['h8']-H['h8'].mean(0))**2).sum(0)).round(2))
+
+--- output (0.01 s) ---
+[[ -4.58   1.32   0.16   0.18   2.46  -5.77  -3.6   -1.04]
+ [-17.89   0.62   0.14  -6.97 -23.95   2.48  -0.38   1.7 ]
+ [  3.1   -7.17   0.15   0.83   1.52   0.63 -13.44   1.77]
+ [ -1.06  -1.55   0.15   0.32   0.08   0.57   0.39  -9.15]
+ [ -4.    -3.23   0.15   0.21  -0.31  -3.37  -1.43   0.9 ]
+ [ -0.7    0.15   0.12  -1.98  -0.14  -1.22  -1.7    0.08]
+ [  0.44   0.15   0.17   0.07   0.26  -1.3   -0.58  -0.11]
+ [ -0.27   0.06  -0.92  -0.17  -0.53   0.01   0.69   0.06]]
+const [33.93 18.82  1.13  9.87 22.54 17.88 34.16 12.08]
+R2 h8 in x: [0.6  0.55 0.85 0.68 0.74 0.51 0.51 0.72]
+
+
+===== step 7/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = """Stage 1 (h1) explained exactly: the inputs are independent standard normals; the
+first hidden state is h1 = relu(x1 * W_x), so it depends only on the sign and size of x1. Splitting into
+positive and negative part of x1 gives two variables; every h1 unit is exactly a linear combination of
+them (unit u = w_u * pos - w_u * neg). Later stages not yet explained: the construction currently makes
+a placeholder prediction for the output (treated as unrelated to the state), so only the h1 stage should
+verify."""
+
+def model(x, iv):
+    pos = iv("x1_pos", np.maximum(x[:, 0], 0.0))
+    neg = iv("x1_neg", np.maximum(-x[:, 0], 0.0))
+    # h1 = pos * w+ + neg * w-
+    h1 = pos[:, None] * WX_POS[None, :] + neg[:, None] * WX_NEG[None, :]
+    out = np.zeros((x.shape[0], 8))
+    return out
+
+WX = np.array([-0.207, 0.03, -1.203, -0.151, -0.467, 0.003, 0.619, 0.004])
+WX_POS = np.maximum(WX, 0.0)
+WX_NEG = np.minimum(WX, 0.0)
+
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 1 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,000 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 5.5% of inputs (a constant output would get 5.5%); output R2 -0.026; KL 0.867
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 5.8% / 11.5% when changed (network changed in 32.1%); output R2 -0.029 | controls: random subspace 3.5%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  partial     x1_pos @ h1: right 5.9% / 7.8% when changed (network changed in 22.3%); output R2 -0.026 | controls: random subspace 4.9%, no-change 77.7%, source-output 14.3%, attribution patching 82.3%
+  partial     x1_neg @ h1: right 5.5% / 14.0% when changed (network changed in 18.2%); output R2 -0.028 | controls: random subspace 5.5%, no-change 81.8%, source-output 14.8%, attribution patching 74.6%
+  edit        all variables @ h1: right 5.9% / 9.7% when changed (network changed in 19.6%); output R2 -0.026 | controls: random subspace 5.0%, no-change 80.4%, source-output 14.1%, attribution patching 78.0%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=222); network decides 1: 0.0% (n=271); network decides 2: 0.0% (n=355); network decides 3: 0.0% (n=448); network decides 4: 0.0% (n=476); network decides 5: 0.0% (n=781); network decides 6: 0.0% (n=744); network decides 7: 0.0% (n=703) | near ties (400 least clear inputs, no requirement): 7.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 5.0% of them (need 50% when there are 30 or more) and is right on 16.9%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 188 (94.0%; on the unsearched starting inputs 83.5%)
+     input [-2.177, -0.795, -1.12, -1.439, -1.337, 1.995, -1.406, -2.674]: network [5], construction [0]
+     input [-1.379, -0.496, 2.432, -0.818, -1.882, -1.184, -0.867, -0.972]: network [2], construction [0]
+     input [-1.099, 2.678, 0.035, -0.027, -1.178, -0.7, -1.549, -0.663]: network [1], construction [0]
+     input [-1.076, -1.219, -0.848, 1.186, -0.628, -1.025, -1.501, -2.042]: network [3], construction [0]
+7. NOT A COPY   16 numeric literals in the file; network parameters 136; share of its weights (|w| >= 0.05) the literals reproduce: 7%
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: NOT VERIFIED (0 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 5.5% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 11.5% of the cases where the network's output changed (need 90%)
+  - partial of x1_pos at h1: prediction right in 7.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of x1_neg at h1: prediction right in 14.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 9.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - worst slice: on the 271 inputs where network decides 1, the construction agrees on 0.0% (need 80%)
+  - the network's own mistakes: on the 2162 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 5.0% (need 50%); it is right on 16.9%: it explains the task, not this network
+COVERAGE   stages 0/8 | behaviour 5.5% | all sites at once 100.0% | worst slice 0.0% | network's mistakes reproduced 5.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 94.5% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 1 (271 inputs), where it matches 0.0%
+  - of the network's 2162 mistakes on test inputs, 95.0% are not reproduced
+  - a search found 188 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 8/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+for t in range(8):
+    for val in [1.0,-1.0]:
+        xx=np.zeros((1,8)); xx[0,t]=val
+        print(t,val, run(xx).round(2), 'd',run(xx).argmax())
+
+--- output (0.0 s) ---
+0 1.0 [[-1.22 -3.36 -3.41 -4.9  -4.22 -3.11 -3.14 -3.08]] d 0
+0 -1.0 [[-10.79  -3.6   -2.43  -2.78  -2.7   -2.68  -2.46  -2.16]] d 7
+1 1.0 [[-0.21 -0.62 -2.91 -2.55 -3.61 -2.58 -2.41 -2.25]] d 0
+1 -1.0 [[ -1.67 -13.92  -3.3   -1.98  -2.09  -1.98  -2.04  -1.89]] d 0
+2 1.0 [[-0.11  0.2  -0.49 -2.45 -1.99 -2.42 -2.28 -1.98]] d 1
+2 -1.0 [[  0.22  -0.06 -12.55  -1.31  -0.03  -0.16  -0.14  -0.15]] d 0
+3 1.0 [[-0.09  0.26  0.29 -0.29 -1.96 -1.26 -2.2  -1.91]] d 2
+3 -1.0 [[ -0.18  -0.23  -0.42 -11.8   -1.48  -0.47  -0.48  -0.52]] d 0
+4 1.0 [[-0.17  0.19  0.22  0.34 -0.27 -1.32 -1.28 -1.96]] d 3
+4 -1.0 [[ 0.05  0.14  0.2  -0.23 -9.54 -0.91 -0.01  0.04]] d 2
+5 1.0 [[-0.22  0.13  0.14  0.32  0.26 -0.06 -1.36 -1.14]] d 3
+5 -1.0 [[ 0.25  0.26  0.45  0.32  0.11 -6.78 -0.47  0.23]] d 2
+6 1.0 [[-0.22 -0.2  -0.    0.1   0.16  0.17 -0.24 -1.32]] d 5
+6 -1.0 [[ 0.56  0.33  0.68  0.76  0.74  0.84 -5.68  0.01]] d 5
+7 1.0 [[-0.25 -0.06 -0.28  0.06  0.4   0.06  0.02 -0.05]] d 4
+7 -1.0 [[-0.05  0.02 -0.09  0.2   0.71  0.19  0.38 -5.3 ]] d 4
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+# scale sensitivity: x = v * e_t for increasing v
+for t in [0,3,7]:
+    for val in [0.3,1,2,4,8]:
+        xx=np.zeros((1,8)); xx[0,t]=val
+        print(t,val, run(xx).argmax(), run(xx).round(1).ravel())
+
+--- output (0.0 s) ---
+0 0.3 0 [-0.4 -1.  -1.  -1.5 -1.3 -0.9 -0.9 -0.9]
+0 1 0 [-1.2 -3.4 -3.4 -4.9 -4.2 -3.1 -3.1 -3.1]
+0 2 0 [-2.4 -6.7 -6.8 -9.8 -8.4 -6.2 -6.3 -6.2]
+0 4 0 [ -4.9 -13.4 -13.6 -19.6 -16.9 -12.4 -12.5 -12.3]
+0 8 0 [ -9.8 -26.8 -27.3 -39.2 -33.8 -24.9 -25.1 -24.6]
+3 0.3 2 [-0.   0.1  0.1 -0.1 -0.6 -0.4 -0.7 -0.6]
+3 1 2 [-0.1  0.3  0.3 -0.3 -2.  -1.3 -2.2 -1.9]
+3 2 2 [-0.2  0.5  0.6 -0.6 -3.9 -2.5 -4.4 -3.8]
+3 4 2 [-0.4  1.   1.2 -1.2 -7.8 -5.  -8.8 -7.6]
+3 8 2 [ -0.7   2.1   2.3  -2.3 -15.7 -10.  -17.6 -15.2]
+7 0.3 4 [-0.1 -0.  -0.1  0.   0.1  0.   0.  -0. ]
+7 1 4 [-0.2 -0.1 -0.3  0.1  0.4  0.1  0.  -0.1]
+7 2 4 [-0.5 -0.1 -0.6  0.1  0.8  0.1  0.  -0.1]
+7 4 4 [-1.  -0.2 -1.1  0.2  1.6  0.2  0.1 -0.2]
+7 8 4 [-2.  -0.5 -2.2  0.5  3.2  0.5  0.1 -0.4]
+
+
+===== step 9/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+d=y.argmax(1)
+A=np.hstack([X,np.ones((len(X),1))])
+c=np.linalg.lstsq(A,y,rcond=None)[0]
+pl=A@c
+print("linear argmax match:",(pl.argmax(1)==d).mean())
+# per-position probe experiments: two-value competition
+for p,q in [(0,1),(0,3),(2,5),(3,6),(1,7),(4,5)]:
+    xx=np.zeros((1,8)); xx[0,p]=2.0; xx[0,q]=1.0
+    print(p,q,run(xx).argmax())
+    xx[0,p]=1.0; xx[0,q]=2.0
+    print(p,q,run(xx).argmax())
+
+--- output (0.0 s) ---
+linear argmax match: 0.284375
+0 1 1
+0 1 0
+0 3 3
+0 3 3
+2 5 5
+2 5 5
+3 6 2
+3 6 3
+1 7 7
+1 7 7
+4 5 3
+4 5 4
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+# does out depend on x through the observed h8 only? yes by definition. 
+# Study: score for class j as function of x_j: vary x_j keeping others zero, look at out_j
+for j in range(8):
+    vals=np.array([0.5,1,2,4])
+    rows=[]
+    for v in vals:
+        xx=np.zeros((1,8)); xx[0,j]=v; rows.append(run(xx).ravel())
+    rows=np.array(rows)
+    print(j, rows[:,j].round(2), 'ratio', (rows[1:,j]/vals[1:,None].ravel()[:3]).round(2))
+
+--- output (0.0 s) ---
+0 [-0.61 -1.22 -2.44 -4.89] ratio [-1.22 -1.22 -1.22]
+1 [-0.31 -0.62 -1.23 -2.46] ratio [-0.62 -0.62 -0.62]
+2 [-0.24 -0.49 -0.97 -1.95] ratio [-0.49 -0.49 -0.49]
+3 [-0.15 -0.29 -0.59 -1.17] ratio [-0.29 -0.29 -0.29]
+4 [-0.13 -0.27 -0.53 -1.06] ratio [-0.27 -0.27 -0.27]
+5 [-0.03 -0.06 -0.11 -0.22] ratio [-0.06 -0.06 -0.06]
+6 [-0.12 -0.24 -0.49 -0.98] ratio [-0.24 -0.24 -0.24]
+7 [-0.03 -0.05 -0.11 -0.22] ratio [-0.05 -0.05 -0.05]
+
+
+===== step 10/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+d=y.argmax(1); am=X.argmax(1)
+Cm=np.zeros((8,8))
+for a,b in zip(am,d): Cm[a,b]+=1
+print(Cm.astype(int))
+print()
+# maybe decision is about the LAST value being max? or argmax of last 4?
+for k in range(1,9):
+    sub=X[:,8-k:]; print(k, (sub.argmax(1)+8-k==d).mean().round(3))
+
+--- output (0.01 s) ---
+[[150  91 131  94  95 159 135 152]
+ [118 124 113 124 116 109 162 151]
+ [ 95  95 189  86 110 115 138 138]
+ [ 50 115  99 244  92 142 111 141]
+ [ 13 115  72 114 328 149 134  96]
+ [ 19  24  88  56  90 542  76 125]
+ [  3  16  22 113  40 237 538  71]
+ [  0   0   0  26 123 104 169 513]]
+
+1 0.173
+2 0.321
+3 0.432
+4 0.47
+5 0.472
+6 0.452
+7 0.392
+8 0.328
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+for p,q in [(0,1),(0,3),(2,5),(3,6),(4,5)]:
+    xx=np.zeros((1,8)); xx[0,p]=2.0; xx[0,q]=1.0
+    print(p,q,'2,1',run(xx).round(2).ravel())
+    xx[0,p]=1.0; xx[0,q]=2.0
+    print(p,q,'1,2',run(xx).round(2).ravel())
+
+--- output (0.0 s) ---
+0 1 2,1 [ -1.6   -0.49  -9.22 -11.45 -10.15  -7.23  -7.12  -7.31]
+0 1 1,2 [ -0.49  -1.19 -10.08  -9.87 -10.33  -7.28  -7.08  -6.97]
+0 3 2,1 [-2.14 -6.11 -8.23 -0.53 -8.39 -6.31 -6.45 -6.29]
+0 3 1,2 [-0.47 -1.65 -5.56 -0.03 -6.1  -4.4  -6.37 -5.96]
+2 5 2,1 [-0.43  0.28 -1.07 -4.79 -5.37  0.51 -4.93 -4.53]
+2 5 1,2 [-0.62  0.29  0.35 -1.26 -3.95  0.36 -4.05 -3.73]
+3 6 2,1 [-0.7   0.04  0.06 -0.97 -4.19 -3.93  0.04 -4.54]
+3 6 1,2 [-0.62 -0.35  0.05  0.34 -1.26 -2.89 -0.1  -3.79]
+4 5 2,1 [-0.54  0.43  0.43  0.82 -0.05  0.63 -4.14 -5.15]
+4 5 1,2 [-0.53  0.48  0.48  0.99  1.01  0.24 -4.65 -4.43]
+
+
+===== step 11/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+xx=np.array([[0.0,0.0,0.0,2.0,0.0,0.0,1.0,0.0]])
+H=acts(xx)
+for t in range(1,9): print('h%d'%t,H['h%d'%t][0])
+print('out',run(xx)[0])
+print()
+xx=np.array([[2.0,1.0,0,0,0,0,0,0]])
+H=acts(xx)
+for t in range(1,9): print('h%d'%t,H['h%d'%t][0])
+print('out',run(xx)[0])
+
+--- output (0.0 s) ---
+h1 [0. 0. 0. 0. 0. 0. 0. 0.]
+h2 [0. 0. 0. 0. 0. 0. 0. 0.]
+h3 [0. 0. 0. 0. 0. 0. 0. 0.]
+h4 [0.   0.06 0.   0.   0.   0.01 1.24 0.01]
+h5 [1.72 0.   0.58 0.42 1.54 0.66 0.6  0.  ]
+h6 [1.25 0.   0.57 0.34 0.03 2.48 1.77 0.05]
+h7 [2.61 0.83 0.   1.33 0.   4.51 3.94 0.14]
+h8 [6.24 3.56 1.05 1.97 0.43 6.56 5.09 1.87]
+out [-0.7   0.04  0.06 -0.97 -4.19 -3.93  0.04 -4.54]
+
+h1 [0.   0.06 0.   0.   0.   0.01 1.24 0.01]
+h2 [1.51 0.   0.   0.27 1.07 0.67 1.22 0.  ]
+h3 [1.68 0.04 0.89 0.3  0.29 1.67 1.3  0.  ]
+h4 [2.47 0.68 1.25 0.23 0.23 4.12 2.59 0.26]
+h5 [3.84 1.16 1.34 2.37 0.41 6.79 5.59 1.79]
+h6 [ 9.75  6.72  1.39  3.46  1.09 12.91 12.01  1.19]
+h7 [18.44 11.86  1.5   5.03  5.42 16.61 15.56 12.72]
+h8 [20.41 25.61  1.82  4.87  3.76 21.48 39.02 18.29]
+out [ -1.6   -0.49  -9.22 -11.45 -10.15  -7.23  -7.12  -7.31]
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+Wh=W['W_h']; Wo=W['W_o']; Wx=W['W_x'][0]
+print("Wx nonzero idx", np.where(np.abs(Wx)>0.1)[0], Wx[np.abs(Wx)>0.1])
+print("svd Wh", np.linalg.svd(Wh,compute_uv=False).round(2))
+# symmetry / block check
+print("Wh+Wh.T\n", ((Wh+Wh.T)/2).round(2))
+
+--- output (0.0 s) ---
+Wx nonzero idx [0 2 3 4 6] [-0.207 -1.203 -0.151 -0.467  0.619]
+svd Wh [3.86 3.18 2.44 2.2  1.45 1.22 0.67 0.13]
+Wh+Wh.T
+ [[ 0.08  0.12  0.7  -0.05 -0.48 -0.04  0.54  0.22]
+ [ 0.12  0.48 -0.5   1.02 -0.05 -0.61 -0.28  1.35]
+ [ 0.7  -0.5   0.24 -0.27  0.23  0.72  0.74 -0.24]
+ [-0.05  1.02 -0.27 -0.67  0.54  1.03  0.25  0.11]
+ [-0.48 -0.05  0.23  0.54  0.27 -0.35  0.87 -0.33]
+ [-0.04 -0.61  0.72  1.03 -0.35  0.79  0.73  0.45]
+ [ 0.54 -0.28  0.74  0.25  0.87  0.73  0.49  0.36]
+ [ 0.22  1.35 -0.24  0.11 -0.33  0.45  0.36 -0.6 ]]
+
+
+===== step 12/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+print("homogeneity:", np.abs(run(2*X[:5])-2*run(X[:5])).max())
+# max-tracking test: perturb a middle value downward below running max
+rng=np.random.default_rng(0)
+idx=rng.choice(8000,200,replace=False)
+base=acts(X[idx])['h8']
+Xp=X[idx].copy()
+for i in range(len(idx)):
+    t=rng.integers(1,7)
+    mx=Xp[i,:t].max()
+    Xp[i,t]=mx-abs(rng.normal())-0.1
+new=acts(Xp)['h8']
+chg=np.abs(new-base).max(1)
+print("fraction with tiny change (<1e-6):",(chg<1e-6).mean(), "median abs change", np.median(chg).round(3), "median |h8|",np.median(np.abs(base)).round(2))
+
+--- output (0.01 s) ---
+homogeneity: 0.0
+fraction with tiny change (<1e-6): 0.0 median abs change 4.597 median |h8| 12.81
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+H=acts(X)
+# Is any unit of h8 nearly equal to a running max-like quantity? correlate with max/min/sum
+M=X.max(1); m=X.min(1); S=X.sum(1); A=np.abs(X).sum(1)
+for u in range(8):
+    print(u,[round(np.corrcoef(H['h8'][:,u],v)[0,1],2) for v in [M,m,S,A,np.maximum(X,0).sum(1)]])
+print()
+# fit h8 unit 3 (always active) as linear function of x and relu features
+
+--- output (0.01 s) ---
+0 [np.float64(0.04), np.float64(-0.4), np.float64(-0.34), np.float64(0.39), np.float64(-0.09)]
+1 [np.float64(0.09), np.float64(-0.44), np.float64(-0.31), np.float64(0.44), np.float64(-0.04)]
+2 [np.float64(0.23), np.float64(-0.12), np.float64(0.04), np.float64(0.26), np.float64(0.17)]
+3 [np.float64(0.04), np.float64(-0.33), np.float64(-0.27), np.float64(0.32), np.float64(-0.07)]
+4 [np.float64(0.01), np.float64(-0.26), np.float64(-0.23), np.float64(0.24), np.float64(-0.07)]
+5 [np.float64(0.12), np.float64(-0.41), np.float64(-0.29), np.float64(0.44), np.float64(-0.02)]
+6 [np.float64(0.07), np.float64(-0.47), np.float64(-0.36), np.float64(0.45), np.float64(-0.07)]
+7 [np.float64(0.06), np.float64(-0.27), np.float64(-0.19), np.float64(0.29), np.float64(-0.01)]
+
+
+
+===== step 13/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=3, suppress=True, linewidth=200)
+H=acts(X)
+for k in ['h5','h6','h7','h8']:
+    pat=(H[k]>1e-9).astype(int)
+    keys=pat.dot(1<<np.arange(8))
+    u,cnt=np.unique(keys,return_counts=True)
+    print(k, "n patterns",len(u), sorted(cnt)[-6:])
+
+--- output (0.01 s) ---
+h5 n patterns 26 [np.int64(348), np.int64(461), np.int64(598), np.int64(693), np.int64(1397), np.int64(3706)]
+h6 n patterns 22 [np.int64(262), np.int64(315), np.int64(574), np.int64(733), np.int64(1172), np.int64(4542)]
+h7 n patterns 15 [np.int64(111), np.int64(216), np.int64(350), np.int64(529), np.int64(1607), np.int64(5098)]
+h8 n patterns 10 [np.int64(72), np.int64(78), np.int64(187), np.int64(209), np.int64(1557), np.int64(5878)]
+
+
+--- python ---
+
+import numpy as np
+H=acts(X)
+pat=(H['h8']>1e-9).astype(int); keys=pat.dot(1<<np.arange(8))
+u,cnt=np.unique(keys,return_counts=True)
+print("patterns h8:",[ (bin(k),c) for k,c in zip(u,cnt)])
+# for the largest pattern, fit exact linear x->h8?
+for k,c in zip(u,cnt):
+    if c<50: continue
+    m=keys==k
+    A=X[m]; Y=H['h8'][m]
+    coef,res,rk,sv=np.linalg.lstsq(A,Y,rcond=None)
+    r=Y-A@coef
+    print(bin(k),c,"rank",rk,"max resid",np.abs(r).max().round(4),"|Y| med",np.median(np.abs(Y)).round(2))
+
+--- output (0.01 s) ---
+patterns h8: [('0b1101011', np.int64(5)), ('0b1101111', np.int64(2)), ('0b1111011', np.int64(78)), ('0b1111111', np.int64(209)), ('0b11100011', np.int64(11)), ('0b11101011', np.int64(187)), ('0b11101111', np.int64(72)), ('0b11111011', np.int64(1557)), ('0b11111101', np.int64(1)), ('0b11111111', np.int64(5878))]
+0b1111011 78 rank 8 max resid 49.5857 |Y| med 12.37
+0b1111111 209 rank 8 max resid 61.1164 |Y| med 11.97
+0b11101011 187 rank 8 max resid 26.8232 |Y| med 8.59
+0b11101111 72 rank 8 max resid 24.5585 |Y| med 8.29
+0b11111011 1557 rank 8 max resid 72.4544 |Y| med 14.81
+0b11111111 5878 rank 8 max resid 123.1449 |Y| med 13.32
+
+
+===== step 14/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = """Partial construction. Stage 1 (h1) is exact: with no biases the network is
+positively homogeneous, and the first hidden state is h1 = relu(x1 * W_x), i.e. it carries only the sign and
+magnitude of the first input. Two variables (positive and negative part of x1) reproduce h1 exactly.
+For the remaining stages the file only carries a rough first-order (linear) read-out of the inputs, used as a
+placeholder so that the output is not constant; the real mechanism is a relu recursion whose piecewise-linear
+structure is still being identified."""
+
+WX = np.array([-0.207, 0.03, -1.203, -0.151, -0.467, 0.003, 0.619, 0.004])
+WX_POS = np.maximum(WX, 0.0)
+WX_NEG = np.minimum(WX, 0.0)
+
+GLIN = np.array([
+ [ 4.70,  0.19, -0.09, -0.34, -0.18,  0.17,  0.15,  0.15],
+ [ 0.83,  7.19, -0.21, -0.15, -0.15,  0.18,  0.25,  0.30],
+ [-0.19, -0.33,  6.53, -1.24, -1.08, -0.92, -0.83, -0.75],
+ [ 0.18,  0.26, -0.09,  6.73, -0.64, -0.36, -0.53, -0.40],
+ [-0.08,  0.08, -0.09, -0.30,  5.86, -0.53, -0.59, -0.69],
+ [-0.15, -0.01, -0.10, -0.08, -0.27,  4.62, -0.70, -0.62],
+ [-0.56, -0.50, -0.54, -0.40, -0.55, -0.39,  3.84, -1.23],
+ [-0.24, -0.03, -0.25, -0.13, -0.12, -0.07, -0.22,  4.00]])
+
+def model(x, iv):
+    pos = iv("x1_pos", np.maximum(x[:, 0], 0.0))
+    neg = iv("x1_neg", np.maximum(-x[:, 0], 0.0))
+    h1 = pos[:, None] * WX_POS[None, :] + neg[:, None] * WX_NEG[None, :]
+    out = x @ GLIN
+    return out
+
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 2 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,480 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 28.3% of inputs (a constant output would get 5.5%); output R2 0.811; KL 2.305
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 31.2% / 34.0% when changed (network changed in 32.1%); output R2 0.682 | controls: random subspace 33.3%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  partial     x1_pos @ h1: right 32.7% / 40.8% when changed (network changed in 22.3%); output R2 0.802 | controls: random subspace 30.0%, no-change 77.7%, source-output 14.3%, attribution patching 82.3%
+  partial     x1_neg @ h1: right 28.1% / 28.3% when changed (network changed in 18.2%); output R2 0.705 | controls: random subspace 29.5%, no-change 81.8%, source-output 14.8%, attribution patching 74.6%
+  edit        all variables @ h1: right 30.5% / 33.9% when changed (network changed in 19.6%); output R2 0.753 | controls: random subspace 29.1%, no-change 80.4%, source-output 14.1%, attribution patching 78.0%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 22.5% (n=222); network decides 1: 24.4% (n=271); network decides 2: 35.8% (n=355); network decides 3: 41.7% (n=448); network decides 4: 35.3% (n=476); network decides 5: 23.6% (n=781); network decides 6: 24.9% (n=744); network decides 7: 23.8% (n=703) | near ties (400 least clear inputs, no requirement): 34.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 43.0% of them (need 50% when there are 30 or more) and is right on 22.9%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 189 (94.5%; on the unsearched starting inputs 64.0%)
+     input [0.883, 0.628, 3.902, -1.833, 0.937, -0.013, -0.841, -2.201]: network [4], construction [2]
+     input [0.265, -0.009, 0.354, 3.672, 0.121, 0.23, 0.818, -1.356]: network [1], construction [3]
+     input [0.382, -1.085, -0.949, 3.699, -1.644, 0.329, -0.22, 1.028]: network [0], construction [3]
+     input [-0.113, 0.067, -1.167, -0.537, 3.5, -0.879, -0.392, 0.883]: network [1], construction [4]
+     input [-1.093, -0.006, 3.788, -1.041, -2.333, 0.126, 0.936, 1.632]: network [7], construction [2]
+7. NOT A COPY   78 numeric literals in the file; network parameters 136; share of its weights (|w| >= 0.05) the literals reproduce: 21%; largest table in the file 64 numbers vs the largest weight tensor 64  -> FLAGGED as a weight copy
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: NOT VERIFIED (0 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 28.3% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 34.0% of the cases where the network's output changed (need 90%)
+  - partial of x1_pos at h1: prediction right in 40.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of x1_neg at h1: prediction right in 28.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 33.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - worst slice: on the 222 inputs where network decides 0, the construction agrees on 22.5% (need 80%)
+  - the network's own mistakes: on the 2162 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 43.0% (need 50%); it is right on 22.9%: it explains the task, not this network
+  - weight copy: the file writes out a table of 64 numbers, at least half the size of the network's largest weight tensor (64 entries), which is that tensor up to rescaling: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 0/8 | behaviour 28.3% | all sites at once 100.0% | worst slice 22.5% | network's mistakes reproduced 43.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 71.7% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 0 (222 inputs), where it matches 22.5%
+  - of the network's 2162 mistakes on test inputs, 57.0% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 189 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 15/80
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+Wx=W['W_x'][0]; Wh=W['W_h']; Wo=W['W_o']
+ev=np.linalg.eigvals(Wh); print("eig A:", np.sort_complex(ev).round(2))
+u=[Wx.copy()]
+for k in range(7): u.append(u[-1]@Wh)
+U=np.array(u)  # u[k] = w_x A^k
+print("norms", np.linalg.norm(U,axis=1).round(2))
+# G: out += x_t * (u_{8-t} @ Wo)
+G=np.array([U[8-(t+1)]@Wo for t in range(8)])
+print("G (row=position, col=class):\n",G.round(2))
+print("svd G", np.linalg.svd(G,compute_uv=False).round(2))
+# compare with empirical regression no intercept
+Gfit=np.linalg.lstsq(X,y,rcond=None)[0]
+print("Gfit:\n",Gfit.round(2))
+print("svd Gfit",np.linalg.svd(Gfit,compute_uv=False).round(2))
+
+--- output (0.0 s) ---
+eig A: [-1.16+0.j   -0.87-0.95j -0.87+0.95j  0.12-1.34j  0.12+1.34j  1.06-0.85j  1.06+0.85j  1.61+0.j  ]
+norms [ 1.45  2.24  4.29 10.43 16.22 30.2  58.55 20.29]
+G (row=position, col=class):
+ [[ 9.5   0.21  0.18  1.48  1.22  1.44 -0.22 -2.28]
+ [ 1.05 13.36  0.04  0.48  1.24  1.34  0.92 -0.2 ]
+ [-0.59 -0.44 11.92 -1.57 -1.28 -0.42 -0.59 -0.87]
+ [ 0.07  0.04  0.04 11.36 -0.81 -0.36  0.05  0.01]
+ [-0.03 -0.13 -0.29 -0.02  9.26 -0.66 -0.67 -0.29]
+ [-0.16 -0.14 -0.35 -0.33 -0.21  6.68 -0.88 -0.72]
+ [-0.66 -0.51 -0.69 -0.72 -0.78 -0.7   5.48 -1.3 ]
+ [-0.2  -0.07 -0.19 -0.14 -0.31 -0.13 -0.36  5.24]]
+svd G [13.96 12.46 11.33 10.17  8.9   6.89  5.92  3.91]
+Gfit:
+ [[ 4.67  0.14 -0.14 -0.39 -0.22  0.13  0.11  0.12]
+ [ 0.87  7.24 -0.15 -0.09 -0.09  0.23  0.29  0.35]
+ [-0.2  -0.34  6.52 -1.25 -1.09 -0.92 -0.84 -0.75]
+ [ 0.15  0.22 -0.13  6.69 -0.68 -0.4  -0.56 -0.43]
+ [-0.1   0.04 -0.14 -0.35  5.82 -0.57 -0.62 -0.72]
+ [-0.15 -0.01 -0.1  -0.08 -0.27  4.62 -0.7  -0.62]
+ [-0.67 -0.65 -0.71 -0.57 -0.71 -0.52  3.71 -1.36]
+ [-0.14  0.11 -0.09  0.03  0.03  0.05 -0.1   4.11]]
+svd Gfit [7.66 7.16 6.72 5.85 4.95 4.7  4.53 2.31]
+
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, suppress=True, linewidth=200)
+H=acts(X)
+# exact linear (all-active) prediction of h_t = sum_s x_s u_{t-s}
+Wx=W['W_x'][0]; Wh=W['W_h']
+u=[Wx]; 
+for k in range(8): u.append(u[-1]@Wh)
+U=np.array(u)
+for t in [4,8]:
+    pred=np.zeros((len(X),8))
+    for s in range(t):
+        pred+=X[:,s][:,None]*U[t-1-s][None,:]
+    err=np.abs(pred-H['h%d'%t])
+    act=(H['h%d'%t]>1e-9)
+    print(t,'err on all-active samples med',np.median(err.max(1)).round(2),'frac<1e-6',(err.max(1)<1e-6).mean().round(3))
+
+--- output (0.01 s) ---
+4 err on all-active samples med 4.6 frac<1e-6 0.0
+8 err on all-active samples med 38.94 frac<1e-6 0.0
+
+
+===== step 16/80
