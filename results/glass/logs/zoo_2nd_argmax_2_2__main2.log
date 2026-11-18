@@ -1,0 +1,256 @@
+
+==== 2026-11-18 02:35:29 attempt 1: /content/helix_probe/lab/constructor.py zoo_2nd_argmax_2_2 --steps 80 --quiet
+
+[start] {"id": "20261118-023529-c7fd", "target": "zoo_2nd_argmax_2_2", "dir": "lab/constructions/zoo_2nd_argmax_2_2/20261118-023529-c7fd"}
+
+===== step 1/80
+
+--- python ---
+
+import numpy as np
+for k,v in W.items(): print(k, v.shape); print(v)
+print(X.shape, X[:5])
+o = run(X[:8]); print(o)
+print("decision frac class1:", (o[:,1]>o[:,0]).mean())
+
+--- output (0.0 s) ---
+W_x (1, 2)
+[[ 4.174 -6.754]]
+W_h (2, 2)
+[[-0.3821  1.8471]
+ [ 1.2886 -0.7515]]
+W_o (2, 2)
+[[  9.541   -9.5381]
+ [-25.6923  25.6381]]
+seq_len (1,)
+[2.]
+(8000, 2) [[ 0.1257 -0.1321]
+ [ 0.6404  0.1049]
+ [-0.5357  0.3616]
+ [ 1.304   0.9471]
+ [-0.7037 -1.2654]]
+[[ -47.8291   47.7281]
+ [-108.6556  108.4262]
+ [  58.8825  -58.8651]
+ [ -76.0872   75.8941]
+ [-119.7669  119.4995]
+ [  53.4028  -53.387 ]
+ [ 184.3583 -184.3038]
+ [  74.2989  -74.2769]]
+decision frac class1: 0.5
+
+
+===== step 2/80
+
+--- python ---
+
+A = acts(X[:6]); print(A.keys())
+print("h1",A['h1']); print("h2",A['h2'])
+x=X[:6]
+h1x = np.maximum(x[:,:1]*W['W_x'],0); print(h1x)
+print("W_h",W['W_h'])
+decision = run(X)[:,1]>run(X)[:,0]
+# candidate: sign of some linear function of x1,x2
+for c in [np.sign(x[:,0]+x[:,1]), np.sign(x[:,0]-x[:,1]), np.sign(x[:,1])]:
+    pass
+print("frac dec class1:", decision.mean())
+import itertools
+# check simple rules on whole dataset
+d = (run(X)[:,1]>run(X)[:,0]).astype(int)
+print("agree sign(x1+x2):", (np.sign(X[:,0]+X[:,1])>0).mean(), ((np.sign(X[:,0]+X[:,1])>0).astype(int)==d).mean())
+print("agree sign(x2):", ((np.sign(X[:,1])>0).astype(int)==d).mean())
+
+--- output (0.0 s) ---
+dict_keys(['h1', 'h2', 'out'])
+h1 [[0.5248 0.    ]
+ [2.6731 0.    ]
+ [0.     3.6179]
+ [5.4429 0.    ]
+ [0.     4.753 ]
+ [0.     4.2096]]
+h2 [[0.     1.8616]
+ [0.     4.2291]
+ [6.1715 0.    ]
+ [1.8733 3.6571]
+ [0.8431 4.9747]
+ [5.5972 0.    ]]
+[[0.5248 0.    ]
+ [2.6731 0.    ]
+ [0.     3.6179]
+ [5.4429 0.    ]
+ [0.     4.753 ]
+ [0.     4.2096]]
+W_h [[-0.3821  1.8471]
+ [ 1.2886 -0.7515]]
+frac dec class1: 0.5015
+agree sign(x1+x2): 0.5065 0.50125
+agree sign(x2): 0.24525
+
+
+===== step 3/80
+
+--- python ---
+
+Wx=W['W_x'][0]; Wh=W['W_h']; Wo=W['W_o']
+def rep(x):
+    h1=np.maximum(x[:,:1]*Wx,0)
+    h2=np.maximum(x[:,1:2]*Wx + h1@Wh,0)
+    d = h2@(Wo[1]-Wo[0])
+    return np.stack([-d/2,d/2],1), h1, h2
+m,h1,h2=rep(X)
+o=run(X)
+print("max abs err out:", np.abs(m-o).max())
+A=acts(X)
+print("h1 err",np.abs(A['h1']-h1).max(),"h2 err",np.abs(A['h2']-h2).max())
+print("decision match:", ((m[:,1]>m[:,0])==(o[:,1]>o[:,0])).mean())
+print("diff constant:",Wo[1]-Wo[0], "sum:",Wo[1]+Wo[0])
+
+--- output (0.0 s) ---
+max abs err out: 341.90775743986933
+h1 err 0.0 h2 err 0.0
+decision match: 0.966375
+diff constant: [-35.2333  35.1762] sum: [-16.1513  16.0999]
+
+
+===== step 4/80
+
+--- python ---
+
+c = Wo[:,1]-Wo[:,0]; print("c",c, "mean(rows):", Wo.mean(1))
+def rep(x):
+    h1=np.maximum(x[:,:1]*Wx,0)
+    h2=np.maximum(x[:,1:2]*Wx + h1@Wh,0)
+    d = h2@c
+    return np.stack([-d/2,d/2],1), h1, h2
+m,h1,h2=rep(X); o=run(X)
+print("out err",np.abs(m-o).max(), "decisions",((m[:,1]>m[:,0])==(o[:,1]>o[:,0])).mean())
+print("ratio c1/-c0", c[1]/-c[0])
+
+--- output (0.0 s) ---
+c [-19.0791  51.3304] mean(rows): [ 0.0014 -0.0271]
+out err 1.144189201504787 decisions 1.0
+ratio c1/-c0 2.690395995102246
+
+
+===== step 5/80
+
+--- python ---
+
+wx0,wx1 = W['W_x'][0]
+Wh=W['W_h']; Wo=W['W_o']
+a,b=abs(wx0),abs(wx1)
+print(repr(wx0),repr(wx1),repr(Wh),repr(Wo))
+k00=Wh[0,0]; k10=(b/a)*Wh[1,0]; k01=(a/b)*Wh[0,1]; k11=Wh[1,1]
+print("rec consts",k01,k11,k00,k10)
+# readout ratio in scaled units
+c = Wo[:,1]-Wo[:,0]
+ratio = (c[1]*b)/(-c[0]*a)
+print("ratio",ratio)
+def rep(x):
+    P1=np.maximum(x[:,0],0); N1=np.maximum(-x[:,0],0)
+    P2=np.maximum(x[:,1]+k00*P1+k10*N1,0)
+    N2=np.maximum(-x[:,1]+k01*P1+k11*N1,0)
+    d=ratio*N2-P2
+    return np.stack([-d/2,d/2],1),P1,N1,P2,N2
+m,P1,N1,P2,N2=rep(X); o=run(X); A=acts(X)
+print("dec",((m[:,1]>m[:,0])==(o[:,1]>o[:,0])).mean())
+print("P1 err",np.abs(P1*A and A['h1'][:,0]/a-P1).max(),"N1",np.abs(A['h1'][:,1]/b-N1).max())
+print("P2",np.abs(A['h2'][:,0]/a-P2).max(),"N2",np.abs(A['h2'][:,1]/b-N2).max())
+print("out scale check", np.abs(m-o).max(), np.abs(o).max())
+
+--- output (0.0 s) ---
+np.float64(4.174037933349609) np.float64(-6.754029750823975) array([[-0.3821,  1.8471],
+       [ 1.2886, -0.7515]]) array([[  9.541 ,  -9.5381],
+       [-25.6923,  25.6381]])
+rec consts 1.1415294349709517 -0.7515226602554321 -0.38212355971336365 2.0851662362478636
+ratio 4.353341987440024
+dec 1.0
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 20, in <module>
+TypeError: unsupported operand type(s) for *: 'float' and 'dict'
+
+
+===== step 6/80
+
+--- python ---
+
+A=acts(X)
+print("P1 err",np.abs(A['h1'][:,0]/a-P1).max(),"N1 err",np.abs(A['h1'][:,1]/b-N1).max())
+print("P2 err",np.abs(A['h2'][:,0]/a-P2).max(),"N2 err",np.abs(A['h2'][:,1]/b-N2).max())
+o=run(X); m,_,_,_,_=rep(X)
+print("out rel err",np.abs(m-o).max()/np.abs(o).max())
+
+--- output (0.0 s) ---
+P1 err 0.0 N1 err 0.0
+P2 err 1.7763568394002505e-15 N2 err 8.881784197001252e-16
+out rel err 0.9874562710385462
+
+
+===== step 7/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A two-step, two-channel leaky accumulator. Each step splits the input into a positive "
+ "channel P = relu(x) and a negative channel N = relu(-x) (the input weights of the two hidden "
+ "units have opposite signs, so after step 1 exactly one unit is alive and holds the signed value). "
+ "Propagation: each channel decays by a fixed fraction of itself (-0.382 for P, -0.752 for N) and is "
+ "re-driven by the opposite channel of the previous step (gain 2.085 into P, 1.142 into N), and the "
+ "input of the current step enters with unit gain: P2 = relu(x2 - 0.382 P1 + 2.085 N1), "
+ "N2 = relu(-x2 + 1.142 P1 - 0.752 N1). The readout compares the two final channels with the N channel "
+ "weighted much more heavily (ratio 4.353): class 1 iff 4.353*N2 > P2, i.e. the network scores "
+ "class 1 when the step-2 negative channel carries more evidence than the step-2 positive channel."
+)
+
+K00 = -0.38212355971336365
+K10 =  2.0851662362478636
+K01 =  1.1415294349709517
+K11 = -0.7515226602554321
+RATIO = 4.353341987440024
+
+def model(x, iv):
+    x1 = x[:, 0]
+    x2 = x[:, 1]
+    P1 = iv("P1", np.maximum(x1, 0.0))
+    N1 = iv("N1", np.maximum(-x1, 0.0))
+    P2 = iv("P2", np.maximum(x2 + K00 * P1 + K10 * N1, 0.0))
+    N2 = iv("N2", np.maximum(-x2 + K01 * P1 + K11 * N1, 0.0))
+    d = RATIO * N2 - P2
+    return np.stack([-0.5 * d, 0.5 * d], axis=1)
+
+ALIGN = {"P1": ["h1"], "N1": ["h1"], "P2": ["h2"], "N2": ["h2"]}
+
+--- judge report 1 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,451 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 49.5%); output R2 -0.105; KL 0.154
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 2; 1 principal components suffice; P1, N1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 75.5% (random n/a) | mean-ablate 75.5%
+  h2          (2 dims named of 2; 2 principal components suffice; P2, N2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 49.5% (random n/a) | mean-ablate 49.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 100.0% / 100.0% when changed (network changed in 31.1%); output R2 -0.108 | controls: random subspace 100.0%, no-change 68.8%, source-output 67.2%, attribution patching 92.8%
+  partial     P1 @ h1: right 100.0% / 100.0% when changed (network changed in 15.5%); output R2 -0.101 | controls: random subspace 83.2%, no-change 84.5%, source-output 59.0%, attribution patching 93.3%
+  partial     N1 @ h1: right 100.0% / 100.0% when changed (network changed in 14.2%); output R2 -0.099 | controls: random subspace 87.9%, no-change 85.8%, source-output 58.4%, attribution patching 97.4%
+  edit        all variables @ h1: right 100.0% / 100.0% when changed (network changed in 15.3%); output R2 -0.096 | controls: random subspace 84.2%, no-change 84.7%, source-output 58.9%, attribution patching 94.8%
+  interchange all variables @ h2: right 100.0% / 100.0% when changed (network changed in 49.5%); output R2 -0.121 | controls: random subspace 100.0%, no-change 50.5%, source-output 100.0%, attribution patching 100.0%
+  partial     P2 @ h2: right 100.0% / 100.0% when changed (network changed in 6.0%); output R2 -0.150 | controls: random subspace 60.7%, no-change 94.0%, source-output 56.5%, attribution patching 100.0%
+  partial     N2 @ h2: right 100.0% / 100.0% when changed (network changed in 44.4%); output R2 -0.153 | controls: random subspace 81.0%, no-change 55.6%, source-output 94.0%, attribution patching 100.0%
+  edit        all variables @ h2: right 100.0% / 100.0% when changed (network changed in 24.4%); output R2 -0.155 | controls: random subspace 74.6%, no-change 75.5%, source-output 74.6%, attribution patching 100.0%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=2022); network decides 1: 100.0% (n=1978) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 0.1% of test inputs (2); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. NOT A COPY   14 numeric literals in the file; network parameters 10; share of its weights (|w| >= 0.05) the literals reproduce: 20%; largest table in the file 2 numbers vs the largest weight tensor 4; constants per degree of freedom 0.625 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 2/2 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED: nothing found by these tests
+
+[done] {"id": "20261118-023529-c7fd", "status": "done", "seconds": 116.3, "best": 1, "verdict": {"verified": true, "fails": [], "stages_total": 2, "stages_verified": 2, "complete": true, "score": 1.0}, "cost": 0.025566288}
+
+status done; best submission 1; cost $0.026; 116.3 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_2_2/20261118-023529-c7fd
