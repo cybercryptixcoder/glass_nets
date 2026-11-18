@@ -198,3 +198,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   large as a whole weight tensor). After: M2,2 and M4,3 are complete, M4,4 is still rejected. Noted in the code:
   this is a heuristic and could be gamed by splitting a table; the reader isn't adversarial, and a semantic review
   (a person, or a model reading the description) is the stronger check later.
+- **21:04** M16,10 mid-run (66 of 80 steps): submission 7 verified 8 of 10 stages; submission 8 tried the task's algorithm and the judge rejected it ("explains the task, not this network": right on 100% of the network's 182 mistakes). Decision: pass 2 *continues* this run to 160 steps (same run, notes kept) instead of a fresh 80-step run, because 80 steps is clearly short for the 432-parameter network. The other networks that fail get a fresh run.

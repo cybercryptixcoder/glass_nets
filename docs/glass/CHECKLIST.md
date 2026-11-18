@@ -76,7 +76,14 @@ Status: [x] done, [~] in progress, [ ] not started.
   results under `results/glass/<target>/<run>/`, a sync to disk every 2 minutes.
 - [~] Ladder (started 20:50 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
   shuffled-weights control.
-- [ ] Results table: `docs/glass/RESULTS.md`.
+- [ ] **Pass 2: must be started by hand.** The live job (`colab_job.sh`, started before pass 2 existed) ends after
+  pass 1. When `colab_status.py` shows the job is NOT RUNNING, run `colab_update_code.py`, then `colab_start.py`.
+  The new `colab_job.sh` runs pass 1 (all done, skipped) and then `--pass2`: a fresh main run for each network not
+  certified by the current judge (M4,4 so far), and a continuation of the M16,10 run to 160 steps.
+- [x] Results table: `results/glass/RESULTS.md` (regenerated after every job and at every relay).
+- [ ] Re-judge every saved construction with the final judge (`scripts/glass/rejudge.py`, CPU, about 25 minutes),
+  then commit the `report_current.*` files so the catalog shows today's certificates.
+- [ ] Final report to Shreyas: the results table, what each certified construction says, and the controls.
 
 ### D. Catalog / playground (in parallel with C)
 - [x] A catalog page in the lab server (`/catalog`; `lab/catalog.py`, `lab/static/catalog.html`): the list of constructions with their certificates; for a chosen input, run
