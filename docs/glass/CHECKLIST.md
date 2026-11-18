@@ -54,25 +54,27 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [ ] GitHub token from Shreyas for direct Colab pushes (relay used meanwhile)
 
 ### B. Build (CPU, in the workspace)
-- [~] **Item 1, AlgZoo targets.** `nets.py` kind `rnn_relu`; `lab/targets/build_algzoo.py` (downloads checkpoints over
+- [x] **Item 1, AlgZoo targets.** `nets.py` kind `rnn_relu`; `lab/targets/build_algzoo.py` (downloads checkpoints over
   https from `storage.googleapis.com/arc-ml-public/alg/zoo/`, converts them to `weights.npz` + `meta.json`, with
   inputs ~ N(0,1) as in AlgZoo's training and task labels); the numpy forward matches torch to 1e-6.
   - Facts: `OneLayerRNN` is `torch.nn.RNN(input_size=1, relu, bias=False)` plus `Linear(h, n, bias=False)`, reading
     the final hidden state. Parameters = h + h² + n·h (M2,2 = 10; M4,3 = 32; M16,10 = 432). 2nd argmax: hidden
     sizes {2,3,4,5,6,8,16,32} × seq lengths {2,...,10}. Best-of-5 seeds are in `alg_zoo/zoo.py`.
-- [ ] **Item 0, baseline:** re-judge the existing verified constructions; save their verdicts in
+- [x] **Item 0, baseline:** re-judge the existing verified constructions; save their verdicts in
   `docs/glass/baseline.json`; re-check after every judge change.
-- [ ] **Item 2, joint substitution** in `lab/judge.py`.
-- [ ] **Item 3, worst slice, the network's own errors, and the disagreement search** in `lab/judge.py`.
-- [ ] **Item 4, coverage line and unexplained list** in the report.
-- [ ] The reader's prompt and kernel run on `rnn_relu` targets unchanged (a short live test on M2,2).
-- [ ] Comparison with the Pitfalls system: `docs/glass/COMPARISON_PITFALLS.md`.
+- [x] **Item 2, joint substitution** in `lab/judge.py`.
+- [x] **Item 3, worst slice, the network's own errors, and the disagreement search** in `lab/judge.py`.
+- [x] **Added (found while building): test 7, "not a copy"** (`copy_check`): rejects constructions that write out the weights.
+- [x] **Added: the tie fix** in `decide()` (round to 1e-9).
+- [x] **Item 4, coverage line and unexplained list** in the report.
+- [x] The reader's prompt and kernel run on `rnn_relu` targets unchanged (a short live test on M2,2). The prompt describes tests 6–7.
+- [x] Comparison with the Pitfalls system: `docs/glass/COMPARISON_PITFALLS.md`.
 
 ### C. Runs (Colab)
-- [ ] A CPU runtime (no GPU is needed: the networks are tiny, and the LLM is remote).
-- [ ] Driver `scripts/glass/run_ladder.py`: a queue of runs, one key per worker (4 workers), each run resumable,
+- [x] A CPU runtime `glass1` (high-RAM, 8 CPUs). Repo at `/content/helix_probe`, log `/content/glass.log`, pid file `/content/glass_job.pid`, snapshot `/content/glass_snapshot.tgz` (every 2 minutes).
+- [x] Driver `scripts/glass/run_ladder.py`: a queue of runs, one key per worker (4 workers), each run resumable,
   results under `results/glass/<target>/<run>/`, a sync to disk every 2 minutes.
-- [ ] Ladder: 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
+- [~] Ladder (started 21:03 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
   shuffled-weights control.
 - [ ] Results table: `docs/glass/RESULTS.md`.
 
@@ -85,6 +87,17 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [ ] Check-in every 9 minutes (`send_later`): Colab alive? runs progressing? sync to GitHub; update this file and the
   diary; a short message to Shreyas.
 - [ ] Every 30 minutes, a fuller update.
+
+## Colab operations (quick reference)
+
+- Status: `colab exec -s glass1 -f scripts/glass/colab_status.py` (under `timeout 100`; retry once).
+- Pull the data: `colab download -s glass1 /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz`, then
+  `tar xzf /tmp/glass_snapshot.tgz -C /home/claude/repo_probe`, commit and push (`scripts/glass/sync_from_colab.sh`).
+- Restart after a reclaimed runtime: `colab new --high-mem -s glass1`; launch a detached clone (`/tmp/cclone.py`
+  pattern: Popen with `start_new_session=True`, because a long `colab exec` hangs); upload `lab/.env`; copy the last
+  snapshot's `results/glass` and `lab/constructions/zoo_*` back (upload and untar); then `colab_start.py`.
+  `run_ladder.py` resumes the interrupted runs.
+- Long execs hang. Anything longer than about 30 seconds is launched detached and polled.
 
 ## How to resume after an interruption
 
