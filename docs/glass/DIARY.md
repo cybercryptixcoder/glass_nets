@@ -355,3 +355,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - lc_3_4 maina: glass-2 COMPLETE, but it is a weight copy stored as integers × 1/10000, which gets past F1 (E10). Not a claim; the judge stays frozen; re-judge everything after the round with the fix.
   - M4,3 v2a: COMPLETE in 1 submission, 0.78 constants per dof, i.e. at the claim line. It is a re-description in a P,D,Q,E basis, not a compression; the account matches E9.
   - M2,2: v1 and v2 both COMPLETE.
+- **00:15** Check-in: 6 done, 4 running (lc_3_4 mainb, lc_4_5 maina/b, lc_6_5 a/b). M4,3 v1a: COMPLETE, 5 submissions, 0.78 constants per dof, the same result as v2a, which took 1 submission. No new lc results.
