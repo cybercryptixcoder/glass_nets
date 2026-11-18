@@ -43,15 +43,15 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (21:23 ET)
+## Current state (21:37 ET)
 
-- Pass 1 main runs done. **Certified:** M2,2 (its prior-only and shuffled controls pass too: too small to
-  discriminate) and M4,3 (its prior control fails 1/3, so reading the network mattered). **Not certified:** M4,4
-  (table copy), M8,8 (no compression: 1.00 constants per parameter), M8,5 (task algorithm), M16,10 (1/10; same as
-  its prior control).
-- Shuffled controls for M4,3, M4,4, M8,5, M8,8 and M16,10 are running.
-- Next: when pass 1 ends (job NOT RUNNING), run `colab_update_code.py` then `colab_start.py` to start pass 2. Then the
-  final report.
+- **Pass 1 done** (18 jobs). Under the current judge, certified: **M4,3** (blinded main run; its prior-only control
+  fails 1/3) and **M2,2** (but only its prior-only construction, with 0 constants; the main run's 8 constants are a
+  rescaled re-description). Not certified: M4,4, M8,5, M8,8, M16,10. Shuffled controls fail except M2,2 (a 10-weight
+  network is always simple).
+- **Pass 2 running** (started 21:35 ET): fresh main runs for M2,2, M4,4, M8,5 and M8,8; then M16,10 continued to 160
+  steps (queued 5th).
+- Next: monitor; when pass 2 ends, re-judge, then the final report.
 
 ## Checklist
 
@@ -86,7 +86,7 @@ Status: [x] done, [~] in progress, [ ] not started.
   results under `results/glass/<target>/<run>/`, a sync to disk every 2 minutes.
 - [~] Ladder (started 20:50 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
   shuffled-weights control.
-- [ ] **Pass 2: must be started by hand.** The live job (`colab_job.sh`, started before pass 2 existed) ends after
+- [x] **Pass 2: started by hand at 21:35 ET.** The live job (`colab_job.sh`, started before pass 2 existed) ends after
   pass 1. When `colab_status.py` shows the job is NOT RUNNING, run `colab_update_code.py`, then `colab_start.py`.
   The new `colab_job.sh` runs pass 1 (all done, skipped) and then `--pass2`: a fresh main run for each network not
   certified by the current judge (M4,4 so far), and a continuation of the M16,10 run to 160 steps.

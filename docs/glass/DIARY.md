@@ -257,3 +257,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     network).
   - Constants per degree of freedom across this session's constructions: honest/compressed 0.0–0.64; rescaled
     re-descriptions 0.875 (caught by the table rule), 1.0 and 1.06.
+- **21:37** Pass 2 started by hand (code updated; the old sync loop was stopped so there's only one). Pass 2 decided its own jobs by re-judging each pass-1 main run on Colab with the current judge: fresh runs for M2,2, M4,4, M8,5 and M8,8; M16,10 continues its pass-1 run to 160 steps (5th in line).
