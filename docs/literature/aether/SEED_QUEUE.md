@@ -71,7 +71,7 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - [x] HeadVis | 2026-05 | https://transformer-circuits.pub/2026/headvis/index.html | anthropic — DONE entry 143 (`transformer-circuits-pub-2026-headvis-index-html`); full page (39,290 chars), no figure inspected (all figures are lazy-loaded interactive components); four case studies on Claude Haiku 3.5 plus the tool release; notes that the INDEX row for this key already existed without a file, so the entry backfills that row
 - Natural Language Autoencoders (summary) | 2026-05 | https://www.anthropic.com/research/natural-language-autoencoders | anthropic
 - From Simulation to Enaction: Post-trained Language Models Recognize and React to Their Own Generations | 2026-05 | https://arxiv.org/abs/2605.25459 | anthropic
-- Building Better Activation Oracles | 2026-05 | https://arxiv.org/abs/2606.02609 | anthropic
+- [x] Building Better Activation Oracles | 2026-05 | https://arxiv.org/abs/2606.02609 | anthropic | DONE entry 335 note: already held as aether/arxiv-2606.02609.md (key is arXiv-id, queue line is title-first — the slug check missed it for 200+ runs)
 - Circuits Updates, May 2026 | 2026-06 | https://transformer-circuits.pub/2026/may-update/index.html | anthropic
 - Circuits Updates, June 2026 | 2026-06 | https://transformer-circuits.pub/2026/june-update/index.html | anthropic
 - [x] Claude Fable 5 & Claude Mythos 5 System Card | 2026-06 | https://www-cdn.anthropic.com/2f9323abbcc4abe219577539efe19a623c9ca2bd/Claude%20Fable%205%20%26%20Claude%20Mythos%205%20System%20Card.pdf | anthropic
