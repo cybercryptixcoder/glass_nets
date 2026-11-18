@@ -43,11 +43,15 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (21:11 ET)
+## Current state (21:23 ET)
 
-- Colab job alive. Pass 1: M2,2 complete (but its prior-only control passes too); M4,3 complete (its prior control fails: 1/3);
-  M8,5 and M8,8 running; controls running (M2,2 prior-only passed too, M4,4 prior failed as expected).
-- Next: when pass 1 ends, start pass 2 by hand (see C). Then the final report.
+- Pass 1 main runs done. **Certified:** M2,2 (its prior-only and shuffled controls pass too: too small to
+  discriminate) and M4,3 (its prior control fails 1/3, so reading the network mattered). **Not certified:** M4,4
+  (table copy), M8,8 (no compression: 1.00 constants per parameter), M8,5 (task algorithm), M16,10 (1/10; same as
+  its prior control).
+- Shuffled controls for M4,3, M4,4, M8,5, M8,8 and M16,10 are running.
+- Next: when pass 1 ends (job NOT RUNNING), run `colab_update_code.py` then `colab_start.py` to start pass 2. Then the
+  final report.
 
 ## Checklist
 
