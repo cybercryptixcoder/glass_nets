@@ -7,6 +7,7 @@ this repo should be able to continue from these files alone, with no separate ha
 
 > The project on this branch is **Glass Networks** (the Helix name is retired for this line of work). It was cut
 > from `constructor-attempt` at `d6b706ff`, which stays untouched as the fallback.
+> - **NEW AGENT? Start with `docs/glass/HANDOFF.md`** (live Colab job, credentials, relay, what to do next).
 > - **Live state and next steps:** `docs/glass/CHECKLIST.md`. **Every step and decision:** `docs/glass/DIARY.md`.
 > - **Results:** `results/glass/RESULTS.md`.
 > - **Catalog:** `/catalog` in the lab server.

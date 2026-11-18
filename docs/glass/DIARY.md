@@ -361,3 +361,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - lc_4_5 does carry a partial account: layer 0 is near-hard copying (86% of rows have max weight > 0.9), and layer 1 at the readout is a soft max/min selector over the keys through a class table G. That is a lead to follow, not a claim.
   - lc_3_4 mainb: not verified (0/3, 52%).
   - So far 3 of 3 lc COMPLETEs are E10 copies, all from the v2 reader. No claim.
+- **01:03** HANDOFF. Shreyas (01:02): keep the Colab job running and hand off to a new session. Status: 12/40 done, 4 running (lc_6_5 mainb, M8,5 v2a, lc_8_6 a/b). Relayed and pushed. Wrote `docs/glass/HANDOFF.md`; START_HERE and CHECKLIST point to it. Option A (glass-2 frozen) is in force. No further check-ins are scheduled from this session.
