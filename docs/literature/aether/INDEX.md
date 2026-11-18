@@ -399,3 +399,5 @@ arxiv-2606.25092 | How Modular Is a Frontier Mixture-of-Experts? A Pre-registere
 arxiv-2606.10487 | Stop Early, Spend Less: Hidden-State Probes as a Practical Recipe for Streaming Moderation of LLM Outputs | ModelOneAI + yunshanai | 2026-06-09 | 2 — full text (v1 HTML; Tables 1-4 as cells, Figures 1-3 not inspected); layer-21 token probe, probe-interval cost curve, guard-agreement 0.941 vs native-human 0.795
 
 arxiv-2605.14038 | Model-Adaptive Tool Necessity Reveals the Knowing-Doing Gap in LLM Tool Use | University of Maryland, College Park | 2026-10-22 | cognition and action probe directions nearly orthogonal at the readout
+
+arxiv-2507.11878 | LLMs Encode Harmfulness and Refusal Separately | Northeastern + Stanford | 2025-07-16 (v5 2026-07-06) | 3 — full text (v5 HTML; Tables 1-11 as cells, Figures 1-19 not inspected); harmfulness direction at the instruction’s last token and refusal direction at the post-template token, cosine ~0.1 between them, reply-inversion task makes them flip in opposite directions
