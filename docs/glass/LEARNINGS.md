@@ -33,3 +33,15 @@ goalposts, so we leave it.
   - the result passes causal tests.
 - Our account is missing the link between thresholds and orderings that Hilton gives.
 - Consequence: every claim needs a prior-work comparison before it is made. The catalog and README must call M4,3 a "blind rediscovery of ARC's account".
+
+## E10. Integer-scaled weight copies get past glass-2's compression rule (confidence: high; found 00:05 ET Nov 18)
+
+- What happened: the run `lc_3_4/20261118-045127-234b` (reader v2) came back VERIFIED AND COMPLETE with "0 constants for 59 degrees of freedom".
+  - Its file stores every weight as an integer in units of 1/10000, e.g. `E = np.array([[-15940, ...]]) * u` with `u = 1/10000`.
+  - Its DESCRIPTION says so openly: "the matrices below are therefore the network's weights at the measured precision".
+  - That makes it a full weight copy, not an explanation.
+- Cause: rule F1 counts only non-integer literals as constants. It was meant to stop hand-set whole numbers like 2 or −1 being counted, but large integers combined with a scale factor carry the same information as decimals.
+- Handling, decided now and not patched mid-round (E2):
+  - glass-2 stays frozen. This run is NOT a discovery; it fails the human-read criterion (the file contains no account at all).
+  - After round 2, one rule change: count the information in each literal. Count every number except small integers (|n| ≤ 10) and 0.5, whatever form it is written in. Then re-judge EVERY round-2 run of both reader arms with it, so the v1 and v2 comparison stays fair.
+  - Report results under both glass-2 and the fixed rule.

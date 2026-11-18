@@ -351,3 +351,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Round 1's controls are reused (the frozen judge gives them the same verdicts).
 - **23:52** Colab runtime `glass2` created (CPU, high-RAM); detached clone; `.env` uploaded; dry run lists 40 jobs; round-2 job started 04:51 UTC (23:51 ET) with 4 workers. Judge glass-2 is frozen from here until round 2 ends.
 - **23:55** Step 1 done: the Drive connector became available and read all three ARC notes. M4,3 = independent rediscovery of Robinson's symmetric reduction (doc `M43_VS_ARC.md`, E9). New, checked by code: the reduced recurrence is a 120° rotation; the exact reduction loses no accuracy.
+- **00:04** Check-in: 4 done, 4 running.
+  - lc_3_4 maina: glass-2 COMPLETE, but it is a weight copy stored as integers × 1/10000, which gets past F1 (E10). Not a claim; the judge stays frozen; re-judge everything after the round with the fix.
+  - M4,3 v2a: COMPLETE in 1 submission, 0.78 constants per dof, i.e. at the claim line. It is a re-description in a P,D,Q,E basis, not a compression; the account matches E9.
+  - M2,2: v1 and v2 both COMPLETE.
