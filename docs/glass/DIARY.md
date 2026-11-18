@@ -409,3 +409,23 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - If both conditions hold, the measure goes forward to step 2.
     - If either fails, the idea is wrong as stated: report it and return to the intent. Do NOT tune the 0.8/0.5
       lines.
+- **11:35 RESULT: rebuild step 1. The pre-registered criterion is NOT met** (`docs/glass/info_measure_step1.txt`; script
+  `scripts/glass/info_measure.py`). One translation error fixed along the way: `load_construction` returns a tuple.
+  - **Worked:**
+    - all 18 new disguises (D1–D6 on three networks) scored S = 0.91–1.72;
+    - 12 of 13 saved copies and near-copies scored ≥ 0.8;
+    - the shuffled-network account scored 1.09;
+    - the lc_8_6 census rule scored 0.35, clearly separated.
+  - **Failed:**
+    - M2,2's account scored 0.66 and M4,3's scored 1.39 (must be ≤ 0.5);
+    - the lc_4_5 mainb copy scored 0.77 (must be ≥ 0.8).
+  - **Why** (diagnosed, no tuning):
+    - On tiny networks a copy is mostly program scaffolding. The generic forward pass alone is 1,352 bits of
+      M2,2's 2,240-bit copy, so file length measures how verbose the code is, not how much is understood.
+    - More fundamentally, M4,3's real account isn't shorter than its 32 weights. It reorganises them (the symmetry)
+      rather than discarding them.
+  - **Conclusion:** "explanation = fewer bits than a copy" is wrong as a general definition. It works as a signal on
+    bigger networks (copies grow, accounts don't) but not as a gate. ARC's framing explains why: the weights are
+    *given*, and a copy is bad not because it is long but because it tells you nothing without being run. A copy
+    only answers questions by sampling.
+  - INTENT change 2 is reopened. The 0.8/0.5 lines stay unused and are not tuned.
