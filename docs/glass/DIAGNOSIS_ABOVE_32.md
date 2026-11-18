@@ -80,3 +80,28 @@ rewrite. Its notes show it understood the pointer-chasing mechanism early.
    short at the same time.
 
 The intent changes this leads to are in `docs/glass/INTENT.md`.
+
+## What to do about it: the reader-scaling plan (proposal, Nov 18, 11:50; for Shreyas's approval)
+
+**Sources.**
+- ARC's analysis of M16,10: approximately isolated subcircuits, plus a handcrafted 22-neuron model that reaches 99%.
+- Community work on M16,10: piecewise-linear regions once the ReLU on/off pattern is fixed; neuron roles such as
+  comparator and max detector.
+- MIPS (Michaud, Tegmark et al.): automatic distillation of RNNs into code.
+- Parameter decomposition (SPD, Goodfire).
+- LLM agents that turn functionally correct but unreadable decompiled code into readable code, guided by a metric.
+
+**The common idea: don't ask for an explanation in one leap.** Start from something exactly right and replace it,
+piece by piece, with readable rules. Measure every step. This is also how the one M4,3 success in round 1 happened
+(E6: compressing a working copy).
+
+| # | Micro experiment | Question → decision | Cost |
+|---|---|---|---|
+| R1 | Mine the saved transcripts: where do the steps go (analysis code, constant-shaving, repeated submissions), and at which step did each reader's notes first contain its key insight? | Is the reader short of understanding, of tools, or of steps? This decides whether R4 is needed and whether the 6-step submit rule matters | Free |
+| R2 | **Progressive replacement, warm start.** On lc_8_6 and M16,10: give the reader its own saved notes plus an exact copy as the starting construction. Its job is to replace one piece at a time with a rule. Each step is scored by fidelity (rungs 1–2) and the information signal | Can the reader produce high-fidelity, compact accounts on big networks when it never has to leap? Yes → this becomes the construction procedure. No → R3 | ~20 min, < $1 |
+| R3 | R2 with a stronger reader model | Is the cheap reader's capability the limit? | Ask first |
+| R4 | Standard tools in the workbench: ReLU on/off-pattern regions for RNNs; attention-pattern and pointer summaries for transformers; symbolic regression for single units | Only if R1 shows the reader spends its steps rebuilding these | Code only |
+
+The definition of "explanation" (INTENT change 2) stays open while these run. Fidelity is measured with the
+calibrated truth tests. The information number is reported as a signal, not a gate: its pre-registered test failed
+on tiny networks (DIARY 11:35), and any revised version needs a new pre-registered test.

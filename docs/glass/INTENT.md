@@ -30,6 +30,13 @@ anyone can run it, test it and argue with it. A **reader** (an AI) writes them. 
   measurement works.
 - **The truth tests** (rungs 1–4). They were calibrated on known answers and never shown to be wrong.
 
+## How development runs (Shreyas, Nov 18): a micro-experiment loop
+
+Build by many small end-to-end experiments, minutes each: see what works, what helps, what hurts, and continue from
+there. A "round" (a full batch of runs) is only for testing a generation that has already been shaped by many micro
+experiments, never for testing a single new piece. Each micro experiment still states its question and the decision
+it informs, and it is logged in the diary.
+
 ## How experiments are run (new)
 
 1. **Question first.** Every experiment states the question, the decision each outcome leads to, and the number of

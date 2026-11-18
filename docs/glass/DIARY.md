@@ -429,3 +429,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     *given*, and a copy is bad not because it is long but because it tells you nothing without being run. A copy
     only answers questions by sampling.
   - INTENT change 2 is reopened. The 0.8/0.5 lines stay unused and are not tuned.
+- **11:00** Research on scaling the reader (ARC M16,10 analysis, community work, MIPS, SPD, metric-guided decompilation cleanup). Wrote the reader-scaling plan (DIAGNOSIS_ABOVE_32.md, end; R1–R4) and recorded Shreyas's micro-experiment development loop in INTENT.md. Waiting for a go on R1/R2.
