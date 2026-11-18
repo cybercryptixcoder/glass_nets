@@ -306,11 +306,17 @@ def copy_check(source, W):
     # compresses nothing; it re-describes the weights (found on AlgZoo M8,8: 136 constants for 136 parameters, quoted
     # in a per-unit scale and split into 8-number rows).
     consts = sum(1 for v in lits if v != int(v) and v != 0.5)
-    # Degrees of freedom: the parameters minus one scale per hidden unit, since rescaling a ReLU unit (and its outgoing
-    # weights inversely) leaves the function unchanged. A rescaled re-description needs exactly this many constants
-    # (AlgZoo M4,4 shuffled: 32 constants = 36 parameters - 4 units).
+    # Degrees of freedom: the parameters minus every transformation that leaves the network's decisions unchanged,
+    # since a re-description can drop those. One scale per hidden unit (rescaling a ReLU unit and its outgoing
+    # weights inversely changes nothing; AlgZoo M4,4 shuffled wrote 32 = 36 - 4 constants),
     units = int(W["W_h"].shape[0]) if "W_h" in W else sum(int(W[k].shape[1]) for k in W if k.startswith("W") and k[1:].isdigit() and f"W{int(k[1:]) + 1}" in W)
-    dof = max(params - units, 1)
+    # and, when the output is a choice among classes (argmax), the readout's own symmetries: adding one vector to
+    # every class's readout column shifts all scores equally (one direction per readout input), and one overall
+    # positive scale. AlgZoo M4,4 (pass 2) wrote exactly these 27 numbers (36 - 4 - 4 - 1) after removing them.
+    out_W = W.get("W_o") if "W_o" in W else next((W[k] for k in sorted((k for k in W if k.startswith("W") and k[1:].isdigit()),
+                                                                     key=lambda k: int(k[1:]))[-1:]), None)
+    readout_sym = int(out_W.shape[0]) + 1 if out_W is not None and out_W.ndim == 2 and out_W.shape[1] > 1 else 0
+    dof = max(params - units - readout_sym, 1)
     compression_copy = bool(params >= 8 and consts >= 0.9 * dof)
     return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
             "largest_tensor": biggest_tensor, "constants": consts, "constants_per_param": round(consts / max(params, 1), 3),
@@ -652,8 +658,9 @@ def verdict(rep):
                    f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
         else:
             why = (f"the file has {cp['constants']} constants for a network with {cp['degrees_of_freedom']} degrees of freedom ({cp['params']} "
-                   f"parameters, less one scale per hidden unit): {cp['constants_per_dof']:.2f} per degree of freedom, so it compresses nothing; "
-                   "it re-describes the weights (rescaled or regrouped) instead of finding the rule")
+                   f"parameters, less the rescalings and readout shifts that leave its decisions unchanged): {cp['constants_per_dof']:.2f} per "
+                   "degree of freedom, so it compresses nothing; it re-describes the weights (rescaled, normalised or regrouped) instead of "
+                   "finding the rule")
         fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
                      "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "
                      "constants that account needs")

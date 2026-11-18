@@ -259,3 +259,20 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     re-descriptions 0.875 (caught by the table rule), 1.0 and 1.06.
 - **21:37** Pass 2 started by hand (code updated; the old sync loop was stopped so there's only one). Pass 2 decided its own jobs by re-judging each pass-1 main run on Colab with the current judge: fresh runs for M2,2, M4,4, M8,5 and M8,8; M16,10 continues its pass-1 run to 160 steps (5th in line).
 - **21:43** Check-in. **M2,2 pass-2 run: VERIFIED AND COMPLETE in 7 steps, 1 submission ($0.03), and this time compressed.** 0.625 constants per degree of freedom: it states the readout as one ratio (class 1 iff 4.353·N2 > P2) instead of four numbers. The account: a two-channel leaky accumulator (positive and negative parts); each channel decays and is re-driven by the opposite one; the decision compares the channels with the negative one weighted 4.35×. Running: M4,4, M8,5, M8,8 (fresh) and the M16,10 continuation (89 steps so far).
+- **21:52** Check-in. **M4,4 pass 2: complete under the old rule, but again a re-description.**
+  - Its account (mixing "circulation", homogeneity) is in normalised coordinates: a 4×4 mixing matrix as 4 rows,
+    and the readout written as 3 class-difference directions with one entry fixed to 1. That's 27 constants.
+  - 27 is exactly the network's true degrees of freedom: 36 parameters − 4 unit scales − 4 readout shift directions
+    − 1 overall scale. The decision (argmax) is also invariant to adding one vector to every class's readout column
+    and to an overall positive scale, and my degrees-of-freedom count had left those out.
+  - Fix: the degrees of freedom now subtract the readout's symmetries for class outputs. The prompt explains it.
+  - **With the corrected count, constants per degree of freedom separate cleanly across all 17 AlgZoo
+    constructions of this session:** every re-description sits at ≥ 1.0 (1.0–1.6); every compressed account at
+    ≤ 0.78 (M4,3 main 0.78, its shuffled 0.70, priors 0.0–0.04, M8,5 0.08).
+  - Consequences:
+    - M2,2's two blinded runs (1.6 and 1.0) and its shuffled control (1.0) are now flagged. The only certified M2,2
+      construction is the prior-only one, which has 0 constants: the network computes 2nd-argmax-of-two the plain
+      way.
+    - **M4,3 main (0.78) remains the one blinded-run certification**, and its prior control fails.
+  - M2,2 note: its minimal exact description has 5 numbers (= its degrees of freedom). Writing them in meaningful
+    coordinates is understanding of a kind, but not compression; the 0-constant account is.
