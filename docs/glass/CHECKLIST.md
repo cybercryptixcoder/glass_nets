@@ -79,9 +79,11 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [ ] Results table: `docs/glass/RESULTS.md`.
 
 ### D. Catalog / playground (in parallel with C)
-- [ ] A catalog page in the lab server: the list of constructions with their certificates; for a chosen input, run
+- [x] A catalog page in the lab server (`/catalog`; `lab/catalog.py`, `lab/static/catalog.html`): the list of constructions with their certificates; for a chosen input, run
   the network and the construction side by side; run the judge.
-- [ ] End-to-end test.
+- [x] End-to-end test (headless Chrome, 21:18): list, playground, intervention, no JS errors.
+- [ ] Re-judge all saved constructions with the current judge (`scripts/glass/rejudge.py`), then commit the `report_current.*` files.
+- [ ] README and START_HERE: say Glass Networks; how to open the catalog (`python3 lab/server.py`, then http://localhost:8765/catalog).
 
 ### E. Monitoring
 - [ ] Check-in every 9 minutes (`send_later`): Colab alive? runs progressing? sync to GitHub; update this file and the

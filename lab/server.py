@@ -375,6 +375,11 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
             if p == "/constructor":
                 return self.send(200, (STATIC / "constructor.html").read_bytes(), "text/html; charset=utf-8")
+            if p == "/catalog":
+                return self.send(200, (STATIC / "catalog.html").read_bytes(), "text/html; charset=utf-8")
+            if p == "/api/catalog":
+                import catalog
+                return self.send(200, catalog.entries())
             if p == "/api/constructions":
                 recs = []
                 for f in sorted(CONS.glob("*/*/run.json"), key=lambda f: f.parent.name, reverse=True):
@@ -471,6 +476,13 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ask.ask(m.group(1), m.group(2), self.body().get("question", "").strip()))
             if p == "/api/launch":
                 return self.send(200, launch(self.body()))
+            m = re.match(r"^/api/catalog/([\w-]+)/([\w-]+)/play$", p)
+            if m:       # the catalog's playground: one input through the network and the construction (lab/catalog.py)
+                import catalog
+                try:
+                    return self.send(200, catalog.play(m.group(1), m.group(2), self.body()))
+                except (ValueError, KeyError) as e:
+                    return self.send(400, {"error": str(e)})
             m = re.match(r"^/api/constructions/([\w-]+)/([\w-]+)/stop$", p)
             if m:
                 (CONS / m.group(1) / m.group(2) / "STOP").write_text("stop requested from the page\n")

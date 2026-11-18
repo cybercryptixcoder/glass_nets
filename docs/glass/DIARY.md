@@ -126,3 +126,41 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - `lab/.env` uploaded; dry run on Colab lists 18 jobs; the judge imports there.
   - Queue order changed: ARC's challenge network M16,10 is now third. It's the most informative and the longest, so
     it shouldn't wait for the smaller ones to finish.
+- **21:05** Colab job running (started 21:03 ET; Colab's clock reads 01:50 UTC).
+  - First launch attempt: "RUNNING" was falsely reported, because `pgrep -f run_ladder.py` matched its own shell
+    command. Fixed with a pid file (`/content/glass_job.pid`).
+  - The sync loop's snapshot failed whenever `tar` saw a file change while reading it (exit 1, normal while runs
+    write). Fixed: the sync loop is now a standalone `colab_sync.sh` that accepts exit 1. It replaced the old loop
+    on the live runtime without stopping the runs.
+  - The relay (`sync_from_colab.sh`) works: first results snapshot pushed at 21:08.
+- **21:07** **First result: M2,2 (10 params) is VERIFIED AND COMPLETE**, blinded, in 12 steps and 2 submissions
+  ($0.04).
+  - All whole-model tests: 100%.
+  - The weight-copy test passes (literals reproduce 20% of the weights).
+  - The reader's account: step 1 splits x1 by sign into two ramps; step 2 compares x2 with a sign-dependent
+    piecewise-linear "hurdle" (one rectifier fires per class); the readout is an almost antisymmetric pair, so the
+    decision is `ev_above > 4.35·ev_below`.
+  - This matches the case ARC reports as fully understood, which is the calibration rung we expected to pass.
+- **21:10** An untracked `docs/GLASS_CHECKLIST.md` (dated 20:23) appeared in the workspace, a near-duplicate of the
+  checklist. I didn't create it in this flow, and deleting it was blocked by the permission system. It's left
+  uncommitted. **The canonical files are `docs/glass/CHECKLIST.md` and `docs/glass/DIARY.md`.** One idea from it is
+  adopted: say "Glass Networks" in the README and START_HERE.
+- **21:15** Catalog built (task D):
+  - `lab/catalog.py` and `lab/static/catalog.html`; routes `/catalog`, `/api/catalog`,
+    `/api/catalog/<target>/<run>/play`.
+  - One card per network: the best run (original weights only, so controls are excluded), its description, the
+    certificate, the "not explained" list and the failures.
+  - Playground: one input through the network and the construction side by side, plus an intervention. Take one
+    variable from another input; the construction predicts the network's decision, and the network shows what it
+    does.
+  - `scripts/glass/rejudge.py` re-judges saved constructions with the current judge (`report_current.*`; the
+    original reports are kept), so catalog cards show today's certificate.
+- **21:18** End-to-end browser test (headless Chrome via Playwright, `/tmp/e2e/test_catalog.py`): 15 entries
+  load; a random input → same decision; an intervention on M2,2's `pos1` → prediction right; no JS errors.
+  Screenshot reviewed.
+- **21:19** **The copy check over-flagged hand-written nets.** The Boolean networks have weights 1, -1, 2, 0.5, and
+  any honest account writes those numbers, so all four Boolean constructions were flagged as copies.
+  - Fix: whole and half numbers are excluded from the weights being matched. Trained networks almost never have
+    such exact values.
+  - After: the Boolean constructions are complete again, and the exact copy of M2,2 is still flagged.
+  - The change doesn't affect the AlgZoo runs on Colab (their weights aren't round numbers).

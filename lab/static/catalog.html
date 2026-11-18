@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalog · Glass Networks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#EEDCC2;--card:#F7ECDC;--ink:#1C1A17;--yellow:#F6C744;--teal:#4FA596;--orange:#F0692A;--blue:#7F9CE2;--green:#62BE76;--grey:#AEB4B5;--field:#FFF8EF;--shadow:#1C1A17;
+--thick:3px solid var(--ink);--thin:2px solid var(--ink);--mono:"Space Mono",ui-monospace,monospace;--serif:"Instrument Serif",Georgia,serif;--sans:"Archivo",system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+.top{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:var(--thick);background:var(--card)}
+.wm{font-family:var(--serif);font-style:italic;font-size:30px}
+.wm b{font-family:var(--sans);font-style:normal;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-right:10px;padding:4px 8px;border:var(--thin);background:var(--yellow)}
+.spacer{flex:1}a.btn,.btn{border:var(--thin);background:var(--card);padding:7px 12px;font-weight:600;box-shadow:3px 3px 0 var(--shadow);text-decoration:none;color:inherit}
+.btn.teal{background:var(--teal)}.btn.orange{background:var(--orange)}.btn.sm{padding:4px 8px;font-size:12px;box-shadow:2px 2px 0 var(--shadow)}
+.main{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px;align-items:start}
+.frame{background:var(--card);border:var(--thick);box-shadow:5px 5px 0 var(--shadow)}
+.frame>h2{margin:0;padding:10px 14px;border-bottom:var(--thin);font-family:var(--serif);font-style:italic;font-weight:400;font-size:22px}
+.pad{padding:12px 14px}
+.entry{padding:10px 14px;border-bottom:2px solid rgba(28,26,23,.15);cursor:pointer}
+.entry:hover{background:var(--field)}.entry.sel{background:var(--yellow)}
+.entry .n{font-weight:800}.entry .m{font-family:var(--mono);font-size:11px;opacity:.8}
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 6px;border:var(--thin);margin-left:6px}
+.badge.complete{background:var(--green)}.badge.verified{background:var(--blue)}.badge.notv{background:var(--grey)}
+.bar{height:8px;border:1px solid var(--ink);background:var(--field);margin-top:4px}.bar>i{display:block;height:100%;background:var(--teal)}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid rgba(28,26,23,.3);padding:5px 8px;text-align:left;font-size:13px}
+th{background:var(--field);font-weight:600}.mono{font-family:var(--mono);font-size:12px}
+pre{font-family:var(--mono);font-size:12px;background:var(--field);border:var(--thin);padding:10px;overflow:auto;max-height:420px;white-space:pre-wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ok{background:var(--green);padding:1px 6px;border:1px solid var(--ink)}.no{background:var(--orange);padding:1px 6px;border:1px solid var(--ink)}
+input.x{width:100%;font-family:var(--mono);font-size:12px;padding:6px;border:var(--thin);background:var(--field)}
+details summary{cursor:pointer;font-weight:600;margin:8px 0}
+.vals{display:flex;gap:2px;align-items:flex-end;height:60px;border-bottom:1px solid var(--ink)}
+.vals span{flex:1;background:var(--blue);min-width:4px}.vals span.top{background:var(--orange)}
+.muted{opacity:.7}.small{font-size:12px}
+</style>
+</head>
+<body>
+<div class="top"><div class="wm"><b>Glass Networks</b>Catalog of constructions</div><div class="spacer"></div>
+<a class="btn sm" href="/constructor">Constructor</a><a class="btn sm" href="/">Lab</a></div>
+<div class="main">
+  <div class="frame"><h2>Networks</h2><div id="list"><div class="pad muted">Loading…</div></div></div>
+  <div id="detail" class="frame"><h2>Pick a network</h2><div class="pad muted">Each entry is the best construction found for one network, with the certificate the judge gave it. The playground runs the real network and the construction side by side.</div></div>
+</div>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const pct = v => v == null ? "–" : (100 * v).toFixed(1) + "%";
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c]));
+let E = [], cur = null;
+
+async function load() {
+  E = await (await fetch("/api/catalog")).json();
+  $("#list").innerHTML = E.map((e, i) => `<div class="entry" data-i="${i}">
+    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : "notv"}">${e.status}</span></div>
+    <div class="m">${esc(e.family)} · ${e.params?.toLocaleString() ?? "?"} params · stages ${e.stages}</div>
+    <div class="bar" title="behaviour"><i style="width:${100 * e.behaviour}%"></i></div></div>`).join("") || '<div class="pad">No judged constructions yet.</div>';
+  document.querySelectorAll(".entry").forEach(d => d.onclick = () => show(+d.dataset.i));
+  const want = new URLSearchParams(location.search).get("t");
+  const i = E.findIndex(e => e.target === want);
+  if (E.length) show(i >= 0 ? i : 0);
+}
+
+function certRows(e) {
+  const c = e.coverage || {};
+  const rows = [["Verdict", `<b>${e.status}</b> (judged by ${esc(e.judged_by)})`], ["Stages explained", e.stages],
+    ["Behaviour (same decision as the network)", pct(e.behaviour)], ["All named sites replaced at once", pct(c.joint)],
+    ["Worst slice", pct(c.worst_slice)], ["Network's own mistakes reproduced", pct(c.errors_reproduced)],
+    ["Runs of the constructor on this network", e.runs], ["Cost of this run", e.cost == null ? "–" : "$" + e.cost.toFixed(2) + ` (${e.steps} steps)`]];
+  return rows.map(r => `<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join("");
+}
+
+function show(i) {
+  cur = E[i];
+  document.querySelectorAll(".entry").forEach(d => d.classList.toggle("sel", +d.dataset.i === i));
+  history.replaceState(null, "", "?t=" + cur.target);
+  const c = cur.coverage || {}, un = c.unexplained || [];
+  $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)} / ${esc(cur.run)}</span></h2>
+  <div class="pad">
+    <div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
+    <h3>What the construction says the network does</h3><pre>${esc(cur.description || "(no description in the file)")}</pre>
+    <div class="grid2"><div><h3>Certificate</h3><table>${certRows(cur)}</table></div>
+    <div><h3>Not explained</h3>${un.length ? "<ul>" + un.map(u => `<li>${esc(u)}</li>`).join("") + "</ul>" : '<p class="muted">Nothing found by the tests.</p>'}
+    ${cur.fails.length ? `<h3>Why it isn't certified</h3><ul>${cur.fails.map(f => `<li class="small">${esc(f)}</li>`).join("")}</ul>` : ""}</div></div>
+    <h3>Playground</h3>${cur.playable ? playgroundHTML() : '<p class="muted">The playground runs weight-level networks; language-model constructions are shown with their certificate only.</p>'}
+    <details><summary>The construction (Python)</summary><pre>${esc(cur.source)}</pre></details>
+    <details><summary>The judge's full report</summary><pre>${esc(cur.report)}</pre></details>
+  </div>`;
+  if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+}
+
+function playgroundHTML() {
+  return `<div class="small muted">An input (comma-separated numbers; empty = a random input from the network's domain). Then compare the network with the construction, or take one of the construction's variables from another input: the construction predicts what the network will do when that variable is changed inside it, and the network shows what it actually does.</div>
+  <p><input class="x" id="xin" placeholder="random"></p>
+  <p><button class="btn sm teal" id="run">Run this input</button> <button class="btn sm" id="rand">Random input</button>
+  &nbsp; Variable: <select id="var"></select> <button class="btn sm orange" id="swap">Take it from a random other input</button></p>
+  <div id="out"></div>`;
+}
+
+function valsHTML(o) {
+  const v = o.values, mx = Math.max(...v.map(Math.abs), 1e-9), top = o.decision;
+  return `<div class="vals">${v.map((a, j) => `<span class="${top.includes(j) && v.length > 1 && j === v.indexOf(Math.max(...v)) ? "top" : ""}" title="${j}: ${a}" style="height:${Math.max(2, 58 * (a - Math.min(...v)) / ((Math.max(...v) - Math.min(...v)) || 1))}px"></span>`).join("")}</div>
+  <div class="mono">decision ${esc(JSON.stringify(o.decision))}</div>`;
+}
+
+async function play(random = false, swap = false) {
+  const txt = $("#xin").value.trim();
+  const body = {};
+  if (!random && txt) body.x = txt.split(/[\s,]+/).map(Number);
+  if (random) body.seed = Math.floor(Math.random() * 1e9);
+  if (swap) { body.x = txt ? txt.split(/[\s,]+/).map(Number) : undefined; body.swap = {variable: $("#var").value}; body.seed = Math.floor(Math.random() * 1e9); }
+  const r = await fetch(`/api/catalog/${cur.target}/${cur.run}/play`, {method: "POST", body: JSON.stringify(body)});
+  const d = await r.json();
+  if (d.error) { $("#out").innerHTML = `<p class="no">${esc(d.error)}</p>`; return; }
+  $("#xin").value = d.x.join(", ");
+  const sel = $("#var"), was = sel.value;
+  sel.innerHTML = d.variables.filter(v => v.sites.length).map(v => `<option${v.name === was ? " selected" : ""}>${esc(v.name)}</option>`).join("");
+  let h = `<div class="grid2"><div><b>Network</b>${valsHTML(d.network)}</div><div><b>Construction</b>${valsHTML(d.construction)}</div></div>
+  <p>${d.agree ? '<span class="ok">same decision</span>' : '<span class="no">different decisions</span>'}</p>
+  <table><tr><th>Variable</th><th>Value on this input</th><th>Lives at</th></tr>${d.variables.map(v => `<tr><td class="mono">${esc(v.name)}</td><td class="mono">${esc(JSON.stringify(v.value))}</td><td class="mono">${esc(v.sites.join(", ") || "not placed")}</td></tr>`).join("")}</table>`;
+  if (d.swap) {
+    const s = d.swap;
+    h = `<h3>Intervention: <span class="mono">${esc(s.variable)}</span> at <span class="mono">${esc(s.site)}</span> taken from input [${esc(s.source_x.join(", "))}] (value ${esc(JSON.stringify(s.source_value))})</h3>
+    <div class="grid2"><div><b>The construction predicts</b>${valsHTML(s.construction_predicts)}</div><div><b>The network actually does</b>${valsHTML(s.network_after)}</div></div>
+    <p>${s.prediction_right ? '<span class="ok">prediction right</span>' : '<span class="no">prediction wrong</span>'}</p><hr>` + h;
+  }
+  $("#out").innerHTML = h;
+}
+load();
+</script>
+</body>
+</html>

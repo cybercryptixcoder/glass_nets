@@ -257,7 +257,8 @@ def disagreement_search(kind, W, X, model, rng, starts=200, iters=25):
 
 def copy_check(source, W):
     """Is the construction a copy of the network's weights rather than an account of its computation? Counts the numeric
-    literals in the source and the share of the network's weights (|w| >= 0.05) that some literal equals to within 1%.
+    literals in the source and the share of the network's weights (|w| >= 0.05, not a whole or half number) that some
+    literal equals to within 1%.
     Flagged when there are at least half as many literals as parameters AND they reproduce at least half of the
     weights: a re-implementation of the weight matrices, which every test above would pass without explaining
     anything (found on AlgZoo: copying M2,2's 10 weights passes every test)."""
@@ -273,7 +274,8 @@ def copy_check(source, W):
     except (tokenize.TokenError, IndentationError):
         pass
     ws = np.concatenate([np.abs(np.ravel(v)) for v in W.values() if np.size(v) > 1]) if W else np.zeros(0)
-    big = ws[ws >= 0.05]
+    big = ws[(ws >= 0.05) & (np.abs(2 * ws - np.round(2 * ws)) > 1e-6)]   # whole and half numbers (hand-set weights such as
+                                                                           # 1, 2, 0.5) are what an account would write anyway
     lv = np.array(sorted(set(lits))) if lits else np.zeros(0)
     if len(big) and len(lv):
         j = np.clip(np.searchsorted(lv, big), 1, len(lv) - 1) if len(lv) > 1 else np.zeros(len(big), int)
