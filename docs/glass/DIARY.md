@@ -362,3 +362,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - lc_3_4 mainb: not verified (0/3, 52%).
   - So far 3 of 3 lc COMPLETEs are E10 copies, all from the v2 reader. No claim.
 - **01:03** HANDOFF. Shreyas (01:02): keep the Colab job running and hand off to a new session. Status: 12/40 done, 4 running (lc_6_5 mainb, M8,5 v2a, lc_8_6 a/b). Relayed and pushed. Wrote `docs/glass/HANDOFF.md`; START_HERE and CHECKLIST point to it. Option A (glass-2 frozen) is in force. No further check-ins are scheduled from this session.
+- **01:25** Check-in (Shreyas asked): 14 of 40 done; 4 running (lc_8_6 a/b, M8,8 v1a/v2a). Relayed.
+  - New glass-2 COMPLETEs, checked by hand:
+    - lc_4_5 maina: 0.81 constants per dof, mostly a re-description (above the 0.78 claim line);
+    - M4,4 v1a: 0.89, near-copy;
+    - M8,5 v1a: 0 constants, an E10 copy;
+    - M8,5 v2a: 0.87, near-copy.
+  - Not verified: lc_6_5 mainb, M4,4 v2a. Still no claim.
