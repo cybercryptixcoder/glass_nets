@@ -98,7 +98,7 @@ HOW THE JUDGE TESTS IT (on inputs held out from fitting)
 4. Interchange, at each site s you align to: the network is run on an input B, but at site s the part of the activation that encodes your variables is replaced by what it is on another input A (the variables are read from the two real activations with a linear probe, and the change (v(A) - v(B)) @ M is added at site s); everything after site s is recomputed. The network's new decision must equal what model(B) returns when iv gives those variables their values from A (need 90%). So the causal wiring of model() must mirror the network: a variable must feed the later variables the way the activation at its site feeds the later sites. A variable placed at several sites is tested at each site separately.
 5. Off-manifold tests, which make states that no input produces (need 50% of the cases where the network's decision changes). Two are run at each site, and passing EITHER is enough: partial (each variable at the site is copied from A while the site's other variables keep their values from B; needs several variables at the site) and edit (a random half of the coordinates of everything you named at the site are copied). Both need realistic coefficients in model(), not just the right decision on ordinary inputs. Where the network keeps parts separate (one per position, per input, per feature group), give each part its own variable, with the coordinates that belong together kept together: copying whole parts keeps every part at a value it really takes.
 6. Whole-model tests, on the construction as a whole: (a) joint substitution: every site you name is replaced AT ONCE by the construction's predictions (need 90% of decisions kept when you name two or more sites); (b) worst slice: behaviour on the inputs where the network makes each one decision, the worst of them must be at least 80%; (c) when the task's correct answers are known, the network's own mistakes: on inputs where the network is wrong, the construction must make the network's (wrong) decision at least half the time, because a construction of the network, not of the task, is the goal; (d) a short search for inputs where the network's decision is clear and the construction's differs (reported with examples, no requirement: use the examples to find what your construction misses).
-7. Not a copy: a file that writes out the network's weight matrices is rejected, whatever it scores: it re-implements the network instead of explaining it. Three checks: many numeric literals reproducing most of the weights; a table of numbers about as large as the network's largest weight tensor (a rescaled weight matrix is still the matrix); or about as many constants (non-integer numbers) in the file as the network has degrees of freedom, i.e. its parameters less the transformations that leave its decisions unchanged (one scale per hidden unit; for a class decision, a common shift of the class scores per readout input, and one overall scale). Writing the weights in normalised coordinates compresses nothing; an explanation finds a rule that needs clearly fewer numbers (the report prints constants per degree of freedom; 0.9 or more is rejected). A construction explains by finding the rule, so it needs far fewer constants than the network has weights. Express each step by what it computes (a comparison, a running maximum, a count, a threshold), with only the constants that account needs.
+7. Compression (an explanation, not a re-description): the report counts the constants in your file (non-integer numbers other than 0.5) against the network's degrees of freedom (its parameters less the transformations that leave its decisions unchanged: one scale per hidden unit; for a class decision, a common shift of the class scores per readout input and one overall scale; in a transformer, everything but the QK and OV products and the residual basis). At 0.9 or more constants per degree of freedom the construction is rejected whatever it scores: writing the weights copied, rescaled, regrouped or normalised compresses nothing. An explanation finds a rule that needs clearly fewer numbers: express each step by what it computes (a comparison, a running maximum, a count, a threshold).
 A site is verified when it passes 3-5; the construction is verified when, in addition, it passes 1, 6 and 7. The network's sites are grouped into STAGES (the successive steps of its computation); a stage is explained when one of its sites is verified. The construction is COMPLETE when it behaves like the network and every stage is explained. That is the goal, reached one stage at a time, with variables that are as low-dimensional as you can make them.
 
 YOUR TOOLS
@@ -117,6 +117,16 @@ HOW TO WORK
 3. Write the construction with one or more variables for each stage, computed from the previous stage's variables. Measure the constants with python, write them into the file, submit, read the report, and fix what fails.
 4. If a site fails, investigate why with python (what does the activation depend on that your variables miss? is the variable used by the network at that site at all?) before resubmitting. You can reproduce any of the judge's tests yourself with run and acts. A variable that is present at a site but not used by what comes after should be given its own name and not fed forward in model().
 Keep each message short. Do the thinking with code. When the judge reports VERIFIED AND COMPLETE, or you are certain you cannot improve further, reply with a short final summary and no tool call."""
+
+# Round 2 (docs/glass/PLAN_ROUND2.md, F3-F4). GLASS_READER=v1 is round 1's reader, unchanged, for the A/B comparison.
+READER = os.environ.get("GLASS_READER", "v2")
+V2_ADDENDUM = """
+
+WORKING ORDER (this replaces any habit of explaining everything at once)
+- Build the construction STAGE BY STAGE, from the first step of the network to the last. Each judge report now opens with a STAGE TABLE (the graded numbers for every stage) and names the stage to FIX FIRST: the earliest stage that is not verified. Work on that stage until it is verified, keep it in every later submission, then move to the next. A later stage's variables must be computed from the earlier stages' verified variables.
+- Do not trade internal stages for output scores. A construction that reproduces the outputs (or the network's mistakes) with tables of measured corrections while its internal stages fail has not explained the network; the stage table is the measure of progress.
+- A good route when the mechanism is not yet clear: first submit an EXACT re-implementation of the network (allowed as a diagnostic: it verifies every stage, it is flagged as a re-description and it is never delivered). Then compress it ONE STAGE AT A TIME: replace that stage's raw state with a few meaningful variables (a sign, a running maximum, a count, a comparison, a symmetric pair), submit, and keep the change only if that stage stays verified. Repeat until the constants per degree of freedom are well below 0.9. Symmetries (units that mirror each other), low-rank structure and groups of units with the same role are the usual sources of compression."""
+
 
 LM_SYSTEM = """You are an interpretability researcher. You are given a real pre-trained transformer language model and a set of prompts on which it shows one behaviour. Your job is to work out HOW the model produces that behaviour, internally, and to write it down as a CONSTRUCTION that an automatic judge will test against the model.
 
@@ -337,6 +347,8 @@ def run_judge(target, variant, path, seed=0, timeout=1500):
     rep = json.loads(out_json.read_text()) if p.returncode == 0 and out_json.exists() else None
     if rep and rep.get("kind") == "lm":
         text += next_focus(rep)
+    if rep and READER == "v2" and rep.get("kind") != "lm":
+        text = stage_table(rep) + "\n\n" + text
     return text, rep
 
 
@@ -411,15 +423,51 @@ def tool_code(call):
     return raw
 
 
+def verified_prefix(rep):
+    """How many stages are verified counting from the network's first stage (round 2's measure of progress)."""
+    n = 0
+    for st in (rep.get("stages") or {}).values():
+        if not st.get("verified"):
+            break
+        n += 1
+    return n
+
+
 def better(a, b):
     """Is report a a better result than report b (None = nothing yet)?"""
     if b is None:
         return True
-    # a submission the judge flags as a weight copy never beats one that is not (a reader may submit an exact
+    # a submission the judge flags as a re-description never beats one that is not (a reader may submit an exact
     # re-implementation to read the judge's measurements; that must not become the delivered construction)
-    ka = (not (a.get("copy") or {}).get("flagged", False), a["verdict"]["complete"], a["verdict"]["score"], a["verdict"]["verified"], -len(a["verdict"]["fails"]))
-    kb = (not (b.get("copy") or {}).get("flagged", False), b["verdict"]["complete"], b["verdict"]["score"], b["verdict"]["verified"], -len(b["verdict"]["fails"]))
-    return ka >= kb
+    def key(r):
+        nc = not (r.get("copy") or {}).get("flagged", False)
+        v = r["verdict"]
+        if READER == "v2":       # stages verified from the first one, then behaviour (F3)
+            return (nc, v["complete"], verified_prefix(r), v.get("stages_verified", 0), r["behaviour"]["match"], -len(v["fails"]))
+        return (nc, v["complete"], v["score"], v["verified"], -len(v["fails"]))
+    return key(a) >= key(b)
+
+
+def stage_table(rep):
+    """F3: the per-stage table that opens a v2 report, with the stage to fix first."""
+    L = ["STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)"]
+    first = None
+    for name, st in (rep.get("stages") or {}).items():
+        cells = []
+        for s_ in st.get("named", []):
+            r = rep["sites"].get(s_, {})
+            ic = [t for t in rep.get("interventions", []) if t["site"] == s_ and t["mode"] == "interchange"]
+            icv = ic[0]["agreement_when_changed"] if ic and ic[0]["agreement_when_changed"] is not None else (ic[0]["agreement"] if ic else None)
+            cells.append(f"{s_}: substitute {r.get('substitute_match', 0):.0%}, interchange " + ("n/a" if icv is None else f"{icv:.0%}")
+                         + (" PASS" if r.get("pass") else " fail"))
+        status = "VERIFIED" if st.get("verified") else ("named, failing" if st.get("named") else "not named")
+        L.append(f"  {name:14s} {status:15s} " + ("; ".join(cells) if cells else ""))
+        if first is None and not st.get("verified"):
+            first = name
+    cp = rep.get("copy") or {}
+    L.append(f"  compression: {cp.get('constants_per_dof', '?')} constants per degree of freedom (an explanation needs < 0.9)")
+    L.append(f"FIX FIRST: stage '{first}'" if first else "All stages verified." + (" Now compress (see the compression line)." if cp.get("flagged") else ""))
+    return "\n".join(L)
 
 
 # ---------------------------------------------------------------- the run
@@ -432,7 +480,7 @@ def construct(target, variant="original", told=False, weights=True, allow_forwar
     meta = json.loads((LAB / "models" / target / "meta.json").read_text())
     is_lm = meta["forward"] == "lm"
     W = None if is_lm else {k: v.astype(np.float64) for k, v in np.load(LAB / "models" / target / "weights.npz").items()}
-    system = LM_SYSTEM if is_lm else SYSTEM
+    system = LM_SYSTEM if is_lm else (SYSTEM + V2_ADDENDUM if READER == "v2" else SYSTEM)
     render = __import__("lmjudge").render if is_lm else judge_mod.render
     best, best_n, nudges = None, None, 0
     if resume:
@@ -463,7 +511,8 @@ def construct(target, variant="original", told=False, weights=True, allow_forwar
         msgs.append({"role": "user", "content": tail})
     else:
         cfg = {"target": target, "variant": variant, "told": told, "weights": weights, "allow_forward": allow_forward, "effort": effort,
-               "max_steps": max_steps, "max_tokens": max_tokens, "seed": seed, "title": title, "model": luminal.model(), "one_shot": one_shot}
+               "max_steps": max_steps, "max_tokens": max_tokens, "seed": seed, "title": title, "model": luminal.model(), "one_shot": one_shot,
+               "reader": READER, "judge_version": judge_mod.JUDGE_VERSION}
         run_id = time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4]
         rdir = OUT / target / run_id
         rdir.mkdir(parents=True, exist_ok=True)

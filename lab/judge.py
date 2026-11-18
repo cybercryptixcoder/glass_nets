@@ -54,6 +54,8 @@ PASS = {"behaviour": 0.95,       # share of inputs on which the construction and
         "joint": 0.90,           # decisions kept when EVERY named site is replaced by the construction's prediction at once
         "worst_slice": 0.80,     # behaviour on the worst slice (the inputs on which the network makes one decision)
         "errors": 0.50}          # share of the network's own mistakes (vs the task's labels) the construction reproduces
+JUDGE_VERSION = "glass-2"         # frozen for round 2 (docs/glass/PLAN_ROUND2.md, F2): every report carries it, and it does
+                                 # not change during a benchmark
 MIN_SLICE = 30                   # slices and error sets smaller than this are reported but carry no requirement
 
 
@@ -256,12 +258,17 @@ def disagreement_search(kind, W, X, model, rng, starts=200, iters=25):
 
 
 def copy_check(source, W):
-    """Is the construction a copy of the network's weights rather than an account of its computation? Counts the numeric
-    literals in the source and the share of the network's weights (|w| >= 0.05, not a whole or half number) that some
-    literal equals to within 1%.
-    Flagged when there are at least half as many literals as parameters AND they reproduce at least half of the
-    weights: a re-implementation of the weight matrices, which every test above would pass without explaining
-    anything (found on AlgZoo: copying M2,2's 10 weights passes every test)."""
+    """Is the construction an explanation, or a re-description of the weights? One rule (round 2, docs/glass/LEARNINGS.md
+    E3): COMPRESSION. Constants = the file's non-integer numeric literals other than 0.5 (whole numbers and halves are
+    what any account writes: 1, 2, a sign). Degrees of freedom = the network's parameters minus every transformation
+    that leaves its decisions unchanged, since a re-description can drop exactly those:
+      - ReLU networks: one scale per hidden unit (a unit and its outgoing weights rescaled inversely);
+      - transformers without LayerNorm: per head, the QK and OV products are all that matter (k*k each, k = head
+        size), and any invertible change of basis of the residual stream (d*d);
+      - a class decision (argmax): one shift of the class scores per readout input, and one overall scale.
+    Flagged at >= 0.9 constants per degree of freedom. On the 17 AlgZoo constructions of round 1 this separates exactly:
+    every re-description (copied, rescaled, split into rows or normalised) sat at 1.0-1.6, every compressed account at
+    0.0-0.78. It replaces round 1's value-match and table rules, which caught nothing this misses."""
     import io, tokenize
     lits = []
     try:
@@ -273,56 +280,32 @@ def copy_check(source, W):
                     pass
     except (tokenize.TokenError, IndentationError):
         pass
-    ws = np.concatenate([np.abs(np.ravel(v)) for v in W.values() if np.size(v) > 1]) if W else np.zeros(0)
-    big = ws[(ws >= 0.05) & (np.abs(2 * ws - np.round(2 * ws)) > 1e-6)]   # whole and half numbers (hand-set weights such as
-                                                                           # 1, 2, 0.5) are what an account would write anyway
-    lv = np.array(sorted(set(lits))) if lits else np.zeros(0)
-    if len(big) and len(lv):
-        j = np.clip(np.searchsorted(lv, big), 1, len(lv) - 1) if len(lv) > 1 else np.zeros(len(big), int)
-        near = np.minimum(np.abs(lv[j] - big), np.abs(lv[np.maximum(j - 1, 0)] - big))
-        matched = float((near <= 0.01 * np.maximum(big, 1e-9)).mean())
-    else:
-        matched = 0.0
-    params = int(ws.size)
-    # A copy can also be rescaled (each unit measured in units of its own gain), which the value match misses. So
-    # also: the largest single array literal (a list of numbers, nested or not) against the network's largest weight
-    # tensor. A table with (nearly) as many entries as that tensor is the tensor, rescaled (found on AlgZoo M4,4: a 4x4
-    # "recurrent gain matrix" equal to W_h up to per-unit scales). The bar is 90%: an account that found structure
-    # needs fewer numbers (M4,3's reader used the cell's mirror symmetry to write W_h's 16 entries as 8), and a bar at
-    # 50% rejected that. This is a heuristic: a determined copier could split the table; the reader is not adversarial.
-    import ast as _ast
-    def nums(node):
-        return sum(1 for n in _ast.walk(node) if isinstance(n, _ast.Constant) and isinstance(n.value, (int, float)) and not isinstance(n.value, bool))
-    try:
-        tables = [nums(n) for n in _ast.walk(_ast.parse(source)) if isinstance(n, (_ast.List, _ast.Tuple))]
-    except SyntaxError:
-        tables = []
-    biggest_table = max(tables, default=0)
-    biggest_tensor = max((int(np.size(v)) for v in W.values()), default=0) if W else 0
-    table_copy = bool(biggest_tensor >= 8 and biggest_table >= 0.9 * biggest_tensor)
-    value_copy = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
-    # Third rule, invariant to rescaling AND to splitting tables: compression. Constants = the file's non-integer
-    # numeric literals other than 0.5. A construction with about as many constants as the network has parameters
-    # compresses nothing; it re-describes the weights (found on AlgZoo M8,8: 136 constants for 136 parameters, quoted
-    # in a per-unit scale and split into 8-number rows).
+    weights = {k: v for k, v in (W or {}).items() if np.size(v) > 1}
+    params = int(sum(np.size(v) for v in weights.values()))
     consts = sum(1 for v in lits if v != int(v) and v != 0.5)
-    # Degrees of freedom: the parameters minus every transformation that leaves the network's decisions unchanged,
-    # since a re-description can drop those. One scale per hidden unit (rescaling a ReLU unit and its outgoing
-    # weights inversely changes nothing; AlgZoo M4,4 shuffled wrote 32 = 36 - 4 constants),
-    units = int(W["W_h"].shape[0]) if "W_h" in W else sum(int(W[k].shape[1]) for k in W if k.startswith("W") and k[1:].isdigit() and f"W{int(k[1:]) + 1}" in W)
-    # and, when the output is a choice among classes (argmax), the readout's own symmetries: adding one vector to
-    # every class's readout column shifts all scores equally (one direction per readout input), and one overall
-    # positive scale. AlgZoo M4,4 (pass 2) wrote exactly these 27 numbers (36 - 4 - 4 - 1) after removing them.
-    out_W = W.get("W_o") if "W_o" in W else next((W[k] for k in sorted((k for k in W if k.startswith("W") and k[1:].isdigit()),
-                                                                     key=lambda k: int(k[1:]))[-1:]), None)
-    readout_sym = int(out_W.shape[0]) + 1 if out_W is not None and out_W.ndim == 2 and out_W.shape[1] > 1 else 0
-    dof = max(params - units - readout_sym, 1)
-    compression_copy = bool(params >= 8 and consts >= 0.9 * dof)
-    return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
-            "largest_tensor": biggest_tensor, "constants": consts, "constants_per_param": round(consts / max(params, 1), 3),
-            "degrees_of_freedom": dof, "constants_per_dof": round(consts / dof, 3),
-            "value_copy": value_copy, "table_copy": table_copy, "compression_copy": compression_copy,
-            "flagged": value_copy or table_copy or compression_copy}
+    if "W_E" in weights:                                         # transformer (nets.transformer)
+        sym, l = 0, 0
+        while f"L{l}.W_Q" in weights or f"L{l}.W_in" in weights:
+            if f"L{l}.W_Q" in weights:
+                H, _, k = weights[f"L{l}.W_Q"].shape
+                sym += H * 2 * k * k
+            if f"L{l}.W_in" in weights:
+                sym += weights[f"L{l}.W_in"].shape[1]             # ReLU MLP neurons: one scale each
+            l += 1
+        d = weights["W_E"].shape[1]
+        sym += d * d
+        out_W = weights.get("W_U")
+    else:                                                       # ReLU RNN / MLP
+        sym = int(weights["W_h"].shape[0]) if "W_h" in weights else sum(
+            int(weights[k].shape[1]) for k in weights if k.startswith("W") and k[1:].isdigit() and f"W{int(k[1:]) + 1}" in weights)
+        out_W = weights.get("W_o") if "W_o" in weights else next((weights[k] for k in sorted(
+            (k for k in weights if k.startswith("W") and k[1:].isdigit()), key=lambda k: int(k[1:]))[-1:]), None)
+    if out_W is not None and np.ndim(out_W) == 2 and out_W.shape[1] > 1:
+        sym += int(out_W.shape[0]) + 1
+    dof = max(params - sym, 1)
+    flagged = bool(params >= 8 and consts >= 0.9 * dof)
+    return {"literals": len(lits), "params": params, "constants": consts, "degrees_of_freedom": dof,
+            "constants_per_dof": round(consts / dof, 3), "flagged": flagged}
 
 
 def certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng):
@@ -561,6 +544,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None, labels=None):
     v["complete"] = bool(v["verified"] and v["stages_verified"] == v["stages_total"])
     v["score"] = round(rep["behaviour"]["match"] * v["stages_verified"] / max(1, v["stages_total"]), 4)
     rep["coverage"] = coverage(rep)
+    rep["judge_version"] = JUDGE_VERSION
     rep["seconds"] = round(time.time() - t0, 2)
     return rep
 
@@ -650,20 +634,10 @@ def verdict(rep):
                      f"{e['construction_right_where_network_wrong']:.1%}: it explains the task, not this network")
     cp = rep.get("copy")
     if cp and cp["flagged"]:
-        if cp.get("value_copy", cp["flagged"]):
-            why = (f"the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they reproduce "
-                   f"{cp['weights_matched']:.0%} of its weights")
-        elif cp.get("table_copy"):
-            why = (f"the file writes out a table of {cp['largest_table']} numbers, about the size of the network's largest weight "
-                   f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
-        else:
-            why = (f"the file has {cp['constants']} constants for a network with {cp['degrees_of_freedom']} degrees of freedom ({cp['params']} "
-                   f"parameters, less the rescalings and readout shifts that leave its decisions unchanged): {cp['constants_per_dof']:.2f} per "
-                   "degree of freedom, so it compresses nothing; it re-describes the weights (rescaled, normalised or regrouped) instead of "
-                   "finding the rule")
-        fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
-                     "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "
-                     "constants that account needs")
+        fails.append(f"not an explanation: the file has {cp['constants']} constants for a network with {cp['degrees_of_freedom']} degrees of "
+                     f"freedom ({cp['params']} parameters, less the transformations that leave its decisions unchanged): "
+                     f"{cp['constants_per_dof']:.2f} per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, "
+                     "regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers")
     if not rep["sites"]:
         fails.append("no sites aligned")
     return {"verified": not fails, "fails": fails}
@@ -725,10 +699,8 @@ def render(rep):
                      + ("".join(f"\n     input {x['input']}: network {x['network']}, construction {x['construction']}" for x in sr["examples"])))
     cp = rep.get("copy")
     if cp:
-        L.append(f"7. NOT A COPY   {cp['literals']} numeric literals in the file; network parameters {cp['params']}; share of its weights "
-                 f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}; largest table in the file {cp.get('largest_table', '?')} "
-                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}; constants per degree of freedom {cp.get('constants_per_dof', '?')} (flag at 0.9)"
-                 + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
+        L.append(f"7. COMPRESSION   {cp['constants']} constants in the file for {cp['degrees_of_freedom']} degrees of freedom in the network: "
+                 f"{cp['constants_per_dof']:.2f} per degree of freedom (an explanation needs < 0.9)" + ("  -> FLAGGED: a re-description, not an explanation" if cp["flagged"] else ""))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else
                        ("named but failing" if st["named"] else "NOT EXPLAINED (no variable at " + " / ".join(st["sites"]) + ")"))

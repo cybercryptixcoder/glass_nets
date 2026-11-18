@@ -314,3 +314,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
       mistake tables;
     - M8,5's 0.98/0.89/0.84/0.79 partial progress was invisible behind "0/5";
     - M4,3's success came from compressing a working copy.
+- **23:38** Shreyas approved round 2. Step 1: opening ARC's Drive notes was again blocked by an unanswered permission prompt (not worked around); marked pending. Step 2: `docs/glass/LEARNINGS.md` frozen (E1–E8).
+- **23:47** Step 3 fixes implemented.
+  - **F1:** `copy_check` is now the single compression rule. Degrees of freedom now also cover transformers: per
+    head QK and OV products (k² each) and the residual basis (d²).
+  - **F2:** `JUDGE_VERSION = "glass-2"` is stamped on every report and every run's config.
+  - **F3 and F4** (constructor, `GLASS_READER=v2`, the default; `v1` = round 1's reader, kept for the A/B):
+    - the v2 prompt adds a stage-by-stage working order, "don't trade internal stages for output scores", and the
+      copy-then-compress route;
+    - v2 reports open with a STAGE TABLE and a "FIX FIRST" line;
+    - v2 picks the best submission by stages verified from the first, then behaviour.
+  - Rule 7 in the prompt, which both readers see, now states the single compression rule.
+  - **Regression check:** every saved non-LM construction re-judged with glass-2
+    (`docs/glass/rejudge_glass2.txt`). Every verdict is identical to the round-1 final verdicts. F1 removed rules
+    without changing any answer, as E3 predicted.
