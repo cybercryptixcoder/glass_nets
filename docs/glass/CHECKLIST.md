@@ -55,7 +55,7 @@ deleted from here; Shreyas can delete it.)
 - Step 1 DONE (`M43_VS_ARC.md`, E9): M4,3 is a blind rediscovery of ARC's account. The judge must NOT change
   until round 2 ends (frozen glass-2).
 - **Known judge hole (E10):** integer-scaled weight copies pass compression. Do not patch until round 2 ends; then fix the rule and re-judge all round-2 runs.
-- 01:05 ET: 12 of 40 done, 4 running. Shreyas: keep the job running (option A: judge frozen). No check-ins are scheduled from the old session; the new agent must relay.
+- 01:43 ET: 17 of 40 done, 4 running; all lc main runs finished, no claim (all COMPLETEs are copies or near-copies). Shreyas: keep the job running (option A: judge frozen). No check-ins are scheduled from the old session; the new agent must relay.
 - At the end:
   - an A/B table, v1 vs v2 on the ladder (networks certified, verified-stage prefix, cost);
   - the longest-cycle results against the pre-registered claim criterion (PLAN_ROUND2 step 5);

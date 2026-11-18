@@ -369,3 +369,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - M8,5 v1a: 0 constants, an E10 copy;
     - M8,5 v2a: 0.87, near-copy.
   - Not verified: lc_6_5 mainb, M4,4 v2a. Still no claim.
+- **01:43** Check-in (Shreyas asked): 17 of 40 done; 4 running (M8,8 v1a/v2a, M16,10 v2a, M2,2 v1b). Relayed and pushed.
+  - New glass-2 COMPLETEs, checked by hand:
+    - lc_8_6 maina: 0.88 constants per dof, a near-copy (288 decimals);
+    - M16,10 v1a: 0 constants with a scale factor, an E10 copy.
+  - lc_8_6 mainb: not verified (1/3, 92.4%).
+  - All 4 lc targets have finished both main runs. No run meets the claim criterion.
