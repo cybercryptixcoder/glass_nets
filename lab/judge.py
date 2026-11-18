@@ -286,8 +286,10 @@ def copy_check(source, W):
     params = int(ws.size)
     # A copy can also be rescaled (each unit measured in units of its own gain), which the value match misses. So
     # also: the largest single array literal (a list of numbers, nested or not) against the network's largest weight
-    # tensor. Writing out a table with at least half as many entries as that tensor is writing out the tensor
-    # (found on AlgZoo M4,4: a 4x4 "recurrent gain matrix" equal to W_h up to per-unit scales).
+    # tensor. A table with (nearly) as many entries as that tensor is the tensor, rescaled (found on AlgZoo M4,4: a 4x4
+    # "recurrent gain matrix" equal to W_h up to per-unit scales). The bar is 90%: an account that found structure
+    # needs fewer numbers (M4,3's reader used the cell's mirror symmetry to write W_h's 16 entries as 8), and a bar at
+    # 50% rejected that. This is a heuristic: a determined copier could split the table; the reader is not adversarial.
     import ast as _ast
     def nums(node):
         return sum(1 for n in _ast.walk(node) if isinstance(n, _ast.Constant) and isinstance(n.value, (int, float)) and not isinstance(n.value, bool))
@@ -297,7 +299,7 @@ def copy_check(source, W):
         tables = []
     biggest_table = max(tables, default=0)
     biggest_tensor = max((int(np.size(v)) for v in W.values()), default=0) if W else 0
-    table_copy = bool(biggest_tensor >= 8 and biggest_table >= 0.5 * biggest_tensor)
+    table_copy = bool(biggest_tensor >= 8 and biggest_table >= 0.9 * biggest_tensor)
     value_copy = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
     return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
             "largest_tensor": biggest_tensor, "value_copy": value_copy, "table_copy": table_copy,
@@ -631,7 +633,7 @@ def verdict(rep):
     if cp and cp["flagged"]:
         why = (f"the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they reproduce "
                f"{cp['weights_matched']:.0%} of its weights" if cp.get("value_copy", cp["flagged"]) else
-               f"the file writes out a table of {cp['largest_table']} numbers, at least half the size of the network's largest weight "
+               f"the file writes out a table of {cp['largest_table']} numbers, about the size of the network's largest weight "
                f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
         fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
                      "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "

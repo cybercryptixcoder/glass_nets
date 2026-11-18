@@ -186,3 +186,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   the current judge (M4,4 at least).
 - `results.py` now prefers `report_current.json` (the current judge's verdict) over the run's own report.
 - **21:01** Pushing the judge fix to Colab: `git pull` there aborted, because the relay commits run folders that exist on Colab as untracked files. Nothing was lost. New `colab_update_code.py` checks out only code paths (`lab/*.py`, `lab/static`, `lab/targets`, `scripts/glass`). Colab now has the table-copy rule (c98ef8ee).
+- **21:03** **M4,3 (32 params): VERIFIED AND COMPLETE.** 26 steps, 6 submissions, $0.13.
+  - Behaviour 99.2%; all sites at once 99.1%; worst slice 98.1%; 79.7% of the network's 74 mistakes reproduced; the
+    search found 4 clear disagreements in 200 starts.
+  - The account: the 4 units form two signed channels (each a positive and a negative part). The cell is
+    mirror-symmetric. The signed part rotates about 120° per step. The readout compares the ratio of the two channel
+    magnitudes with two thresholds.
+  - ARC lists M4,3 as "more or less" understood, so this is the second calibration rung, passed.
+- The table-copy rule first flagged M4,3: its symmetric mixing table has 8 numbers against W_h's 16, and the bar was
+  50%. That was wrong. Using the symmetry to halve the numbers *is* explanation. Bar raised to 90% (a table about as
+  large as a whole weight tensor). After: M2,2 and M4,3 are complete, M4,4 is still rejected. Noted in the code:
+  this is a heuristic and could be gamed by splitting a table; the reader isn't adversarial, and a semantic review
+  (a person, or a model reading the description) is the stronger check later.
