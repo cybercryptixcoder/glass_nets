@@ -3,12 +3,14 @@
 *Living entry point, kept current after every working session. Last updated Nov 14, 2026 (branch `constructor-attempt`). Anyone handed
 this repo should be able to continue from these files alone, with no separate handoff.*
 
-## BRANCH `constructor-v2` (2026-11-17). Read this first if you are on this branch.
+## GLASS NETWORKS (branch `glass-networks`, from 2026-11-17). Read this first if you are on this branch.
 
-> Cut from `constructor-attempt` at `d6b706ff`, which stays untouched as the fallback. The job and every planned
-> change, each tied to the failure it catches: `docs/V2_CONSTRUCTOR_PLAN.md`. In short: whole-model constructions
-> of AlgZoo networks, a judge that adds joint substitution, worst-case/error checks and a coverage line, then a
-> blinded run ladder (API runs need Shreyas's OK). Status: plan written; no code changed yet.
+> The project on this branch is **Glass Networks** (the Helix name is retired for this line of work). It was cut
+> from `constructor-attempt` at `d6b706ff`, which stays untouched as the fallback.
+> - **Live state and next steps:** `docs/glass/CHECKLIST.md`. **Every step and decision:** `docs/glass/DIARY.md`.
+> - **Results:** `results/glass/RESULTS.md`.
+> - **Catalog:** `/catalog` in the lab server.
+> - The plan: `docs/V2_CONSTRUCTOR_PLAN.md`.
 
 ## CURRENT STATE (2026-11-17, session 4, branch `constructor-attempt`). Read this first.
 

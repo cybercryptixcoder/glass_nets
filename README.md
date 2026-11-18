@@ -1,3 +1,21 @@
+# Glass Networks
+
+**On this branch (`glass-networks`) the project is Glass Networks.** An AI reader studies a trained network and
+writes a **construction**: a small Python program that stands in for the whole network, with its variables placed
+at the network's internal sites. An independent judge then certifies it with measured tests. Certified
+constructions go into a catalog you can run and test.
+
+- **Start here:** `docs/glass/CHECKLIST.md` (the current plan and state) and `docs/glass/DIARY.md` (every step and
+  decision).
+- **Results:** `results/glass/RESULTS.md`.
+- **The catalog and playground:** `python3 lab/server.py`, then open http://localhost:8765/catalog.
+- **The plan and its reasons:** `docs/V2_CONSTRUCTOR_PLAN.md`. **Comparison with the Pitfalls paper's system:**
+  `docs/glass/COMPARISON_PITFALLS.md`.
+
+The Helix Probe material below is the project's history (the name is retired for this line of work).
+
+---
+
 # Helix Probe
 
 **Point it at a black box. It runs one small experiment at a time and builds a model of how the box works: a model
