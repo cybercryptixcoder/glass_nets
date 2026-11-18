@@ -47,8 +47,10 @@ def _runs(tid):
             run = json.loads((rdir / "run.json").read_text())
         except (OSError, ValueError):
             continue
-        if run.get("config", {}).get("variant", "original") != "original" or not run.get("config", {}).get("weights", True):
-            continue                      # controls (shuffled weights, prior-only) are not entries
+        if run.get("config", {}).get("variant", "original") != "original":
+            continue                      # shuffled/untrained controls are a different network: not entries
+        # (a prior-only construction, written without the network, is an entry if the judge certifies it against
+        #  the network: it is then a valid account of it, and the card says how it was written)
         out.append((json.loads(d.read_text()), rdir, run))
     return out
 
@@ -75,6 +77,8 @@ def entries():
             "report": next(((rdir / f).read_text() for f in ("report_current.txt", "report.txt") if (rdir / f).exists()), ""),
             "judged_by": "current judge" if (rdir / "report_current.json").exists() else "the judge of its run",
             "cost": run.get("cost"), "steps": len(run.get("steps", [])),
+            "written": "without access to the network (prior-only control: told the task, one submission)" if not run.get("config", {}).get("weights", True)
+                       else ("by a blinded reader with the weights" if not run.get("config", {}).get("told") else "by a reader told the task, with the weights"),
         })
     order = {"complete": 0, "verified": 1, "not verified": 2}
     return sorted(cards, key=lambda c: (order[c["status"]], c["params"] or 0))

@@ -304,12 +304,17 @@ def copy_check(source, W):
     # Third rule, invariant to rescaling AND to splitting tables: compression. Constants = the file's non-integer
     # numeric literals other than 0.5. A construction with about as many constants as the network has parameters
     # compresses nothing; it re-describes the weights (found on AlgZoo M8,8: 136 constants for 136 parameters, quoted
-    # in a per-unit scale and split into 8-number rows). Calibrated on this session's constructions: honest accounts
-    # used 0.56 (M4,3) and 0.80 (M2,2) constants per parameter; the re-descriptions used exactly 1.00 (M8,8, M16,10).
+    # in a per-unit scale and split into 8-number rows).
     consts = sum(1 for v in lits if v != int(v) and v != 0.5)
-    compression_copy = bool(params >= 8 and consts >= 0.9 * params)
+    # Degrees of freedom: the parameters minus one scale per hidden unit, since rescaling a ReLU unit (and its outgoing
+    # weights inversely) leaves the function unchanged. A rescaled re-description needs exactly this many constants
+    # (AlgZoo M4,4 shuffled: 32 constants = 36 parameters - 4 units).
+    units = int(W["W_h"].shape[0]) if "W_h" in W else sum(int(W[k].shape[1]) for k in W if k.startswith("W") and k[1:].isdigit() and f"W{int(k[1:]) + 1}" in W)
+    dof = max(params - units, 1)
+    compression_copy = bool(params >= 8 and consts >= 0.9 * dof)
     return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
             "largest_tensor": biggest_tensor, "constants": consts, "constants_per_param": round(consts / max(params, 1), 3),
+            "degrees_of_freedom": dof, "constants_per_dof": round(consts / dof, 3),
             "value_copy": value_copy, "table_copy": table_copy, "compression_copy": compression_copy,
             "flagged": value_copy or table_copy or compression_copy}
 
@@ -646,8 +651,9 @@ def verdict(rep):
             why = (f"the file writes out a table of {cp['largest_table']} numbers, about the size of the network's largest weight "
                    f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
         else:
-            why = (f"the file has {cp['constants']} constants for a network of {cp['params']} parameters ({cp['constants_per_param']:.2f} per "
-                   f"parameter): it compresses nothing, so it re-describes the weights (rescaled or regrouped) instead of finding the rule")
+            why = (f"the file has {cp['constants']} constants for a network with {cp['degrees_of_freedom']} degrees of freedom ({cp['params']} "
+                   f"parameters, less one scale per hidden unit): {cp['constants_per_dof']:.2f} per degree of freedom, so it compresses nothing; "
+                   "it re-describes the weights (rescaled or regrouped) instead of finding the rule")
         fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
                      "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "
                      "constants that account needs")
@@ -714,7 +720,7 @@ def render(rep):
     if cp:
         L.append(f"7. NOT A COPY   {cp['literals']} numeric literals in the file; network parameters {cp['params']}; share of its weights "
                  f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}; largest table in the file {cp.get('largest_table', '?')} "
-                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}; constants per network parameter {cp.get('constants_per_param', '?')}"
+                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}; constants per degree of freedom {cp.get('constants_per_dof', '?')} (flag at 0.9)"
                  + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else

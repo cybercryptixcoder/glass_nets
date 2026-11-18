@@ -239,3 +239,21 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     pass 1, reading the network added nothing on M16,10.
   - Re-judged with the current judge: M2,2 (main, prior, shuffled) complete; M4,3 complete; M4,4, M8,8 and the
     M16,10 delivered file flagged as copies; M8,5 not verified.
+- **21:33** Pass 1 finished (18/18 jobs done; Colab job ended 02:29 UTC = 21:29 ET).
+  - **Shuffled controls** (re-judged): M4,3 0/3; M8,5 0/5; M8,8 1/8 (partial); M16,10 0/10. These fail, as a
+    control should.
+  - **M4,4 shuffled came back COMPLETE** with 32 constants: a per-unit-rescaled re-description that sat just under
+    the 0.9-constants-per-parameter bar. The bar's denominator was wrong. Rescaling a ReLU unit (and its outgoing
+    weights inversely) leaves the function unchanged, so a re-description needs exactly *parameters minus hidden
+    units* constants (36 − 4 = 32).
+  - Fix: the compression rule now counts constants per **degree of freedom** (parameters minus one scale per
+    hidden unit). It flags at 0.9.
+  - Effect: the M2,2 *main* construction is now flagged. It has exactly 8 constants for 8 degrees of freedom: the
+    weights rescaled, with meaningful names but no compression.
+  - **The M2,2 prior-only construction (0 constants) remains complete.** So the compressed explanation of M2,2 is
+    the task's own algorithm, and the network's insides align with it.
+  - The catalog now admits a certified prior-only construction as an entry (it's checked against the network
+    like any other) and says how each entry was written. Shuffled/untrained runs are still excluded (a different
+    network).
+  - Constants per degree of freedom across this session's constructions: honest/compressed 0.0–0.64; rescaled
+    re-descriptions 0.875 (caught by the table rule), 1.0 and 1.06.
