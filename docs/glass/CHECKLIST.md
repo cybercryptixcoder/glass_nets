@@ -48,8 +48,8 @@ deleted from here; Shreyas can delete it.)
 - **All runs done** (pass 1: 18 jobs; pass 2: 5). Final report: `docs/glass/REPORT.md`. Results:
   `results/glass/RESULTS.md`. Certified: M4,3 (blinded); M2,2 (prior-only, 0 constants). Not explained: M4,4, M8,5,
   M8,8, M16,10 (best: 97% behaviour, 1/10 stages, 45% of mistakes).
-- The Colab runtime `glass1` is idle (CPU, high-RAM). Asked Shreyas whether to stop it.
-- Next: wait for Shreyas. Proposed next work is in REPORT.md ("What's next").
+- The Colab runtime `glass1` was stopped at 22:46 ET on Shreyas's word. Nothing is running.
+- Next: Shreyas decides. The proposed next work is in REPORT.md ("What's next"). To run again: `colab new --high-mem -s glass1` and follow the restart steps above.
 
 ## Checklist
 
