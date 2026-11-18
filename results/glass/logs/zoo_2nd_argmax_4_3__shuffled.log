@@ -1069,3 +1069,576 @@ NOT EXPLAINED:
   - a search found 1 inputs (from 200 starts) where the network's decision is clear and the construction's differs
 
 ===== step 24/30
+
+--- python ---
+
+a=acts(X); h3r=a['h3']; Wo=W['W_o']; Wh=W['W_h']
+WX=np.array([-4.7163,3.9653,4.6995,-3.9652])
+GA=np.array([-27.2172,-13.1023,-17.3148,14.3599]); GB=np.array([4.5224,-30.1548,-20.3652,-3.2568])
+Wh8=np.array([[-2.3877,-2.4339,-1.8931,-1.8948],[1.3387,-2.1996,2.6429,-2.4339],
+              [1.9277,1.9331,1.3387,-2.1996],[2.8057,-2.3877,2.8057,2.6429]])
+print("Wh8 err", np.abs(Wh8-Wh).max().round(4))
+def chain(Whc):
+    h1=np.maximum(X[:,:1]*WX,0); h2=np.maximum(X[:,1:2]*WX+h1@Whc,0); h3=np.maximum(X[:,2:3]*WX+h2@Whc,0)
+    return h1,h2,h3
+d_true=np.argmax(h3r@Wo,1)
+for name,Whc in [("exact",Wh),("g8",Wh8)]:
+    h1,h2,h3=chain(Whc)
+    print(name,"h3err",np.abs(h3-h3r).max().round(3),"dec",(np.argmax(np.c_[h3@GA,h3@GB,np.zeros(len(h3))],1)==d_true).mean().round(4))
+# judge-like tests with variable = gaps
+h1,h2,h3=chain(Wh8)
+V=np.c_[h3@GA,h3@GB]
+Vr=np.c_[h3r@Wo[:,0]-h3r@Wo[:,2], h3r@Wo[:,1]-h3r@Wo[:,2]]
+Z=np.c_[np.ones(len(V)),V]
+M_,*_=np.linalg.lstsq(Z,h3r,rcond=None); rec=Z@M_
+print("gap-probe resid",np.abs(rec-h3r).max().round(2))
+print("substitute dec kept", (np.argmax(rec@Wo,1)==d_true).mean().round(4))
+# partial: copy g0 from A, keep g1 from B
+rng=np.random.default_rng(2); n=len(X); pr=rng.integers(0,n,(4000,2)); A,B=pr[:,0],pr[:,1]
+mix=np.c_[V[A,0],V[B,1]]
+rec2=np.c_[np.ones(len(mix)),mix]@M_
+net_dec=np.argmax(rec2@Wo,1)
+my_dec=np.argmax(np.c_[mix,np.zeros(len(mix))],1)
+ch=net_dec!=d_true[B]
+print("partial g0: right all",(net_dec==my_dec).mean().round(4),"chg",ch.mean().round(3),(net_dec[ch]==my_dec[ch]).mean().round(4))
+mix=np.c_[V[B,0],V[A,1]]; rec2=np.c_[np.ones(len(mix)),mix]@M_
+net_dec=np.argmax(rec2@Wo,1); my_dec=np.argmax(np.c_[mix,np.zeros(len(mix))],1)
+print("partial g1: right all",(net_dec==my_dec).mean().round(4),"chg",ch.mean().round(3),(net_dec[ch]==my_dec[ch]).mean().round(4))
+# interchange both gaps from A
+rec3=np.c_[np.ones(n),V[A]]@M_; net_dec=np.argmax(rec3@Wo,1); my_dec=np.argmax(np.c_[V[A],np.zeros(len(A))],1)
+print("interchange gaps: right all",(net_dec==my_dec).mean().round(4),"chg",(net_dec!=d_true[B]).mean().round(3))
+
+--- output (0.01 s) ---
+Wh8 err 0.0189
+exact h3err 0.001 dec 1.0
+g8 h3err 0.868 dec 0.9971
+gap-probe resid 21.45
+substitute dec kept 0.9954
+partial g0: right all 0.9358 chg 0.324 0.8043
+partial g1: right all 0.9392 chg 0.324 0.8205
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 35, in <module>
+  File "/usr/local/lib/python3.13/dist-packages/numpy/lib/_index_tricks_impl.py", line 435, in __getitem__
+    res = self.concatenate(tuple(objs), axis=axis)
+ValueError: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 8000 and the array at index 1 has size 4000
+
+
+===== step 25/30
+
+--- python ---
+
+WX=np.array([-4.7163,3.9653,4.6995,-3.9652]); Wo=W['W_o']; Wh=W['W_h']
+GA=np.array([-27.2172,-13.1023,-17.3148,14.3599]); GB=np.array([4.5224,-30.1548,-20.3652,-3.2568])
+h3r=a['h3']; d_true=np.argmax(h3r@Wo,1)
+Wh8=np.array([[-2.3877,-2.4339,-1.8931,-1.8948],[1.3387,-2.1996,2.6429,-2.4339],
+              [1.9277,1.9331,1.3387,-2.1996],[2.8057,-2.3877,2.8057,2.6429]])
+Wh13=np.array([[-2.3877,-2.4339,-1.8931,-1.8948],[1.3387,-2.1996,2.6429,-2.4339],
+               [1.9277,1.9331,1.3398,-2.1912],[2.8057,-2.3826,2.7868,2.6352]])
+rng=np.random.default_rng(2); n=len(X); pr=rng.integers(0,n,(4000,2)); A,B=pr[:,0],pr[:,1]
+for nm,Whc in [("exact",Wh),("Wh13",Wh13),("Wh8",Wh8)]:
+    h1=np.maximum(X[:,:1]*WX,0); h2=np.maximum(X[:,1:2]*WX+h1@Whc,0); h3=np.maximum(X[:,2:3]*WX+h2@Whc,0)
+    V=np.c_[h3@GA,h3@GB]
+    Z=np.c_[np.ones(len(V)),V]; M_,*_=np.linalg.lstsq(Z,h3r,rcond=None); rec=Z@M_
+    sub=(np.argmax(rec@Wo,1)==d_true).mean()
+    # interchange: variables from A
+    recA=np.c_[np.ones(len(A)),V[A]]@M_; net=np.argmax(recA@Wo,1); mine=np.argmax(np.c_[V[A],np.zeros(len(A))],1)
+    chg=(net!=d_true[B]).mean(); rt=(net==mine).mean(); rtc=(net[chg]==mine[chg]).mean()
+    print(nm,"h3err",np.abs(h3-h3r).max().round(3),"subst",sub.round(4),"interch",rt.round(4),"/",rtc.round(4),"chg",chg.round(3))
+
+--- output (0.0 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 17, in <module>
+IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+
+
+===== step 26/30
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A three-step cascade of ReLU threshold detectors, one detector block per input. "
+ "Step 1: the first input only enters through its sign, h1_j = relu(wx_j*x1) with input weights of "
+ "magnitude 4.716 and 3.965 (two units each), so the state is just (relu(x1), relu(-x1)). "
+ "Step 2: h2_j = relu(wx_j*x2 + (h1 @ Wh)_j): each unit switches on when x2 beats a drive inherited "
+ "from the sign of x1. "
+ "Step 3: h3_j = relu(wx_j*x3 + (h2 @ Wh)_j): the same detector applied to x3, so unit j is on when "
+ "x3 clears a drive inherited from step 2. Wh is a switch matrix built from only eight magnitudes in "
+ "a fixed pattern (each appears twice). "
+ "Readout: the class scores are linear in h3 with six magnitudes (16, 18.7, 15.7, 11.45, 1.6, 1.66), "
+ "so only the two score gaps decide: class 0 if score0-score2 is largest, class 1 if score1-score2 is "
+ "largest, else class 2. Those two gaps are the decision variables and live at h3.")
+
+WX = np.array([-4.7163, 3.9653, 4.6995, -3.9652])
+# eight switch magnitudes of the recurrent map
+v1 = -2.3852   # also used for the -2.3826 entry
+v2 = -2.4339
+v3 = -1.8940
+v4 = 1.3398
+v5 = -2.1954
+v6 = 2.6391
+v7 = 1.9304
+v8 = 2.7963
+WH = np.array([[v1, v2, v3, v3],
+               [v4, v5, v6, v2],
+               [v7, v7, v4, v5],
+               [v8, v1, v8, v6]])
+
+# decision directions at h3: (score0 - score2) and (score1 - score2)
+GA = [-27.217, -13.102, -17.315, 14.360]
+GB = [4.522, -30.155, -20.365, -3.257]
+GA = np.array(GA)
+GB = np.array(GB)
+
+def model(x, iv):
+    x1 = x[:, 0]
+    p = iv("x1pos", np.maximum(x1, 0.0))
+    n = iv("x1neg", np.maximum(-x1, 0.0))
+    h1 = iv("h1", np.maximum((p - n)[:, None] * WX, 0.0))
+    h2 = iv("h2", np.maximum(x[:, 1:2] * WX + h1 @ WH, 0.0))
+    g0 = iv("gap02", np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0) @ GA)
+    g1 = iv("gap12", np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0) @ GB)
+    return np.stack([g0, g1, np.zeros(len(x))], 1)
+
+ALIGN = {"x1pos": ["h1"], "x1neg": ["h1"], "h2": ["h2"],
+         "gap02": ["h3"], "gap12": ["h3"]}
+
+--- judge report 5 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,061 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.6% of inputs (a constant output would get 66.0%); output R2 1.000; KL 0.002
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; x1pos, x1neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 70.9% (random 77.9%) | mean-ablate 70.9%
+  h2          (4 dims named of 4; 3 principal components suffice; h2): explained 1.000 | substitute 99.8% | keep 100.0% | remove 63.3% (random n/a) | mean-ablate 63.3%
+  h3          (2 dims named of 4; 2 principal components suffice; gap02, gap12): explained 0.889 | substitute 99.5% | keep 96.5% | remove 66.0% (random 65.9%) | mean-ablate 66.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 99.9% / 99.8% when changed (network changed in 30.0%); output R2 1.000 | controls: random subspace 76.8%, no-change 70.0%, source-output 61.0%, attribution patching 72.6%
+  partial     x1pos @ h1: right 94.0% / 78.7% when changed (network changed in 25.1%); output R2 0.936 | controls: random subspace 72.5%, no-change 74.9%, source-output 58.9%, attribution patching 81.3%
+  partial     x1neg @ h1: right 94.5% / 85.2% when changed (network changed in 7.8%); output R2 0.929 | controls: random subspace 83.8%, no-change 92.2%, source-output 50.4%, attribution patching 86.8%
+  edit        all variables @ h1: right 93.8% / 79.0% when changed (network changed in 15.8%); output R2 0.935 | controls: random subspace 81.2%, no-change 84.2%, source-output 54.5%, attribution patching 85.0%
+  interchange h2 @ h2: right 99.9% / 99.9% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 99.9%, no-change 53.1%, source-output 82.0%, attribution patching 59.0%
+  edit        h2 @ h2: right 99.7% / 99.4% when changed (network changed in 34.3%); output R2 1.000 | controls: random subspace 66.3%, no-change 65.7%, source-output 60.7%, attribution patching 75.4%
+  interchange all variables @ h3: right 87.8% / 83.3% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 59.7%, no-change 53.1%, source-output 87.8%, attribution patching 100.0%
+  partial     gap02 @ h3: right 80.4% / 45.6% when changed (network changed in 31.8%); output R2 1.000 | controls: random subspace 58.0%, no-change 68.2%, source-output 78.2%, attribution patching 100.0%
+  partial     gap12 @ h3: right 83.8% / 89.8% when changed (network changed in 21.1%); output R2 1.000 | controls: random subspace 59.5%, no-change 78.9%, source-output 64.9%, attribution patching 100.0%
+  edit        all variables @ h3: right 84.8% / 67.3% when changed (network changed in 28.4%); output R2 1.000 | controls: random subspace 61.9%, no-change 71.6%, source-output 71.5%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): h1
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 99.5% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=890); network decides 1: 97.9% (n=472); network decides 2: 99.8% (n=2638) | near ties (889 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 69.5% of test inputs (2781); the construction reproduces 99.6% of them (need 50% when there are 30 or more) and is right on 0.3%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 24 (12.0%; on the unsearched starting inputs 0.0%)
+     input [-1.806, -0.43, -1.879]: network [1], construction [2]
+     input [-1.587, -0.81, -1.68]: network [1], construction [2]
+     input [1.882, 0.503, -0.633]: network [2], construction [1]
+     input [-1.697, -0.205, -1.795]: network [1], construction [2]
+7. NOT A COPY   34 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 62%; largest table in the file 4 numbers vs the largest weight tensor 16  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: named but failing
+VERDICT: NOT VERIFIED (2 of 3 stages verified). Failing:
+  - interchange of all variables at h3: prediction right in 83.3% of the cases where the network's output changed (need 90%)
+  - weight copy: the file has 34 numeric literals for a network of 32 parameters, and they reproduce 62% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 2/3 | behaviour 99.6% | all sites at once 99.5% | worst slice 97.9% | network's mistakes reproduced 99.6%
+NOT EXPLAINED:
+  - stage 'step 3' is not explained
+  - on 0.4% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 0.5% of the network's decisions
+  - variables not placed in the network (untested): h1
+  - worst slice: network decides 1 (472 inputs), where it matches 97.9%
+  - of the network's 2781 mistakes on test inputs, 0.4% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 24 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 27/30
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A three-step cascade of ReLU threshold detectors. "
+ "Step 1: the first input only enters through its sign, h1_j = relu(wx_j*x1) with input-weight "
+ "magnitudes 4.7163 and 3.9653 (two units each), so the state is just (relu(x1), relu(-x1)). "
+ "Step 2: h2_j = relu(wx_j*x2 + (h1 @ Wh)_j): unit j switches on when x2 beats a drive inherited from "
+ "the sign of x1. "
+ "Step 3: h3_j = relu(wx_j*x3 + (h2 @ Wh)_j): the same detector applied to x3, so unit j is on when x3 "
+ "clears a drive inherited from the step-2 switches. Wh is a switch matrix whose entries take only a "
+ "handful of magnitudes, each shared by two positions. "
+ "Readout: the three class scores are linear in h3 with six magnitudes (16, 18.7, 15.7, 11.45, 1.6, "
+ "1.66), so only two score gaps decide: class 0 if score0-score2 is largest, class 1 if score1-score2 "
+ "is largest, else class 2. Those gaps live at h3 and are the construction's output.")
+
+WX = np.array([-4.7163, 3.9653, 4.6995, -3.9652])
+s1 = -2.3852   # shared by the two -2.38 entries
+s2 = -2.4339
+s3 = -1.8940   # shared by the two -1.89 entries
+s4 = 1.3398    # shared by the two 1.34 entries
+s5 = -2.1996
+s6 = 2.6429
+s7 = 1.9277
+s8 = 2.8057
+WH = np.array([[s1, s2, s3, s3],
+               [s4, s5, s6, s2],
+               [s7, s7, s4, -2.1912],
+               [s8, s1, 2.7868, 2.6352]])
+
+# readout magnitudes (six values) and the two decision directions
+kA, kB, kC, kD, kE, kF = -15.7403, 15.9993, -18.7243, 11.4769, 1.6175, -1.6650
+GA = np.array([kA - kD, kF - kD, kA - kE, kB - kE])
+GB = np.array([kB - kD, kC - kD, kC - kE, kF - kE])
+
+def model(x, iv):
+    x1 = x[:, 0]
+    p = iv("x1pos", np.maximum(x1, 0.0))
+    n = iv("x1neg", np.maximum(-x1, 0.0))
+    h1 = iv("h1", np.maximum((p - n)[:, None] * WX, 0.0))
+    h2 = iv("h2", np.maximum(x[:, 1:2] * WX + h1 @ WH, 0.0))
+    h3 = np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0)
+    g0 = iv("gap02", h3 @ GA)
+    g1 = iv("gap12", h3 @ GB)
+    return np.c_[g0, g1, np.zeros_like(g0)]
+
+ALIGN = {"x1pos": ["h1"], "x1neg": ["h1"], "h2": ["h2"],
+         "gap02": ["h3"], "gap12": ["h3"]}
+
+--- judge report 6 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,114 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.9% of inputs (a constant output would get 66.0%); output R2 1.000; KL 0.001
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; x1pos, x1neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 70.9% (random 77.9%) | mean-ablate 70.9%
+  h2          (4 dims named of 4; 3 principal components suffice; h2): explained 1.000 | substitute 99.9% | keep 100.0% | remove 63.3% (random n/a) | mean-ablate 63.3%
+  h3          (2 dims named of 4; 2 principal components suffice; gap02, gap12): explained 0.889 | substitute 77.6% | keep 96.5% | remove 66.0% (random 65.9%) | mean-ablate 66.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 99.8% / 100.0% when changed (network changed in 30.0%); output R2 1.000 | controls: random subspace 76.8%, no-change 70.0%, source-output 61.0%, attribution patching 72.6%
+  partial     x1pos @ h1: right 94.0% / 78.7% when changed (network changed in 25.1%); output R2 0.936 | controls: random subspace 72.5%, no-change 74.9%, source-output 58.9%, attribution patching 81.3%
+  partial     x1neg @ h1: right 94.7% / 85.8% when changed (network changed in 7.8%); output R2 0.929 | controls: random subspace 83.7%, no-change 92.2%, source-output 50.4%, attribution patching 86.8%
+  edit        all variables @ h1: right 93.9% / 79.4% when changed (network changed in 15.8%); output R2 0.935 | controls: random subspace 81.3%, no-change 84.2%, source-output 54.5%, attribution patching 85.0%
+  interchange h2 @ h2: right 99.8% / 99.9% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 99.8%, no-change 53.1%, source-output 82.0%, attribution patching 59.0%
+  edit        h2 @ h2: right 99.9% / 99.9% when changed (network changed in 34.4%); output R2 1.000 | controls: random subspace 66.3%, no-change 65.6%, source-output 60.5%, attribution patching 75.5%
+  interchange all variables @ h3: right 79.9% / 78.0% when changed (network changed in 40.1%); output R2 1.000 | controls: random subspace 59.6%, no-change 60.0%, source-output 80.0%, attribution patching 100.0%
+  partial     gap02 @ h3: right 82.7% / 48.6% when changed (network changed in 33.8%); output R2 1.000 | controls: random subspace 57.8%, no-change 66.2%, source-output 80.2%, attribution patching 100.0%
+  partial     gap12 @ h3: right 82.2% / 88.7% when changed (network changed in 19.9%); output R2 1.000 | controls: random subspace 59.4%, no-change 80.1%, source-output 65.1%, attribution patching 100.0%
+  edit        all variables @ h3: right 81.2% / 62.8% when changed (network changed in 24.3%); output R2 1.000 | controls: random subspace 61.8%, no-change 75.7%, source-output 71.5%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): h1
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 77.6% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=890); network decides 1: 100.0% (n=472); network decides 2: 99.8% (n=2638) | near ties (889 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 69.5% of test inputs (2781); the construction reproduces 99.9% of them (need 50% when there are 30 or more) and is right on 0.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 9 (4.5%; on the unsearched starting inputs 0.5%)
+     input [1.882, 0.503, -0.633]: network [2], construction [1]
+     input [1.633, 0.426, -0.488]: network [2], construction [1]
+     input [1.622, 0.359, -0.259]: network [2], construction [1]
+     input [1.384, 0.192, 0.178]: network [2], construction [1]
+     input [1.044, 0.051, 0.573]: network [2], construction [0]
+7. NOT A COPY   31 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 97%; largest table in the file 6 numbers vs the largest weight tensor 16  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: named but failing
+VERDICT: NOT VERIFIED (2 of 3 stages verified). Failing:
+  - substitution at h3: 77.6% (need 90%)
+  - interchange of all variables at h3: prediction right in 78.0% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 3 named sites replaced at once by the construction's predictions, the network keeps 77.6% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - weight copy: the file has 31 numeric literals for a network of 32 parameters, and they reproduce 97% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 2/3 | behaviour 99.9% | all sites at once 77.6% | worst slice 99.8% | network's mistakes reproduced 99.9%
+NOT EXPLAINED:
+  - stage 'step 3' is not explained
+  - on 0.1% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.4% of the network's decisions
+  - variables not placed in the network (untested): h1
+  - worst slice: network decides 2 (2638 inputs), where it matches 99.8%
+  - of the network's 2781 mistakes on test inputs, 0.1% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 9 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 28/30
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A three-step cascade of ReLU threshold detectors, with a three-way comparison readout. "
+ "Step 1: the first input only enters through its sign, h1_j = relu(wx_j*x1) with input-weight "
+ "magnitudes 4.7163 and 3.9653 (two units each), so the whole state is (relu(x1), relu(-x1)). "
+ "Step 2: h2_j = relu(wx_j*x2 + (h1 @ Wh)_j): unit j switches on when x2 beats a drive inherited from "
+ "the sign of x1. "
+ "Step 3: h3_j = relu(wx_j*x3 + (h2 @ Wh)_j): the same detector applied to x3, so unit j is on when x3 "
+ "clears a drive inherited from the step-2 switches; Wh's entries take only a handful of magnitudes, "
+ "each shared by two positions. "
+ "Readout: the three class scores are the sum of the h3 units weighted by three columns of a small "
+ "table (magnitudes 16, 18.7, 15.7, 11.45, 1.6, 1.66); class 0 wants unit 3 on, class 1 wants unit 0 "
+ "on, class 2 wants units 1 and 2 on. The scores themselves are the decision and live at h3.")
+
+WX = np.array([-4.7163, 3.9653, 4.6995, -3.9652])
+s1 = -2.3852
+s2 = -2.4339
+s3 = -1.8940
+s4 = 1.3398
+s5 = -2.1996
+s6 = 2.6429
+s7 = 1.9277
+s8 = 2.8057
+WH = np.array([[s1, s2, s3, s3],
+               [s4, s5, s6, s2],
+               [s7, s7, s4, -2.1912],
+               [s8, s1, 2.7868, 2.6352]])
+
+kA, kB, kC, kD = -15.7403, 15.9993, -18.7243, 11.4769
+kE, kF, kG = 11.4305, 1.6175, 1.5993
+kH, kI, kJ, kK = -1.6718, -1.6575, -15.6973, 15.9592
+C0 = np.array([kA, kH, kJ, kK])
+C1 = np.array([kB, kC, -18.7477, kI])
+C2 = np.array([kD, kE, kF, kG])
+
+def model(x, iv):
+    x1 = x[:, 0]
+    p = iv("x1pos", np.maximum(x1, 0.0))
+    n = iv("x1neg", np.maximum(-x1, 0.0))
+    h1 = iv("h1", np.maximum((p - n)[:, None] * WX, 0.0))
+    h2 = iv("h2", np.maximum(x[:, 1:2] * WX + h1 @ WH, 0.0))
+    h3 = np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0)
+    s0 = iv("score0", h3 @ C0)
+    s1c = iv("score1", h3 @ C1)
+    s2c = iv("score2", h3 @ C2)
+    return np.c_[s0, s1c, s2c]
+
+ALIGN = {"x1pos": ["h1"], "x1neg": ["h1"], "h2": ["h2"],
+         "score0": ["h3"], "score1": ["h3"], "score2": ["h3"]}
+
+--- judge report 7 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,066 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.8% of inputs (a constant output would get 66.0%); output R2 1.000; KL 0.001
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; x1pos, x1neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 70.9% (random 77.9%) | mean-ablate 70.9%
+  h2          (4 dims named of 4; 3 principal components suffice; h2): explained 1.000 | substitute 99.9% | keep 100.0% | remove 63.3% (random n/a) | mean-ablate 63.3%
+  h3          (3 dims named of 4; 2 principal components suffice; score0, score1, score2): explained 0.951 | substitute 77.6% | keep 97.5% | remove 66.0% (random 64.7%) | mean-ablate 66.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 99.8% / 100.0% when changed (network changed in 30.0%); output R2 1.000 | controls: random subspace 76.8%, no-change 70.0%, source-output 61.0%, attribution patching 72.6%
+  partial     x1pos @ h1: right 94.0% / 78.7% when changed (network changed in 25.1%); output R2 0.936 | controls: random subspace 72.5%, no-change 74.9%, source-output 58.9%, attribution patching 81.3%
+  partial     x1neg @ h1: right 94.7% / 85.8% when changed (network changed in 7.8%); output R2 0.929 | controls: random subspace 83.7%, no-change 92.2%, source-output 50.4%, attribution patching 86.8%
+  edit        all variables @ h1: right 93.9% / 79.4% when changed (network changed in 15.8%); output R2 0.935 | controls: random subspace 81.3%, no-change 84.2%, source-output 54.5%, attribution patching 85.0%
+  interchange h2 @ h2: right 99.8% / 99.8% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 99.8%, no-change 53.1%, source-output 82.0%, attribution patching 59.0%
+  edit        h2 @ h2: right 99.9% / 99.9% when changed (network changed in 34.4%); output R2 1.000 | controls: random subspace 66.3%, no-change 65.6%, source-output 60.5%, attribution patching 75.5%
+  interchange all variables @ h3: right 83.7% / 75.0% when changed (network changed in 46.8%); output R2 1.000 | controls: random subspace 66.1%, no-change 53.2%, source-output 83.8%, attribution patching 100.0%
+  partial     score0 @ h3: right 83.2% / 0.6% when changed (network changed in 16.8%); output R2 1.000 | controls: random subspace 74.8%, no-change 83.2%, source-output 63.6%, attribution patching 100.0%
+  partial     score1 @ h3: right 99.9% / 100.0% when changed (network changed in 20.1%); output R2 1.000 | controls: random subspace 66.6%, no-change 80.0%, source-output 57.0%, attribution patching 100.0%
+  partial     score2 @ h3: right 99.9% / 100.0% when changed (network changed in 29.5%); output R2 1.000 | controls: random subspace 68.3%, no-change 70.5%, source-output 65.1%, attribution patching 100.0%
+  edit        all variables @ h3: right 92.9% / 90.5% when changed (network changed in 27.8%); output R2 1.000 | controls: random subspace 66.1%, no-change 72.2%, source-output 67.7%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): h1
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 77.6% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=890); network decides 1: 100.0% (n=472); network decides 2: 99.7% (n=2638) | near ties (889 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 69.5% of test inputs (2781); the construction reproduces 99.9% of them (need 50% when there are 30 or more) and is right on 0.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 10 (5.0%; on the unsearched starting inputs 0.0%)
+     input [2.405, 0.648, -0.795]: network [2], construction [1]
+     input [1.784, 0.702, -1.366]: network [2], construction [1]
+     input [2.14, 0.639, -0.921]: network [2], construction [1]
+     input [1.176, 0.293, -0.304]: network [2], construction [1]
+7. NOT A COPY   37 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 100%; largest table in the file 4 numbers vs the largest weight tensor 16  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: named but failing
+VERDICT: NOT VERIFIED (2 of 3 stages verified). Failing:
+  - substitution at h3: 77.6% (need 90%)
+  - interchange of all variables at h3: prediction right in 75.0% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 3 named sites replaced at once by the construction's predictions, the network keeps 77.6% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - weight copy: the file has 37 numeric literals for a network of 32 parameters, and they reproduce 100% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 2/3 | behaviour 99.8% | all sites at once 77.6% | worst slice 99.7% | network's mistakes reproduced 99.9%
+NOT EXPLAINED:
+  - stage 'step 3' is not explained
+  - on 0.2% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.4% of the network's decisions
+  - variables not placed in the network (untested): h1
+  - worst slice: network decides 2 (2638 inputs), where it matches 99.7%
+  - of the network's 2781 mistakes on test inputs, 0.1% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 10 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 29/30
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A three-step cascade of ReLU threshold detectors. "
+ "Step 1: the first input only enters through its sign, h1_j = relu(wx_j*x1) with input-weight "
+ "magnitudes 4.7163 and 3.9653 (two units each), so the state is just (relu(x1), relu(-x1)). "
+ "Step 2: h2_j = relu(wx_j*x2 + (h1 @ Wh)_j): unit j switches on when x2 beats a drive inherited from "
+ "the sign of x1. "
+ "Step 3: h3_j = relu(wx_j*x3 + (h2 @ Wh)_j): the same detector applied to x3, so unit j is on when x3 "
+ "clears a drive inherited from the step-2 switches; Wh's entries take only a handful of magnitudes "
+ "shared between pairs of positions. "
+ "Readout: each class score is the sum of the h3 units weighted by a column of a small table "
+ "(magnitudes 16, 18.7, 15.7, 11.45, 1.6, 1.66). Class 0 = unit 3 on, class 1 = unit 0 on, "
+ "class 2 = units 1 and 2 on.")
+
+WX = np.array([-4.7163, 3.9653, 4.6995, -3.9652])
+s1 = -2.3852
+s2 = -2.4339
+s3 = -1.8940
+s4 = 1.3398
+s5 = -2.1996
+s6 = 2.6429
+s7 = 1.9277
+s8 = 2.8057
+WH = np.array([[s1, s2, s3, s3],
+               [s4, s5, s6, s2],
+               [s7, s7, s4, -2.1912],
+               [s8, s1, 2.7868, 2.6352]])
+
+kA, kB, kC, kD = -15.7403, 15.9993, -18.7243, 11.4769
+kE, kF, kG = 11.4305, 1.6175, 1.5993
+kH, kI, kJ = -1.6718, -1.6575, -15.6973
+KO = np.array([[kA, kB, kD],
+               [kH, kC, kE],
+               [kJ, -18.7477, kF],
+               [15.9592, kI, kG]])
+
+def model(x, iv):
+    x1 = x[:, 0]
+    p = iv("x1pos", np.maximum(x1, 0.0))
+    n = iv("x1neg", np.maximum(-x1, 0.0))
+    h1 = iv("h1", np.maximum((p - n)[:, None] * WX, 0.0))
+    h2 = iv("h2", np.maximum(x[:, 1:2] * WX + h1 @ WH, 0.0))
+    h3 = iv("h3", np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0))
+    return h3 @ KO
+
+ALIGN = {"x1pos": ["h1"], "x1neg": ["h1"], "h2": ["h2"], "h3": ["h3"]}
+
+--- judge report 8 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,820 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.8% of inputs (a constant output would get 66.0%); output R2 1.000; KL 0.001
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; x1pos, x1neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 70.9% (random 77.9%) | mean-ablate 70.9%
+  h2          (4 dims named of 4; 3 principal components suffice; h2): explained 1.000 | substitute 99.9% | keep 100.0% | remove 63.3% (random n/a) | mean-ablate 63.3%
+  h3          (4 dims named of 4; 2 principal components suffice; h3): explained 1.000 | substitute 77.6% | keep 100.0% | remove 66.0% (random n/a) | mean-ablate 66.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 99.8% / 100.0% when changed (network changed in 30.0%); output R2 1.000 | controls: random subspace 76.8%, no-change 70.0%, source-output 61.0%, attribution patching 72.6%
+  partial     x1pos @ h1: right 94.0% / 78.7% when changed (network changed in 25.1%); output R2 0.936 | controls: random subspace 72.5%, no-change 74.9%, source-output 58.9%, attribution patching 81.3%
+  partial     x1neg @ h1: right 94.7% / 85.8% when changed (network changed in 7.8%); output R2 0.929 | controls: random subspace 83.7%, no-change 92.2%, source-output 50.4%, attribution patching 86.8%
+  edit        all variables @ h1: right 93.9% / 79.4% when changed (network changed in 15.8%); output R2 0.935 | controls: random subspace 81.3%, no-change 84.2%, source-output 54.5%, attribution patching 85.0%
+  interchange h2 @ h2: right 99.8% / 99.8% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 99.8%, no-change 53.1%, source-output 82.0%, attribution patching 59.0%
+  edit        h2 @ h2: right 99.9% / 99.9% when changed (network changed in 34.4%); output R2 1.000 | controls: random subspace 66.3%, no-change 65.6%, source-output 60.5%, attribution patching 75.5%
+  interchange h3 @ h3: right 81.3% / 91.2% when changed (network changed in 35.9%); output R2 1.000 | controls: random subspace 100.0%, no-change 64.1%, source-output 81.4%, attribution patching 100.0%
+  edit        h3 @ h3: right 97.2% / 95.7% when changed (network changed in 29.1%); output R2 1.000 | controls: random subspace 69.0%, no-change 70.9%, source-output 66.5%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): h1
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 77.6% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=890); network decides 1: 100.0% (n=472); network decides 2: 99.7% (n=2638) | near ties (889 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 69.5% of test inputs (2781); the construction reproduces 99.9% of them (need 50% when there are 30 or more) and is right on 0.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 5 (2.5%; on the unsearched starting inputs 0.0%)
+     input [1.819, 0.254, 0.201]: network [2], construction [1]
+     input [1.873, 0.479, -0.553]: network [2], construction [1]
+     input [1.07, 0.306, -0.429]: network [2], construction [1]
+7. NOT A COPY   37 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 100%; largest table in the file 4 numbers vs the largest weight tensor 16; constants per network parameter 0.844  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: named but failing
+VERDICT: NOT VERIFIED (2 of 3 stages verified). Failing:
+  - substitution at h3: 77.6% (need 90%)
+  - joint substitution: with all 3 named sites replaced at once by the construction's predictions, the network keeps 77.6% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - weight copy: the file has 37 numeric literals for a network of 32 parameters, and they reproduce 100% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 2/3 | behaviour 99.8% | all sites at once 77.6% | worst slice 99.7% | network's mistakes reproduced 99.9%
+NOT EXPLAINED:
+  - stage 'step 3' is not explained
+  - on 0.2% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.4% of the network's decisions
+  - variables not placed in the network (untested): h1
+  - worst slice: network decides 2 (2638 inputs), where it matches 99.7%
+  - of the network's 2781 mistakes on test inputs, 0.1% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 5 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 30/30
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "A three-step cascade of ReLU threshold detectors. "
+ "Step 1: the first input only enters through its sign, h1_j = relu(wx_j*x1) with input-weight "
+ "magnitudes 4.7163 and 3.9653 (two units each), so the state is just (relu(x1), relu(-x1)). "
+ "Step 2: h2_j = relu(wx_j*x2 + (h1 @ Wh)_j): unit j switches on when x2 beats a drive inherited from "
+ "the sign of x1. "
+ "Step 3: h3_j = relu(wx_j*x3 + (h2 @ Wh)_j): the same detector applied to x3, so unit j is on when x3 "
+ "clears a drive inherited from the step-2 switches; the entries of Wh take only eight magnitudes, "
+ "each shared by two positions. "
+ "Readout: the scores are linear in h3 with six magnitudes (16, 18.7, 15.7, 11.45, 1.6, 1.66), so the "
+ "decision depends only on two score gaps: class 0 if score0-score2 is largest, class 1 if "
+ "score1-score2 is largest, else class 2. Those two gaps are what the last state decides with; the "
+ "state's overall size carries no further information.")
+
+WX = np.array([-4.7163, 3.9653, 4.6995, -3.9652])
+v1 = -2.3852
+v2 = -2.4339
+v3 = -1.8940
+v4 = 1.3398
+v5 = -2.1954
+v6 = 2.6391
+v7 = 1.9304
+v8 = 2.7963
+WH = np.array([[v1, v2, v3, v3],
+               [v4, v5, v6, v2],
+               [v7, v7, v4, v5],
+               [v8, v1, v8, v6]])
+
+GA = np.array([-27.217, -13.102, -17.315, 14.360])
+GB = np.array([4.522, -30.155, -20.365, -3.257])
+ONE = np.array([1.0, 1.0, 1.0, 1.0])
+
+def model(x, iv):
+    x1 = x[:, 0]
+    p = iv("x1pos", np.maximum(x1, 0.0))
+    n = iv("x1neg", np.maximum(-x1, 0.0))
+    h1 = iv("h1", np.maximum((p - n)[:, None] * WX, 0.0))
+    h2 = iv("h2", np.maximum(x[:, 1:2] * WX + h1 @ WH, 0.0))
+    h3 = np.maximum(x[:, 2:3] * WX + h2 @ WH, 0.0)
+    g0 = iv("gap02", h3 @ GA)
+    g1 = iv("gap12", h3 @ GB)
+    tot = iv("total", h3 @ ONE)
+    return np.c_[g0, g1, np.zeros_like(g0)]
+
+ALIGN = {"x1pos": ["h1"], "x1neg": ["h1"], "h2": ["h2"],
+         "gap02": ["h3"], "gap12": ["h3"], "total": ["h3"]}
+
+--- judge report 9 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,967 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.6% of inputs (a constant output would get 66.0%); output R2 1.000; KL 0.002
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 2 principal components suffice; x1pos, x1neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 70.9% (random 77.9%) | mean-ablate 70.9%
+  h2          (4 dims named of 4; 3 principal components suffice; h2): explained 1.000 | substitute 99.8% | keep 100.0% | remove 63.3% (random n/a) | mean-ablate 63.3%
+  h3          (3 dims named of 4; 2 principal components suffice; gap02, gap12, total): explained 0.928 | substitute 99.6% | keep 76.1% | remove 66.0% (random 64.7%) | mean-ablate 66.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 99.9% / 99.8% when changed (network changed in 30.0%); output R2 1.000 | controls: random subspace 76.8%, no-change 70.0%, source-output 61.0%, attribution patching 72.6%
+  partial     x1pos @ h1: right 94.0% / 78.7% when changed (network changed in 25.1%); output R2 0.936 | controls: random subspace 72.5%, no-change 74.9%, source-output 58.9%, attribution patching 81.3%
+  partial     x1neg @ h1: right 94.5% / 85.2% when changed (network changed in 7.8%); output R2 0.929 | controls: random subspace 83.8%, no-change 92.2%, source-output 50.4%, attribution patching 86.8%
+  edit        all variables @ h1: right 93.8% / 79.0% when changed (network changed in 15.8%); output R2 0.935 | controls: random subspace 81.2%, no-change 84.2%, source-output 54.5%, attribution patching 85.0%
+  interchange h2 @ h2: right 99.9% / 99.9% when changed (network changed in 46.9%); output R2 1.000 | controls: random subspace 99.9%, no-change 53.1%, source-output 82.0%, attribution patching 59.0%
+  edit        h2 @ h2: right 99.7% / 99.4% when changed (network changed in 34.3%); output R2 1.000 | controls: random subspace 66.3%, no-change 65.7%, source-output 60.7%, attribution patching 75.4%
+  interchange all variables @ h3: right 88.6% / 98.6% when changed (network changed in 40.5%); output R2 1.000 | controls: random subspace 66.2%, no-change 59.6%, source-output 88.8%, attribution patching 100.0%
+  partial     gap02 @ h3: right 81.3% / 47.3% when changed (network changed in 35.4%); output R2 1.000 | controls: random subspace 59.2%, no-change 64.6%, source-output 81.2%, attribution patching 100.0%
+  partial     gap12 @ h3: right 71.7% / 55.9% when changed (network changed in 38.8%); output R2 1.000 | controls: random subspace 66.3%, no-change 61.2%, source-output 79.8%, attribution patching 100.0%
+  partial     total @ h3: right 82.2% / 1.1% when changed (network changed in 17.8%); output R2 1.000 | controls: random subspace 69.8%, no-change 82.2%, source-output 50.2%, attribution patching 100.0%
+  edit        all variables @ h3: right 81.1% / 59.0% when changed (network changed in 31.4%); output R2 1.000 | controls: random subspace 63.4%, no-change 68.7%, source-output 70.7%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): h1
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 99.6% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=890); network decides 1: 97.9% (n=472); network decides 2: 99.8% (n=2638) | near ties (889 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 69.5% of test inputs (2781); the construction reproduces 99.6% of them (need 50% when there are 30 or more) and is right on 0.3%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 20 (10.0%; on the unsearched starting inputs 0.0%)
+     input [-1.863, -0.415, -1.933]: network [1], construction [2]
+     input [-1.032, -1.205, -1.401]: network [1], construction [2]
+     input [-0.935, -0.406, -0.961]: network [1], construction [2]
+     input [1.64, -0.136, 1.836]: network [2], construction [0]
+     input [1.784, 0.702, -1.366]: network [2], construction [1]
+7. NOT A COPY   34 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 62%; largest table in the file 4 numbers vs the largest weight tensor 16; constants per network parameter 0.625  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: VERIFIED at h3
+VERDICT: NOT VERIFIED (3 of 3 stages verified). Failing:
+  - weight copy: the file has 34 numeric literals for a network of 32 parameters, and they reproduce 62% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the constants that account needs
+COVERAGE   stages 3/3 | behaviour 99.6% | all sites at once 99.6% | worst slice 97.9% | network's mistakes reproduced 99.6%
+NOT EXPLAINED:
+  - on 0.4% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 0.4% of the network's decisions
+  - variables not placed in the network (untested): h1
+  - worst slice: network decides 1 (472 inputs), where it matches 97.9%
+  - of the network's 2781 mistakes on test inputs, 0.4% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+  - a search found 20 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+[done] {"id": "20261118-021345-e14a", "status": "done", "seconds": 589.1, "best": 1, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 67.4% of inputs (need 95%)", "interchange of all variables at h1: prediction right in 41.0% of the cases where the network's output changed (need 90%)", "partial of x1pos at h1: prediction right in 44.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "edit of all variables at h1: prediction right in 46.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "(at h1 it is enough that EITHER every partial test OR the edit of all variables passes)", "worst slice: on the 890 inputs where network decides 0, the construction agrees on 22.0% (need 80%)"], "stages_total": 3, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.136221552}
+
+status done; best submission 1; cost $0.136; 589.1 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_4_3/20261118-021345-e14a

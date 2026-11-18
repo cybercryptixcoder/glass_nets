@@ -790,3 +790,433 @@ rank Wh 8 1.0
 ===== step 21/30
 
 [note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """The first hidden state is exactly relu(x1*wx); since wx has mixed signs it equals
+p*wx_pos + n*wx_neg with p = relu(x1), n = relu(-x1) -- i.e. two numbers (the positive and the
+negative part of the first input) times two fixed 8-dim patterns. From there the state is
+amplified by the recurrence (spectral radius ~3.5) and the readout difference between classes
+6 and 7 is nearly orthogonal to the amplified direction, so the decision is the sign of a
+delicately balanced evidence score. To first order that score is a weighted sum of the inputs
+whose weights fall off geometrically with the step (each later input is amplified by fewer
+recurrence steps): about (-50,-20,-7,-3,+0.5,-0.9,+0.6,+0.5) x_t. Only classes 6 and 7 are
+ever competitive (their difference is the score; class 7 wins when the score is positive)."""
+
+WX = np.array([-1.2027, -0.4672, -0.1506, 0.6188, 0.0032, -0.2073, 0.0302, 0.0040])
+WXP = np.maximum(WX, 0.0)
+# evidence direction in input space: class 7 wins when sum_t ev[t]*x_t > 0
+EV = np.array([1.3614, 0.6840, 0.3391, 0.1394, 0.0069, 0.0103, 0.0207, -0.0009])
+
+
+def model(x, iv):
+    B = x.shape[0]
+    p1 = iv("x1_pos", np.maximum(x[:, 0], 0.0))
+    n1 = iv("x1_neg", np.maximum(-x[:, 0], 0.0))
+    score = iv("score0", np.zeros(B))
+    # the first input's contribution, read from the state variables so that an
+    # intervention on the step-1 state moves the score the way the network does
+    x1_eff = p1 - n1
+    s = iv("score1", score + EV[0] * x1_eff)
+    for t in range(1, 8):
+        s = iv("score%d" % (t + 1), s + EV[t] * x[:, t])
+    out = np.zeros((B, 8))
+    out[:, 6] = -np.abs(s) * 0.0 - s
+    out[:, 7] = s
+    return out
+
+
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 3 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,751 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 95.0% of inputs (a constant output would get 47.0%); output R2 -0.455; KL 1.170
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 65.0% (random 82.7%) | mean-ablate 65.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 95.6% / 94.7% when changed (network changed in 41.4%); output R2 -0.461 | controls: random subspace 61.5%, no-change 58.6%, source-output 74.9%, attribution patching 57.0%
+  partial     x1_pos @ h1: right 93.2% / 80.3% when changed (network changed in 24.1%); output R2 -0.427 | controls: random subspace 76.1%, no-change 75.8%, source-output 64.9%, attribution patching 73.7%
+  partial     x1_neg @ h1: right 92.5% / 91.8% when changed (network changed in 17.6%); output R2 -0.445 | controls: random subspace 77.0%, no-change 82.4%, source-output 61.8%, attribution patching 79.8%
+  edit        all variables @ h1: right 92.8% / 85.2% when changed (network changed in 20.6%); output R2 -0.430 | controls: random subspace 80.7%, no-change 79.4%, source-output 63.3%, attribution patching 77.2%
+Variables in model() with no site in ALIGN (not tested): score0, score1, score2, score3, score4, score5, score6, score7, score8
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 6: 92.3% (n=2121); network decides 7: 98.0% (n=1879) | near ties (400 least clear inputs, no requirement): 78.8%
+   the network's own mistakes: it is wrong on 87.5% of test inputs (3502); the construction reproduces 94.8% of them (need 50% when there are 30 or more) and is right on 0.7%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 93 (46.5%; on the unsearched starting inputs 3.0%)
+     input [-1.558, 3.338, 1.605, 0.42, -1.054, 0.325, 0.647, -0.521]: network [6], construction [7]
+     input [-0.85, -0.361, 1.877, 0.682, -0.087, 3.166, -0.21, -0.421]: network [7], construction [6]
+     input [-0.581, 1.905, -0.794, 1.964, -0.533, -0.69, 0.97, 0.24]: network [6], construction [7]
+     input [1.189, -2.104, 1.209, -0.645, 0.766, 0.569, 0.425, -0.895]: network [6], construction [7]
+     input [-0.718, 2.095, -0.45, 1.392, -0.193, -0.702, 0.194, 1.686]: network [6], construction [7]
+7. NOT A COPY   30 numeric literals in the file; network parameters 136; share of its weights (|w| >= 0.05) the literals reproduce: 9%; largest table in the file 8 numbers vs the largest weight tensor 64
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: NOT VERIFIED (1 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 95.0% of inputs (need 95%)
+COVERAGE   stages 1/8 | behaviour 95.0% | all sites at once 100.0% | worst slice 92.3% | network's mistakes reproduced 94.8%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 5.0% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): score0, score1, score2, score3, score4, score5, score6, score7, score8
+  - worst slice: network decides 6 (2121 inputs), where it matches 92.3%
+  - of the network's 3502 mistakes on test inputs, 5.2% are not reproduced
+  - a search found 93 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 22/30
+
+--- python ---
+import numpy as np
+Wh=W['W_h']; Wx=W['W_x'][0]; Wo=W['W_o']
+Xn = X; A = acts(Xn); d = Wo[:,6]-Wo[:,7]
+s = A['h8']@d; y=(s>0)
+def fit(F, tr=np.arange(6000)):
+    c,_,_,_ = np.linalg.lstsq(F[tr], s[tr], rcond=None)
+    p = F@c
+    r2 = 1-((s-p)**2).sum()/((s-s.mean())**2).sum()
+    acc = ((p>0)==y).mean()
+    return c, r2, acc
+print("X only", fit(Xn)[1:])
+for j in range(4):
+    m = Xn[:,j]>0
+    c1,r1,a1 = fit(Xn[m]); c2,r2_,a2 = fit(Xn[~m])
+    print("split sign x%d"%(j+1), round(r1,3), round(r2_,3), round((a1*m.sum()+a2*(~m).sum())/len(Xn),4))
+F = np.hstack([np.maximum(Xn,0), np.maximum(-Xn,0)])
+print("relu both", fit(F)[1:])
+
+--- output (0.01 s) ---
+X only (np.float64(0.8118681350671529), np.float64(0.94075))
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 14, in <module>
+  File "<your code>", line 6, in fit
+IndexError: index 4002 is out of bounds for axis 0 with size 4002
+
+
+===== step 23/30
+
+--- python ---
+import numpy as np
+print(X.shape)
+A = acts(X[:4000]); print(A['h8'].shape)
+Wh=W['W_h']; Wx=W['W_x'][0]; Wo=W['W_o']
+Xn=X[:4000]; s=A['h8']@(Wo[:,6]-Wo[:,7]); y=(s>0)
+def fit(F, tr=np.arange(3000)):
+    c,_,_,_ = np.linalg.lstsq(F[tr], s[tr], rcond=None); p=F@c
+    return c, 1-((s-p)**2).sum()/((s-s.mean())**2).sum(), ((p>0)==y).mean()
+print("X only", fit(Xn)[1:])
+for j in range(4):
+    m = Xn[:,j]>0
+    c1,r1,a1 = fit(Xn[m]); c2,r2,a2 = fit(Xn[~m])
+    print("split x%d"%(j+1), round(r1,3), round(r2,3), round((a1*m.sum()+a2*(~m).sum())/len(Xn),4), c1.round(1), c2.round(1))
+F = np.hstack([np.maximum(Xn,0), np.maximum(-Xn,0)])
+print("relu both", fit(F)[1:])
+
+--- output (0.0 s) ---
+(8000, 8)
+(4000, 8)
+X only (np.float64(0.8094677161520646), np.float64(0.93675))
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 12, in <module>
+  File "<your code>", line 7, in fit
+IndexError: index 2010 is out of bounds for axis 0 with size 2010
+
+
+===== step 24/30
+
+--- python ---
+import numpy as np
+Wh=W['W_h']; Wx=W['W_x'][0]; Wo=W['W_o']
+Xn=X[:4000]; A=acts(Xn); s=A['h8']@(Wo[:,6]-Wo[:,7]); y=(s>0)
+def fit(F):
+    c,_,_,_ = np.linalg.lstsq(F, s, rcond=None); p=F@c
+    return c, 1-((s-p)**2).sum()/((s-s.mean())**2).sum(), ((p>0)==y).mean()
+for j in range(4):
+    m = Xn[:,j]>0
+    c1,r1,a1 = fit(Xn[m]); c2,r2,a2 = fit(Xn[~m])
+    print("split x%d"%(j+1), round(r1,3), round(r2,3), round((a1*m.sum()+a2*(~m).sum())/len(Xn),4))
+    print("   ", c1.round(1), c2.round(1))
+F = np.hstack([np.maximum(Xn,0), np.maximum(-Xn,0)])
+print("relu both: r2", round(fit(F)[1],4), "acc", round(fit(F)[2],4), fit(F)[0].round(1))
+
+--- output (0.0 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 9, in <module>
+  File "<your code>", line 5, in fit
+  File "/usr/local/lib/python3.13/dist-packages/numpy/linalg/_linalg.py", line 2524, in lstsq
+    raise LinAlgError('Incompatible dimensions')
+numpy.linalg.LinAlgError: Incompatible dimensions
+
+
+===== step 25/30
+
+--- python ---
+import numpy as np
+Wh=W['W_h']; Wx=W['W_x'][0]; Wo=W['W_o']
+Xn=X[:4000]; A=acts(Xn); s=A['h8']@(Wo[:,6]-Wo[:,7]); y=(s>0)
+def fit(F, mask):
+    c,_,_,_ = np.linalg.lstsq(F[mask], s[mask], rcond=None); p=F@c
+    return c, 1-((s[mask]-p[mask])**2).sum()/((s[mask]-s[mask].mean())**2).sum(), ((p[mask]>0)==y[mask]).mean()
+one=np.ones(len(Xn),bool)
+for j in range(4):
+    m = Xn[:,j]>0
+    c1,r1,a1 = fit(Xn, m); c2,r2,a2 = fit(Xn, ~m)
+    print("split x%d"%(j+1), round(r1,3), round(r2,3), round((a1*m.sum()+a2*(~m).sum())/len(Xn),4))
+    print("   ", c1.round(1), c2.round(1))
+F = np.hstack([np.maximum(Xn,0), np.maximum(-Xn,0)])
+c,r_,a = fit(F,one); print("relu both: r2", round(r_,4), "acc", round(a,4)); print(c.round(1))
+
+--- output (0.01 s) ---
+split x1 0.955 0.839 0.9452
+    [-69.7 -31.2  -8.9  -3.2   1.1  -0.1   1.5   0.3] [-30.1  -8.8  -6.1  -2.5  -0.5  -1.4   0.    0.3]
+split x2 0.911 0.767 0.9012
+    [-58.9 -29.9  -8.7  -2.4   0.4  -0.1   1.1   0.2] [-40.6  -9.9  -5.2  -3.6   0.8  -1.4   0.4  -0. ]
+split x3 0.872 0.827 0.8882
+    [-51.8 -21.4 -19.1  -4.3   0.6  -0.3   1.6   1.1] [-47.7 -18.6   3.7  -1.5   0.7  -1.1  -0.   -0.2]
+split x4 0.854 0.837 0.8872
+    [-50.8 -19.6  -8.1 -13.5  -0.2  -0.8   1.2   0.6] [-48.6 -20.6  -6.8   7.8   1.2  -0.9   0.1   0.5]
+relu both: r2 0.9301 acc 0.9118
+[-72.5 -15.9  -7.5  -1.8   0.1  -0.5   0.8  -0.3  26.4  25.2   8.1   3.9  -0.7   0.9  -0.6  -1.4]
+
+
+===== step 26/30
+
+--- python ---
+import numpy as np
+Wh=W['W_h']; Wx=W['W_x'][0]; Wo=W['W_o']
+Xn=X[:6000]; A=acts(Xn); s=A['h8']@(Wo[:,6]-Wo[:,7]); y=(s>0).astype(float)
+Xt=X[6000:8000]; At=acts(Xt); st=At['h8']@(Wo[:,6]-Wo[:,7]); yt=(st>0).astype(float)
+def feats(Z): return np.hstack([Z, np.maximum(Z,0), np.maximum(-Z,0)])
+F=feats(Xn); Ft=feats(Xt)
+w=np.zeros(F.shape[1])
+for it in range(3000):
+    p=1/(1+np.exp(-F@w))
+    g=F.T@(p-y)/len(y) + 1e-4*w
+    w-= 0.5*g
+def acc(F,y): return ((F@w>0)==(y>0)).mean()
+print("train",acc(F,y).round(4),"test",acc(Ft,yt).round(4))
+print(w.round(2))
+np.save('/tmp/w.npy', w)
+
+--- output (0.41 s) ---
+train 0.9782 test 0.9705
+[-7.58 -3.8  -1.89 -0.76 -0.27 -0.17  0.02  0.   -3.72  0.35 -1.35 -0.48 -0.23 -0.12 -0.02 -0.03  3.85  4.15  0.54  0.27  0.04  0.05 -0.04 -0.03]
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 15, in <module>
+  File "/usr/local/lib/python3.13/dist-packages/numpy/lib/_npyio_impl.py", line 568, in save
+    file_ctx = open(file, "wb")
+TypeError: 'NoneType' object is not callable
+
+
+===== step 27/30
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """Step 1 is exact: h1 = relu(x1*wx) = p*wx_pos + n*wx_neg with p = relu(x1), n = relu(-x1),
+so the step-1 state holds exactly two numbers: the positive and the negative part of the first
+input, each scaled by a fixed 8-dim pattern. From there the recurrence amplifies the state by a
+factor of ~3.5 per step along one dominant direction, while the readout difference between the
+only two competitive classes (6 and 7) is nearly orthogonal to that dominant direction. The
+decision is therefore the sign of a finely balanced evidence score: a mostly-linear weighted sum
+of the inputs whose weights decay with the step (an earlier input is amplified by more recurrence
+steps), corrected by the rectification (only the positive/negative part of each input is passed
+on, which is why each input enters once linearly and once through its two half-wave rectified
+parts). Inputs at later steps barely matter. Class 7 wins when the score is positive."""
+
+WX = np.array([-1.2027, -0.4672, -0.1506, 0.6188, 0.0032, -0.2073, 0.0302, 0.0040])
+# evidence weights: direct part, positive-part correction, negative-part correction
+WL = np.array([-7.58, -3.80, -1.89, -0.76, -0.27, -0.17, 0.02, 0.00])
+WP = np.array([-3.72, 0.35, -1.35, -0.48, -0.23, -0.12, -0.02, -0.03])
+WN = np.array([3.85, 4.15, 0.54, 0.27, 0.04, 0.05, -0.04, -0.03])
+
+
+def model(x, iv):
+    B = x.shape[0]
+    p1 = iv("x1_pos", np.maximum(x[:, 0], 0.0))
+    n1 = iv("x1_neg", np.maximum(-x[:, 0], 0.0))
+    x1 = iv("x1", p1 - n1)
+    u = np.stack([x1] + [x[:, t] for t in range(1, 8)], axis=1)
+    pos = iv("pos_parts", np.maximum(u, 0.0))
+    neg = iv("neg_parts", np.maximum(-u, 0.0))
+    level = iv("level", np.zeros(B))
+    s = iv("lin", level + u @ WL)
+    s = iv("score", s + pos @ WP + neg @ WN)
+    out = np.zeros((B, 8))
+    out[:, 6] = -s
+    out[:, 7] = s
+    return out
+
+
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 4 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,917 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 2.4% of inputs (a constant output would get 47.0%); output R2 -0.456; KL 20.877
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 65.0% (random 82.7%) | mean-ablate 65.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 2.5% / 2.8% when changed (network changed in 41.4%); output R2 -0.462 | controls: random subspace 38.2%, no-change 58.6%, source-output 74.9%, attribution patching 57.0%
+  partial     x1_pos @ h1: right 6.2% / 18.0% when changed (network changed in 24.1%); output R2 -0.428 | controls: random subspace 24.4%, no-change 75.8%, source-output 64.9%, attribution patching 73.7%
+  partial     x1_neg @ h1: right 6.0% / 5.4% when changed (network changed in 17.6%); output R2 -0.446 | controls: random subspace 22.6%, no-change 82.4%, source-output 61.8%, attribution patching 79.8%
+  edit        all variables @ h1: right 6.2% / 12.4% when changed (network changed in 20.6%); output R2 -0.431 | controls: random subspace 18.9%, no-change 79.4%, source-output 63.3%, attribution patching 77.2%
+Variables in model() with no site in ALIGN (not tested): x1, pos_parts, neg_parts, level, lin, score
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 6: 1.8% (n=2121); network decides 7: 3.1% (n=1879) | near ties (400 least clear inputs, no requirement): 16.0%
+   the network's own mistakes: it is wrong on 87.5% of test inputs (3502); the construction reproduces 2.5% of them (need 50% when there are 30 or more) and is right on 14.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 200 (100.0%; on the unsearched starting inputs 89.5%)
+     input [-2.783, -3.101, -0.581, -1.96, -1.673, 0.787, 0.906, -0.884]: network [6], construction [7]
+     input [3.746, 0.824, 3.215, 1.023, 0.862, 0.653, 1.168, 1.152]: network [7], construction [6]
+     input [-3.041, -1.378, -1.709, -1.17, -1.768, 0.131, 3.14, 0.408]: network [6], construction [7]
+     input [-2.715, -1.996, -0.853, -1.3, -1.417, 1.812, -0.913, -2.138]: network [6], construction [7]
+     input [3.782, 1.543, 0.139, 1.467, -0.797, -0.631, 0.749, 2.233]: network [7], construction [6]
+7. NOT A COPY   45 numeric literals in the file; network parameters 136; share of its weights (|w| >= 0.05) the literals reproduce: 12%; largest table in the file 8 numbers vs the largest weight tensor 64
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: NOT VERIFIED (0 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 2.4% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 2.8% of the cases where the network's output changed (need 90%)
+  - partial of x1_pos at h1: prediction right in 18.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of x1_neg at h1: prediction right in 5.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 12.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - worst slice: on the 2121 inputs where network decides 6, the construction agrees on 1.8% (need 80%)
+  - the network's own mistakes: on the 3502 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 2.5% (need 50%); it is right on 14.1%: it explains the task, not this network
+COVERAGE   stages 0/8 | behaviour 2.4% | all sites at once 100.0% | worst slice 1.8% | network's mistakes reproduced 2.5%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 97.6% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): x1, pos_parts, neg_parts, level, lin, score
+  - worst slice: network decides 6 (2121 inputs), where it matches 1.8%
+  - of the network's 3502 mistakes on test inputs, 97.5% are not reproduced
+  - a search found 200 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 28/30
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """Step 1 is exact: h1 = relu(x1*wx) = p*wx_pos + n*wx_neg with p = relu(x1), n = relu(-x1),
+so the step-1 state holds exactly two numbers: the positive and the negative part of the first
+input, each scaling a fixed 8-dim pattern. From there the recurrence amplifies the state by a
+factor of ~3.5 per step along one dominant direction, while the readout difference between the
+only two competitive classes (6 and 7) is nearly orthogonal to that dominant direction. The
+decision is therefore the sign of a finely balanced evidence score: a mainly linear weighted sum
+of the inputs whose weights decay with the step (an earlier input is amplified by more recurrence
+steps), plus a rectification correction - only the positive/negative part of each input is passed
+on, so each input enters once linearly and once through its two half-wave-rectified parts.
+Inputs at later steps barely matter. The score is positive for class 6 (the majority class)
+and negative for class 7."""
+
+WX = np.array([-1.2027, -0.4672, -0.1506, 0.6188, 0.0032, -0.2073, 0.0302, 0.0040])
+# evidence weights backing class 6: direct part, positive-part correction, negative-part correction
+WL = np.array([-7.58, -3.80, -1.89, -0.76, -0.27, -0.17, 0.02, 0.00])
+WP = np.array([-3.72, 0.35, -1.35, -0.48, -0.23, -0.12, -0.02, -0.03])
+WN = np.array([3.85, 4.15, 0.54, 0.27, 0.04, 0.05, -0.04, -0.03])
+
+
+def model(x, iv):
+    B = x.shape[0]
+    p1 = iv("x1_pos", np.maximum(x[:, 0], 0.0))
+    n1 = iv("x1_neg", np.maximum(-x[:, 0], 0.0))
+    x1 = iv("x1", p1 - n1)
+    u = np.stack([x1] + [x[:, t] for t in range(1, 8)], axis=1)
+    pos = iv("pos_parts", np.maximum(u, 0.0))
+    neg = iv("neg_parts", np.maximum(-u, 0.0))
+    level = iv("level", np.zeros(B))
+    s = iv("lin", level + u @ WL)
+    s = iv("score", s + pos @ WP + neg @ WN)
+    out = np.zeros((B, 8))
+    out[:, 6] = s
+    out[:, 7] = -s
+    return out
+
+
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 5 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,962 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 97.6% of inputs (a constant output would get 47.0%); output R2 -0.455; KL 0.248
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 65.0% (random 82.7%) | mean-ablate 65.0%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 97.5% / 97.2% when changed (network changed in 41.4%); output R2 -0.461 | controls: random subspace 61.8%, no-change 58.6%, source-output 74.9%, attribution patching 57.0%
+  partial     x1_pos @ h1: right 93.8% / 82.0% when changed (network changed in 24.1%); output R2 -0.427 | controls: random subspace 75.6%, no-change 75.8%, source-output 64.9%, attribution patching 73.7%
+  partial     x1_neg @ h1: right 94.0% / 94.6% when changed (network changed in 17.6%); output R2 -0.445 | controls: random subspace 77.5%, no-change 82.4%, source-output 61.8%, attribution patching 79.8%
+  edit        all variables @ h1: right 93.8% / 87.6% when changed (network changed in 20.6%); output R2 -0.429 | controls: random subspace 81.0%, no-change 79.4%, source-output 63.3%, attribution patching 77.2%
+Variables in model() with no site in ALIGN (not tested): x1, pos_parts, neg_parts, level, lin, score
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 6: 98.2% (n=2121); network decides 7: 96.9% (n=1879) | near ties (400 least clear inputs, no requirement): 84.0%
+   the network's own mistakes: it is wrong on 87.5% of test inputs (3502); the construction reproduces 97.5% of them (need 50% when there are 30 or more) and is right on 0.3%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 55 (27.5%; on the unsearched starting inputs 1.5%)
+     input [-0.85, -0.361, 1.877, 0.682, -0.087, 3.166, -0.21, -0.421]: network [7], construction [6]
+     input [-0.508, -0.458, 1.792, -0.01, -0.53, 0.938, -1.026, -1.212]: network [7], construction [6]
+     input [-0.354, -0.448, 0.276, 2.378, 0.786, 0.205, 0.192, -0.083]: network [7], construction [6]
+     input [-0.332, -0.351, 0.752, 0.873, 1.234, 0.632, -0.019, -0.361]: network [7], construction [6]
+     input [-0.387, -0.286, 1.143, 0.174, 1.92, -0.547, 0.37, 0.736]: network [7], construction [6]
+7. NOT A COPY   45 numeric literals in the file; network parameters 136; share of its weights (|w| >= 0.05) the literals reproduce: 12%; largest table in the file 8 numbers vs the largest weight tensor 64
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: VERIFIED at every site it names, but INCOMPLETE: 1 of 8 stages explained.
+COVERAGE   stages 1/8 | behaviour 97.6% | all sites at once 100.0% | worst slice 96.9% | network's mistakes reproduced 97.5%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 2.4% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): x1, pos_parts, neg_parts, level, lin, score
+  - worst slice: network decides 7 (1879 inputs), where it matches 96.9%
+  - of the network's 3502 mistakes on test inputs, 2.5% are not reproduced
+  - a search found 55 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 29/30
+
+--- python ---
+import numpy as np
+Wh=W['W_h']; Wo=W['W_o']
+Xn=X[:6000]; A=acts(Xn); s=A['h8']@(Wo[:,6]-Wo[:,7]); y=(s>0).astype(float)
+Xt=X[6000:8000]; At=acts(Xt); st=At['h8']@(Wo[:,6]-Wo[:,7]); yt=(st>0).astype(float)
+def feats(Z):
+    m = np.maximum(-Z,0)
+    extra = np.stack([m[:,0]*Z[:,j] for j in range(1,5)],axis=1)
+    return np.hstack([Z, np.maximum(Z,0), m, extra])
+F=feats(Xn); Ft=feats(Xt)
+mu=F.mean(0); sd=F.std(0)+1e-9; Fs=(F-mu)/sd; Fts=(Ft-mu)/sd
+w=np.zeros(Fs.shape[1])
+for it in range(4000):
+    p=1/(1+np.exp(-np.clip(Fs@w,-30,30)))
+    w-= 0.6*(Fs.T@(p-y)/len(y) + 3e-4*w)
+print("train",((Fs@w>0)==(y>0)).mean().round(4),"test",((Fts@w>0)==(yt>0)).mean().round(4))
+print("w scaled", (w/sd).round(2), "intercept", (-(w*mu/sd).sum()).round(2))
+
+--- output (0.47 s) ---
+train 0.9782 test 0.975
+w scaled [-4.63 -2.73 -1.22 -0.51 -0.17 -0.11  0.02  0.01 -8.44 -2.15 -1.97 -0.84 -0.33 -0.2   0.01  0.04  5.07  5.86  1.6   0.64  0.16  0.13 -0.04  0.01  3.41 -0.42  0.17 -0.27] intercept 0.27
+
+
+===== step 30/30
+
+[done] {"id": "20261118-021616-3ac7", "status": "done", "seconds": 405.9, "best": 5, "verdict": {"verified": true, "fails": [], "stages_total": 8, "stages_verified": 1, "complete": false, "score": 0.122}, "cost": 0.08958525599999999}
+
+status done; best submission 5; cost $0.090; 405.9 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_8_8/20261118-021616-3ac7

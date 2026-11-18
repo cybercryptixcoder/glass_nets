@@ -1,6 +1,6 @@
 # Glass Networks: AlgZoo results
 
-*Regenerated 2026-11-17 21:23 EST by `scripts/glass/results.py` from `results/glass/queue.json` and each run's `report.json`. 'main' = blinded constructor run; 'prior' = prior-only control (told the task, no weights, one submission); 'shuffled' = the same reader on weights shuffled within each tensor (should fail).*
+*Regenerated 2026-11-17 21:31 EST by `scripts/glass/results.py` from `results/glass/queue.json` and each run's `report.json`. 'main' = blinded constructor run; 'prior' = prior-only control (told the task, no weights, one submission); 'shuffled' = the same reader on weights shuffled within each tensor (should fail).*
 
 | network | params | run | job status | run id | verdict | stages | behaviour | all sites at once | worst slice | mistakes reproduced | steps | submissions | cost |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -17,7 +17,8 @@
 | M8,8 | 136 | prior | done | 20261118-021012-9ae6 | not verified | 0/8 | 46.0% | 100.0% | 39.9% | 0.0% | 1 | 1 | $0.04 |
 | M16,10 | 432 | prior | done | 20261118-021154-f774 | not verified | 1/10 | 95.5% | 93.5% | 92.8% | 0.0% | 1 | 1 | $0.04 |
 | M2,2 | 10 | shuffled | done | 20261118-021155-ff8b | COMPLETE | 2/2 | 100.0% | 100.0% | 100.0% | 100.0% | 7 | 2 | $0.02 |
-| M4,3 | 32 | shuffled | running | 20261118-021345-e14a | - | - | - | - | - | - | 23 | 4 | $0.09 |
-| M4,4 | 36 | shuffled | running | 20261118-021358-b385 | - | - | - | - | - | - | 21 | 3 | $0.06 |
-| M8,5 | 112 | shuffled | running | 20261118-021502-76fc | - | - | - | - | - | - | 25 | 4 | $0.06 |
-| M8,8 | 136 | shuffled | running | 20261118-021616-3ac7 | - | - | - | - | - | - | 20 | 2 | $0.05 |
+| M4,3 | 32 | shuffled | done | 20261118-021345-e14a | not verified | 0/3 | 67.4% | 100.0% | 22.0% | 64.9% | 30 | 9 | $0.14 |
+| M4,4 | 36 | shuffled | done | 20261118-021358-b385 | COMPLETE | 4/4 | 100.0% | 100.0% | 100.0% | 100.0% | 27 | 6 | $0.09 |
+| M8,5 | 112 | shuffled | done | 20261118-021502-76fc | not verified | 0/5 | 88.3% | 100.0% | 0.0% | 88.7% | 30 | 5 | $0.08 |
+| M8,8 | 136 | shuffled | done | 20261118-021616-3ac7 | verified (partial) | 1/8 | 97.6% | 100.0% | 96.9% | 97.5% | 30 | 5 | $0.09 |
+| M16,10 | 432 | shuffled | done | 20261118-022212-1ef6 | not verified | 0/10 | 100.0% | 100.0% | 100.0% | 100.0% | 30 | 5 | $0.11 |
