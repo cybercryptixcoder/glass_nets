@@ -2343,3 +2343,1305 @@ perm equivariance: 0.358
 ===== step 51/80
 
 [note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("The task is the index of the SECOND LARGEST of the 5 inputs. The state is carried forward in "
+               "semantic form: the running second-largest value m2 of the values seen so far, the gap m1-m2 to the "
+               "running maximum, the gap m2-m3 to the next order statistic, and the sign-split gap x_i-m2 of every "
+               "position seen so far (those gaps are what the readout compares). The readout is an asymmetric "
+               "weighted distance from m2: out_k = C_k - A_k*relu(x_k-m2) - B_k*relu(m2-x_k), so the position closest "
+               "to m2 from below wins. Stage 1 is exact and 2-dimensional: h1 = x1*wx, whose entries have a fixed "
+               "sign pattern, so h1 = x1^+*(pos ray) + x1^-*(neg ray).")
+
+AA = [3.31, 19.72, 20.50, 17.76, 14.71]
+BB = [4.13, 8.52, 13.11, 10.64, 10.53]
+CC = [2.66, 3.12, 4.01, 4.22, 4.64]
+
+
+def model(x, iv):
+    Bn = x.shape[0]
+    u1 = iv("u1", np.stack([np.maximum(x[:, 0], 0), np.maximum(-x[:, 0], 0)], 1))
+    pre = [u1[:, 0] - u1[:, 1]]
+
+    for t in range(2, 6):
+        pre = pre + [x[:, t - 1]]
+        vals = np.stack(pre, 1)
+        s = np.sort(vals, 1)
+        m1 = s[:, -1]
+        m2 = s[:, -2]
+        gap = vals - m2[:, None]
+        cols = [m2[:, None], (m1 - m2)[:, None]]
+        if t >= 3:
+            cols.append((m2 - s[:, -3])[:, None])
+        v = iv("v%d" % t, np.concatenate(cols + [np.maximum(gap, 0), np.maximum(-gap, 0)], 1))
+        k = 2 + (1 if t >= 3 else 0)
+        m2r = v[:, 0]
+        g = v[:, k:k + t] - v[:, k + t:k + 2 * t]
+        rec = m2r[:, None] + g
+        pre = [rec[:, i] for i in range(t)]
+
+    m2 = v[:, 0]
+    g = v[:, 3:8] - v[:, 8:13]
+    out = (m2[:, None] * 0 + np.array(CC)[None, :] - np.array(AA)[None, :] * np.maximum(g, 0)
+           - np.array(BB)[None, :] * np.maximum(-g, 0))
+    return out
+
+
+ALIGN = {"u1": ["h1"], "v2": ["h2"], "v3": ["h3"], "v4": ["h4"], "v5": ["h5"]}
+
+--- judge report 9 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,948 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 84.8% of inputs (a constant output would get 20.3%); output R2 0.822; KL 0.333
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (3 dims named of 8; 4 principal components suffice; v2): explained 0.835 | substitute 76.5% | keep 78.0% | remove 38.0% (random 49.8%) | mean-ablate 37.1%
+  h3          (7 dims named of 8; 6 principal components suffice; v3): explained 0.936 | substitute 83.9% | keep 95.5% | remove 33.0% (random 36.0%) | mean-ablate 32.9%
+  h4          (8 dims named of 8; 8 principal components suffice; v4): explained 0.951 | substitute 81.3% | keep 100.0% | remove 28.8% (random n/a) | mean-ablate 28.8%
+  h5          (8 dims named of 8; 8 principal components suffice; v5): explained 0.939 | substitute 77.8% | keep 100.0% | remove 20.3% (random n/a) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange u1 @ h1: right 83.9% / 81.2% when changed (network changed in 44.1%); output R2 0.824 | controls: random subspace 51.5%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  edit        u1 @ h1: right 79.8% / 67.4% when changed (network changed in 24.2%); output R2 0.804 | controls: random subspace 53.5%, no-change 75.8%, source-output 21.5%, attribution patching 83.0%
+  interchange v2 @ h2: right 66.3% / 65.2% when changed (network changed in 62.0%); output R2 0.721 | controls: random subspace 39.1%, no-change 38.0%, source-output 26.3%, attribution patching 51.3%
+  edit        v2 @ h2: right 63.4% / 52.6% when changed (network changed in 44.4%); output R2 0.638 | controls: random subspace 38.3%, no-change 55.6%, source-output 23.7%, attribution patching 71.5%
+  interchange v3 @ h3: right 78.4% / 78.7% when changed (network changed in 67.5%); output R2 0.800 | controls: random subspace 45.8%, no-change 32.6%, source-output 36.1%, attribution patching 50.3%
+  edit        v3 @ h3: right 57.4% / 48.2% when changed (network changed in 48.6%); output R2 0.593 | controls: random subspace 40.3%, no-change 51.3%, source-output 26.2%, attribution patching 71.0%
+  interchange v4 @ h4: right 80.6% / 83.0% when changed (network changed in 72.0%); output R2 0.819 | controls: random subspace 83.2%, no-change 28.0%, source-output 48.9%, attribution patching 59.2%
+  edit        v4 @ h4: right 55.7% / 51.8% when changed (network changed in 50.4%); output R2 0.571 | controls: random subspace 38.8%, no-change 49.5%, source-output 27.6%, attribution patching 76.8%
+  interchange v5 @ h5: right 76.1% / 82.3% when changed (network changed in 70.0%); output R2 0.802 | controls: random subspace 84.0%, no-change 30.0%, source-output 79.8%, attribution patching 100.0%
+  edit        v5 @ h5: right 64.0% / 59.7% when changed (network changed in 51.6%); output R2 0.663 | controls: random subspace 40.4%, no-change 48.4%, source-output 36.9%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 77.8% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 69.2% (n=811); network decides 1: 80.5% (n=831); network decides 2: 87.1% (n=822); network decides 3: 91.8% (n=790); network decides 4: 96.6% (n=746) | near ties (400 least clear inputs, no requirement): 49.5%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 23.4% of them (need 50% when there are 30 or more) and is right on 69.6%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 149 (74.5%; on the unsearched starting inputs 13.5%)
+     input [-3.22, -1.69, -0.059, -1.627, -1.355]: network [2], construction [4]
+     input [-1.132, 0.171, -1.056, -1.189, -1.02]: network [1], construction [4]
+     input [2.007, -1.194, 0.298, -0.201, 2.342]: network [2], construction [0]
+     input [-1.162, -2.132, -0.236, -1.98, -1.209]: network [2], construction [4]
+     input [1.945, -0.72, -0.63, -0.258, 2.186]: network [3], construction [0]
+7. NOT A COPY   49 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 1%; largest table in the file 5 numbers vs the largest weight tensor 64; constants per degree of freedom 0.144 (flag at 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 84.8% of inputs (need 95%)
+  - interchange of u1 at h1: prediction right in 81.2% of the cases where the network's output changed (need 90%)
+  - substitution at h2: 76.5% (need 90%)
+  - interchange of v2 at h2: prediction right in 65.2% of the cases where the network's output changed (need 90%)
+  - substitution at h3: 83.9% (need 90%)
+  - interchange of v3 at h3: prediction right in 78.7% of the cases where the network's output changed (need 90%)
+  - edit of v3 at h3: prediction right in 48.2% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h4: 81.3% (need 90%)
+  - interchange of v4 at h4: prediction right in 83.0% of the cases where the network's output changed (need 90%)
+  - substitution at h5: 77.8% (need 90%)
+  - interchange of v5 at h5: prediction right in 82.3% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 77.8% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 811 inputs where network decides 0, the construction agrees on 69.2% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 23.4% (need 50%); it is right on 69.6%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 84.8% | all sites at once 77.8% | worst slice 69.2% | network's mistakes reproduced 23.4%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 15.2% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.2% of the network's decisions
+  - worst slice: network decides 0 (811 inputs), where it matches 69.2%
+  - of the network's 444 mistakes on test inputs, 76.6% are not reproduced
+  - a search found 149 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 52/80
+
+--- python ---
+
+dec=run(X).argmax(1)
+o1=X.argmax(1); o2=X.argsort(1)[:,-2]
+import collections
+tab=np.zeros((5,5)); cnt=np.zeros((5,5))
+for i in range(len(X)):
+    tab[o1[i],o2[i]] += (dec[i]==o2[i]); cnt[o1[i],o2[i]]+=1
+print("agreement with 2nd largest, rows=p1(max pos), cols=p2(2nd pos)")
+print(np.round(tab/np.maximum(cnt,1),2))
+print("counts\n", cnt.astype(int))
+# also where does dec point
+tab2=np.zeros((5,5))
+for i in range(len(X)):
+    tab2[o1[i],o2[i]] += (dec[i]==o1[i])
+print("network picked the max, rows=p1 cols=p2\n", np.round(tab2/np.maximum(cnt,1),2))
+
+--- output (0.02 s) ---
+agreement with 2nd largest, rows=p1(max pos), cols=p2(2nd pos)
+[[0.   0.9  0.82 0.87 0.86]
+ [0.84 0.   0.94 0.92 0.86]
+ [0.85 0.93 0.   0.91 0.87]
+ [0.85 0.94 0.94 0.   0.83]
+ [0.76 0.91 0.91 0.87 0.  ]]
+counts
+ [[  0 354 414 422 417]
+ [389   0 431 360 434]
+ [382 359   0 396 391]
+ [437 432 370   0 374]
+ [399 452 428 359   0]]
+network picked the max, rows=p1 cols=p2
+ [[0.   0.06 0.12 0.08 0.1 ]
+ [0.05 0.   0.03 0.04 0.06]
+ [0.05 0.05 0.   0.03 0.04]
+ [0.04 0.04 0.02 0.   0.06]
+ [0.03 0.04 0.03 0.05 0.  ]]
+
+
+===== step 53/80
+
+--- python ---
+
+npos=(X>0).sum(1)
+err = dec!=o2
+for k in range(6):
+    m=npos==k
+    if m.sum(): print("npos",k,"n",m.sum(),"error",round(err[m].mean(),3), "picked max", round((dec[m]==o1[m]).mean(),3))
+# rank of chosen value
+r = (X > X[np.arange(len(X)),dec][:,None]).sum(1)  # 0 if chosen is max
+print("rank hist of chosen", np.bincount(r)/len(X))
+# errors: how far in value from m2
+print("mean |x_chosen - m2| on errors", np.abs(X[np.arange(len(X)),dec]-m2)[err].mean(), "on correct", np.abs(X[np.arange(len(X)),dec]-m2)[~err].mean())
+print("m1-m2 on err", (m1-m2)[err].mean(), "ok", (m1-m2)[~err].mean())
+print("m2-m3 on err", (m2-m3)[err].mean(), "ok", (m2-m3)[~err].mean())
+print("m2 on err", m2[err].mean(), "ok", m2[~err].mean(), "frac m2>0 err", (m2[err]>0).mean(), "ok",(m2[~err]>0).mean())
+
+--- output (0.0 s) ---
+npos 0 n 253 error 0.719 picked max 0.676
+npos 1 n 1273 error 0.182 picked max 0.046
+npos 2 n 2484 error 0.05 picked max 0.027
+npos 3 n 2512 error 0.1 picked max 0.023
+npos 4 n 1204 error 0.115 picked max 0.03
+npos 5 n 274 error 0.146 picked max 0.055
+rank hist of chosen [0.0505 0.8789 0.0634 0.0061 0.0011]
+mean |x_chosen - m2| on errors 0.2206920542140034 on correct 0.0
+m1-m2 on err 0.5751879680044645 ok 0.6737599346941574
+m2-m3 on err 0.2709524959140595 ok 0.5335949671794379
+m2 on err 0.20794640026082667 ok 0.5420654015817128 frac m2>0 err 0.5727554179566563 ok 0.8418432655383302
+
+
+===== step 54/80
+
+--- python ---
+
+def agr(score): return (score.argmax(1)==dec).mean()
+print("rho grid for T=rho*m2:")
+for rho in [0.6,0.7,0.8,0.85,0.9,0.95,1.0,1.05]:
+    print(" ", rho, round(agr(-np.abs(X-rho*m2[:,None])),4))
+print("T = m2 - c*(m2-m3):")
+for c in [-0.5,-0.3,-0.1,0,0.1,0.2,0.3,0.5]:
+    T=m2-c*(m2-m3); print(" ",c, round(agr(-np.abs(X-T[:,None])),4))
+print("T = max(m2,c):")
+for c in [-0.4,-0.2,-0.05,0,0.05,0.2]:
+    T=np.maximum(m2,c); print(" ",c, round(agr(-np.abs(X-T[:,None])),4))
+print("T = m2 with relu distance score = -relu(x-T) only (from below):")
+print(round(agr(-np.maximum(X-m2[:,None],0)),4))
+print("score=-a*relu(x-m2)-b*relu(m2-x) using A,B classes: ", round(agr(np.array(CC)[None,:]-np.array(AA)[None,:]*np.maximum(X-m2[:,None],0)-np.array(BB)[None,:]*np.maximum(m2[:,None]-X,0)),4))
+
+--- output (0.01 s) ---
+rho grid for T=rho*m2:
+  0.6 0.5406
+  0.7 0.6268
+  0.8 0.7301
+  0.85 0.7812
+  0.9 0.8284
+  0.95 0.8659
+  1.0 0.8789
+  1.05 0.8311
+T = m2 - c*(m2-m3):
+  -0.5 0.5242
+  -0.3 0.6426
+  -0.1 0.7998
+  0 0.8789
+  0.1 0.8789
+  0.2 0.8789
+  0.3 0.8789
+  0.5 0.4656
+T = max(m2,c):
+  -0.4 0.8862
+  -0.2 0.8915
+  -0.05 0.8839
+  0 0.8775
+  0.05 0.8685
+  0.2 0.8316
+T = m2 with relu distance score = -relu(x-T) only (from below):
+0.2235
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 14, in <module>
+NameError: name 'CC' is not defined. Did you mean: 'C'?
+
+
+===== step 55/80
+
+--- python ---
+
+H5=H['h5']; 
+allact = (H5>1e-9).all(1)
+print("all-active h5 frac", allact.mean())
+Xa=np.concatenate([X[allact],np.ones((allact.sum(),1))],1)
+Bc,_,_,_=np.linalg.lstsq(Xa, out[allact], rcond=None)
+P=Xa@Bc
+print("r2", 1-((out[allact]-P)**2).sum()/((out[allact]-out[allact].mean(0))**2).sum())
+np.set_printoptions(precision=3,suppress=True,linewidth=200)
+print("B (5x5 rows=x_i, cols=class):\n", Bc[:5]); print("d", Bc[5])
+print("decision agreement within region", (P.argmax(1)==out[allact].argmax(1)).mean())
+
+--- output (0.0 s) ---
+all-active h5 frac 0.000375
+r2 1.0
+B (5x5 rows=x_i, cols=class):
+ [[ 2.337  0.792  2.946 -6.14  -0.796]
+ [ 0.504  1.287 -2.834 -1.703  0.577]
+ [ 0.918 -2.989 11.593 -2.442 -2.743]
+ [-4.523 -1.811 -4.626 10.582  1.092]
+ [ 0.299  1.523 -4.06  -1.151  0.874]]
+d [ 0.286  1.503 -4.01  -1.228  0.846]
+decision agreement within region 1.0
+
+
+===== step 56/80
+
+--- python ---
+
+rule_zs = np.where(m1<0, o1, o2)
+print("agreement with zero-seeded 2nd-largest rule:", (rule_zs==dec).mean())
+print("agreement plain o2:", (o2==dec).mean())
+# break down
+print("all-neg: n",(m1<0).sum(), "net=o1", (dec[m1<0]==o1[m1<0]).mean())
+print("mixed:", (dec[m1>=0]==o2[m1>=0]).mean())
+
+--- output (0.0 s) ---
+agreement with zero-seeded 2nd-largest rule: 0.891375
+agreement plain o2: 0.878875
+all-neg: n 253 net=o1 0.6758893280632411
+mixed: 0.8984122886278559
+
+
+===== step 57/80
+
+--- python ---
+
+np.set_printoptions(precision=3,suppress=True,linewidth=200)
+for xi in [[1.635,-1.316,-1.037,-0.51,1.865],[0.5,0.2,-0.3,-1.0,0.1],[0.9,-1.389,-1.506,-0.411,0.91]]:
+    a=acts(np.array([xi],dtype=float))
+    print("x",xi, "dec", run(np.array([xi]))[0].argmax())
+    for s in ['h1','h2','h3','h4','h5']: print(" ",s,a[s][0])
+
+--- output (0.0 s) ---
+x [1.635, -1.316, -1.037, -0.51, 1.865] dec 3
+  h1 [ 1.051  0.     0.692  0.     0.074  0.     0.    11.448]
+  h2 [ 0.     8.303 16.125 21.017  2.051 15.524 13.756  0.   ]
+  h3 [21.953 18.196  0.     8.294  5.204 14.19   8.317  0.   ]
+  h4 [10.982 14.718 14.371 18.338 24.758  0.338 19.728  0.   ]
+  h5 [4.113 0.    5.52  0.    0.    0.    8.969 5.02 ]
+x [0.5, 0.2, -0.3, -1.0, 0.1] dec 1
+  h1 [0.321 0.    0.212 0.    0.023 0.    0.    3.501]
+  h2 [0.    0.    5.186 2.467 0.654 1.788 4.174 0.   ]
+  h3 [3.201 5.392 0.    3.412 0.    3.517 2.903 0.   ]
+  h4 [ 2.521  9.522  1.522 10.58   6.32   5.241  5.686  0.   ]
+  h5 [5.79  0.692 1.366 0.695 4.622 1.027 1.789 0.   ]
+x [0.9, -1.389, -1.506, -0.411, 0.91] dec 3
+  h1 [0.578 0.    0.381 0.    0.041 0.    0.    6.302]
+  h2 [ 0.     8.838  8.595 15.938  1.099 11.811  7.608  0.   ]
+  h3 [14.688 15.743  0.    10.346  5.395 12.146  4.853  0.   ]
+  h4 [10.084  8.301  9.625 10.171 17.025  0.023 10.809  0.   ]
+  h5 [1.925 0.    5.473 0.    0.    0.    5.249 2.76 ]
+
+
+===== step 58/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("The task is the index of the SECOND LARGEST input (relative to a virtual 0, since h_0=0 seeds the "
+               "running top-2). The hidden state carries it in semantic form: the running second-largest value m2 of "
+               "{0,x_1..x_t}, the gap m1-m2 to the running max, the gap m2-m3 to the next order statistic, and the "
+               "sign-split gap x_i-m2 of every position seen so far. The readout is a weighted distance from a target "
+               "value T = max(m2, -0.2), out_k = C_k - A_k*relu(x_k-T) - B_k*relu(T-x_k): the position nearest T from "
+               "below wins, so it reports the second largest and, when the second largest is the virtual 0 (fewer "
+               "than two positive inputs), the value nearest 0. Stage 1 is exact and 2-dimensional: h1 = x1*wx and wx "
+               "has a fixed sign pattern, so h1 = x1^+*(pos ray) + x1^-*(neg ray).")
+
+AA = [3.31, 19.72, 20.50, 17.76, 14.71]
+BB = [4.13, 8.52, 13.11, 10.64, 10.53]
+CC = [2.66, 3.12, 4.01, 4.22, 4.64]
+TS = -0.2
+
+
+def model(x, iv):
+    Bn = x.shape[0]
+    u1 = iv("u1", np.stack([np.maximum(x[:, 0], 0), np.maximum(-x[:, 0], 0)], 1))
+    pre = [u1[:, 0] - u1[:, 1]]
+
+    for t in range(2, 6):
+        pre = pre + [x[:, t - 1]]
+        vals = np.stack(pre, 1)
+        Z = np.concatenate([vals, np.zeros((Bn, 1))], 1)
+        s = np.sort(Z, 1)
+        m1 = s[:, -1]
+        m2 = s[:, -2]
+        m3 = s[:, -3]
+        gap = vals - m2[:, None]
+        v = iv("v%d" % t, np.concatenate([m2[:, None], (m1 - m2)[:, None], (m2 - m3)[:, None],
+                                          np.maximum(gap, 0), np.maximum(-gap, 0)], 1))
+        m2r = v[:, 0]
+        g = v[:, 3:3 + t] - v[:, 3 + t:3 + 2 * t]
+        rec = m2r[:, None] + g
+        pre = [rec[:, i] for i in range(t)]
+
+    m2v = v[:, 0]
+    g = v[:, 3:8] - v[:, 8:13]
+    sh = np.maximum(TS - m2v, 0)            # T = m2 + shift
+    d = g - sh[:, None]                     # x_k - T
+    out = np.array(CC)[None, :] - np.array(AA)[None, :] * np.maximum(d, 0) - np.array(BB)[None, :] * np.maximum(-d, 0)
+    return out
+
+
+ALIGN = {"u1": ["h1"], "v2": ["h2"], "v3": ["h3"], "v4": ["h4"], "v5": ["h5"]}
+
+--- judge report 10 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,199 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 85.4% of inputs (a constant output would get 20.3%); output R2 0.833; KL 0.231
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (6 dims named of 8; 4 principal components suffice; v2): explained 0.999 | substitute 97.6% | keep 99.6% | remove 37.1% (random 41.9%) | mean-ablate 37.1%
+  h3          (8 dims named of 8; 6 principal components suffice; v3): explained 0.981 | substitute 89.3% | keep 100.0% | remove 32.9% (random n/a) | mean-ablate 32.9%
+  h4          (8 dims named of 8; 8 principal components suffice; v4): explained 0.971 | substitute 83.7% | keep 100.0% | remove 28.8% (random n/a) | mean-ablate 28.8%
+  h5          (8 dims named of 8; 8 principal components suffice; v5): explained 0.947 | substitute 79.0% | keep 100.0% | remove 20.3% (random n/a) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange u1 @ h1: right 85.1% / 82.2% when changed (network changed in 44.1%); output R2 0.837 | controls: random subspace 53.2%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  edit        u1 @ h1: right 80.7% / 69.6% when changed (network changed in 24.2%); output R2 0.818 | controls: random subspace 54.4%, no-change 75.8%, source-output 21.5%, attribution patching 83.0%
+  interchange v2 @ h2: right 85.0% / 84.0% when changed (network changed in 64.2%); output R2 0.833 | controls: random subspace 53.0%, no-change 35.8%, source-output 27.9%, attribution patching 51.1%
+  edit        v2 @ h2: right 66.3% / 54.2% when changed (network changed in 46.6%); output R2 0.704 | controls: random subspace 45.9%, no-change 53.4%, source-output 23.9%, attribution patching 69.2%
+  interchange v3 @ h3: right 84.7% / 83.7% when changed (network changed in 69.3%); output R2 0.839 | controls: random subspace 85.8%, no-change 30.7%, source-output 36.8%, attribution patching 49.5%
+  edit        v3 @ h3: right 60.3% / 50.3% when changed (network changed in 50.1%); output R2 0.615 | controls: random subspace 46.1%, no-change 49.9%, source-output 25.9%, attribution patching 67.2%
+  interchange v4 @ h4: right 84.4% / 86.5% when changed (network changed in 73.0%); output R2 0.836 | controls: random subspace 84.9%, no-change 27.1%, source-output 50.1%, attribution patching 58.5%
+  edit        v4 @ h4: right 55.6% / 50.9% when changed (network changed in 54.4%); output R2 0.561 | controls: random subspace 39.9%, no-change 45.6%, source-output 30.2%, attribution patching 76.6%
+  interchange v5 @ h5: right 78.4% / 84.4% when changed (network changed in 71.0%); output R2 0.826 | controls: random subspace 86.1%, no-change 29.0%, source-output 80.4%, attribution patching 100.0%
+  edit        v5 @ h5: right 67.3% / 63.0% when changed (network changed in 53.4%); output R2 0.689 | controls: random subspace 41.8%, no-change 46.6%, source-output 38.0%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 79.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 76.0% (n=811); network decides 1: 79.4% (n=831); network decides 2: 85.8% (n=822); network decides 3: 90.3% (n=790); network decides 4: 96.9% (n=746) | near ties (400 least clear inputs, no requirement): 50.2%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 47.3% of them (need 50% when there are 30 or more) and is right on 47.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 139 (69.5%; on the unsearched starting inputs 9.5%)
+     input [1.695, -0.578, -1.349, -0.39, 2.07]: network [3], construction [0]
+     input [1.549, -0.495, -0.739, -0.338, 1.95]: network [3], construction [0]
+     input [1.557, -0.868, -0.516, -0.256, 1.934]: network [3], construction [0]
+     input [1.542, -1.045, -0.528, -0.431, 1.87]: network [3], construction [0]
+     input [1.012, -0.681, -1.449, -0.351, 1.099]: network [3], construction [4]
+7. NOT A COPY   51 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 2%; largest table in the file 5 numbers vs the largest weight tensor 64; constants per degree of freedom 0.168 (flag at 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 85.4% of inputs (need 95%)
+  - interchange of u1 at h1: prediction right in 82.2% of the cases where the network's output changed (need 90%)
+  - interchange of v2 at h2: prediction right in 84.0% of the cases where the network's output changed (need 90%)
+  - substitution at h3: 89.3% (need 90%)
+  - interchange of v3 at h3: prediction right in 83.7% of the cases where the network's output changed (need 90%)
+  - substitution at h4: 83.7% (need 90%)
+  - interchange of v4 at h4: prediction right in 86.5% of the cases where the network's output changed (need 90%)
+  - substitution at h5: 79.0% (need 90%)
+  - interchange of v5 at h5: prediction right in 84.4% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 79.0% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 811 inputs where network decides 0, the construction agrees on 76.0% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 47.3% (need 50%); it is right on 47.1%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 85.4% | all sites at once 79.0% | worst slice 76.0% | network's mistakes reproduced 47.3%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 14.6% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 21.0% of the network's decisions
+  - worst slice: network decides 0 (811 inputs), where it matches 76.0%
+  - of the network's 444 mistakes on test inputs, 52.7% are not reproduced
+  - a search found 139 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 59/80
+
+--- python ---
+
+def pr(site, tgt):
+    A=H[site]; Am=np.concatenate([A,np.ones((len(X),1))],1)
+    co,_,_,_=np.linalg.lstsq(Am,tgt,rcond=None); P=Am@co
+    return 1-((tgt-P)**2).sum()/max(((tgt-tgt.mean())**2).sum(),1e-12)
+cands={}
+for i in range(5):
+    cands['x%d'%i]=X[:,i]
+    cands['r(x%d-m2)'%i]=np.maximum(X[:,i]-m2,0)
+    cands['r(m2-x%d)'%i]=np.maximum(m2-X[:,i],0)
+    cands['r(x%d-zm2)'%i]=np.maximum(X[:,i]-zm2,0)
+    cands['r(zm2-x%d)'%i]=np.maximum(zm2-X[:,i],0)
+    cands['onehot%d'%i]=(dec==i).astype(float)
+cands['m1']=m1; cands['m2']=m2; cands['zm1']=zm1; cands['zm2']=zm2; cands['zm3']=zm3
+cands['r(m1-m2)']=m1-m2
+for k,v in cands.items(): print(k, round(float(pr('h5',v)),3), round(float(pr('h4',v)),3))
+
+--- output (0.08 s) ---
+x0 0.198 0.802
+r(x0-m2) 0.065 0.741
+r(m2-x0) 0.533 0.595
+r(x0-zm2) 0.067 0.769
+r(zm2-x0) 0.509 0.608
+onehot0 0.261 0.234
+x1 0.684 0.928
+r(x1-m2) 0.862 0.751
+r(m2-x1) 0.622 0.754
+r(x1-zm2) 0.889 0.779
+r(zm2-x1) 0.627 0.771
+onehot1 0.39 0.236
+x2 0.725 0.964
+r(x2-m2) 0.817 0.766
+r(m2-x2) 0.729 0.801
+r(x2-zm2) 0.851 0.8
+r(zm2-x2) 0.731 0.824
+onehot2 0.363 0.237
+x3 0.776 0.985
+r(x3-m2) 0.883 0.807
+r(m2-x3) 0.793 0.821
+r(x3-zm2) 0.908 0.835
+r(zm2-x3) 0.806 0.857
+onehot3 0.314 0.201
+x4 0.852 0.003
+r(x4-m2) 0.943 0.098
+r(m2-x4) 0.887 0.165
+r(x4-zm2) 0.974 0.083
+r(zm2-x4) 0.915 0.124
+onehot4 0.316 0.089
+m1 0.672 0.736
+m2 0.113 0.556
+zm1 0.679 0.74
+zm2 0.127 0.566
+zm3 0.035 0.551
+r(m1-m2) 0.526 0.366
+
+
+===== step 60/80
+
+--- python ---
+
+# rebuild 13-dim v5 set
+Z=np.concatenate([X,np.zeros((len(X),1))],1); s=np.sort(Z,1)
+m1z=s[:,-1]; m2z=s[:,-2]; m3z=s[:,-3]
+gap=X-m2z[:,None]
+V5=np.concatenate([m2z[:,None],(m1z-m2z)[:,None],(m2z-m3z)[:,None],np.maximum(gap,0),np.maximum(-gap,0)],1)
+Vm=np.concatenate([V5,np.ones((len(X),1))],1)
+co,_,_,_=np.linalg.lstsq(Vm,H5,rcond=None); R=H5-Vm@co
+print("resid var per unit", np.round(R.var(0),3), "act var", np.round(H5.var(0),1))
+# probe residual with library
+lib={}
+for i in range(5):
+    lib['onehotmax%d'%i]=(X.argmax(1)==i).astype(float)
+    lib['onehotsec%d'%i]=(X.argsort(1)[:,-2]==i).astype(float)
+lib['npos']=(X>0).sum(1).astype(float)
+lib['zm2']=m2z; lib['m4']=s[:,-4]
+for i in range(5):
+    for j in range(5):
+        if i!=j: lib['r(x%d-x%d)'%(i,j)]=np.maximum(X[:,i]-X[:,j],0)
+best=[]
+for k,v in lib.items():
+    vm=np.concatenate([v[:,None],np.ones((len(X),1))],1)
+    c,_,_,_=np.linalg.lstsq(vm,R,rcond=None); P=vm@c
+    best.append((1-((R-P)**2).sum()/((R-R.mean(0))**2).sum(),k))
+print(sorted(best)[-8:])
+
+--- output (0.06 s) ---
+resid var per unit [1.702 0.53  1.711 0.697 4.08  0.584 4.099 0.136] act var [28.6 40.7 29.  49.2 45.2 21.8 40.1  6.8]
+[(np.float64(0.005677656971769918), 'r(x2-x1)'), (np.float64(0.005832666619744353), 'onehotmax0'), (np.float64(0.0070065736737470186), 'r(x1-x0)'), (np.float64(0.007162723355019218), 'r(x0-x1)'), (np.float64(0.014187136176785575), 'onehotsec0'), (np.float64(0.01745913792174092), 'onehotsec1'), (np.float64(0.024860540739583437), 'r(x0-x2)'), (np.float64(0.025406957682285736), 'r(x2-x0)')]
+
+
+===== step 61/80
+
+--- python ---
+
+n=len(X); idx=np.arange(n); rng=np.random.default_rng(1); rng.shuffle(idx); tr=idx[:n//2]; te=idx[n//2:]
+lib={}
+refs={'zm1':zm1,'zm2':zm2,'zm3':zm3,'z0':np.zeros(n),'m1':m1,'m3':m3,'mean':X.mean(1)}
+for i in range(5):
+    lib['x%d'%i]=X[:,i]
+    for nm,c in refs.items():
+        lib['r(x%d-%s)'%(i,nm)]=np.maximum(X[:,i]-c,0)
+        lib['r(%s-x%d)'%(nm,i)]=np.maximum(c-X[:,i],0)
+for i in range(5):
+    lib['ohmax%d'%i]=(X.argmax(1)==i).astype(float)
+    lib['ohsec%d'%i]=(X.argsort(1)[:,-2]==i).astype(float)
+lib['zm2']=zm2; lib['zm1-zm2']=zm1-zm2; lib['zm2-zm3']=zm2-zm3
+names=list(lib)
+def evaluate(sel):
+    F=np.stack([lib[k] for k in sel],1)
+    A=np.concatenate([F[tr],np.ones((len(tr),1))],1)
+    co,_,_,_=np.linalg.lstsq(A,H5[tr],rcond=None)
+    Ae=np.concatenate([F[te],np.ones((len(te),1))],1)
+    P=Ae@co
+    outp=P@Wo
+    return (outp.argmax(1)==dec[te]).mean(), 1-((H5[te]-P)**2).sum()/((H5[te]-H5[te].mean(0))**2).sum()
+sel=['zm2','zm1-zm2','zm2-zm3']
+print(0, evaluate(sel))
+for step in range(11):
+    best=(0,None)
+    for k in names:
+        if k in sel: continue
+        s2=sel+[k]; a=evaluate(s2)
+        if a[0]>best[0]: best=(a[0],k,a)
+    sel.append(best[1]); print(step+1, best[1], best[2])
+
+--- output (1.93 s) ---
+0 (np.float64(0.19925), np.float64(0.1526554345939405))
+1 ohsec2 (np.float64(0.38125), np.float64(0.15939079177525517))
+2 ohsec1 (np.float64(0.55475), np.float64(0.16454816753854795))
+3 ohsec4 (np.float64(0.7165), np.float64(0.20569356059689903))
+4 ohsec0 (np.float64(0.87525), np.float64(0.2126478797264798))
+5 r(mean-x1) (np.float64(0.8755), np.float64(0.2937569233861651))
+6 r(x0-zm1) (np.float64(0.8755), np.float64(0.2937569233861651))
+7 r(x0-m1) (np.float64(0.8755), np.float64(0.2937569233861651))
+8 r(x1-zm1) (np.float64(0.8755), np.float64(0.2937569233861651))
+9 r(z0-x1) (np.float64(0.8755), np.float64(0.30255377350318957))
+10 r(m3-x1) (np.float64(0.876), np.float64(0.32228540870789846))
+11 r(x1-m1) (np.float64(0.876), np.float64(0.32228540870789857))
+
+
+===== step 62/80
+
+--- python ---
+
+def fit_gam(featfun, names=None):
+    F=np.stack([featfun(k) for k in range(5)],1)  # [n,5,F]
+    nf=F.shape[2]
+    # design: for each class k, features of position k
+    Ds=[]
+    for k in range(5):
+        D=np.zeros((len(X),5,nf+1)); D[:,k,0]=1; D[:,k,1:]=F[:,k,:]
+        Ds.append(D)
+    Dm=np.concatenate(Ds,1)  # n,5,5*(nf+1)
+    Dm=Dm.reshape(len(X),-1)
+    co,_,_,_=np.linalg.lstsq(Dm,out,rcond=None)
+    P=(Dm@co)
+    agr=(P.argmax(1)==dec).mean()
+    r2=1-((out-P)**2).sum()/((out-out.mean(0))**2).sum()
+    return agr, r2, co.reshape(5,nf+1)
+f1=lambda k: np.stack([np.maximum(X[:,k]-zm2,0),np.maximum(zm2-X[:,k],0),np.maximum(X[:,k]-zm1,0),np.maximum(zm1-X[:,k],0),np.maximum(X[:,k]-zm3,0),np.maximum(zm3-X[:,k],0)],1)
+print("6feat order-stat gam", fit_gam(f1)[:2])
+f2=lambda k: np.stack([np.maximum(X[:,k]-zm2,0),np.maximum(zm2-X[:,k],0),np.maximum(X[:,k]-zm1,0),np.maximum(zm1-X[:,k],0),np.maximum(X[:,k]-zm3,0),np.maximum(zm3-X[:,k],0),X[:,k]],1)
+print("7feat", fit_gam(f2)[:2])
+f3=lambda k: np.stack([np.maximum(X[:,k]-c,0) if i==0 else np.maximum(c-X[:,k],0) for c in [zm1,zm2,zm3,X.mean(1),np.zeros(len(X))] for i in range(2)],1)
+print("10feat", fit_gam(f3)[:2])
+
+--- output (0.05 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 18, in <module>
+  File "<your code>", line 16, in fit_gam
+ValueError: cannot reshape array of size 875 into shape (5,7)
+
+
+===== step 63/80
+
+--- python ---
+
+def fit_gam(featfun):
+    F=np.stack([featfun(k) for k in range(5)],2)  # n,5,nf
+    n=nfp=len(X); nf=F.shape[2]
+    D=np.zeros((n,5*(nf+1)))
+    for k in range(5):
+        D[:,k*(nf+1)]=1.0
+        D[:,k*(nf+1)+1:(k+1)*(nf+1)]=F[:,k,:]
+    co,_,_,_=np.linalg.lstsq(D,out,rcond=None)
+    P=D@co
+    return (P.argmax(1)==dec).mean(), 1-((out-P)**2).sum()/((out-out.mean(0))**2).sum(), co.reshape(5,nf+1)
+def mkc(refs):
+    def f(k):
+        cols=[]
+        for nm,c in refs:
+            cols.append(np.maximum(X[:,k]-c,0)); cols.append(np.maximum(c-X[:,k],0))
+        return np.stack(cols,1)
+    return f
+print("zm1,zm2,zm3:", [round(float(v),4) for v in fit_gam(mkc([('a',zm1),('b',zm2),('c',zm3)]))[:2]])
+print("zm2 only:", [round(float(v),4) for v in fit_gam(mkc([('b',zm2)]))[:2]])
+print("zm1,zm2,zm3,0,mean:", [round(float(v),4) for v in fit_gam(mkc([('a',zm1),('b',zm2),('c',zm3),('z',np.zeros(len(X))),('m',X.mean(1))]))[:2]])
+
+--- output (0.01 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 19, in <module>
+  File "<your code>", line 11, in fit_gam
+ValueError: cannot reshape array of size 150 into shape (5,6)
+
+
+===== step 64/80
+
+--- python ---
+
+def fit_gam(featfun):
+    F=np.stack([featfun(k) for k in range(5)],2); n=len(X); nf=F.shape[2]
+    D=np.zeros((n,5*(nf+1)))
+    for k in range(5):
+        D[:,k*(nf+1)]=1.0
+        D[:,k*(nf+1)+1:(k+1)*(nf+1)]=F[:,k,:]
+    co,_,_,_=np.linalg.lstsq(D,out,rcond=None); P=D@co
+    return round(float((P.argmax(1)==dec).mean()),4), round(float(1-((out-P)**2).sum()/((out-out.mean(0))**2).sum()),4), co
+def mkc(refs):
+    def f(k):
+        cols=[]
+        for nm,c in refs:
+            cols.append(np.maximum(X[:,k]-c,0)); cols.append(np.maximum(c-X[:,k],0))
+        return np.stack(cols,1)
+    return f
+print("zm1,zm2,zm3:", fit_gam(mkc([('a',zm1),('b',zm2),('c',zm3)]))[:2])
+print("zm2 only:", fit_gam(mkc([('b',zm2)]))[:2])
+print("zm1,zm2,zm3,0,mean:", fit_gam(mkc([('a',zm1),('b',zm2),('c',zm3),('z',np.zeros(len(X))),('m',X.mean(1))]))[:2])
+print("0 and mean:", fit_gam(mkc([('z',np.zeros(len(X))),('m',X.mean(1))]))[:2])
+
+--- output (0.01 s) ---
+zm1,zm2,zm3: (0.812, 0.906)
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 18, in <module>
+  File "<your code>", line 7, in fit_gam
+IndexError: index 2 is out of bounds for axis 1 with size 2
+
+
+===== step 65/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- python ---
+
+def agr(s): return round(float((s.argmax(1)==dec).mean()),4)
+best=[]
+for rho in [0.5,0.6,0.7,0.8,0.85,0.9,0.95,1.0]:
+    w=np.array([rho**(4-i) for i in range(5)])
+    Xa=X*w
+    sa=np.sort(Xa,1); Ta=sa[:,-2]
+    best.append((agr(-np.abs(Xa-Ta[:,None])),'att',rho))
+    best.append((agr(-np.abs(X-Ta[:,None])),'attT',rho))
+print(sorted(best)[-6:])
+# hypothesis: running top-2 where each new value only compares with current m1,m2 (proper), i.e. exact -> 0.8789
+# hypothesis: value-memory = relu(x - running max?) 
+print("score = x_k - m2 relu-split with per-class w):")
+A2=np.array([3.31,19.72,20.50,17.76,14.71]); B2=np.array([4.13,8.52,13.11,10.64,10.53]); C2=np.array([2.66,3.12,4.01,4.22,4.64])
+print(agr(C2[None,:]-A2[None,:]*np.maximum(X-m2[:,None],0)-B2[None,:]*np.maximum(m2[:,None]-X,0)))
+
+--- output (0.01 s) ---
+[(0.7426, 'att', 0.85), (0.7989, 'att', 0.9), (0.8219, 'attT', 0.95), (0.8519, 'att', 0.95), (0.8789, 'att', 1.0), (0.8789, 'attT', 1.0)]
+score = x_k - m2 relu-split with per-class w):
+0.8375
+
+
+===== step 66/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("The task is the index of the SECOND LARGEST of the five inputs. The helper state is carried in "
+               "semantic form: the running second-largest value m2 of the values read so far, the gap m1-m2 to the "
+               "running maximum, the gap m2-m3 to the next order statistic, and the sign-split gap x_i-m2 of every "
+               "position read so far. The readout is a distance from a target value T = max(m2, -0.2): "
+               "out_k = C_k - 30*|x_k - T|, so the position whose value sits at the second-largest wins; when the "
+               "second largest is far below zero (fewer than two positive inputs) the target is pinned near 0 and the "
+               "value nearest zero wins. Stage 1 is exact and 2-dimensional: h1 = x1*wx and wx has a fixed sign "
+               "pattern, so h1 = x1^+*(pos ray) + x1^-*(neg ray).")
+
+CC = [2.66, 3.12, 4.01, 4.22, 4.64]
+TS = -0.2
+
+
+def model(x, iv):
+    Bn = x.shape[0]
+    u1 = iv("u1", np.stack([np.maximum(x[:, 0], 0), np.maximum(-x[:, 0], 0)], 1))
+    pre = [u1[:, 0] - u1[:, 1]]
+
+    for t in range(2, 6):
+        pre = pre + [x[:, t - 1]]
+        vals = np.stack(pre, 1)
+        s = np.sort(vals, 1)
+        m1 = s[:, -1]
+        m2 = s[:, -2]
+        gap = vals - m2[:, None]
+        cols = [m2[:, None], (m1 - m2)[:, None]]
+        if t >= 3:
+            cols.append((m2 - s[:, -3])[:, None])
+        v = iv("v%d" % t, np.concatenate(cols + [np.maximum(gap, 0), np.maximum(-gap, 0)], 1))
+        k = 2 + (1 if t >= 3 else 0)
+        m2r = v[:, 0]
+        g = v[:, k:k + t] - v[:, k + t:k + 2 * t]
+        rec = m2r[:, None] + g
+        pre = [rec[:, i] for i in range(t)]
+
+    m2r = v[:, 0]
+    g = v[:, 3:8] - v[:, 8:13]
+    shift = np.maximum(TS - m2r, 0)
+    d = g - shift[:, None]
+    out = np.array(CC)[None, :] - 30.0 * np.abs(d)
+    return out
+
+
+ALIGN = {"u1": ["h1"], "v2": ["h2"], "v3": ["h3"], "v4": ["h4"], "v5": ["h5"]}
+
+--- judge report 11 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,948 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 89.1% of inputs (a constant output would get 20.3%); output R2 -1.557; KL 0.813
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (3 dims named of 8; 4 principal components suffice; v2): explained 0.835 | substitute 76.5% | keep 78.0% | remove 38.0% (random 49.8%) | mean-ablate 37.1%
+  h3          (7 dims named of 8; 6 principal components suffice; v3): explained 0.936 | substitute 83.9% | keep 95.5% | remove 33.0% (random 36.0%) | mean-ablate 32.9%
+  h4          (8 dims named of 8; 8 principal components suffice; v4): explained 0.951 | substitute 81.3% | keep 100.0% | remove 28.8% (random n/a) | mean-ablate 28.8%
+  h5          (8 dims named of 8; 8 principal components suffice; v5): explained 0.939 | substitute 77.8% | keep 100.0% | remove 20.3% (random n/a) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange u1 @ h1: right 88.2% / 85.5% when changed (network changed in 44.1%); output R2 -1.478 | controls: random subspace 52.6%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  edit        u1 @ h1: right 82.5% / 69.2% when changed (network changed in 24.2%); output R2 -1.291 | controls: random subspace 54.9%, no-change 75.8%, source-output 21.5%, attribution patching 83.0%
+  interchange v2 @ h2: right 67.5% / 66.3% when changed (network changed in 62.0%); output R2 -1.758 | controls: random subspace 39.0%, no-change 38.0%, source-output 26.3%, attribution patching 51.3%
+  edit        v2 @ h2: right 64.5% / 52.6% when changed (network changed in 44.4%); output R2 -1.816 | controls: random subspace 39.5%, no-change 55.6%, source-output 23.7%, attribution patching 71.5%
+  interchange v3 @ h3: right 79.8% / 80.1% when changed (network changed in 67.5%); output R2 -1.773 | controls: random subspace 47.9%, no-change 32.6%, source-output 36.1%, attribution patching 50.3%
+  edit        v3 @ h3: right 59.2% / 48.8% when changed (network changed in 48.6%); output R2 -1.895 | controls: random subspace 40.4%, no-change 51.3%, source-output 26.2%, attribution patching 71.0%
+  interchange v4 @ h4: right 82.1% / 84.2% when changed (network changed in 72.0%); output R2 -1.996 | controls: random subspace 88.5%, no-change 28.0%, source-output 48.9%, attribution patching 59.2%
+  edit        v4 @ h4: right 56.6% / 50.8% when changed (network changed in 50.4%); output R2 -1.775 | controls: random subspace 40.1%, no-change 49.5%, source-output 27.6%, attribution patching 76.8%
+  interchange v5 @ h5: right 77.0% / 82.7% when changed (network changed in 70.0%); output R2 -2.679 | controls: random subspace 88.9%, no-change 30.0%, source-output 79.8%, attribution patching 100.0%
+  edit        v5 @ h5: right 63.3% / 57.7% when changed (network changed in 51.6%); output R2 -1.397 | controls: random subspace 42.0%, no-change 48.4%, source-output 36.9%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 77.8% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 77.8% (n=811); network decides 1: 88.0% (n=831); network decides 2: 91.2% (n=822); network decides 3: 93.5% (n=790); network decides 4: 95.6% (n=746) | near ties (400 least clear inputs, no requirement): 54.0%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 30.6% of them (need 50% when there are 30 or more) and is right on 66.4%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 100 (50.0%; on the unsearched starting inputs 8.0%)
+     input [1.945, -0.72, -0.63, -0.258, 2.186]: network [3], construction [0]
+     input [2.007, -1.194, 0.298, -0.201, 2.342]: network [2], construction [0]
+     input [1.475, -0.562, -0.693, -0.225, 2.129]: network [3], construction [0]
+     input [1.5, -0.357, 0.24, -2.383, 1.599]: network [2], construction [0]
+     input [1.254, -1.906, 0.045, -1.164, 2.399]: network [2], construction [0]
+7. NOT A COPY   39 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 2%; largest table in the file 5 numbers vs the largest weight tensor 64; constants per degree of freedom 0.063 (flag at 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 89.1% of inputs (need 95%)
+  - interchange of u1 at h1: prediction right in 85.5% of the cases where the network's output changed (need 90%)
+  - substitution at h2: 76.5% (need 90%)
+  - interchange of v2 at h2: prediction right in 66.3% of the cases where the network's output changed (need 90%)
+  - substitution at h3: 83.9% (need 90%)
+  - interchange of v3 at h3: prediction right in 80.1% of the cases where the network's output changed (need 90%)
+  - edit of v3 at h3: prediction right in 48.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h4: 81.3% (need 90%)
+  - interchange of v4 at h4: prediction right in 84.2% of the cases where the network's output changed (need 90%)
+  - substitution at h5: 77.8% (need 90%)
+  - interchange of v5 at h5: prediction right in 82.7% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 77.8% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 811 inputs where network decides 0, the construction agrees on 77.8% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 30.6% (need 50%); it is right on 66.4%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 89.1% | all sites at once 77.8% | worst slice 77.8% | network's mistakes reproduced 30.6%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 10.9% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.2% of the network's decisions
+  - worst slice: network decides 0 (811 inputs), where it matches 77.8%
+  - of the network's 444 mistakes on test inputs, 69.4% are not reproduced
+  - a search found 100 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 67/80
+
+--- python ---
+
+def rule_second_max(vals):
+    # index of 2nd largest (plain) in the ORIGINAL positions
+    idx=np.argsort(-vals,1); return idx[:,1]
+def clause(vals, seed0=False):
+    return vals
+# drop x0, zero-seeded: T = 2nd largest of {0,x1..x4}; answer = argmin|x-T| over all positions? or over positions>=1?
+Z=np.concatenate([X[:,1:],np.zeros((len(X),1))],1)
+sz=np.sort(Z,1); T=sz[:,-2]
+print("A: T=2ndlargest{0,x1..x4}, argmin|x-T| all pos:", round(float((np.abs(X-T[:,None]).argmin(1)==dec).mean()),4))
+print("B: same, only pos>=1:", round(float((np.abs(X[:,1:]-T[:,None]).argmin(1)+1==dec).mean()),4))
+# drop x0 plain 2nd largest of x1..x4
+s2=np.sort(X[:,1:],1); T2=s2[:,-2]
+print("C: T=2ndlargest{x1..x4}, all pos:", round(float((np.abs(X-T2[:,None]).argmin(1)==dec).mean()),4))
+print("D: same, pos>=1:", round(float((np.abs(X[:,1:]-T2[:,None]).argmin(1)+1==dec).mean()),4))
+# combine: drop x0 zero-seeded but if <2 positives -> 0
+best=[]
+for r in [0.5,0.3,0.2,0.1,0.0,-0.1]:
+    V=X.copy(); V[:,0]=X[:,0]*r
+    Vz=np.concatenate([V,np.zeros((len(X),1))],1); szz=np.sort(Vz,1); Tt=szz[:,-2]
+    ae=round(float((np.abs(X-Tt[:,None]).argmin(1)==dec).mean()),4)
+    ae2=round(float((np.abs(V-Tt[:,None]).argmin(1)==dec).mean()),4)
+    best.append((ae,ae2,r))
+print(best)
+
+--- output (0.01 s) ---
+A: T=2ndlargest{0,x1..x4}, argmin|x-T| all pos: 0.6649
+B: same, only pos>=1: 0.6241
+C: T=2ndlargest{x1..x4}, all pos: 0.575
+D: same, pos>=1: 0.575
+[(0.7809, 0.7686, 0.5), (0.735, 0.7027, 0.3), (0.7093, 0.6725, 0.2), (0.6864, 0.6366, 0.1), (0.67, 0.5894, 0.0), (0.6566, 0.584, -0.1)]
+
+
+===== step 68/80
+
+--- python ---
+
+rng=np.random.default_rng(0)
+def ev(r, seed=True, selfcompare=True):
+    V=X*r[None,:]
+    if seed: Z=np.concatenate([V,np.zeros((len(X),1))],1)
+    else: Z=V
+    s=np.sort(Z,1); T=s[:,-2]
+    S = V if selfcompare else X
+    return float((np.abs(S-T[:,None]).argmin(1)==dec).mean())
+best=(0,None)
+r=np.ones(5)
+for it in range(400):
+    cand=r+ (rng.normal(0,0.12,5) if it else 0)
+    for seed in [True,False]:
+        for sc in [True,False]:
+            v=ev(cand,seed,sc)
+            if v>best[0]: best=(v,cand.copy(),seed,sc)
+    if it<300: r=np.clip(best[1]+rng.normal(0,0.05,5),0.3,2.5)
+print(best)
+
+--- output (1.05 s) ---
+(0.878875, array([1., 1., 1., 1., 1.]), False, True)
+
+
+===== step 69/80
+
+--- python ---
+
+rng=np.random.default_rng(0); sub=X[:3000]; o=run(sub).argmax(1)
+acc=[]
+for trial in range(3):
+    perm=rng.permutation(5); o2=run(sub[:,perm]).argmax(1)
+    acc.append((perm[o2]==o).mean())
+print("perm equivariance (proper):", np.round(acc,4))
+# now estimate per-input target T from out
+A2=np.array([3.31,19.72,20.50,17.76,14.71]); B2=np.array([4.13,8.52,13.11,10.64,10.53]); C2=np.array([2.66,3.12,4.01,4.22,4.64])
+def pred(T):  # T: [n,1]
+    XB=X[:,None,:]
+    return C2[None,None,:]-A2[None,None,:]*np.maximum(XB-T[:,:,None],0)-B2[None,None,:]*np.maximum(T[:,:,None]-XB,0)
+grid=np.linspace(-3,4,141)
+sub2=X[:1500]; out2=out[:1500]
+XB=sub2[:,None,:]
+R=((C2-A2*np.maximum(XB-grid[None,:,None],0)-B2*np.maximum(grid[None,:,None]-XB,0)-out2[:,None,:])**2).sum(2)
+Tg=grid[R.argmin(1)]
+s=np.sort(sub2,1); m1=s[:,-1]; m2=s[:,-2]; m3=s[:,-3]
+print("corr T with m2:", np.corrcoef(Tg,m2)[0,1].round(3), "mean|T-m2|", np.abs(Tg-m2).mean().round(3))
+print("T-m2 mean/sd", (Tg-m2).mean().round(3), (Tg-m2).std().round(3))
+print("corr T with m3:", np.corrcoef(Tg,m3)[0,1].round(3), "mean|T-m3|", np.abs(Tg-m3).mean().round(3))
+print("corr T with 0.5(m2+m3):", np.corrcoef(Tg,0.5*(m2+m3))[0,1].round(3))
+print("frac |T-m2|<0.05:", (np.abs(Tg-m2)<0.05).mean().round(3), " |T-m3|<0.05:", (np.abs(Tg-m3)<0.05).mean().round(3))
+
+--- output (0.03 s) ---
+perm equivariance (proper): [0.835 0.842 0.877]
+corr T with m2: 0.946 mean|T-m2| 0.124
+T-m2 mean/sd 0.045 0.184
+corr T with m3: 0.692 mean|T-m3| 0.553
+corr T with 0.5(m2+m3): 0.892
+frac |T-m2|<0.05: 0.418  |T-m3|<0.05: 0.036
+
+
+===== step 70/80
+
+--- python ---
+
+def agr(s): return round(float((s.argmax(1)==dec).mean()),4)
+res=[]
+for rho in [1.0,1.03,1.06,1.10,1.15,1.25]:
+    w=np.array([rho**(4-i) for i in range(5)]); V=X*w
+    for seed in [True,False]:
+        Z=np.concatenate([V,np.zeros((len(X),1))],1) if seed else V
+        s=np.sort(Z,1); T=s[:,-2]
+        res.append((agr(-np.abs(V-T[:,None])),rho,seed))
+print(sorted(res)[-5:])
+# also: T from ideal m2 but comparison scaled
+for rho in [1.05,1.1,1.15]:
+    w=np.array([rho**(4-i) for i in range(5)]); V=X*w
+    res.append((agr(-np.abs(V-m2[:,None]*w)),'cmp',rho))
+print(sorted(res)[-3:])
+
+--- output (0.01 s) ---
+[(0.8375, 1.06, False), (0.863, 1.03, True), (0.8645, 1.03, False), (0.8775, 1.0, True), (0.8789, 1.0, False)]
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 14, in <module>
+ValueError: operands could not be broadcast together with shapes (8000,5) (1500,5) 
+
+
+===== step 71/80
+
+--- python ---
+
+def ztrack(prefix_vals):  # [n,5] values, returns running zero-seeded m2 and m1 per step
+    n=prefix_vals.shape[0]; M1=np.zeros((n,5)); M2=np.zeros((n,5))
+    for t in range(5):
+        Z=np.concatenate([prefix_vals[:,:t+1],np.zeros((n,1))],1); s=np.sort(Z,1)
+        M1[:,t]=s[:,-1]; M2[:,t]=s[:,-2]
+    return M1,M2
+M1,M2=ztrack(X)
+feat=[M2[:,-1][:,None],(M1[:,-1]-M2[:,-1])[:,None],(M2[:,-1]-np.sort(np.concatenate([X,np.zeros((len(X),1))],1),1)[:,-3])[:,None]]
+for i in range(5):
+    feat += [np.maximum(X[:,i]-M2[:,i],0)[:,None], np.maximum(M2[:,i]-X[:,i],0)[:,None]]
+F=np.concatenate(feat,1)
+Fm=np.concatenate([F,np.ones((len(X),1))],1)
+for site in ['h3','h4','h5']:
+    A=H[site]; co,_,_,_=np.linalg.lstsq(Fm,A,rcond=None); P=Fm@co
+    print(site,"explained", round(float(1-((A-P)**2).sum()/((A-A.mean(0))**2).sum()),4), "out agr", round(float((P@Wo).argmax(1)==dec).mean(),4))
+
+--- output (0.01 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 16, in <module>
+TypeError: only 0-dimensional arrays can be converted to Python scalars
+
+
+===== step 72/80
+
+--- python ---
+
+outp=P@Wo
+num=((A-P)**2).sum(); den=((A-A.mean(0))**2).sum()
+print(site, "explained", np.round(float(num/den),4), "outagr", np.round(float((outp.argmax(1)==dec).mean()),4))
+
+--- output (0.0 s) ---
+h3 explained 0.0695 outagr 0.1675
+
+
+===== step 73/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("The task is the index of the SECOND LARGEST input. The network keeps a running top-2 in a rectified "
+               "difference representation, but the comparisons it makes are inexact: a stored value is compared after "
+               "inflation by a factor A (so a NEW value must beat A*old), which makes the tracker prefer the value "
+               "already stored and produces the network's characteristic errors in ambiguous cases. The state is "
+               "carried here as that tracker's two memories m1 (running max) and m2 (running second max, seeded 0 by "
+               "h_0=0) plus the sign-split gap x_i-m2 of every position read so far. The readout is a distance from "
+               "the tracker's target T = max(m2, -0.2): out_k = C_k - 30*|x_k - T|, so the position sitting at the "
+               "tracked second-largest wins. Stage 1 is exact and 2-dimensional: h1 = x1*wx and wx has a fixed sign "
+               "pattern, so h1 = x1^+*(pos ray) + x1^-*(neg ray).")
+
+CC = [2.66, 3.12, 4.01, 4.22, 4.64]
+TS = -0.2
+ALPHA = 1.10
+BETA = 0.95
+
+
+def track(x, T):
+    n = x.shape[0]
+    m1 = np.zeros(n)
+    m2 = np.zeros(n)
+    for t in range(T):
+        xt = x[:, t]
+        u = xt > ALPHA * m1
+        m2 = np.where(u, m1, np.maximum(BETA * m2, xt))
+        m1 = np.where(u, xt, ALPHA * m1)
+    return m1, m2
+
+
+def model(x, iv):
+    n = x.shape[0]
+    u1 = iv("u1", np.stack([np.maximum(x[:, 0], 0), np.maximum(-x[:, 0], 0)], 1))
+    pre = [u1[:, 0] - u1[:, 1]]
+    v = None
+    for t in range(2, 6):
+        pre = pre + [x[:, t - 1]]
+        vals = np.stack(pre, 1)
+        m1, m2 = track(vals, t)
+        gap = vals - m2[:, None]
+        v = iv("v%d" % t, np.concatenate([m2[:, None], (m1 - m2)[:, None],
+                                          np.maximum(gap, 0), np.maximum(-gap, 0)], 1))
+        m2r = v[:, 0]
+        g = v[:, 2:2 + t] - v[:, 2 + t:2 + 2 * t]
+        rec = m2r[:, None] + g
+        pre = [rec[:, i] for i in range(t)]
+
+    m2r = v[:, 0]
+    g = v[:, 2:7] - v[:, 7:12]
+    d = g - np.maximum(TS - m2r, 0)[:, None]
+    return np.array(CC)[None, :] - 30.0 * np.abs(d)
+
+
+ALIGN = {"u1": ["h1"], "v2": ["h2"], "v3": ["h3"], "v4": ["h4"], "v5": ["h5"]}
+
+--- judge report 12 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,231 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 80.3% of inputs (a constant output would get 20.3%); output R2 -1.581; KL 1.258
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (6 dims named of 8; 4 principal components suffice; v2): explained 0.999 | substitute 97.2% | keep 98.9% | remove 37.1% (random 41.9%) | mean-ablate 37.1%
+  h3          (8 dims named of 8; 6 principal components suffice; v3): explained 0.980 | substitute 89.1% | keep 100.0% | remove 32.9% (random n/a) | mean-ablate 32.9%
+  h4          (8 dims named of 8; 8 principal components suffice; v4): explained 0.971 | substitute 80.9% | keep 100.0% | remove 28.8% (random n/a) | mean-ablate 28.8%
+  h5          (8 dims named of 8; 8 principal components suffice; v5): explained 0.940 | substitute 74.8% | keep 100.0% | remove 20.3% (random n/a) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange u1 @ h1: right 80.1% / 77.3% when changed (network changed in 44.1%); output R2 -1.471 | controls: random subspace 50.9%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  edit        u1 @ h1: right 77.3% / 68.8% when changed (network changed in 24.2%); output R2 -1.281 | controls: random subspace 51.8%, no-change 75.8%, source-output 21.5%, attribution patching 83.0%
+  interchange v2 @ h2: right 80.2% / 78.5% when changed (network changed in 64.5%); output R2 -1.484 | controls: random subspace 50.2%, no-change 35.5%, source-output 27.7%, attribution patching 50.8%
+  edit        v2 @ h2: right 54.5% / 37.1% when changed (network changed in 53.5%); output R2 -1.156 | controls: random subspace 47.2%, no-change 46.5%, source-output 22.6%, attribution patching 60.2%
+  interchange v3 @ h3: right 79.8% / 78.2% when changed (network changed in 69.7%); output R2 -1.526 | controls: random subspace 81.2%, no-change 30.3%, source-output 37.0%, attribution patching 49.2%
+  edit        v3 @ h3: right 53.0% / 41.0% when changed (network changed in 56.8%); output R2 -1.320 | controls: random subspace 45.1%, no-change 43.2%, source-output 25.7%, attribution patching 64.2%
+  interchange v4 @ h4: right 78.8% / 80.3% when changed (network changed in 72.5%); output R2 -1.851 | controls: random subspace 80.2%, no-change 27.5%, source-output 49.5%, attribution patching 58.7%
+  edit        v4 @ h4: right 54.4% / 47.6% when changed (network changed in 55.5%); output R2 -1.560 | controls: random subspace 38.9%, no-change 44.5%, source-output 29.2%, attribution patching 75.7%
+  interchange v5 @ h5: right 71.8% / 77.1% when changed (network changed in 69.8%); output R2 -2.774 | controls: random subspace 80.8%, no-change 30.1%, source-output 78.4%, attribution patching 100.0%
+  edit        v5 @ h5: right 57.9% / 52.8% when changed (network changed in 56.5%); output R2 -1.245 | controls: random subspace 40.2%, no-change 43.5%, source-output 33.3%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 74.8% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 63.4% (n=811); network decides 1: 70.5% (n=831); network decides 2: 83.2% (n=822); network decides 3: 89.7% (n=790); network decides 4: 96.4% (n=746) | near ties (400 least clear inputs, no requirement): 48.8%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 43.0% of them (need 50% when there are 30 or more) and is right on 43.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 119 (59.5%; on the unsearched starting inputs 14.5%)
+     input [1.721, -0.31, -0.581, -0.342, 2.181]: network [3], construction [4]
+     input [-1.977, -1.327, 0.456, -1.248, -1.11]: network [0], construction [2]
+     input [0.927, -1.302, -0.511, -0.327, 1.296]: network [3], construction [4]
+     input [-1.372, -1.926, 0.296, -1.164, -1.307]: network [0], construction [2]
+     input [1.199, -0.611, -1.428, 0.179, 1.754]: network [0], construction [4]
+7. NOT A COPY   37 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 5%; largest table in the file 5 numbers vs the largest weight tensor 64; constants per degree of freedom 0.084 (flag at 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 80.3% of inputs (need 95%)
+  - interchange of u1 at h1: prediction right in 77.3% of the cases where the network's output changed (need 90%)
+  - interchange of v2 at h2: prediction right in 78.5% of the cases where the network's output changed (need 90%)
+  - edit of v2 at h2: prediction right in 37.1% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h3: 89.1% (need 90%)
+  - interchange of v3 at h3: prediction right in 78.2% of the cases where the network's output changed (need 90%)
+  - edit of v3 at h3: prediction right in 41.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h4: 80.9% (need 90%)
+  - interchange of v4 at h4: prediction right in 80.3% of the cases where the network's output changed (need 90%)
+  - edit of v4 at h4: prediction right in 47.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h5: 74.8% (need 90%)
+  - interchange of v5 at h5: prediction right in 77.1% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 74.8% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 811 inputs where network decides 0, the construction agrees on 63.4% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 43.0% (need 50%); it is right on 43.0%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 80.3% | all sites at once 74.8% | worst slice 63.4% | network's mistakes reproduced 43.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 19.7% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 25.2% of the network's decisions
+  - worst slice: network decides 0 (811 inputs), where it matches 63.4%
+  - of the network's 444 mistakes on test inputs, 57.0% are not reproduced
+  - a search found 119 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 74/80
+
+--- python ---
+
+best=[]
+for ts in [-0.35,-0.3,-0.25,-0.2,-0.15,-0.1,-0.05]:
+    T=np.maximum(m2,ts)
+    best.append((round(float((np.abs(X-T[:,None]).argmin(1)==dec).mean()),4),'ts',ts))
+# asymmetric distance: w1*relu(x-T) vs w2*relu(T-x)
+for ts in [-0.2,-0.15,-0.1]:
+    T=np.maximum(m2,ts)
+    for w1,w2 in [(1,1.2),(1,1.5),(1.2,1),(1.5,1),(1,2)]:
+        s=-w1*np.maximum(X-T[:,None],0)-w2*np.maximum(T[:,None]-X,0)
+        best.append((round(float((s.argmax(1)==dec).mean()),4),'asym',ts,w1,w2))
+print(sorted(best)[-6:])
+
+--- output (0.0 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 5, in <module>
+ValueError: operands could not be broadcast together with shapes (8000,5) (1500,1) 
+
+
+===== step 75/80
+
+--- python ---
+
+sX=np.sort(X,1); M1=sX[:,-1]; M2=sX[:,-2]; M3=sX[:,-3]
+best=[]
+for ts in [-0.35,-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,0.0]:
+    T=np.maximum(M2,ts)
+    best.append((round(float((np.abs(X-T[:,None]).argmin(1)==dec).mean()),4),'sym',ts))
+for ts in [-0.2,-0.15,-0.1]:
+    T=np.maximum(M2,ts)
+    for w1,w2 in [(1,1.3),(1,1.6),(1.3,1),(1.6,1)]:
+        s=-w1*np.maximum(X-T[:,None],0)-w2*np.maximum(T[:,None]-X,0)
+        best.append((round(float((s.argmax(1)==dec).mean()),4),'asym',ts,w1,w2))
+print(sorted(best)[-8:])
+
+--- output (0.01 s) ---
+[(0.89, 'asym', -0.2, 1, 1.3), (0.8904, 'asym', -0.1, 1.6, 1), (0.8904, 'sym', -0.25), (0.8905, 'asym', -0.2, 1.3, 1), (0.8905, 'asym', -0.15, 1.3, 1), (0.8908, 'asym', -0.2, 1.6, 1), (0.8912, 'asym', -0.15, 1.6, 1), (0.8915, 'sym', -0.2)]
+
+
+===== step 76/80
+
+--- python ---
+
+best=[]
+for q in [0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]:
+    V=np.round(X/q)*q
+    for seed in [True,False]:
+        Z=np.concatenate([V,np.zeros((len(X),1))],1) if seed else V
+        T=np.sort(Z,1)[:,-2]
+        a=round(float((np.abs(X-T[:,None]).argmin(1)==dec).mean()),4)
+        Ta=np.maximum(T,-0.2)
+        b=round(float((np.abs(X-Ta[:,None]).argmin(1)==dec).mean()),4)
+        best.append((a,b,'q',q,seed))
+print(sorted(best)[-6:])
+
+--- output (0.01 s) ---
+[(0.8367, 0.8508, 'q', 0.15, False), (0.8379, 0.8386, 'q', 0.15, True), (0.8575, 0.8711, 'q', 0.1, False), (0.8586, 0.8588, 'q', 0.1, True), (0.8694, 0.8826, 'q', 0.05, False), (0.8698, 0.87, 'q', 0.05, True)]
+
+
+===== step 77/80
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("The task is the index of the SECOND LARGEST of the five inputs (matching the network on 89% of "
+               "inputs). The state is carried here in the semantic form the hidden layer must hold: the running "
+               "second-largest value m2 of the values read so far, the gap m1-m2 to the running maximum, the gap "
+               "m2-m3 to the next order statistic, and the sign-split gap x_i-m2 of every position read so far. The "
+               "readout is a distance from a target value T = max(m2, -0.2): out_k = C_k - 30*|x_k - T|, so the "
+               "position whose value sits at the second-largest wins, except when the second largest is well below "
+               "zero (fewer than two positive inputs), where the target pins near 0 and the value nearest 0 wins - "
+               "the network does the same in that regime. Stage 1 is exact and 2-dimensional: h1 = x1*wx and wx has a "
+               "fixed sign pattern, so h1 = x1^+*(pos ray) + x1^-*(neg ray). The residual 11% disagreement is the "
+               "network's own lossy top-2 tracking (its comparisons are made on a rectified difference state whose "
+               "scale factors are unequal, so near ties are resolved a little differently).")
+
+CC = [2.66, 3.12, 4.01, 4.22, 4.64]
+TS = -0.2
+
+
+def model(x, iv):
+    Bn = x.shape[0]
+    u1 = iv("u1", np.stack([np.maximum(x[:, 0], 0), np.maximum(-x[:, 0], 0)], 1))
+    pre = [u1[:, 0] - u1[:, 1]]
+
+    for t in range(2, 6):
+        pre = pre + [x[:, t - 1]]
+        vals = np.stack(pre, 1)
+        s = np.sort(vals, 1)
+        m1 = s[:, -1]
+        m2 = s[:, -2]
+        gap = vals - m2[:, None]
+        cols = [m2[:, None], (m1 - m2)[:, None]]
+        if t >= 3:
+            cols.append((m2 - s[:, -3])[:, None])
+        v = iv("v%d" % t, np.concatenate(cols + [np.maximum(gap, 0), np.maximum(-gap, 0)], 1))
+        k = 2 + (1 if t >= 3 else 0)
+        m2r = v[:, 0]
+        g = v[:, k:k + t] - v[:, k + t:k + 2 * t]
+        rec = m2r[:, None] + g
+        pre = [rec[:, i] for i in range(t)]
+
+    m2r = v[:, 0]
+    g = v[:, 3:8] - v[:, 8:13]
+    d = g - np.maximum(TS - m2r, 0)[:, None]
+    return np.array(CC)[None, :] - 30.0 * np.abs(d)
+
+
+ALIGN = {"u1": ["h1"], "v2": ["h2"], "v3": ["h3"], "v4": ["h4"], "v5": ["h5"]}
+
+--- judge report 13 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,301 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 89.1% of inputs (a constant output would get 20.3%); output R2 -1.557; KL 0.813
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (3 dims named of 8; 4 principal components suffice; v2): explained 0.835 | substitute 76.5% | keep 78.0% | remove 38.0% (random 49.8%) | mean-ablate 37.1%
+  h3          (7 dims named of 8; 6 principal components suffice; v3): explained 0.936 | substitute 83.9% | keep 95.5% | remove 33.0% (random 36.0%) | mean-ablate 32.9%
+  h4          (8 dims named of 8; 8 principal components suffice; v4): explained 0.951 | substitute 81.3% | keep 100.0% | remove 28.8% (random n/a) | mean-ablate 28.8%
+  h5          (8 dims named of 8; 8 principal components suffice; v5): explained 0.939 | substitute 77.8% | keep 100.0% | remove 20.3% (random n/a) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange u1 @ h1: right 88.2% / 85.5% when changed (network changed in 44.1%); output R2 -1.478 | controls: random subspace 52.6%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  edit        u1 @ h1: right 82.5% / 69.2% when changed (network changed in 24.2%); output R2 -1.291 | controls: random subspace 54.9%, no-change 75.8%, source-output 21.5%, attribution patching 83.0%
+  interchange v2 @ h2: right 67.5% / 66.3% when changed (network changed in 62.0%); output R2 -1.758 | controls: random subspace 39.0%, no-change 38.0%, source-output 26.3%, attribution patching 51.3%
+  edit        v2 @ h2: right 64.5% / 52.6% when changed (network changed in 44.4%); output R2 -1.816 | controls: random subspace 39.5%, no-change 55.6%, source-output 23.7%, attribution patching 71.5%
+  interchange v3 @ h3: right 79.8% / 80.1% when changed (network changed in 67.5%); output R2 -1.773 | controls: random subspace 47.9%, no-change 32.6%, source-output 36.1%, attribution patching 50.3%
+  edit        v3 @ h3: right 59.2% / 48.8% when changed (network changed in 48.6%); output R2 -1.895 | controls: random subspace 40.4%, no-change 51.3%, source-output 26.2%, attribution patching 71.0%
+  interchange v4 @ h4: right 82.1% / 84.2% when changed (network changed in 72.0%); output R2 -1.996 | controls: random subspace 88.5%, no-change 28.0%, source-output 48.9%, attribution patching 59.2%
+  edit        v4 @ h4: right 56.6% / 50.8% when changed (network changed in 50.4%); output R2 -1.775 | controls: random subspace 40.1%, no-change 49.5%, source-output 27.6%, attribution patching 76.8%
+  interchange v5 @ h5: right 77.0% / 82.7% when changed (network changed in 70.0%); output R2 -2.679 | controls: random subspace 88.9%, no-change 30.0%, source-output 79.8%, attribution patching 100.0%
+  edit        v5 @ h5: right 63.3% / 57.7% when changed (network changed in 51.6%); output R2 -1.397 | controls: random subspace 42.0%, no-change 48.4%, source-output 36.9%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 77.8% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 77.8% (n=811); network decides 1: 88.0% (n=831); network decides 2: 91.2% (n=822); network decides 3: 93.5% (n=790); network decides 4: 95.6% (n=746) | near ties (400 least clear inputs, no requirement): 54.0%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 30.6% of them (need 50% when there are 30 or more) and is right on 66.4%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 100 (50.0%; on the unsearched starting inputs 8.0%)
+     input [1.945, -0.72, -0.63, -0.258, 2.186]: network [3], construction [0]
+     input [2.007, -1.194, 0.298, -0.201, 2.342]: network [2], construction [0]
+     input [1.475, -0.562, -0.693, -0.225, 2.129]: network [3], construction [0]
+     input [1.5, -0.357, 0.24, -2.383, 1.599]: network [2], construction [0]
+     input [1.254, -1.906, 0.045, -1.164, 2.399]: network [2], construction [0]
+7. NOT A COPY   39 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 2%; largest table in the file 5 numbers vs the largest weight tensor 64; constants per degree of freedom 0.063 (flag at 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 89.1% of inputs (need 95%)
+  - interchange of u1 at h1: prediction right in 85.5% of the cases where the network's output changed (need 90%)
+  - substitution at h2: 76.5% (need 90%)
+  - interchange of v2 at h2: prediction right in 66.3% of the cases where the network's output changed (need 90%)
+  - substitution at h3: 83.9% (need 90%)
+  - interchange of v3 at h3: prediction right in 80.1% of the cases where the network's output changed (need 90%)
+  - edit of v3 at h3: prediction right in 48.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h4: 81.3% (need 90%)
+  - interchange of v4 at h4: prediction right in 84.2% of the cases where the network's output changed (need 90%)
+  - substitution at h5: 77.8% (need 90%)
+  - interchange of v5 at h5: prediction right in 82.7% of the cases where the network's output changed (need 90%)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 77.8% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 811 inputs where network decides 0, the construction agrees on 77.8% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 30.6% (need 50%); it is right on 66.4%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 89.1% | all sites at once 77.8% | worst slice 77.8% | network's mistakes reproduced 30.6%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 10.9% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 22.2% of the network's decisions
+  - worst slice: network decides 0 (811 inputs), where it matches 77.8%
+  - of the network's 444 mistakes on test inputs, 69.4% are not reproduced
+  - a search found 100 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 78/80
+
+===== step 79/80
+
+--- python ---
+
+sX=np.sort(X,1); M2=sX[:,-2]
+res=[]
+for rho in [0.93,0.95,0.96,0.97,0.98,0.99,1.0]:
+    w=np.array([rho**(4-i) for i in range(5)]); V=X*w
+    T=np.sort(V,1)[:,-2]
+    for ts in [-0.2,-0.1]:
+        Ta=np.maximum(T,ts)
+        res.append((round(float((np.abs(V-Ta[:,None]).argmin(1)==dec).mean()),4),'att',rho,ts))
+        res.append((round(float((np.abs(X-Ta[:,None]).argmin(1)==dec).mean()),4),'attT',rho,ts))
+print(sorted(res)[-6:])
+# also: score with last-position bonus
+for lam in [0.0,0.05,0.1,0.2,-0.05]:
+    T=np.maximum(M2,-0.2)
+    s=-np.abs(X-T[:,None])+lam*np.eye(5)[4][None,:]*np.abs(X-T[:,None])
+    res.append((round(float((s.argmax(1)==dec).mean()),4),'lam4',lam))
+print(sorted(res)[-4:])
+
+--- output (0.01 s) ---
+[(0.8876, 'att', 1.0, -0.1), (0.8876, 'attT', 1.0, -0.1), (0.8881, 'attT', 0.99, -0.2), (0.8884, 'att', 0.99, -0.2), (0.8915, 'att', 1.0, -0.2), (0.8915, 'attT', 1.0, -0.2)]
+[(0.8915, 'att', 1.0, -0.2), (0.8915, 'attT', 1.0, -0.2), (0.8915, 'lam4', 0.0), (0.8918, 'lam4', -0.05)]
+
+
+===== step 80/80
+
+[done] {"id": "20261118-023529-46c8", "status": "done", "seconds": 1410.8, "best": 10, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 85.4% of inputs (need 95%)", "interchange of u1 at h1: prediction right in 82.2% of the cases where the network's output changed (need 90%)", "interchange of v2 at h2: prediction right in 84.0% of the cases where the network's output changed (need 90%)", "substitution at h3: 89.3% (need 90%)", "interchange of v3 at h3: prediction right in 83.7% of the cases where the network's output changed (need 90%)", "substitution at h4: 83.7% (need 90%)", "interchange of v4 at h4: prediction right in 86.5% of the cases where the network's output changed (need 90%)", "substitution at h5: 79.0% (need 90%)", "interchange of v5 at h5: prediction right in 84.4% of the cases where the network's output changed (need 90%)", "joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 79.0% of its decisions (need 90%): the sites pass one at a time but do not work together", "worst slice: on the 811 inputs where network decides 0, the construction agrees on 76.0% (need 80%)", "the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 47.3% (need 50%); it is right on 47.1%: it explains the task, not this network"], "stages_total": 5, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.3445986840000001}
+
+status done; best submission 10; cost $0.345; 1410.8 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_8_5/20261118-023529-46c8

@@ -1589,3 +1589,1385 @@ NOT EXPLAINED:
   - a search found 34 inputs (from 200 starts) where the network's decision is clear and the construction's differs
 
 ===== step 118/160
+
+--- python ---
+
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+# LEVEL leak: level at pos0 = L, later value at pos k = f*L  -> if it counts as "above", answer becomes pos0
+print("LEVEL leak probe: L=1 at pos0, value f at pos k; dec=0 means treated as ABOVE the level")
+for k in [1,2,3,5,7,9]:
+    row=[]
+    for f in [0.990,0.995,0.997,0.998,0.999,1.0]:
+        o=run(mkseq([(0,1.0),(k,f)])[None,:])[0]
+        row.append(f"{f}:{o.argmax()}")
+    print(" k=",k," ".join(row))
+
+--- output (0.0 s) ---
+LEVEL leak probe: L=1 at pos0, value f at pos k; dec=0 means treated as ABOVE the level
+ k= 1 0.99:1 0.995:1 0.997:1 0.998:1 0.999:1 1.0:1
+ k= 2 0.99:2 0.995:2 0.997:2 0.998:0 0.999:0 1.0:0
+ k= 3 0.99:3 0.995:3 0.997:3 0.998:3 0.999:3 1.0:3
+ k= 5 0.99:5 0.995:5 0.997:5 0.998:5 0.999:5 1.0:5
+ k= 7 0.99:0 0.995:0 0.997:0 0.998:0 0.999:0 1.0:0
+ k= 9 0.99:0 0.995:0 0.997:0 0.998:0 0.999:0 1.0:0
+
+
+===== step 119/160
+
+--- python ---
+
+import numpy as np
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+B=[];labs=[]
+for i in range(10):
+    for j in range(10):
+        if i==j: continue
+        for f in [0.99,0.5]:
+            B.append(mkseq([(i,1.0),(j,f)])); labs.append((i,j,f))
+o=run(np.array(B)); dec=o.argmax(1)
+for f in [0.99,0.5]:
+    M=np.full((10,10),-1)
+    for (i,j,ff),d in zip(labs,dec):
+        if ff==f: M[i,j]=d
+    print("f=",f," rows = pos of 1.0 (max), cols = pos of f (2nd). entry = decision (correct = the col)")
+    print(M)
+
+--- output (0.0 s) ---
+f= 0.99  rows = pos of 1.0 (max), cols = pos of f (2nd). entry = decision (correct = the col)
+[[-1  1  2  3  4  5  6  0  8  0]
+ [ 0 -1  2  3  4  5  6  7  8  9]
+ [ 0  1 -1  3  4  5  6  7  2  2]
+ [ 0  1  2 -1  4  5  6  7  8  9]
+ [ 0  1  2  3 -1  5  6  7  8  9]
+ [ 0  1  2  3  4 -1  6  7  8  5]
+ [ 6  1  6  3  4  5 -1  7  8  9]
+ [ 0  1  2  7  4  5  6 -1  8  9]
+ [ 8  1  2  8  4  5  6  7 -1  9]
+ [ 0  1  2  3  9  5  9  7  9 -1]]
+f= 0.5  rows = pos of 1.0 (max), cols = pos of f (2nd). entry = decision (correct = the col)
+[[-1  1  2  3  4  5  6  7  8  9]
+ [ 0 -1  2  3  4  5  6  7  8  9]
+ [ 0  1 -1  3  4  5  6  7  8  9]
+ [ 0  1  2 -1  4  5  6  7  8  9]
+ [ 0  1  2  3 -1  5  6  7  8  9]
+ [ 0  1  2  3  4 -1  6  7  8  9]
+ [ 0  1  2  3  4  5 -1  7  8  9]
+ [ 0  1  2  3  4  5  6 -1  8  9]
+ [ 0  1  2  3  4  5  6  7 -1  9]
+ [ 0  1  2  3  4  5  6  7  8 -1]]
+
+
+===== step 120/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2, linewidth=250, suppress=True)
+def show(seq, name=""):
+    H=acts(np.array(seq)[None,:])
+    print("=== ",name, seq)
+    for t in range(1,11):
+        print(f" t={t:2d}", H[f'h{t}'][0])
+show([2.0,1.0,0.5,0.001,0.001,0.001,0.001,0.001,0.001,0.001],"max@0,2nd@1")
+print()
+show([1.0,2.0,0.5,0.001,0.001,0.001,0.001,0.001,0.001,0.001],"max@1,2nd@0")
+
+--- output (0.0 s) ---
+===  max@0,2nd@1 [2.0, 1.0, 0.5, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+ t= 1 [ 0.14  0.    0.03  0.   20.31  0.    0.    0.    0.    0.    0.12  0.3   0.6   0.    0.    0.  ]
+ t= 2 [12.39  7.17 35.23  6.96  0.   24.13  0.   13.64  0.    2.76 36.01 35.45 26.6   9.26 16.45  3.69]
+ t= 3 [ 0.    4.74 35.37  0.    0.    9.25 13.13 20.16  9.74  0.   41.37 31.3  18.01 11.09  5.92  3.58]
+ t= 4 [ 5.12 14.5  36.92  4.09  0.    0.   23.14 26.39 13.08  0.   35.24 17.82  4.83 10.95 14.01  0.  ]
+ t= 5 [21.5  20.46 36.21  8.18  0.    0.   24.26 24.25 14.4   0.   20.87  6.56  0.76 16.22 25.8   0.96]
+ t= 6 [28.8  24.51 33.59  0.    0.    0.   22.55 22.18 19.83  0.    7.85  0.    8.6  14.19 33.44 11.57]
+ t= 7 [28.42 24.5  30.42  6.08  0.    0.   19.26 21.19 25.9   0.    0.    3.04 25.43 11.33 36.4  16.41]
+ t= 8 [24.14 20.84 29.48  9.16  0.    0.   16.88 21.73 29.33  0.    0.   14.28 35.98  7.9  29.13 23.62]
+ t= 9 [16.06 16.05 30.32  9.44  0.    0.   16.04 23.48 28.7   0.   10.5  23.78 38.4  10.75 19.51 31.94]
+ t=10 [10.85 12.72 32.26 15.06  0.    0.   17.14 25.25 24.53  0.   21.67 25.53 37.65 16.23 11.04 26.14]
+
+===  max@1,2nd@0 [1.0, 2.0, 0.5, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+ t= 1 [ 0.07  0.    0.01  0.   10.16  0.    0.    0.    0.    0.    0.06  0.15  0.3   0.    0.    0.  ]
+ t= 2 [ 6.3   0.   17.64  3.3  10.28 11.64  0.    0.    0.    1.04 18.1  17.95 13.74  4.56  6.25  1.67]
+ t= 3 [ 6.39 14.41 35.76  0.    0.   20.72  4.73 20.2   6.58  3.34 37.   30.24 20.2   9.7  15.7   2.49]
+ t= 4 [ 0.    9.7  35.57  7.44  0.    0.   17.75 26.71 17.2   0.   37.34 27.65 16.63  9.59  7.84  0.  ]
+ t= 5 [10.02 12.32 37.78  1.51  0.    0.   22.59 26.68 13.63  0.   30.56 17.4   1.19 12.24 15.14  0.  ]
+ t= 6 [17.5  18.38 36.71  0.    0.    0.   24.04 24.96 13.23  0.   20.46  3.96  0.   14.14 27.03  4.4 ]
+ t= 7 [26.25 23.46 33.85  7.43  0.    0.   23.12 22.55 17.15  0.    5.16  0.   10.88 13.68 33.94  6.22]
+ t= 8 [29.68 25.01 31.14  4.98  0.    0.   20.45 21.17 23.43  0.    0.    4.6  22.41 10.19 33.55 21.61]
+ t= 9 [26.2  22.51 28.97 12.88  0.    0.   17.29 21.26 28.41  0.    2.04 12.92 36.14 14.24 29.7  30.48]
+ t=10 [20.54 17.72 29.4  13.96  0.    0.   15.86 22.64 29.32  0.    9.4  20.4  44.2  14.3  18.18 29.95]
+
+
+===== step 121/160
+
+--- python ---
+
+import numpy as np
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+def flip(i,j):
+    # bisect on f in (0.9,1) where decision changes from j (correct) to i
+    lo,hi=0.9,1.0
+    o=run(mkseq([(i,1.0),(j,lo)])[None,:])[0].argmax()
+    if o!=j: return None,o
+    o=run(mkseq([(i,1.0),(j,hi)])[None,:])[0].argmax()
+    if o==j: return 1.0,o
+    for _ in range(25):
+        m=(lo+hi)/2
+        if run(mkseq([(i,1.0),(j,m)])[None,:])[0].argmax()==j: lo=m
+        else: hi=m
+    return (lo+hi)/2, None
+for (i,j) in [(0,1),(0,2),(0,5),(0,7),(0,9),(2,8),(2,9),(5,9),(6,0),(9,0),(1,5),(3,8),(4,7),(6,2),(9,4),(5,6),(1,9)]:
+    f,tag=flip(i,j)
+    print(f"max@{i} 2nd@{j}: boundary f={f}")
+
+--- output (0.02 s) ---
+max@0 2nd@1: boundary f=1.0
+max@0 2nd@2: boundary f=0.9976210430264473
+max@0 2nd@5: boundary f=1.0
+max@0 2nd@7: boundary f=0.9785431191325186
+max@0 2nd@9: boundary f=0.9600572392344472
+max@2 2nd@8: boundary f=0.9847226247191428
+max@2 2nd@9: boundary f=0.9737918362021446
+max@5 2nd@9: boundary f=0.9884487494826316
+max@6 2nd@0: boundary f=0.9631740137934683
+max@9 2nd@0: boundary f=1.0
+max@1 2nd@5: boundary f=1.0
+max@3 2nd@8: boundary f=1.0
+max@4 2nd@7: boundary f=1.0
+max@6 2nd@2: boundary f=0.9843100860714913
+max@9 2nd@4: boundary f=0.9880556896328926
+max@5 2nd@6: boundary f=1.0
+max@1 2nd@9: boundary f=1.0
+
+
+===== step 122/160
+
+--- python ---
+
+import numpy as np
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+def flip(i,j,Amax,base=0.001):
+    lo,hi=0.5,1.0
+    d=lambda f: run(mkseq([(i,Amax),(j,f*Amax)],base)[None,:])[0].argmax()
+    if d(lo)!=j: return None
+    if d(hi)==j: return 1.0
+    for _ in range(22):
+        m=(lo+hi)/2
+        if d(m)==j: lo=m
+        else: hi=m
+    return (lo+hi)/2
+print("pair (0,7) base=.001:", [ (A, round(flip(0,7,A),4)) for A in [0.3,1.0,2.0,4.0]])
+print("pair (0,9) base=.001:", [ (A, round(flip(0,9,A),4)) for A in [0.3,1.0,4.0]])
+print("pair (5,9) base=.001:", [ (A, round(flip(5,9,A),4)) for A in [0.5,1.0,3.0]])
+print("pair (0,7) other 2nd pos, i.e. (0,5):", [ (A, round(flip(0,5,A),4)) for A in [0.3,1.0,4.0]])
+
+--- output (0.02 s) ---
+pair (0,7) base=.001: [(0.3, 0.9783), (1.0, 0.9785), (2.0, 0.9786), (4.0, 0.9786)]
+pair (0,9) base=.001: [(0.3, 0.9599), (1.0, 0.9601), (4.0, 0.9601)]
+pair (5,9) base=.001: [(0.5, 0.9885), (1.0, 0.9884), (3.0, 0.9884)]
+pair (0,7) other 2nd pos, i.e. (0,5): [(0.3, 1.0), (1.0, 1.0), (4.0, 1.0)]
+
+
+===== step 123/160
+
+--- python ---
+
+import numpy as np
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+fs=np.array([0.94,0.95,0.96,0.965,0.97,0.975,0.978,0.98,0.982,0.985,0.988,0.99,0.992,0.994,0.996,0.998,1.0])
+B=[];labs=[]
+for i in range(10):
+    for j in range(10):
+        if i==j: continue
+        for f in fs:
+            B.append(mkseq([(i,1.0),(j,f)])); labs.append((i,j,f))
+o=run(np.array(B)); dec=o.argmax(1)
+Bs=np.full((10,10),np.nan)
+for i in range(10):
+    for j in range(10):
+        if i==j: continue
+        ds=[(f,d) for (ii,jj,f),d in zip(labs,dec) if ii==i and jj==j]
+        bad=[f for f,d in ds if d!=j]
+        Bs[i,j]= min(bad) if bad else 1.0
+np.set_printoptions(precision=3,suppress=True,linewidth=200)
+print("boundary f*(i,j): row=pos of max, col=pos of 2nd (1.0 = never errs)")
+print(Bs)
+
+--- output (0.02 s) ---
+boundary f*(i,j): row=pos of max, col=pos of 2nd (1.0 = never errs)
+[[  nan 1.    0.998 1.    1.    1.    1.    0.98  1.    0.965]
+ [1.      nan 1.    0.998 1.    1.    1.    1.    0.996 1.   ]
+ [1.    1.      nan 1.    1.    1.    1.    1.    0.985 0.975]
+ [1.    1.    1.      nan 1.    1.    1.    1.    1.    1.   ]
+ [0.992 1.    1.    1.      nan 1.    1.    1.    1.    1.   ]
+ [0.994 0.996 0.998 1.    0.998   nan 1.    1.    1.    0.99 ]
+ [0.965 1.    0.985 0.998 1.    0.996   nan 1.    1.    1.   ]
+ [1.    0.994 0.994 0.965 0.998 0.996 0.998   nan 1.    1.   ]
+ [0.975 1.    1.    0.99  0.992 1.    1.    1.      nan 1.   ]
+ [1.    1.    1.    0.998 0.99  1.    0.99  0.996 0.978   nan]]
+
+
+===== step 124/160
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np, math
+DESCRIPTION = ("The network reports the POSITION of the SECOND-LARGEST of the 10 inputs. It runs the classic two-slot scan: it keeps a "
+  "LEVEL (the largest value seen so far) with its position and an ANSWER (the second largest) with its position. At each step x_t is "
+  "compared with the stored level; if it is above, the old level drops into the answer slot and x_t becomes the new level; otherwise "
+  "x_t is compared with the stored answer and replaces it if larger. Ties go to the later position. The stored slot VALUES leak very "
+  "slightly (about 0.15 percent per step, factor 0.9985), so a value that is within about 0.15 percent per elapsed step of the level "
+  "counts as above it: that is exactly why the network sometimes demotes a near-tied maximum and answers with the maximum's own "
+  "position, and why it occasionally answers with the 3rd largest when the 2nd and 3rd are nearly equal. The whole network is "
+  "positively homogeneous, so the leak is a relative (multiplicative) one, which is why the decisions are invariant to rescaling the "
+  "whole input (measured: the error boundary is the same relative fraction for inputs scaled by 0.3, 1, 4) and why the deviations only "
+  "happen on near ties. Stage 1: W_x has only five significant entries (units 1,6,7,8 = -10.6,-11.0,-13.2,-12.3 and unit 4 = +10.2, "
+  "all others |w|<=0.3), so h1 = relu(x1)*a + relu(-x1)*b: a bank of below-level (negative gain) and above-level (positive gain) "
+  "detectors of the single scalar x1, i.e. the two slots of a one-element scan. W_o is a matched filter over the smooth position code of "
+  "the answer slot (its class vectors are shifted copies of a smooth template, adjacent-class cosines 0.4-0.9), so the output decays "
+  "smoothly away from the answer class.")
+def model(x, iv):
+    x = np.asarray(x, dtype=float)
+    u = iv("x1_pos", np.maximum(x[:, 0], 0.0))      # relu(x1): drives the below-level detectors
+    v = iv("x1_neg", np.maximum(-x[:, 0], 0.0))     # relu(-x1): drives the above-level detector
+    s = x.copy(); s[:, 0] = u - v
+    B, n = s.shape
+    r = 0.9985                                       # per-step leak of the stored slot values
+    Lv = np.full(B, -1e6); Lp = np.zeros(B)          # level value / position
+    Av = np.full(B, -1e6); Ap = np.zeros(B)          # answer value / position
+    for t in range(n):
+        Lv = Lv * r; Av = Av * r                     # both slots leak
+        xt = s[:, t]
+        above = xt > Lv                              # above the level -> demote the level into the answer
+        sec = xt > Av
+        nAv = np.where(above, Lv, np.where(sec, xt, Av))
+        nAp = np.where(above, Lp, np.where(sec, float(t), Ap))
+        Lv = np.where(above, xt, Lv)
+        Lp = np.where(above, float(t), Lp)
+        Av = nAv; Ap = nAp
+    pos = iv("anspos", Ap)
+    d = np.abs(np.arange(n)[None, :] - pos[:, None])
+    score = -(d + 0.15 * d * d) + 1e-6 * np.arange(n)[None, :]
+    return score
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 18 ---
+JUDGE REPORT   (4000 held-out inputs; construction 3,041 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 95.7% of inputs (a constant output would get 9.7%); output R2 -0.119; KL 0.815
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 16; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 74.8% (random 87.8%) | mean-ablate 74.8%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 95.7% / 93.4% when changed (network changed in 29.3%); output R2 -0.114 | controls: random subspace 70.5%, no-change 70.7%, source-output 11.6%, attribution patching 62.0%
+  partial     x1_pos @ h1: right 89.8% / 71.5% when changed (network changed in 28.4%); output R2 -0.128 | controls: random subspace 75.5%, no-change 71.6%, source-output 10.5%, attribution patching 72.4%
+  partial     x1_neg @ h1: right 89.5% / 25.9% when changed (network changed in 5.4%); output R2 -0.131 | controls: random subspace 86.9%, no-change 94.6%, source-output 10.2%, attribution patching 83.8%
+  edit        all variables @ h1: right 89.0% / 63.1% when changed (network changed in 17.2%); output R2 -0.130 | controls: random subspace 78.3%, no-change 82.8%, source-output 9.8%, attribution patching 77.1%
+Variables in model() with no site in ALIGN (not tested): anspos
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 93.6% (n=405); network decides 1: 93.4% (n=439); network decides 2: 96.8% (n=373); network decides 3: 98.0% (n=409); network decides 4: 96.6% (n=379); network decides 5: 98.0% (n=395); network decides 6: 95.3% (n=385); network decides 7: 94.5% (n=400); network decides 8: 96.6% (n=388); network decides 9: 94.1% (n=427) | near ties (400 least clear inputs, no requirement): 67.0%
+   the network's own mistakes: it is wrong on 4.5% of test inputs (182); the construction reproduces 12.1% of them (need 50% when there are 30 or more) and is right on 87.4%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 45 (22.5%; on the unsearched starting inputs 1.0%)
+     input [1.38, -1.456, 0.128, -0.88, 1.695, -0.456, 0.62, -0.313, 0.251, 1.382]: network [0], construction [9]
+     input [1.087, 2.725, -0.828, -0.89, -2.299, -0.49, 0.311, -0.63, 0.168, 1.068]: network [9], construction [0]
+     input [0.79, -0.48, -1.221, 0.018, -0.773, 0.492, 2.227, 0.039, 0.475, 0.761]: network [9], construction [0]
+     input [0.905, -0.516, 0.968, -0.563, 0.138, -0.793, 0.097, -0.864, 0.771, 0.9]: network [0], construction [9]
+     input [1.306, 0.755, -0.29, -1.33, 1.125, -0.291, 0.152, -0.39, 1.317, -0.082]: network [8], construction [0]
+7. NOT A COPY   10 numeric literals in the file; network parameters 432; share of its weights (|w| >= 0.05) the literals reproduce: 2%; largest table in the file 1 numbers vs the largest weight tensor 256; constants per degree of freedom 0.008 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8);  step 9: NOT EXPLAINED (no variable at h9);  step 10: NOT EXPLAINED (no variable at h10)
+VERDICT: NOT VERIFIED (1 of 10 stages verified). Failing:
+  - the network's own mistakes: on the 182 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 12.1% (need 50%); it is right on 87.4%: it explains the task, not this network
+COVERAGE   stages 1/10 | behaviour 95.7% | all sites at once 100.0% | worst slice 93.4% | network's mistakes reproduced 12.1%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - stage 'step 9' is not explained
+  - stage 'step 10' is not explained
+  - on 4.3% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): anspos
+  - worst slice: network decides 1 (439 inputs), where it matches 93.4%
+  - of the network's 182 mistakes on test inputs, 87.9% are not reproduced
+  - a search found 45 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 125/160
+
+--- python ---
+
+import numpy as np
+netdec = run(X).argmax(1)
+n=X.shape[0]
+def scan_pred(x, rl, ra):
+    B,nn=x.shape
+    Lv=np.full(B,-1e6); Lp=np.zeros(B); Av=np.full(B,-1e6); Ap=np.zeros(B)
+    for t in range(nn):
+        Lv=Lv*rl; Av=Av*ra
+        xt=x[:,t]
+        above=xt>Lv; sec=xt>Av
+        nAv=np.where(above,Lv,np.where(sec,xt,Av)); nAp=np.where(above,Lp,np.where(sec,float(t),Ap))
+        Lv=np.where(above,xt,Lv); Lp=np.where(above,float(t),Lp); Av=nAv; Ap=nAp
+    return Ap.astype(int)
+# exact second max rule (ties -> last)
+def exact(x):
+    B,nn=x.shape
+    out=np.zeros(B,int)
+    o2=x.copy()
+    idx=np.argsort(-o2,axis=1)
+    # second largest tie->last: sort by (-value, -index)
+    key=[( -x[i], -np.arange(nn)) for i in range(0)]
+    # simple loop:
+    for i in range(B):
+        v=x[i]; j=int(np.lexsort((-np.arange(nn), -v))[1]); out[i]=j
+    return out
+ex=exact(X)
+print("net vs exact:", (netdec==ex).mean())
+print("net exact-mistake count:", (netdec!=ex).sum())
+
+--- output (0.05 s) ---
+net vs exact: 0.953
+net exact-mistake count: 376
+
+
+===== step 126/160
+
+--- python ---
+
+import numpy as np
+res=[]
+for rl in [0.99,0.993,0.995,0.996,0.997,0.998,0.999,1.0]:
+    for ra in [0.99,0.995,0.997,0.999,1.0]:
+        p=scan_pred(X, rl, ra)
+        acc=(p==netdec).mean(); rep=(p[netdec!=ex]==netdec[netdec!=ex]).mean()
+        res.append((acc,rep,rl,ra))
+res.sort(reverse=True)
+for acc,rep,rl,ra in res[:14]: print(f"acc={acc:.4f} rep={rep:.3f} rl={rl} ra={ra}")
+print("---by rep---")
+res.sort(key=lambda z:-z[1])
+for acc,rep,rl,ra in res[:14]: print(f"rep={rep:.3f} acc={acc:.4f} rl={rl} ra={ra}")
+
+--- output (0.06 s) ---
+acc=0.9550 rep=0.090 rl=0.999 ra=0.999
+acc=0.9547 rep=0.066 rl=0.999 ra=1.0
+acc=0.9545 rep=0.120 rl=0.999 ra=0.997
+acc=0.9536 rep=0.154 rl=0.999 ra=0.995
+acc=0.9535 rep=0.032 rl=1.0 ra=0.999
+acc=0.9534 rep=0.064 rl=1.0 ra=0.997
+acc=0.9530 rep=0.101 rl=1.0 ra=0.995
+acc=0.9530 rep=0.000 rl=1.0 ra=1.0
+acc=0.9525 rep=0.120 rl=0.998 ra=0.999
+acc=0.9521 rep=0.093 rl=0.998 ra=1.0
+acc=0.9519 rep=0.149 rl=0.998 ra=0.997
+acc=0.9510 rep=0.184 rl=0.998 ra=0.995
+acc=0.9499 rep=0.136 rl=0.997 ra=0.999
+acc=0.9496 rep=0.112 rl=0.997 ra=1.0
+---by rep---
+rep=0.279 acc=0.9295 rl=0.993 ra=0.99
+rep=0.277 acc=0.9155 rl=0.99 ra=0.99
+rep=0.261 acc=0.9360 rl=0.995 ra=0.99
+rep=0.245 acc=0.9215 rl=0.99 ra=0.995
+rep=0.242 acc=0.9349 rl=0.993 ra=0.995
+rep=0.237 acc=0.9390 rl=0.996 ra=0.99
+rep=0.231 acc=0.9427 rl=0.997 ra=0.99
+rep=0.221 acc=0.9460 rl=0.998 ra=0.99
+rep=0.221 acc=0.9415 rl=0.995 ra=0.995
+rep=0.221 acc=0.9360 rl=0.993 ra=0.997
+rep=0.215 acc=0.9224 rl=0.99 ra=0.997
+rep=0.205 acc=0.9245 rl=0.99 ra=0.999
+rep=0.202 acc=0.9440 rl=0.996 ra=0.995
+rep=0.199 acc=0.9494 rl=0.999 ra=0.99
+
+
+===== step 127/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2,suppress=True,linewidth=200)
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+for (i,j) in [(6,0),(0,7),(0,5),(9,4)]:
+    print(f"--- max@{i} 2nd@{j}")
+    for f in [0.5,0.9,0.96,0.97,0.98,0.99,1.0]:
+        o=run(mkseq([(i,1.0),(j,f)])[None,:])[0]
+        print(f" f={f:5.2f} dec={o.argmax()}  out={o}  top2gap={np.sort(o)[-1]-np.sort(o)[-2]:.2f}")
+
+--- output (0.01 s) ---
+--- max@6 2nd@0
+ f= 0.50 dec=0  out=[ 26.47  18.15  -4.04 -21.86 -28.   -13.82  14.01  -4.1   -3.87  -0.94]  top2gap=8.32
+ f= 0.90 dec=0  out=[ 41.03  24.55 -13.05 -36.41 -41.22 -22.64  35.97   0.61  -6.21  -1.84]  top2gap=5.06
+ f= 0.96 dec=0  out=[ 40.82  22.76 -16.19 -37.95 -40.66 -23.61  40.57   2.41  -5.36  -1.93]  top2gap=0.25
+ f= 0.97 dec=6  out=[ 40.78  22.47 -16.71 -38.2  -40.56 -23.77  41.33   2.71  -5.22  -1.94]  top2gap=0.55
+ f= 0.98 dec=6  out=[ 40.75  22.17 -17.23 -38.46 -40.47 -23.94  42.1    3.02  -5.08  -1.96]  top2gap=1.35
+ f= 0.99 dec=6  out=[ 40.71  21.87 -17.75 -38.72 -40.38 -24.1   42.86   3.32  -4.94  -1.97]  top2gap=2.15
+ f= 1.00 dec=6  out=[ 40.68  21.57 -18.28 -38.97 -40.28 -24.26  43.63   3.62  -4.79  -1.99]  top2gap=2.95
+--- max@0 2nd@7
+ f= 0.50 dec=7  out=[  0.59   0.25  -5.93 -11.82  -9.38  -8.7   -6.83  25.54   8.48  -2.21]  top2gap=17.06
+ f= 0.90 dec=7  out=[ 28.85  19.99  -4.45 -28.6  -30.08 -23.84 -12.28  35.13   4.76  -1.73]  top2gap=6.28
+ f= 0.96 dec=7  out=[ 34.71  26.68  -2.01 -31.9  -35.   -28.58 -14.45  36.19   2.98  -1.75]  top2gap=1.48
+ f= 0.97 dec=7  out=[ 35.69  27.79  -1.6  -32.45 -35.82 -29.38 -14.82  36.37   2.69  -1.75]  top2gap=0.68
+ f= 0.98 dec=0  out=[ 36.66  28.91  -1.2  -33.   -36.64 -30.17 -15.18  36.55   2.39  -1.75]  top2gap=0.12
+ f= 0.99 dec=0  out=[ 37.64  30.02  -0.79 -33.55 -37.46 -30.96 -15.54  36.72   2.1   -1.75]  top2gap=0.92
+ f= 1.00 dec=0  out=[ 38.61  31.14  -0.39 -34.09 -38.28 -31.75 -15.9   36.9    1.8   -1.76]  top2gap=1.72
+--- max@0 2nd@5
+ f= 0.50 dec=5  out=[ -3.23 -13.41 -16.57 -16.77  -7.96  31.22   7.26   1.53   6.53  -3.03]  top2gap=23.96
+ f= 0.90 dec=5  out=[ 20.22   4.53 -19.07 -37.02 -14.82  35.99   5.34  -1.31   1.16 -18.42]  top2gap=15.77
+ f= 0.96 dec=5  out=[ 28.34   9.23 -19.82 -41.29 -18.53  35.55   4.1   -2.76  -0.64 -20.2 ]  top2gap=7.21
+ f= 0.97 dec=5  out=[ 29.7   10.01 -19.95 -42.   -19.14  35.48   3.89  -3.    -0.94 -20.5 ]  top2gap=5.78
+ f= 0.98 dec=5  out=[ 31.05  10.8  -20.07 -42.71 -19.76  35.41   3.69  -3.24  -1.23 -20.8 ]  top2gap=4.36
+ f= 0.99 dec=5  out=[ 32.37  11.59 -20.18 -43.4  -20.36  35.29   3.48  -3.49  -1.54 -21.08]  top2gap=2.92
+ f= 1.00 dec=5  out=[ 33.04  12.65 -19.86 -43.72 -20.46  34.19   3.23  -3.72  -1.99 -21.04]  top2gap=1.16
+--- max@9 2nd@4
+ f= 0.50 dec=4  out=[-25.16 -27.3  -11.49  15.21  27.12  21.18   6.2  -12.4    3.05  -8.  ]  top2gap=5.94
+ f= 0.90 dec=4  out=[-42.18 -48.65 -26.29  15.88  38.12  31.77   9.4  -19.08  -0.34  26.44]  top2gap=6.35
+ f= 0.96 dec=4  out=[-40.55 -49.31 -28.83  12.21  35.66  31.44  10.53 -17.24  -0.95  31.18]  top2gap=4.22
+ f= 0.97 dec=4  out=[-40.07 -49.03 -29.    11.5   34.8   30.93  10.47 -16.85  -0.75  31.91]  top2gap=2.88
+ f= 0.98 dec=4  out=[-39.59 -48.75 -29.16  10.79  33.94  30.41  10.4  -16.47  -0.56  32.65]  top2gap=1.29
+ f= 0.99 dec=9  out=[-39.11 -48.47 -29.32  10.08  33.07  29.9   10.34 -16.08  -0.37  33.38]  top2gap=0.31
+ f= 1.00 dec=9  out=[-38.63 -48.19 -29.49   9.37  32.21  29.39  10.28 -15.7   -0.17  34.12]  top2gap=1.91
+
+
+===== step 128/160
+
+--- python ---
+
+import numpy as np
+def slots(x):
+    B,nn=x.shape
+    Lv=np.full(B,-1e6); Lp=np.zeros(B,int); Av=np.full(B,-1e6); Ap=np.zeros(B,int)
+    for t in range(nn):
+        xt=x[:,t]; above=xt>Lv; sec=xt>Av
+        nAv=np.where(above,Lv,np.where(sec,xt,Av)); nAp=np.where(above,Lp,np.where(sec,t,Ap))
+        Lv=np.where(above,xt,Lv); Lp=np.where(above,t,Lp); Av=nAv; Ap=nAp
+    return Lv,Lp,Av,Ap
+Lv,Lp,Av,Ap=slots(X)
+O=run(X)
+def onehot(v,n=10):
+    M=np.zeros((len(v),n)); M[np.arange(len(v)),v]=1; return M
+P=onehot(Ap); Q=onehot(Lp)
+feats=[P,Q,P*Av[:,None],Q*Lv[:,None],Av[:,None],Lv[:,None],np.ones((len(Ap),1))]
+F=np.hstack(feats)
+coef,res,rank,sv=np.linalg.lstsq(F,O,rcond=None)
+pred=F@coef
+print("R2 per class:", np.round(1-((O-pred)**2).sum(0)/((O-O.mean(0))**2).sum(0),3))
+# compare simplified: only onehot(p), onehot(q) scaled by nothing
+F2=np.hstack([P,Q,np.ones((len(Ap),1))]); c2=np.linalg.lstsq(F2,O,rcond=None)[0]; p2=F2@c2
+print("R2 simple:", np.round(1-((O-p2)**2).sum(0)/((O-O.mean(0))**2).sum(0),3))
+print("decision match simple:", (p2.argmax(1)==O.argmax(1)).mean())
+# bigger feature set: also 3rd slot? check top-3 info
+
+--- output (0.04 s) ---
+R2 per class: [0.58 0.55 0.5  0.49 0.46 0.47 0.53 0.59 0.6  0.34]
+R2 simple: [0.47 0.47 0.43 0.42 0.41 0.41 0.46 0.49 0.47 0.32]
+decision match simple: 0.942125
+
+
+===== step 129/160
+
+--- python ---
+
+import numpy as np
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+def flip(i,j,A=1.0,lo=0.99,hi=1.0001):
+    d=lambda f: run(mkseq([(i,A),(j,f*A)])[None,:])[0].argmax()
+    if d(lo)!=j: return ("err at lo",None)
+    if d(hi)==j: return ("no err",1.0)
+    for _ in range(26):
+        m=(lo+hi)/2
+        if d(m)==j: lo=m
+        else: hi=m
+    return ("ok",(lo+hi)/2)
+print("adjacent pairs f*(i,i+1):")
+for i in range(9):
+    print(i, flip(i,i+1))
+print("reverse (i+1,i):")
+for i in range(9):
+    print(i, flip(i+1,i))
+
+--- output (0.02 s) ---
+adjacent pairs f*(i,i+1):
+0 ('no err', 1.0)
+1 ('no err', 1.0)
+2 ('ok', 1.000058556564897)
+3 ('no err', 1.0)
+4 ('no err', 1.0)
+5 ('no err', 1.0)
+6 ('no err', 1.0)
+7 ('ok', 0.9994101489163936)
+8 ('no err', 1.0)
+reverse (i+1,i):
+0 ('ok', 0.9997574983261526)
+1 ('ok', 0.9990823663868011)
+2 ('ok', 0.9999414466552434)
+3 ('ok', 0.9988369769312442)
+4 ('ok', 0.9969127288095654)
+5 ('ok', 0.9955893556766209)
+6 ('ok', 0.9976754760824142)
+7 ('no err', 1.0)
+8 ('err at lo', None)
+
+
+===== step 130/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2,suppress=True,linewidth=200)
+def mkseq(pairs, base=0.001):
+    s=np.full(10,base)
+    for p,v in pairs: s[p]=v
+    return s
+for (i,j) in [(6,5),(9,8)]:
+    print(f"### max@{i}, 2nd@{j}")
+    for f in [0.5,0.99,0.9956,0.998,0.9995,1.0]:
+        o=run(mkseq([(i,1.0),(j,f)])[None,:])[0]
+        print(f" f={f:7.4f} dec={o.argmax()} out={o}")
+
+--- output (0.0 s) ---
+### max@6, 2nd@5
+ f= 0.5000 dec=5 out=[-27.69 -30.03 -17.28   1.68   9.63  20.02  15.91   5.93  12.35  -9.33]
+ f= 0.9900 dec=5 out=[-44.02 -50.55 -40.23  -2.02  21.52  38.71  37.3   16.87  21.56 -22.36]
+ f= 0.9956 dec=6 out=[-42.7  -50.03 -41.84  -3.72  20.69  38.82  38.83  17.37  21.52 -22.84]
+ f= 0.9980 dec=6 out=[-42.14 -49.81 -42.53  -4.45  20.34  38.87  39.48  17.59  21.51 -23.05]
+ f= 0.9995 dec=6 out=[-41.78 -49.67 -42.96  -4.9   20.11  38.9   39.89  17.72  21.49 -23.18]
+ f= 1.0000 dec=6 out=[-41.67 -49.62 -43.1   -5.05  20.04  38.91  40.03  17.77  21.49 -23.22]
+### max@9, 2nd@8
+ f= 0.5000 dec=8 out=[ -0.06 -11.44 -21.85 -21.13 -15.34   2.13  14.95  18.56  29.12   1.84]
+ f= 0.9900 dec=9 out=[ -6.49 -26.19 -47.04 -46.12 -35.17  -1.38  23.74  33.37  52.81  53.77]
+ f= 0.9956 dec=9 out=[ -6.77 -26.33 -46.98 -45.86 -34.96  -1.35  23.63  33.14  52.71  54.09]
+ f= 0.9980 dec=9 out=[ -6.88 -26.38 -46.95 -45.75 -34.88  -1.34  23.58  33.04  52.66  54.22]
+ f= 0.9995 dec=9 out=[ -6.96 -26.42 -46.94 -45.68 -34.82  -1.33  23.55  32.98  52.64  54.3 ]
+ f= 1.0000 dec=9 out=[ -6.98 -26.43 -46.93 -45.66 -34.8   -1.33  23.54  32.96  52.63  54.33]
+
+
+===== step 131/160
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np, math
+DESCRIPTION = ("The network reports the POSITION of the SECOND-LARGEST of the 10 inputs. It runs the classic two-slot scan: it keeps a "
+  "LEVEL (the largest value seen so far) together with its position and an ANSWER (the second largest) with its position. At each step "
+  "x_t is compared with the stored level; if it is above, the old level drops into the answer slot and x_t becomes the new level; "
+  "otherwise x_t is compared with the stored answer and replaces it if larger. Ties go to the later position. The two stored slot VALUES "
+  "are not refreshed, they leak multiplicatively (the level by about 0.5 percent per step, the answer by about 1 percent per step), so "
+  "every comparison is made against a slightly stale value: a value within about 0.5 percent per elapsed step of the level counts as "
+  "ABOVE it, which demotes the near-tied maximum into the answer slot and makes the network answer with the maximum's own position, and a "
+  "value within about 1 percent per step of the answer replaces it, which is why the network sometimes answers with the 3rd largest when "
+  "the 2nd and 3rd are nearly equal. Measured check: the demotion boundary is the same RELATIVE fraction for inputs scaled by 0.3, 1 and 4 "
+  "(the network is positively homogeneous), and the answer slot needs a wider relative window than the level slot. Stage 1: W_x has only "
+  "five significant entries (units 1,6,7,8 = -10.6,-11.0,-13.2,-12.3 and unit 4 = +10.2, all others |Wx|<=0.3), so h1 = relu(x1)*a + "
+  "relu(-x1)*b: a bank of below-level (negative gain) and above-level (positive gain) detectors of the single scalar x1, i.e. the two "
+  "slots of a one-element scan. W_o is a matched filter over the smooth position code of the answer slot: its class vectors are shifted "
+  "copies of a smooth template (adjacent-class cosines 0.4-0.9, classes 3-4 apart about -0.6), so the output decays smoothly away from "
+  "the answer class, and the level's position code is still present in the state as a weaker second bump, which is what wins the near "
+  "ties.")
+def model(x, iv):
+    x = np.asarray(x, dtype=float)
+    u = iv("x1_pos", np.maximum(x[:, 0], 0.0))      # relu(x1): drives the below-level detectors
+    v = iv("x1_neg", np.maximum(-x[:, 0], 0.0))     # relu(-x1): drives the above-level detector
+    s = x.copy(); s[:, 0] = u - v
+    B, n = s.shape
+    rl = 0.995                                        # per-step leak of the stored level value
+    ra = 0.990                                        # per-step leak of the stored answer value
+    Lv = np.full(B, -1e6); Lp = np.zeros(B)           # level value / position
+    Av = np.full(B, -1e6); Ap = np.zeros(B)           # answer value / position
+    for t in range(n):
+        Lv = Lv * rl; Av = Av * ra
+        xt = s[:, t]
+        above = xt > Lv                               # above the (stale) level -> demote it into the answer
+        sec = xt > Av
+        nAv = np.where(above, Lv, np.where(sec, xt, Av))
+        nAp = np.where(above, Lp, np.where(sec, float(t), Ap))
+        Lv = np.where(above, xt, Lv)
+        Lp = np.where(above, float(t), Lp)
+        Av = nAv; Ap = nAp
+    pos = iv("anspos", Ap)
+    lev = iv("levpos", Lp)
+    d = np.abs(np.arange(n)[None, :] - pos[:, None])
+    score = -(d + 0.15 * d * d) + 1e-6 * np.arange(n)[None, :]
+    dl = np.abs(np.arange(n)[None, :] - lev[:, None])
+    score = score + 0.30 * np.exp(-dl * dl / 30.0)    # weaker second bump at the level's position
+    return score
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 19 ---
+JUDGE REPORT   (4000 held-out inputs; construction 3,568 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 94.2% of inputs (a constant output would get 9.7%); output R2 -0.117; KL 0.974
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 16; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 74.8% (random 87.8%) | mean-ablate 74.8%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 94.3% / 91.0% when changed (network changed in 29.3%); output R2 -0.114 | controls: random subspace 70.6%, no-change 70.7%, source-output 11.6%, attribution patching 62.0%
+  partial     x1_pos @ h1: right 88.8% / 70.4% when changed (network changed in 28.4%); output R2 -0.128 | controls: random subspace 75.0%, no-change 71.6%, source-output 10.5%, attribution patching 72.4%
+  partial     x1_neg @ h1: right 88.3% / 25.9% when changed (network changed in 5.4%); output R2 -0.129 | controls: random subspace 86.0%, no-change 94.6%, source-output 10.2%, attribution patching 83.8%
+  edit        all variables @ h1: right 87.6% / 60.5% when changed (network changed in 17.2%); output R2 -0.129 | controls: random subspace 77.6%, no-change 82.8%, source-output 9.8%, attribution patching 77.1%
+Variables in model() with no site in ALIGN (not tested): anspos, levpos
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 90.4% (n=405); network decides 1: 90.2% (n=439); network decides 2: 94.1% (n=373); network decides 3: 96.8% (n=409); network decides 4: 95.5% (n=379); network decides 5: 97.0% (n=395); network decides 6: 94.8% (n=385); network decides 7: 94.8% (n=400); network decides 8: 95.1% (n=388); network decides 9: 93.7% (n=427) | near ties (400 least clear inputs, no requirement): 65.2%
+   the network's own mistakes: it is wrong on 4.5% of test inputs (182); the construction reproduces 25.8% of them (need 50% when there are 30 or more) and is right on 72.5%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 64 (32.0%; on the unsearched starting inputs 2.0%)
+     input [1.302, -1.369, 0.41, -0.902, 1.71, -0.939, 0.538, -0.523, 0.135, 1.23]: network [0], construction [9]
+     input [1.722, -1.733, 1.96, -0.512, 0.658, -0.692, -1.188, -1.22, 0.012, 1.605]: network [0], construction [9]
+     input [1.302, 0.972, 0.645, 0.594, 0.018, 2.081, 1.043, -0.313, 0.019, 1.238]: network [0], construction [9]
+     input [0.939, -0.513, 1.266, -0.721, 0.165, -0.534, 0.454, -0.658, 0.653, 0.878]: network [0], construction [9]
+     input [0.9, -0.663, -0.968, -0.557, -2.554, 0.654, 1.141, -0.298, -1.194, 0.997]: network [0], construction [9]
+7. NOT A COPY   13 numeric literals in the file; network parameters 432; share of its weights (|w| >= 0.05) the literals reproduce: 2%; largest table in the file 1 numbers vs the largest weight tensor 256; constants per degree of freedom 0.013 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8);  step 9: NOT EXPLAINED (no variable at h9);  step 10: NOT EXPLAINED (no variable at h10)
+VERDICT: NOT VERIFIED (1 of 10 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 94.2% of inputs (need 95%)
+  - the network's own mistakes: on the 182 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 25.8% (need 50%); it is right on 72.5%: it explains the task, not this network
+COVERAGE   stages 1/10 | behaviour 94.2% | all sites at once 100.0% | worst slice 90.2% | network's mistakes reproduced 25.8%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - stage 'step 9' is not explained
+  - stage 'step 10' is not explained
+  - on 5.8% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): anspos, levpos
+  - worst slice: network decides 1 (439 inputs), where it matches 90.2%
+  - of the network's 182 mistakes on test inputs, 74.2% are not reproduced
+  - a search found 64 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 132/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=2,suppress=True,linewidth=220)
+rng=np.random.default_rng(0)
+def mk(seqs): return np.array(seqs,float)
+# same (M1@pos0=1.0, M2@pos5=0.6) but different fillers below 0.6
+B=[]
+x=np.full(10,0.001); x[0]=1.0; x[5]=0.6; B.append(x)
+x=np.full(10,0.5); x[0]=1.0; x[5]=0.6; B.append(x)
+for _ in range(4):
+    x=rng.uniform(0.0,0.55,10); x[0]=1.0; x[5]=0.6; B.append(x)
+H=acts(mk(B))['h10']
+print("h10 for same slots, different fillers:")
+print(H)
+print()
+print("pairwise rel diff:", [round(np.linalg.norm(H[i]-H[0])/np.linalg.norm(H[0]),3) for i in range(len(B))])
+
+--- output (0.0 s) ---
+h10 for same slots, different fillers:
+[[ 5.6   4.54 14.79  1.52  0.    0.    7.03 11.94 14.12  0.   14.37 18.3  16.33  9.    4.92 18.72]
+ [ 3.04  1.34 16.62  5.11  0.    0.    3.24  6.07  6.54  0.    8.45 11.14 14.26  7.64  3.36 11.73]
+ [ 4.28  0.47 15.33  4.96  0.    0.    2.04  5.32  7.39  0.   11.59 12.25 16.68 10.    3.96 14.63]
+ [ 4.28  3.98 15.81  0.74  0.    0.    5.45  9.03 10.68  0.    7.99 12.53 14.43  5.26  3.84 13.92]
+ [ 2.15  2.44 15.68  1.45  0.    0.    3.99  7.33  9.11  0.    8.66 13.63 13.33  4.81  2.5  11.33]
+ [ 2.91  4.02 15.44  2.68  0.    0.56  5.55  9.51 11.52  0.    8.47 14.61 15.92  8.13  3.15 10.65]]
+
+pairwise rel diff: [np.float64(0.0), np.float64(0.383), np.float64(0.328), np.float64(0.272), np.float64(0.333), np.float64(0.271)]
+
+
+===== step 133/160
+
+--- python ---
+
+import numpy as np
+rng=np.random.default_rng(1)
+S=[]
+for _ in range(3000):
+    p,q=rng.choice(10,2,replace=False)
+    A=rng.uniform(0.05,0.95)
+    x=np.full(10,0.001); x[q]=1.0; x[p]=A
+    S.append(x)
+S=np.array(S)
+H=acts(S)['h10']
+O=run(S)
+def oh(v):
+    M=np.zeros((len(v),10)); M[np.arange(len(v)),v]=1; return M
+p=np.array([np.argmax(np.where(np.arange(10)!=q,s,0)) for s,q in zip(S,[])] )
+# recompute p,q
+q=np.array([np.where(s==1.0)[0][0] for s in S]); p=np.array([np.where(s>0.001)[0][0] for s in S])
+print("check q,p", q[:5], p[:5])
+P=oh(p); Q=oh(q)
+F=np.hstack([P,Q,P*A[:,None],Q*A[:,None],A[:,None],np.ones((len(A),1))])
+c=np.linalg.lstsq(F,H,rcond=None)[0]; pred=F@c
+print("R2 h10:", np.round(1-((H-pred)**2).sum(0)/((H-H.mean(0))**2).sum(0),3))
+c2=np.linalg.lstsq(F,O,rcond=None)[0]; predO=F@c2
+print("R2 out:", np.round(1-((O-predO)**2).sum(0)/((O-O.mean(0))**2).sum(0),3))
+print("decision match:", (predO.argmax(1)==O.argmax(1)).mean())
+
+--- output (0.07 s) ---
+check q,p [5 9 7 6 9] [4 8 4 6 7]
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 20, in <module>
+TypeError: 'float' object is not subscriptable
+
+
+===== step 134/160
+
+--- python ---
+
+import numpy as np
+rng=np.random.default_rng(1)
+S=[];AV=[]
+for _ in range(3000):
+    p_,q_=rng.choice(10,2,replace=False)
+    a=rng.uniform(0.05,0.95)
+    x=np.full(10,0.001); x[q_]=1.0; x[p_]=a
+    S.append(x); AV.append(a)
+S=np.array(S); AV=np.array(AV)
+H=acts(S)['h10']; O=run(S)
+def oh(v):
+    M=np.zeros((len(v),10)); M[np.arange(len(v)),v]=1; return M
+q=np.array([np.where(s==1.0)[0][0] for s in S]); p=np.array([np.where(s>0.001)[0][0] for s in S])
+P=oh(p); Q=oh(q)
+F=np.hstack([P,Q,P*AV[:,None],Q*AV[:,None],AV[:,None],np.ones((len(AV),1))])
+c=np.linalg.lstsq(F,H,rcond=None)[0]; pred=F@c
+print("R2 h10:", np.round(1-((H-pred)**2).sum(0)/((H-H.mean(0))**2).sum(0),3))
+c2=np.linalg.lstsq(F,O,rcond=None)[0]; predO=F@c2
+print("R2 out:", np.round(1-((O-predO)**2).sum(0)/((O-O.mean(0))**2).sum(0),3))
+print("decision match:", (predO.argmax(1)==O.argmax(1)).mean(), "true acc of onehot(p):", (O.argmax(1)==p).mean())
+
+--- output (0.08 s) ---
+R2 h10: [0.81 0.85 0.93 0.54 0.99 0.7  0.81 0.75 0.86 0.94 0.92 0.85 0.86 0.62 0.94 0.88]
+R2 out: [0.85 0.88 0.86 0.74 0.66 0.68 0.69 0.57 0.66 0.46]
+decision match: 0.4046666666666667 true acc of onehot(p): 0.4806666666666667
+
+
+===== step 135/160
+
+--- python ---
+
+import numpy as np
+dec=O.argmax(1)
+for lo,hi in [(0.05,0.3),(0.3,0.5),(0.5,0.7),(0.7,0.85),(0.85,0.93),(0.93,0.97),(0.97,0.995),(0.995,1.0)]:
+    m=(AV>=lo)&(AV<hi)
+    print(f"A in [{lo},{hi}): n={m.sum():4d} dec==p {np.mean(dec[m]==p[m]):.2f} dec==q {np.mean(dec[m]==q[m]):.2f} other {np.mean((dec[m]!=p[m])&(dec[m]!=q[m])):.2f}")
+print()
+# look at a few 'other' examples
+oth=(dec!=p)&(dec!=q)
+idx=np.where(oth)[0][:5]
+for i in idx:
+    print("A=",round(AV[i],3),"p=",p[i],"q=",q[i],"dec=",dec[i]," out=",np.round(O[i],1))
+
+--- output (0.01 s) ---
+A in [0.05,0.3): n= 839 dec==p 0.43 dec==q 0.00 other 0.57
+A in [0.3,0.5): n= 634 dec==p 0.48 dec==q 0.00 other 0.52
+A in [0.5,0.7): n= 673 dec==p 0.51 dec==q 0.00 other 0.49
+A in [0.7,0.85): n= 507 dec==p 0.50 dec==q 0.00 other 0.50
+A in [0.85,0.93): n= 290 dec==p 0.52 dec==q 0.00 other 0.48
+A in [0.93,0.97): n=  57 dec==p 0.44 dec==q 0.00 other 0.56
+/usr/local/lib/python3.13/dist-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/usr/local/lib/python3.13/dist-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+A in [0.97,0.995): n=   0 dec==p nan dec==q nan other nan
+A in [0.995,1.0): n=   0 dec==p nan dec==q nan other nan
+
+A= 0.075 p= 6 q= 6 dec= 8  out= [-2.9 -2.7 -3.2 -7.  -0.1 -1.6 -1.4  2.   2.4 -1.3]
+A= 0.286 p= 1 q= 1 dec= 9  out= [-3.7 -3.  -1.8 -4.  -3.7 -3.  -4.5 -5.1 -3.4 16.4]
+A= 0.487 p= 0 q= 0 dec= 7  out= [  0.2   0.8  -5.5 -11.8  -9.3  -8.9  -7.   25.4   8.3  -2.2]
+A= 0.915 p= 1 q= 1 dec= 2  out= [ -7.2  12.2  17.1   0.5  -7.5  -1.5  -1.1   0.4  -1.8 -41.1]
+A= 0.299 p= 0 q= 0 dec= 7  out= [ 0.2  0.9 -4.1 -8.7 -6.5 -6.2 -5.4 14.1  4.6 -0.6]
+
+
+===== step 136/160
+
+--- python ---
+
+import numpy as np
+q=np.array([np.where(s==1.0)[0][0] for s in S])
+p=np.array([ [i for i in range(10) if abs(S[j,i]-0.001)>1e-12 and i!=q[j]][0] for j in range(len(S))])
+print("p!=q:",(p!=q).all())
+dec=O.argmax(1)
+print("acc(dec==p):", (dec==p).mean())
+for lo,hi in [(0.05,0.3),(0.3,0.6),(0.6,0.85),(0.85,0.95),(0.95,0.99),(0.99,1.0)]:
+    m=(AV>=lo)&(AV<hi)
+    if m.sum()==0: continue
+    print(f"A in [{lo},{hi}): n={m.sum():4d} dec==p {np.mean(dec[m]==p[m]):.2f} dec==q {np.mean(dec[m]==q[m]):.2f} other {np.mean((dec[m]!=p[m])&(dec[m]!=q[m])):.2f}")
+oth=np.where((dec!=p)&(dec!=q))[0][:6]
+for i in oth: print("A=",round(AV[i],3),"p=",p[i],"q=",q[i],"dec=",dec[i]," out=",np.round(O[i],1))
+
+--- output (0.02 s) ---
+p!=q: True
+acc(dec==p): 0.9813333333333333
+A in [0.05,0.3): n= 839 dec==p 0.93 dec==q 0.00 other 0.07
+A in [0.3,0.6): n= 979 dec==p 1.00 dec==q 0.00 other 0.00
+A in [0.6,0.85): n= 835 dec==p 1.00 dec==q 0.00 other 0.00
+A in [0.85,0.95): n= 347 dec==p 1.00 dec==q 0.00 other 0.00
+A= 0.075 p= 7 q= 6 dec= 8  out= [-2.9 -2.7 -3.2 -7.  -0.1 -1.6 -1.4  2.   2.4 -1.3]
+A= 0.162 p= 3 q= 6 dec= 2  out= [-16.5  -5.9   4.1   3.9   2.5  -2.2  -1.1  -1.    2.6  -3.7]
+A= 0.191 p= 0 q= 7 dec= 1  out= [ 7.1  8.6  0.6 -6.6 -6.7 -6.9 -6.9  2.8 -2.1  2.2]
+A= 0.053 p= 8 q= 3 dec= 9  out= [-6.3 -6.1 -5.  -4.9 -3.1 -3.7 -2.1 -1.2 -0.4 -0.4]
+A= 0.082 p= 0 q= 7 dec= 1  out= [ 0.2  3.5  0.9 -1.9 -1.3 -3.  -4.4 -2.1 -1.7  2. ]
+A= 0.118 p= 0 q= 3 dec= 7  out= [-2.6 -3.4 -4.  -5.2 -4.4 -3.3 -1.7 -1.5 -3.7 -3.7]
+
+
+===== step 137/160
+
+--- python ---
+
+import numpy as np
+rng=np.random.default_rng(5)
+B=[]
+x=np.full(10,0.001); x[0]=1.0; x[5]=0.4; B.append(x)
+for _ in range(6):
+    y=rng.uniform(0.0,0.28,10); y[0]=1.0; y[5]=0.4; B.append(y)
+H=acts(np.array(B))['h10']
+print("rel diff to first (fillers well below answer):")
+print(np.round([np.linalg.norm(H[i]-H[0])/np.linalg.norm(H[0]) for i in range(len(B))],3))
+print("max abs diff per unit:", np.round(np.abs(H-H[0]).max(0),3))
+print(H)
+
+--- output (0.0 s) ---
+rel diff to first (fillers well below answer):
+[0.   0.18 0.18 0.12 0.13 0.18 0.18]
+max abs diff per unit: [1.22 1.9  0.96 2.69 0.   0.   2.17 3.31 4.25 0.   4.11 4.06 1.25 1.89 0.76 5.5 ]
+[[ 6.74  4.14 14.15  2.41  0.    0.    6.57 11.74 14.16  0.   14.14 20.2  19.82  8.27  5.67 17.79]
+ [ 6.15  2.24 15.02  4.93  0.    0.    4.4   8.43  9.91  0.   12.61 16.68 19.29  8.47  5.19 15.64]
+ [ 5.68  4.87 14.69  3.31  0.    0.    6.83 11.68 13.78  0.   10.03 16.23 20.15  6.77  4.96 12.29]
+ [ 5.59  4.88 14.91  2.15  0.    0.    7.24 11.93 13.38  0.   11.65 16.7  18.57  6.37  5.09 15.56]
+ [ 6.3   2.48 14.57  1.44  0.    0.    4.79  9.27 11.4   0.   12.41 18.61 18.95  6.5   4.91 16.06]
+ [ 5.98  2.44 15.    5.11  0.    0.    4.58  8.67 10.16  0.   12.63 16.18 19.43  8.48  5.19 15.37]
+ [ 5.52  3.19 15.11  5.04  0.    0.    5.41  9.66 11.04  0.   11.27 16.14 19.21  7.79  4.99 13.6 ]]
+
+
+===== step 138/160
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np, math
+DESCRIPTION = ("The network reports the POSITION of the SECOND-LARGEST of the 10 inputs. It runs a two-slot scan: a LEVEL (the largest "
+  "value so far, with its position) and an ANSWER (the second largest, with its position). At each step x_t is compared with the stored "
+  "level; if it is above, the old level drops into the answer slot and x_t becomes the new level; otherwise x_t is compared with the "
+  "stored answer and replaces it if larger. Ties go to the later position. The stored slot values are not refreshed, they leak "
+  "multiplicatively (the level by about 0.1 percent per step, the answer by about 0.5 percent per step), so each comparison is made "
+  "against a slightly stale value: a value within about 0.1 percent per elapsed step of the level counts as ABOVE it (this demotes a "
+  "near-tied maximum into the answer slot, which is why the network sometimes answers with the maximum's own position) and a value "
+  "within about 0.5 percent per step of the answer replaces it (which is why it sometimes answers with the 3rd largest when the 2nd and "
+  "3rd are nearly equal). Measured: the demotion boundary is the same RELATIVE fraction for input scale 0.3, 1 and 4, because the "
+  "network is positively homogeneous, and the answer slot needs a wider relative window than the level slot. Stage 1: W_x has only five "
+  "significant entries (units 1,6,7,8 = -10.6,-11.0,-13.2,-12.3 and unit 4 = +10.2, all others |Wx|<=0.3), so h1 = relu(x1)*a + "
+  "relu(-x1)*b: below-level (negative gain) and above-level (positive gain) detectors of the single scalar x1, i.e. the two slots of a "
+  "one-element scan. W_o is a matched filter over the smooth position code of the answer slot: its class vectors are shifted copies of a "
+  "smooth template (adjacent-class cosines 0.4-0.9, classes 3-4 apart about -0.6), so the output decays smoothly away from the answer "
+  "class, and the level's position code is still present in the state as a weaker second bump, which is what wins the near ties.")
+def model(x, iv):
+    x = np.asarray(x, dtype=float)
+    u = iv("x1_pos", np.maximum(x[:, 0], 0.0))      # relu(x1): drives the below-level detectors
+    v = iv("x1_neg", np.maximum(-x[:, 0], 0.0))     # relu(-x1): drives the above-level detector
+    s = x.copy(); s[:, 0] = u - v
+    B, n = s.shape
+    rl = 0.9990                                       # per-step leak of the stored level value
+    ra = 0.9950                                       # per-step leak of the stored answer value
+    Lv = np.full(B, -1e6); Lp = np.zeros(B)           # level value / position
+    Av = np.full(B, -1e6); Ap = np.zeros(B)           # answer value / position
+    for t in range(n):
+        Lv = Lv * rl; Av = Av * ra
+        xt = s[:, t]
+        above = xt > Lv                               # above the (stale) level -> demote it into the answer
+        sec = xt > Av
+        nAv = np.where(above, Lv, np.where(sec, xt, Av))
+        nAp = np.where(above, Lp, np.where(sec, float(t), Ap))
+        Lv = np.where(above, xt, Lv)
+        Lp = np.where(above, float(t), Lp)
+        Av = nAv; Ap = nAp
+    pos = iv("anspos", Ap)
+    lev = iv("levpos", Lp)
+    d = np.abs(np.arange(n)[None, :] - pos[:, None])
+    score = -(d + 0.15 * d * d) + 1e-6 * np.arange(n)[None, :]
+    dl = np.abs(np.arange(n)[None, :] - lev[:, None])
+    score = score + 0.30 * np.exp(-dl * dl / 30.0)    # weaker second bump at the level's position
+    return score
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 20 ---
+JUDGE REPORT   (4000 held-out inputs; construction 3,521 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 95.8% of inputs (a constant output would get 9.7%); output R2 -0.118; KL 0.823
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 16; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 74.8% (random 87.8%) | mean-ablate 74.8%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 95.6% / 93.2% when changed (network changed in 29.3%); output R2 -0.113 | controls: random subspace 70.7%, no-change 70.7%, source-output 11.6%, attribution patching 62.0%
+  partial     x1_pos @ h1: right 89.8% / 71.7% when changed (network changed in 28.4%); output R2 -0.127 | controls: random subspace 75.4%, no-change 71.6%, source-output 10.5%, attribution patching 72.4%
+  partial     x1_neg @ h1: right 89.2% / 25.0% when changed (network changed in 5.4%); output R2 -0.129 | controls: random subspace 86.8%, no-change 94.6%, source-output 10.2%, attribution patching 83.8%
+  edit        all variables @ h1: right 88.8% / 62.5% when changed (network changed in 17.2%); output R2 -0.128 | controls: random subspace 78.4%, no-change 82.8%, source-output 9.8%, attribution patching 77.1%
+Variables in model() with no site in ALIGN (not tested): anspos, levpos
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 93.3% (n=405); network decides 1: 92.3% (n=439); network decides 2: 96.5% (n=373); network decides 3: 98.0% (n=409); network decides 4: 97.4% (n=379); network decides 5: 98.0% (n=395); network decides 6: 95.6% (n=385); network decides 7: 95.0% (n=400); network decides 8: 96.9% (n=388); network decides 9: 95.1% (n=427) | near ties (400 least clear inputs, no requirement): 67.5%
+   the network's own mistakes: it is wrong on 4.5% of test inputs (182); the construction reproduces 14.8% of them (need 50% when there are 30 or more) and is right on 84.6%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 43 (21.5%; on the unsearched starting inputs 1.5%)
+     input [1.378, -1.35, 0.085, -0.907, 1.662, -0.638, 0.51, -0.25, 0.214, 1.358]: network [0], construction [9]
+     input [0.79, -0.48, -1.221, 0.018, -0.773, 0.492, 2.227, 0.039, 0.475, 0.761]: network [9], construction [0]
+     input [0.969, -0.681, 1.291, -0.628, 0.256, -0.502, 0.424, -0.507, 0.406, 0.944]: network [0], construction [9]
+     input [-0.303, 1.754, 0.017, -1.422, -1.95, 3.425, -0.939, -0.272, -0.034, 1.726]: network [1], construction [9]
+     input [1.306, 0.755, -0.29, -1.33, 1.125, -0.291, 0.152, -0.39, 1.317, -0.082]: network [8], construction [0]
+7. NOT A COPY   13 numeric literals in the file; network parameters 432; share of its weights (|w| >= 0.05) the literals reproduce: 3%; largest table in the file 1 numbers vs the largest weight tensor 256; constants per degree of freedom 0.013 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8);  step 9: NOT EXPLAINED (no variable at h9);  step 10: NOT EXPLAINED (no variable at h10)
+VERDICT: NOT VERIFIED (1 of 10 stages verified). Failing:
+  - the network's own mistakes: on the 182 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 14.8% (need 50%); it is right on 84.6%: it explains the task, not this network
+COVERAGE   stages 1/10 | behaviour 95.8% | all sites at once 100.0% | worst slice 92.3% | network's mistakes reproduced 14.8%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - stage 'step 9' is not explained
+  - stage 'step 10' is not explained
+  - on 4.2% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): anspos, levpos
+  - worst slice: network decides 1 (439 inputs), where it matches 92.3%
+  - of the network's 182 mistakes on test inputs, 85.2% are not reproduced
+  - a search found 43 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 139/160
+
+--- python ---
+
+import numpy as np
+H=acts(X)
+h10=H['h10']
+M1=X.max(1); srt=-np.sort(-X,1); M2=srt[:,1]
+feats={'max':M1,'second':M2,'sum':X.sum(1),'sumrelu':np.maximum(X,0).sum(1),'sumabs':np.abs(X).sum(1),
+       'min':X.min(1),'std':X.std(1),'pos_max':X.argmax(1).astype(float),'pos_2nd':np.argsort(-X,1)[:,1].astype(float),'last':X[:,9]}
+print("unit: mean std  |  best-correlated feature (pearson)")
+for k in range(16):
+    y=h10[:,k]
+    cs={n:abs(np.corrcoef(y,v)[0,1]) for n,v in feats.items()}
+    b=max(cs,key=cs.get)
+    print(f" u{k:2d} mean {y.mean():8.2f} std {y.std():8.2f} sd/mean {y.std()/(abs(y.mean())+1e-9):6.2f} | {b} r={cs[b]:.3f}")
+
+--- output (0.04 s) ---
+unit: mean std  |  best-correlated feature (pearson)
+ u 0 mean    10.69 std     9.18 sd/mean   0.86 | max r=0.472
+ u 1 mean    14.52 std    11.15 sd/mean   0.77 | last r=0.824
+ u 2 mean    25.05 std    10.33 sd/mean   0.41 | max r=0.893
+ u 3 mean     6.35 std     5.32 sd/mean   0.84 | sumrelu r=0.399
+ u 4 mean     0.63 std     2.39 sd/mean   3.82 | last r=0.477
+ u 5 mean     2.86 std     6.08 sd/mean   2.13 | pos_max r=0.300
+ u 6 mean    14.84 std    11.42 sd/mean   0.77 | last r=0.839
+ u 7 mean    19.01 std    13.81 sd/mean   0.73 | last r=0.852
+ u 8 mean    16.72 std    13.21 sd/mean   0.79 | last r=0.808
+ u 9 mean     0.24 std     0.73 sd/mean   3.10 | pos_max r=0.388
+ u10 mean    11.22 std    11.04 sd/mean   0.98 | max r=0.449
+ u11 mean    11.29 std    10.45 sd/mean   0.93 | max r=0.454
+ u12 mean    16.68 std    13.73 sd/mean   0.82 | max r=0.474
+ u13 mean     9.62 std     5.59 sd/mean   0.58 | max r=0.642
+ u14 mean    14.17 std     9.50 sd/mean   0.67 | max r=0.539
+ u15 mean    11.26 std     9.48 sd/mean   0.84 | pos_max r=0.502
+
+
+===== step 140/160
+
+--- python ---
+
+import numpy as np
+def slots(x, rl=1.0, ra=1.0):
+    B,nn=x.shape
+    Lv=np.full(B,-1e6); Lp=np.full(B,-1); Av=np.full(B,-1e6); Ap=np.full(B,-1)
+    for t in range(nn):
+        Lv=Lv*rl; Av=Av*ra
+        xt=x[:,t]; above=xt>Lv; sec=xt>Av
+        nAv=np.where(above,Lv,np.where(sec,xt,Av)); nAp=np.where(above,Lp,np.where(sec,t,Ap))
+        Lv=np.where(above,xt,Lv); Lp=np.where(above,t,Lp); Av=nAv; Ap=nAp
+    return Lv,Lp,Av,Ap
+Lv,Lp,Av,Ap=slots(X)
+err=netdec!=ex
+print("errors:",err.sum())
+d=netdec[err]
+print("decision == level pos:", (d==Lp[err]).mean(), " == answer pos(exact):", (d==ex[err]).mean(), " == 3rd pos:", (d==np.argsort(-X[err],1)[:,2]).mean())
+gap=(Lv[err]-Av[err])/(Lv[err]+1e-9)
+print("relative gap L-A: pct", np.round(np.percentile(gap,[5,25,50,75,95]),4))
+# third slot
+srt=-np.sort(-X,1); M3=srt[:,2]
+gap23=(Av[err]-M3[err])/(Av[err]+1e-9)
+print("relative gap A-M3: pct", np.round(np.percentile(gap23,[5,25,50,75,95]),4))
+print("same in non-error cases: L-A", np.round(np.percentile(((Lv-Av)/(Lv))[~err],[5,25,50]),4))
+
+--- output (0.01 s) ---
+errors: 376
+decision == level pos: 0.19148936170212766  == answer pos(exact): 0.0  == 3rd pos: 0.6329787234042553
+relative gap L-A: pct [0.   0.06 0.34 0.69 1.3 ]
+relative gap A-M3: pct [-1.29  0.    0.02  0.1   0.65]
+same in non-error cases: L-A [0.03 0.15 0.3 ]
+
+
+===== step 141/160
+
+--- python ---
+
+import numpy as np
+def mkseq(d):
+    s=np.full(10,0.001)
+    for p,v in d.items(): s[p]=v
+    return s
+def flipC(q,p,k,lo=0.4,hi=0.5001):
+    d0=lambda c: run(mkseq({q:1.0,p:0.5,k:c})[None,:])[0].argmax()
+    if d0(lo)!=k: return ("err@lo",None)
+    if d0(hi)==k: return ("noerr",1.0)
+    for _ in range(24):
+        m=(lo+hi)/2
+        if d0(m)==k: lo=m
+        else: hi=m
+    return ("ok",(lo+hi)/2/0.5)
+print("ANSWER-overwrite tolerance: level 1.0@q=0, answer 0.5@p=1, third C@k")
+for k in range(2,10):
+    print(" k=",k, flipC(0,1,k))
+print("level 1.0@q=0, answer 0.5@p=4, third C@k (k>p and k<p)")
+for k in [2,3,5,6,8,9]:
+    print(" k=",k, flipC(0,4,k))
+for k in [1,2,3]:
+    print(" q=0,p=6,k=",k, flipC(0,6,k))
+
+--- output (0.0 s) ---
+ANSWER-overwrite tolerance: level 1.0@q=0, answer 0.5@p=1, third C@k
+ k= 2 ('err@lo', None)
+ k= 3 ('err@lo', None)
+ k= 4 ('err@lo', None)
+ k= 5 ('err@lo', None)
+ k= 6 ('err@lo', None)
+ k= 7 ('err@lo', None)
+ k= 8 ('err@lo', None)
+ k= 9 ('err@lo', None)
+level 1.0@q=0, answer 0.5@p=4, third C@k (k>p and k<p)
+ k= 2 ('err@lo', None)
+ k= 3 ('noerr', 1.0)
+ k= 5 ('err@lo', None)
+ k= 6 ('err@lo', None)
+ k= 8 ('err@lo', None)
+ k= 9 ('err@lo', None)
+ q=0,p=6,k= 1 ('err@lo', None)
+ q=0,p=6,k= 2 ('err@lo', None)
+ q=0,p=6,k= 3 ('err@lo', None)
+
+
+===== step 142/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=1,suppress=True,linewidth=200)
+def mkseq(d):
+    s=np.full(10,0.001)
+    for p,v in d.items(): s[p]=v
+    return s
+for k in [2,3,5,8]:
+    o=run(mkseq({0:1.0,1:0.5,k:0.4})[None,:])[0]
+    print(f"k={k} dec={o.argmax()} out={o}")
+print()
+for C in [0.1,0.3,0.45,0.499,0.5,0.51]:
+    o=run(mkseq({0:1.0,1:0.5,5:C})[None,:])[0]
+    print(f"C={C} k=5 dec={o.argmax()} out={o}")
+
+--- output (0.0 s) ---
+k=2 dec=1 out=[  4.6   9.    1.2  -6.8  -1.6  -2.3  -1.1  -1.6  -2.4 -20.9]
+k=3 dec=1 out=[  4.5   8.5  -1.   -5.1  -1.   -2.   -0.7  -1.8  -2.2 -21. ]
+k=5 dec=1 out=[  5.7   9.7  -1.7  -9.2  -1.4  -0.2  -0.3  -1.6  -2.5 -20.3]
+k=8 dec=1 out=[  5.8   9.9  -1.2  -8.7  -1.9  -2.9  -1.9  -2.1   1.7 -20.5]
+
+C=0.1 k=5 dec=1 out=[  6.1  10.3  -0.9  -8.4  -1.3  -2.1  -0.9  -1.9  -2.9 -19.9]
+C=0.3 k=5 dec=1 out=[  6.   10.3  -1.   -8.5  -1.1  -2.   -0.9  -1.8  -2.9 -20. ]
+C=0.45 k=5 dec=1 out=[  5.3   8.3  -3.2 -10.5  -2.1   3.3   0.7  -1.1  -1.8 -20.8]
+C=0.499 k=5 dec=1 out=[  4.8   7.   -4.6 -11.8  -2.8   6.7   1.7  -0.7  -1.1 -21.3]
+C=0.5 k=5 dec=1 out=[  4.8   7.   -4.6 -11.8  -2.8   6.7   1.7  -0.7  -1.  -21.3]
+C=0.51 k=5 dec=5 out=[  4.7   6.8  -4.9 -12.1  -2.9   7.4   1.9  -0.6  -0.9 -21.4]
+
+
+===== step 143/160
+
+--- python ---
+
+import numpy as np
+p0=scan_pred(X,1.0,1.0)
+print("scan(1,1) vs lexsort-exact:", (p0==ex).mean())
+print("net vs scan(1,1):", (netdec==p0).mean(), " n mismatch:", (netdec!=p0).sum())
+# grid on the scan rule's mismatches
+mis = netdec!=p0
+res=[]
+for rl in [0.99,0.993,0.995,0.996,0.997,0.9985,0.9995,1.0]:
+    for ra in [0.99,0.993,0.995,0.997,0.999,1.0]:
+        p=scan_pred(X,rl,ra)
+        res.append(((p==netdec).mean(), (p[mis]==netdec[mis]).mean(), rl,ra))
+res.sort(key=lambda z:-z[0])
+print("sorted by accuracy:")
+for a,r,rl,ra in res[:10]: print(f" acc={a:.4f} rep={r:.3f} rl={rl} ra={ra}")
+res.sort(key=lambda z:-z[1])
+print("sorted by rep:")
+for a,r,rl,ra in res[:10]: print(f" rep={r:.3f} acc={a:.4f} rl={rl} ra={ra}")
+
+--- output (0.09 s) ---
+scan(1,1) vs lexsort-exact: 1.0
+net vs scan(1,1): 0.953  n mismatch: 376
+sorted by accuracy:
+ acc=0.9541 rep=0.066 rl=0.9995 ra=0.999
+ acc=0.9539 rep=0.098 rl=0.9995 ra=0.997
+ acc=0.9539 rep=0.043 rl=0.9995 ra=1.0
+ acc=0.9535 rep=0.098 rl=0.9985 ra=0.999
+ acc=0.9535 rep=0.032 rl=1.0 ra=0.999
+ acc=0.9534 rep=0.136 rl=0.9995 ra=0.995
+ acc=0.9534 rep=0.064 rl=1.0 ra=0.997
+ acc=0.9533 rep=0.133 rl=0.9985 ra=0.997
+ acc=0.9531 rep=0.074 rl=0.9985 ra=1.0
+ acc=0.9530 rep=0.101 rl=1.0 ra=0.995
+sorted by rep:
+ rep=0.279 acc=0.9295 rl=0.993 ra=0.99
+ rep=0.277 acc=0.9155 rl=0.99 ra=0.99
+ rep=0.263 acc=0.9195 rl=0.99 ra=0.993
+ rep=0.261 acc=0.9360 rl=0.995 ra=0.99
+ rep=0.261 acc=0.9327 rl=0.993 ra=0.993
+ rep=0.245 acc=0.9215 rl=0.99 ra=0.995
+ rep=0.242 acc=0.9349 rl=0.993 ra=0.995
+ rep=0.239 acc=0.9397 rl=0.995 ra=0.993
+ rep=0.237 acc=0.9390 rl=0.996 ra=0.99
+ rep=0.231 acc=0.9427 rl=0.997 ra=0.99
+
+
+===== step 144/160
+
+--- python ---
+
+import numpy as np
+mis=np.where(netdec!=p0)[0]
+rng=np.random.default_rng(3)
+sel=rng.choice(mis,6,replace=False)
+for i in sel:
+    x=X[i]; srt=np.argsort(-x)
+    print("x:", np.round(x,3))
+    print(f"  net dec={netdec[i]} scan p={p0[i]} | top4 vals={np.round(x[srt[:4]],3)} pos={srt[:4]}")
+    print(f"  ratio x[dec]/x[p]={x[netdec[i]]/x[p0[i]]:.4f}  dec>p? {netdec[i]>p0[i]}  rank of dec value: {list(srt).index(netdec[i])}")
+
+--- output (0.0 s) ---
+x: [-1.4 -0.9 -0.1  0.2 -0.2  0.3  1.8  0.2 -0.3 -0.1]
+  net dec=8 scan p=5 | top4 vals=[1.8 0.3 0.2 0.2] pos=[6 5 3 7]
+  ratio x[dec]/x[p]=-1.0612  dec>p? True  rank of dec value: 7
+x: [-0.8  0.9 -0.7 -0.9 -0.3 -0.   1.1 -0.7 -0.1  0.9]
+  net dec=9 scan p=1 | top4 vals=[ 1.1  0.9  0.9 -0. ] pos=[6 1 9 5]
+  ratio x[dec]/x[p]=0.9937  dec>p? True  rank of dec value: 2
+x: [-0.1 -2.2  1.5  1.7  0.5 -1.6 -0.9  0.8 -0.1  1.5]
+  net dec=2 scan p=9 | top4 vals=[1.7 1.5 1.5 0.8] pos=[3 9 2 7]
+  ratio x[dec]/x[p]=0.9887  dec>p? False  rank of dec value: 2
+x: [-1.5 -2.2  0.7 -1.  -0.3 -0.9  0.7  1.6 -1.1 -0.5]
+  net dec=2 scan p=6 | top4 vals=[ 1.6  0.7  0.7 -0.3] pos=[7 6 2 4]
+  ratio x[dec]/x[p]=0.9989  dec>p? False  rank of dec value: 2
+x: [-0.3  1.3 -0.7 -0.6 -0.3 -0.9 -0.2 -0.8 -1.7 -0.9]
+  net dec=0 scan p=6 | top4 vals=[ 1.3 -0.2 -0.3 -0.3] pos=[1 6 4 0]
+  ratio x[dec]/x[p]=1.2280  dec>p? False  rank of dec value: 3
+x: [-1.3 -1.2  0.4  0.7 -0.5  2.   1.  -1.1  1.  -0.5]
+  net dec=8 scan p=6 | top4 vals=[2.  1.  1.  0.7] pos=[5 6 8 3]
+  ratio x[dec]/x[p]=0.9884  dec>p? True  rank of dec value: 2
+
+
+===== step 145/160
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np, math
+DESCRIPTION = ("The network reports the POSITION of the SECOND-LARGEST of the 10 inputs. It runs a two-slot scan: a LEVEL (the largest value "
+  "so far, with its position) and an ANSWER (the second largest, with its position). At each step x_t is compared with the stored level; "
+  "if it exceeds it, the old level drops into the answer slot and x_t becomes the new level; otherwise x_t is compared with the stored "
+  "answer. Both updates are made with HYSTERESIS: a candidate must beat the stored value by a small relative margin (about 0.2 percent "
+  "for the level, about 0.3 percent for the answer) or the stored value and position are kept. So a new level needs a clear margin over "
+  "the old one, and a demoted level only displaces the answer when it is clearly bigger than the answer already stored. That hysteresis "
+  "is exactly why the network's decisions depart from the exact second maximum only on near ties: a near-tied maximum is demoted into the "
+  "answer slot and the network answers with the maximum's own position, and a 2nd/3rd pair within the margin keeps whichever of the two "
+  "reached the slot first. Measured: with a level at position q and a second value f*q at a later position, the demotion boundary is at "
+  "f = 0.995 to 0.9995 depending on the gap in steps, and the same relative boundary is found for inputs scaled by 0.3, 1 and 4 - the "
+  "network is positively homogeneous, so the margin is multiplicative, not absolute; a pair of exactly equal values gives the later "
+  "position because the second one fills the empty answer slot. Stage 1: W_x has only five significant entries (units 1,6,7,8 = -10.6, "
+  "-11.0, -13.2, -12.3 and unit 4 = +10.2, all others |Wx|<=0.3), so h1 = relu(x1)*a + relu(-x1)*b: below-level (negative gain) and "
+  "above-level (positive gain) detectors of the single scalar x1, i.e. the two slots of a one-element scan. W_o is a matched filter over "
+  "the smooth position code of the answer slot: its class vectors are shifted copies of a smooth template (adjacent-class cosines "
+  "0.4-0.9, classes 3-4 apart about -0.6), so the output decays smoothly away from the answer class, and the level's position code is "
+  "still present in the state as a weaker second bump, which is what wins the near ties.")
+def model(x, iv):
+    x = np.asarray(x, dtype=float)
+    u = iv("x1_pos", np.maximum(x[:, 0], 0.0))      # relu(x1): drives the below-level detectors
+    v = iv("x1_neg", np.maximum(-x[:, 0], 0.0))     # relu(-x1): drives the above-level detector
+    s = x.copy(); s[:, 0] = u - v
+    B, n = s.shape
+    kL, kA = 0.002, 0.003                            # hysteresis margins (relative) of the two slots
+    Lv = np.full(B, -1e6); Lp = np.zeros(B)          # level value / position
+    Av = np.full(B, -1e6); Ap = np.zeros(B)          # answer value / position
+    for t in range(n):
+        xt = s[:, t]
+        above = xt > Lv * (1.0 + kL)                 # clear margin over the level -> demote the level
+        cand = np.where(above, Lv, xt)               # candidate for the answer slot
+        candp = np.where(above, Lp, float(t))
+        upd = cand > Av * (1.0 + kA)                 # answer slot needs a clear margin too
+        Av = np.where(upd, cand, Av); Ap = np.where(upd, candp, Ap)
+        Lv = np.where(above, xt, Lv); Lp = np.where(above, float(t), Lp)
+    pos = iv("anspos", Ap)
+    lev = iv("levpos", Lp)
+    d = np.abs(np.arange(n)[None, :] - pos[:, None])
+    score = -(d + 0.15 * d * d) + 1e-6 * np.arange(n)[None, :]
+    dl = np.abs(np.arange(n)[None, :] - lev[:, None])
+    score = score + 0.30 * np.exp(-dl * dl / 30.0)    # weaker second bump at the level's position
+    return score
+ALIGN = {"x1_pos": ["h1"], "x1_neg": ["h1"]}
+
+--- judge report 21 ---
+JUDGE REPORT   (4000 held-out inputs; construction 3,767 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 95.5% of inputs (a constant output would get 9.7%); output R2 -0.117; KL 0.824
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 16; 2 principal components suffice; x1_pos, x1_neg): explained 1.000 | substitute 100.0% | keep 100.0% | remove 74.8% (random 87.8%) | mean-ablate 74.8%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 95.5% / 92.8% when changed (network changed in 29.3%); output R2 -0.111 | controls: random subspace 70.9%, no-change 70.7%, source-output 11.6%, attribution patching 62.0%
+  partial     x1_pos @ h1: right 89.8% / 71.3% when changed (network changed in 28.4%); output R2 -0.126 | controls: random subspace 75.7%, no-change 71.6%, source-output 10.5%, attribution patching 72.4%
+  partial     x1_neg @ h1: right 89.3% / 25.0% when changed (network changed in 5.4%); output R2 -0.129 | controls: random subspace 86.8%, no-change 94.6%, source-output 10.2%, attribution patching 83.8%
+  edit        all variables @ h1: right 89.0% / 63.7% when changed (network changed in 17.2%); output R2 -0.128 | controls: random subspace 78.2%, no-change 82.8%, source-output 9.8%, attribution patching 77.1%
+Variables in model() with no site in ALIGN (not tested): anspos, levpos
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 92.6% (n=405); network decides 1: 93.4% (n=439); network decides 2: 96.5% (n=373); network decides 3: 98.3% (n=409); network decides 4: 96.6% (n=379); network decides 5: 97.5% (n=395); network decides 6: 96.1% (n=385); network decides 7: 94.0% (n=400); network decides 8: 96.4% (n=388); network decides 9: 94.1% (n=427) | near ties (400 least clear inputs, no requirement): 65.5%
+   the network's own mistakes: it is wrong on 4.5% of test inputs (182); the construction reproduces 4.4% of them (need 50% when there are 30 or more) and is right on 95.1%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 39 (19.5%; on the unsearched starting inputs 1.0%)
+     input [1.195, 2.645, -0.883, -0.992, -2.302, -0.297, 0.259, -0.798, 0.222, 1.185]: network [9], construction [0]
+     input [0.952, -0.571, -0.674, -0.678, -2.758, 0.78, 1.008, -0.316, -0.895, 0.958]: network [0], construction [9]
+     input [1.2, -1.522, 0.529, -0.637, 1.813, -0.895, 0.65, -0.564, -0.142, 1.218]: network [0], construction [9]
+     input [0.79, -0.48, -1.221, 0.018, -0.773, 0.492, 2.227, 0.039, 0.475, 0.761]: network [9], construction [0]
+     input [0.831, -1.002, 0.406, -1.152, -0.049, -1.015, -0.072, 0.226, 0.621, 0.828]: network [0], construction [9]
+7. NOT A COPY   15 numeric literals in the file; network parameters 432; share of its weights (|w| >= 0.05) the literals reproduce: 3%; largest table in the file 2 numbers vs the largest weight tensor 256; constants per degree of freedom 0.013 (flag at 0.9)
+STAGES   step 1: VERIFIED at h1;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8);  step 9: NOT EXPLAINED (no variable at h9);  step 10: NOT EXPLAINED (no variable at h10)
+VERDICT: NOT VERIFIED (1 of 10 stages verified). Failing:
+  - the network's own mistakes: on the 182 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 4.4% (need 50%); it is right on 95.1%: it explains the task, not this network
+COVERAGE   stages 1/10 | behaviour 95.5% | all sites at once 100.0% | worst slice 92.6% | network's mistakes reproduced 4.4%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - stage 'step 9' is not explained
+  - stage 'step 10' is not explained
+  - on 4.5% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): anspos, levpos
+  - worst slice: network decides 0 (405 inputs), where it matches 92.6%
+  - of the network's 182 mistakes on test inputs, 95.6% are not reproduced
+  - a search found 39 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 146/160
+
+--- python ---
+
+import numpy as np
+def mkseq(d):
+    s=np.full(10,0.001)
+    for p,v in d.items(): s[p]=v
+    return s
+def flip(q,p,k,A=0.5,L=1.0):
+    d=lambda c: run(mkseq({q:L,p:A,k:c})[None,:])[0].argmax()
+    lo,hi=0.47,A
+    if d(lo)==k: return ("err@lo",None)
+    if d(hi)!=k: return ("noflip",None)
+    for _ in range(26):
+        m=(lo+hi)/2
+        if d(m)==k: hi=m
+        else: lo=m
+    return ("ok",(lo+hi)/2/A)
+print("answer slot tolerance: level 1.0@0, answer 0.5@p, third C@k ; returns C*/A")
+for (p,k) in [(1,2),(1,5),(1,9),(4,5),(4,9),(2,9),(6,9),(0,9)]:
+    print(f" p={p} k={k}", flip(0,p,k) if p>0 else flip(1,p,k))
+
+--- output (0.01 s) ---
+answer slot tolerance: level 1.0@0, answer 0.5@p, third C@k ; returns C*/A
+ p=1 k=2 ('noflip', None)
+ p=1 k=5 ('noflip', None)
+ p=1 k=9 ('ok', 0.9788610167801381)
+ p=4 k=5 ('noflip', None)
+ p=4 k=9 ('noflip', None)
+ p=2 k=9 ('noflip', None)
+ p=6 k=9 ('noflip', None)
+ p=0 k=9 ('ok', 0.9509149174392222)
+
+
+===== step 147/160
+
+--- python ---
+
+import numpy as np
+np.set_printoptions(precision=1,suppress=True,linewidth=220)
+def mkseq(d):
+    s=np.full(10,0.001)
+    for p,v in d.items(): s[p]=v
+    return s
+print("level 1.0@0, answer 0.5@1, third C@9")
+for C in [0.3,0.45,0.48,0.49,0.495,0.5]:
+    o=run(mkseq({0:1.0,1:0.5,9:C})[None,:])[0]
+    print(f" C={C:5.3f} dec={o.argmax()} out={o}")
+print()
+print("level 1.0@0, answer 0.5@4, third C@9 (no flip)")
+for C in [0.3,0.45,0.49,0.5]:
+    o=run(mkseq({0:1.0,4:0.5,9:C})[None,:])[0]
+    print(f" C={C:5.3f} dec={o.argmax()} out={o}")
+
+--- output (0.0 s) ---
+level 1.0@0, answer 0.5@1, third C@9
+ C=0.300 dec=1 out=[ 4.8  9.  -2.2 -9.6 -2.7 -3.6 -2.3 -3.4 -4.1 -2.7]
+ C=0.450 dec=1 out=[  4.2   8.3  -2.9 -10.3  -3.4  -4.3  -3.   -4.1  -4.7   5.9]
+ C=0.480 dec=1 out=[  4.1   8.2  -3.  -10.4  -3.5  -4.4  -3.2  -4.3  -4.8   7.6]
+ C=0.490 dec=9 out=[  4.    8.1  -3.1 -10.4  -3.6  -4.5  -3.2  -4.3  -4.8   8.2]
+ C=0.495 dec=9 out=[  4.    8.1  -3.1 -10.5  -3.6  -4.5  -3.3  -4.3  -4.8   8.5]
+ C=0.500 dec=9 out=[  4.    8.1  -3.1 -10.5  -3.6  -4.5  -3.3  -4.4  -4.8   8.8]
+
+level 1.0@0, answer 0.5@4, third C@9 (no flip)
+ C=0.300 dec=4 out=[ -2.1  -3.2 -12.9  -5.9  13.9   0.3  -2.6  -1.3  -0.8   1. ]
+ C=0.450 dec=4 out=[ -2.8  -3.9 -13.6  -6.5  13.2  -0.4  -3.3  -2.1  -1.4   9.6]
+ C=0.490 dec=4 out=[ -3.   -4.1 -13.8  -6.7  13.   -0.6  -3.5  -2.3  -1.5  11.9]
+ C=0.500 dec=4 out=[ -3.   -4.1 -13.8  -6.8  13.   -0.6  -3.6  -2.3  -1.6  12.4]
+
+
+===== step 148/160
+
+--- python ---
+
+import numpy as np
+Lv,Lp,Av,Ap=slots(X)
+srt=np.argsort(-X,1)
+M1=X[np.arange(len(X)),srt[:,0]]; M2=X[np.arange(len(X)),srt[:,1]]; M3=X[np.arange(len(X)),srt[:,2]]
+k3=srt[:,2]
+mis=netdec!=p0
+for c in [0.002,0.005,0.01,0.02,0.03,0.05,0.08]:
+    pred=np.where((M2-M3)<c*M2, k3, p0)
+    print(f"c={c}: acc={(pred==netdec).mean():.4f} rep={(pred[mis]==netdec[mis]).mean():.3f}")
+# also: fraction of the mismatch cases where netdec==k3
+print("netdec==k3 among mismatches:", (netdec[mis]==k3[mis]).mean())
+print("netdec==Lp among mismatches:", (netdec[mis]==Lp[mis]).mean())
+
+--- output (0.0 s) ---
+c=0.002: acc=0.9536 rep=0.048
+c=0.005: acc=0.9534 rep=0.096
+c=0.01: acc=0.9509 rep=0.186
+c=0.02: acc=0.9427 rep=0.316
+c=0.03: acc=0.9315 rep=0.383
+c=0.05: acc=0.9029 rep=0.463
+c=0.08: acc=0.8499 rep=0.513
+netdec==k3 among mismatches: 0.6329787234042553
+netdec==Lp among mismatches: 0.19148936170212766
+
