@@ -216,3 +216,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     and pipeline work end to end.
   - The M4,4 prior control (59.8% behaviour, 0/4 stages) behaves as a control should. M4,3's prior control is
     pending; it's the one that matters.
+- **21:12** Check-in. **M4,3 prior-only control: NOT verified (1 of 3 stages; behaviour 98.2%).** The blinded main run explained all 3 stages, and the told-but-weightless reader explains 1. So on M4,3 the certification needs the network itself, not just knowing the task. This is the first rung where reading the network is clearly necessary. Running: M8,5 and M8,8 main (19 and 13 min), their prior controls.
