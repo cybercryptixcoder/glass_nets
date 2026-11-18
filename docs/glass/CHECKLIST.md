@@ -45,6 +45,8 @@ deleted from here; Shreyas can delete it.)
 
 ## CHANGE RULE (binding; LEARNINGS E12): no code change without a CHANGES.md entry (failure → reproduced cause → before/after test incl. held-out + adversarial cases → verdicts that must not change). Otherwise it is a flagged, off-by-default experiment. Validate the judge before any run spend. No thresholds fitted to outcomes. One kind of change per round.
 
+See also `docs/PROJECT_REVIEW.md` (whole-project review, Nov 18; decisions for Shreyas in §10).
+
 ## Current state: ROUND 2 FINISHED (04:10 ET Nov 18); report `docs/glass/REPORT_ROUND2.md`. Next: its 'next round' list. HANDOFF at 01:05 ET Nov 18; read `docs/glass/HANDOFF.md` first. Earlier header: (23:52 ET), ROUND 2 (approved 23:36 ET; plan: `docs/glass/PLAN_ROUND2.md`)
 
 - Done:

@@ -378,3 +378,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **03:59** Sync (Shreyas asked); status above relayed.
 - **04:02** ROUND 2 FINISHED: 40/40; all 757 run files and 70 logs synced (counts match Colab). Wrote REPORT_ROUND2.md (A/B: v2 no better, so revert F3/F4; no lc claim; shuffled lc_3_4 passed, so the judge is too loose) and E11. Coding is left for the next agent.
 - **09:51** Review with Shreyas. Retracted the 'v2 no better' reading and the proposed glass-3 rule (both patchwork). Wrote the corrections in REPORT_ROUND2, E12 (how it happened, the binding change rule), CHANGES.md (ledger) and the CHECKLIST rule.
+- **10:07** Whole-project review written (`docs/PROJECT_REVIEW.md`) at Shreyas's request: history, parts, experiments, the core problem (no valid 'is it an explanation' measure), why we circle, an audit of earlier decisions, the build routine, and his decisions. Nothing run.
