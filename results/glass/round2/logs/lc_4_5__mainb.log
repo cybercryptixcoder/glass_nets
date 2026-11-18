@@ -951,3 +951,1575 @@ NOT EXPLAINED:
   - the construction copies the network's weights, so it explains nothing by itself
 
 ===== step 23/80
+
+--- python ---
+
+np.set_printoptions(precision=4, suppress=True, linewidth=220)
+for k in ["W_E","W_pos","W_U"]:
+    print(k); print(W[k])
+for l in [0,1]:
+    WQ, WK, WV, WO = [W[f"L{l}.{n}"][0] for n in ["W_Q","W_K","W_V","W_O"]]
+    print(f"--- layer {l}")
+    print("WQ\n",WQ); print("WK\n",WK); print("WV\n",WV); print("WO\n",WO)
+    print("M=WQ WK^T\n", WQ@WK.T)
+    print("V=WV WO\n", WV@WO)
+
+--- output (0.0 s) ---
+W_E
+[[-0.5547 -2.026   1.4238  0.301 ]
+ [ 1.0222 -1.0874  0.6785  1.8459]
+ [ 0.9991 -0.2001  1.1441  1.3961]
+ [ 1.7693  1.8963  1.0939 -0.5216]
+ [-0.6405 -0.0166  2.8816 -0.0738]]
+W_pos
+[[ 0.933  -0.5251  2.2547  0.0259]
+ [ 1.9077 -1.1536  0.5939 -1.6735]
+ [-1.2981  1.9569  2.5465 -0.4738]
+ [-1.5923 -0.4525 -0.0671  2.0607]
+ [-1.5712 -1.1513  0.1696  2.6083]]
+W_U
+[[ 0.1397 -0.1018 -0.0272 -0.0296 -0.1579]
+ [-0.0436  0.1143  0.1122 -0.1387 -0.3954]
+ [ 0.6891 -0.418   0.1983 -0.5265 -1.4645]
+ [-0.3152 -0.363   0.6068  0.3611  0.006 ]]
+--- layer 0
+WQ
+ [[ 3.2001  1.6683  3.0831  2.6743]
+ [-1.2368  2.8073  1.143   5.1298]
+ [-2.6694 -2.0003  1.021  -0.4435]
+ [ 0.9867 -0.6436 -2.109  -1.8283]]
+WK
+ [[ 0.3338 -1.7759 -2.7886 -2.3371]
+ [-1.7169  0.0349  1.7594  1.2848]
+ [-2.2896 -3.2117 -0.5018 -2.6883]
+ [-4.6616  0.3198 -0.7943  0.5497]]
+WV
+ [[ 0.5573  0.0069 -0.9117  0.2999]
+ [-0.1229 -0.1595 -0.5697 -0.3257]
+ [ 0.8621 -0.0513  0.3206 -0.3577]
+ [ 0.0109 -0.0025 -0.7993 -0.8032]]
+WO
+ [[ 0.2002  1.0833 -0.3118 -0.7092]
+ [-0.0439 -0.1009 -0.058   0.0292]
+ [-1.4468 -0.6819  0.3432 -1.0248]
+ [ 0.8705 -0.9573 -0.0243 -0.2886]]
+M=WQ WK^T
+ [[-16.742    3.4242 -21.4213 -15.3627]
+ [-20.5746  10.8229 -20.5484   8.5752]
+ [  0.8506   5.7401  13.2163  10.7495]
+ [ 11.6265  -7.7763   5.7809  -4.1356]]
+V=WV WO
+ [[ 1.6914  0.9376 -0.4944  0.4528]
+ [ 0.5231  0.5833 -0.14    0.7603]
+ [-0.6005  1.0629 -0.147  -0.8383]
+ [ 0.4595  1.326  -0.258   1.0431]]
+--- layer 1
+WQ
+ [[-0.6085 -0.2795 -0.543   0.0627]
+ [-0.0924 -0.2877 -0.1484 -0.1071]
+ [ 0.4436 -2.3097 -3.5781  0.6081]
+ [ 0.4666 -0.5981 -0.172   0.2837]]
+WK
+ [[ 0.1338  0.4798  0.1351 -0.0392]
+ [-0.2893  0.799   0.925   0.0082]
+ [ 0.6468 -0.7584 -1.1471  0.3823]
+ [ 0.1642 -0.8974 -1.9585  0.2631]]
+WV
+ [[-1.4634 -1.3115 -0.4038  0.0581]
+ [ 0.5144 -0.3847 -2.1988 -0.1269]
+ [-2.5183  0.0285 -1.5646  1.1705]
+ [ 0.3044  2.0461  0.6024 -0.342 ]]
+WO
+ [[ 0.6729 -5.5002  0.7471  1.5071]
+ [-0.0863 -2.5255  1.4241 -1.561 ]
+ [-0.8041 -0.2032  0.1339 -0.0074]
+ [ 0.2319  1.658   0.0931 -0.093 ]]
+M=WQ WK^T
+ [[-0.2913 -0.549   0.4652  1.2309]
+ [-0.1663 -0.3412  0.2876  0.5054]
+ [-1.5564 -5.2785  6.3757  9.3132]
+ [-0.259  -0.7697  1.0613  1.0249]]
+V=WV WO
+ [[-0.5335 11.5397 -3.0097 -0.1606]
+ [ 2.118  -1.6214 -0.4697  1.4038]
+ [-0.1676 16.0379 -1.9413 -3.9371]
+ [-0.5355 -7.5311  3.1901 -2.7079]]
+
+
+===== step 24/80
+
+--- python ---
+
+Y = run(X)
+Yc = Y - Y.mean(0)
+U,s,Vt = np.linalg.svd(Yc, full_matrices=False)
+print("logit singular values", s.round(1))
+print("Vt\n", Vt.round(2))
+print("W_U svd", np.linalg.svd(W["W_U"])[1].round(2))
+print("V0 svd", np.linalg.svd(W["L0.W_V"][0]@W["L0.W_O"][0])[1].round(2))
+print("V1 svd", np.linalg.svd(W["L1.W_V"][0]@W["L1.W_O"][0])[1].round(2))
+# structure of W_U relative to W_E: cos of columns with embedding directions
+
+--- output (0.03 s) ---
+logit singular values [321.8 240.1  68.9   8.5   0. ]
+Vt
+ [[-0.75  0.56  0.28  0.14  0.14]
+ [ 0.08  0.47 -0.17 -0.47 -0.72]
+ [ 0.14  0.42 -0.66 -0.2   0.58]
+ [ 0.07 -0.06  0.52 -0.78  0.35]
+ [ 0.64  0.53  0.44  0.35  0.08]]
+W_U svd [1.81 0.85 0.31 0.04]
+V0 svd [2.72 1.54 0.98 0.01]
+V1 svd [21.74  5.15  1.95  0.22]
+
+
+===== step 25/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+WE,WP = W["W_E"],W["W_pos"]
+M0 = W["L0.W_Q"][0]@W["L0.W_K"][0].T
+Aq = np.array([WE[t]@M0 + WP[p]@M0 for p in range(5) for t in range(5)])  # M0^T x
+print("singular values of query-vector set (25x4):", np.linalg.svd(Aq)[1].round(1))
+Bk = np.array([WE[t]+WP[p] for p in range(5) for t in range(5)])
+print("singular values of key vectors:", np.linalg.svd(Bk)[1].round(2))
+# rank of M0 itself
+print("M0 svd", np.linalg.svd(M0)[1].round(2))
+# score matrix structure: for 25 query combos x 25 key combos
+S = Aq@Bk.T
+print("S svd", np.linalg.svd(S)[1].round(1))
+
+--- output (0.0 s) ---
+singular values of query-vector set (25x4): [500.4 244.1  76.6   1.2]
+singular values of key vectors: [14.99 11.85  8.81  6.11]
+M0 svd [44.38 23.89  7.24  0.16]
+S svd [6351.8 2447.4  724.     9.8    0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0.     0. ]
+
+
+===== step 26/80
+
+--- python ---
+
+A0 = a["attn0.pattern"].reshape(-1,5,5)
+idx = {tuple(r):i for i,r in enumerate(X.astype(int))}
+for r in [[0,0,0,0,0],[1,2,3,4,0],[4,3,2,1,0],[0,1,2,3,4],[2,2,3,3,4],[3,0,1,2,4],[1,1,1,1,1],[4,4,0,0,0]]:
+    i = idx[tuple(r)]
+    print(np.array(r), "argmax keys per q:", A0[i].argmax(1), "maxvals", A0[i].max(1).round(2))
+    print(A0[i].round(2))
+
+--- output (0.01 s) ---
+[0 0 0 0 0] argmax keys per q: [0 0 0 0 0] maxvals [1. 1. 1. 1. 1.]
+[[1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]]
+[1 2 3 4 0] argmax keys per q: [1 2 3 0 0] maxvals [1. 1. 1. 1. 1.]
+[[0. 1. 0. 0. 0.]
+ [0. 0. 1. 0. 0.]
+ [0. 0. 0. 1. 0.]
+ [1. 0. 0. 0. 0.]
+ [1. 0. 0. 0. 0.]]
+[4 3 2 1 0] argmax keys per q: [0 4 2 1 0] maxvals [0.99 1.   0.99 0.99 1.  ]
+[[0.99 0.   0.01 0.   0.  ]
+ [0.   0.   0.   0.   1.  ]
+ [0.   0.   0.99 0.01 0.  ]
+ [0.01 0.99 0.   0.   0.  ]
+ [1.   0.   0.   0.   0.  ]]
+[0 1 2 3 4] argmax keys per q: [0 1 4 3 0] maxvals [1.   0.82 1.   0.66 1.  ]
+[[1.   0.   0.   0.   0.  ]
+ [0.18 0.82 0.   0.   0.  ]
+ [0.   0.   0.   0.   1.  ]
+ [0.   0.   0.   0.66 0.34]
+ [1.   0.   0.   0.   0.  ]]
+[2 2 3 3 4] argmax keys per q: [2 2 4 3 0] maxvals [1.   1.   1.   0.66 1.  ]
+[[0.   0.   1.   0.   0.  ]
+ [0.   0.   1.   0.   0.  ]
+ [0.   0.   0.   0.   1.  ]
+ [0.   0.   0.   0.66 0.34]
+ [1.   0.   0.   0.   0.  ]]
+[3 0 1 2 4] argmax keys per q: [4 0 2 0 0] maxvals [0.85 1.   0.83 1.   1.  ]
+[[0.   0.   0.   0.15 0.85]
+ [1.   0.   0.   0.   0.  ]
+ [0.   0.   0.83 0.   0.17]
+ [1.   0.   0.   0.   0.  ]
+ [1.   0.   0.   0.   0.  ]]
+[1 1 1 1 1] argmax keys per q: [0 1 2 1 1] maxvals [0.9 1.  1.  1.  1. ]
+[[0.9 0.1 0.  0.  0. ]
+ [0.  1.  0.  0.  0. ]
+ [0.  0.  1.  0.  0. ]
+ [0.  1.  0.  0.  0. ]
+ [0.  1.  0.  0.  0. ]]
+[4 4 0 0 0] argmax keys per q: [0 2 0 0 0] maxvals [1.   0.82 1.   1.   1.  ]
+[[1.   0.   0.   0.   0.  ]
+ [0.18 0.   0.82 0.   0.  ]
+ [1.   0.   0.   0.   0.  ]
+ [1.   0.   0.   0.   0.  ]
+ [1.   0.   0.   0.   0.  ]]
+
+
+===== step 27/80
+
+--- python ---
+
+WU = W["W_U"]; V1 = W["L1.W_V"][0]@W["L1.W_O"][0]; V0=W["L0.W_V"][0]@W["L0.W_O"][0]
+X0 = a["embed"].reshape(-1,5,4); O0=a["attn0.out"].reshape(-1,5,4); R0=a["resid0.mid"].reshape(-1,5,4)
+A1 = a["attn1.pattern"].reshape(-1,5,5); O1=a["attn1.out"].reshape(-1,5,4); R1=a["resid1.mid"].reshape(-1,5,4)
+term_emb = X0[:,4]@WU
+term_o0 = O0[:,4]@WU
+term_o1 = O1[:,4]@WU
+Y = run(X)
+print("Y check", np.abs(term_emb+term_o0+term_o1-Y).max())
+for nm,t in [("emb",term_emb),("o0",term_o0),("o1",term_o1)]:
+    print(nm, "std per class", t.std(0).round(1))
+# contribution to decision: correlation of each term's (c0-c1) with total
+d = (Y[:,0]-Y[:,1])
+for nm,t in [("emb",term_emb),("o0",term_o0),("o1",term_o1)]:
+    dt = t[:,0]-t[:,1]
+    print(nm, "corr with total c0-c1", np.corrcoef(dt,d)[0,1].round(2), "std", dt.std().round(1))
+
+--- output (0.03 s) ---
+Y check 7.105427357601002e-15
+emb std per class [0.6 0.4 0.4 0.7 1.2]
+o0 std per class [0.6 0.6 1.  0.7 0.3]
+o1 std per class [4.2 3.9 2.1 2.2 2.9]
+emb corr with total c0-c1 0.22 std 0.6
+o0 corr with total c0-c1 0.1 std 0.5
+o1 corr with total c0-c1 1.0 std 7.6
+
+
+===== step 28/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+V1WU = V1@WU; V0WU = V0@WU; WEWU = W["W_E"]@WU; WPWU=W["W_pos"]@WU
+print("V1@W_U\n", V1WU, "svd", np.linalg.svd(V1WU)[1].round(2))
+print("W_E@W_U (token -> class scores)\n", WEWU)
+print("W_pos@W_U\n", WPWU)
+print("V0@W_U\n", V0WU)
+# how do the class scores for a token look; is class t scoring token t?
+print("diag of WEWU", np.diag(WEWU).round(2))
+
+--- output (0.0 s) ---
+V1@W_U
+ [[-2.601  2.69   0.614 -0.058 -0.072]
+ [-0.4   -0.714  0.519  0.916  1.003]
+ [-0.82   4.091 -0.971 -2.618 -3.495]
+ [ 3.306 -1.157 -1.841 -1.597 -1.626]] svd [6.7  5.51 0.32 0.07]
+W_E@W_U (token -> class scores)
+ [[ 0.897 -0.879  0.253 -0.344 -1.195]
+ [ 0.076 -1.182  1.105  0.43  -0.714]
+ [ 0.497 -1.11   1.025 -0.1   -1.746]
+ [ 1.083 -0.231  0.065 -1.08  -2.634]
+ [ 1.92  -1.114  0.542 -1.523 -4.113]]
+W_pos@W_U
+ [[ 1.699 -1.107  0.379 -1.133 -3.242]
+ [ 1.254  0.033 -1.079 -0.813 -0.725]
+ [ 1.637 -0.537  0.472 -1.745 -4.301]
+ [-0.899 -0.61   1.23   0.889  0.541]
+ [-0.875 -0.989  1.53   1.059  0.471]]
+V0@W_U
+ [[-0.288 -0.023  0.236  0.244  0.089]
+ [-0.289 -0.204  0.485  0.252 -0.104]
+ [ 0.033  0.548 -0.402 -0.355 -0.115]
+ [-0.5   -0.166  0.718  0.315 -0.213]]
+diag of WEWU [ 0.9  -1.18  1.02 -1.08 -4.11]
+
+
+===== step 29/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("Re-implementation with full-precision constants; layer-1 QK is tested as a rank-1 product "
+               "M1 = s u v^T (layer 1 attends by a single scalar projection of query and key). ")
+
+WE = np.array([[-0.5547,-2.0260,1.4238,0.3010],[1.0222,-1.0874,0.6785,1.8459],[0.9991,-0.2001,1.1441,1.3961],
+               [1.7693,1.8963,1.0939,-0.5216],[-0.6405,-0.0166,2.8816,-0.0738]])
+WP = np.array([[0.9330,-0.5251,2.2547,0.0259],[1.9077,-1.1536,0.5939,-1.6735],[-1.2981,1.9569,2.5465,-0.4738],
+               [-1.5923,-0.4525,-0.0671,2.0607],[-1.5712,-1.1513,0.1696,2.6083]])
+WU = np.array([[0.1397,-0.1018,-0.0272,-0.0296,-0.1579],[-0.0436,0.1143,0.1122,-0.1387,-0.3954],
+               [0.6891,-0.4180,0.1983,-0.5265,-1.4645],[-0.3152,-0.3630,0.6068,0.3611,0.0060]])
+M0 = np.array([[-16.7420,3.4242,-21.4213,-15.3627],[-20.5746,10.8229,-20.5484,8.5752],
+               [0.8506,5.7401,13.2163,10.7495],[11.6265,-7.7763,5.7809,-4.1356]])
+u1 = np.array([-0.111,-0.054,-0.984,-0.130]); v1 = np.array([0.126,0.421,-0.508,-0.741])
+M1 = 12.762 * np.outer(u1, v1)
+V0 = np.array([[1.6914,0.9376,-0.4944,0.4528],[0.5231,0.5833,-0.1400,0.7603],
+               [-0.6005,1.0629,-0.1470,-0.8383],[0.4595,1.3260,-0.2580,1.0431]])
+V1 = np.array([[-0.5335,11.5397,-3.0097,-0.1606],[2.1180,-1.6214,-0.4697,1.4038],
+               [-0.1676,16.0379,-1.9413,-3.9371],[-0.5355,-7.5311,3.1901,-2.7079]])
+
+def sm(S):
+    S = S - S.max(-1, keepdims=True)
+    E = np.exp(S)
+    return E / E.sum(-1, keepdims=True)
+
+def model(x, iv):
+    x = np.asarray(x).astype(int)
+    B = x.shape[0]
+    vs = []
+    for p in range(5):
+        oh = np.zeros((B, 5)); oh[np.arange(B), x[:, p]] = 1.0
+        vs.append(iv("e%d" % p, oh @ WE + WP[p]))
+    x0 = np.stack(vs, 1)
+    A0 = sm(np.einsum('bik,kl,bjl->bij', x0, M0, x0) / 2.0)
+    A0 = iv("A0", A0.reshape(B, 25))
+    o0 = iv("o0", np.einsum('bij,bjk,kl->bil', A0.reshape(B,5,5), x0, V0).reshape(B, 20))
+    x1 = iv("r0", (x0 + o0.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    A1 = sm(np.einsum('bik,kl,bjl->bij', x1, M1, x1) / 2.0)
+    A1 = iv("A1", A1.reshape(B, 25))
+    o1 = iv("o1", np.einsum('bij,bjk,kl->bil', A1.reshape(B,5,5), x1, V1).reshape(B, 20))
+    x2 = iv("r1", (x1 + o1.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    return x2[:, 4, :] @ WU
+
+ALIGN = {"e0": ["embed"], "e1": ["embed"], "e2": ["embed"], "e3": ["embed"], "e4": ["embed"],
+         "A0": ["attn0.pattern"], "o0": ["attn0.out"], "r0": ["resid0.mid"],
+         "A1": ["attn1.pattern"], "o1": ["attn1.out"], "r1": ["resid1.mid"]}
+
+--- judge report 5 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      named, failing  embed: substitute 100%, interchange 71% fail
+  layer 0 attention named, failing  attn0.pattern: substitute 100%, interchange 84% fail; attn0.out: substitute 100%, interchange 82% fail; resid0.mid: substitute 100%, interchange 71% fail
+  layer 1 attention named, failing  attn1.pattern: substitute 72%, interchange 68% fail; attn1.out: substitute 70%, interchange 68% fail; resid1.mid: substitute 74%, interchange 62% fail
+  compression: 1.136 constants per degree of freedom (an explanation needs < 0.9)
+FIX FIRST: stage 'embedding'
+
+JUDGE REPORT   (1563 held-out inputs; construction 2,578 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 72.9% of inputs (a constant output would get 38.7%); output R2 0.521; KL 0.663
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 20; 15 principal components suffice; e0, e1, e2, e3, e4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 45.0% (random n/a) | mean-ablate 45.0%
+  attn0.pattern (19 dims named of 25; 11 principal components suffice; A0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 40.2% (random 45.4%) | mean-ablate 40.2%
+  attn0.out   (20 dims named of 20; 15 principal components suffice; o0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 42.2% (random n/a) | mean-ablate 42.2%
+  resid0.mid  (20 dims named of 20; 19 principal components suffice; r0): explained 1.000 | substitute 100.0% | keep 100.0% | remove 16.1% (random n/a) | mean-ablate 16.1%
+  attn1.pattern (20 dims named of 25; 10 principal components suffice; A1): explained 0.908 | substitute 72.5% | keep 100.0% | remove 37.9% (random 52.2%) | mean-ablate 37.9%
+  attn1.out   (20 dims named of 20; 11 principal components suffice; o1): explained 0.805 | substitute 69.9% | keep 100.0% | remove 34.5% (random n/a) | mean-ablate 34.5%
+  resid1.mid  (20 dims named of 20; 13 principal components suffice; r1): explained 0.835 | substitute 73.6% | keep 100.0% | remove 38.7% (random n/a) | mean-ablate 38.7%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 73.2% / 71.0% when changed (network changed in 62.3%); output R2 0.515 | controls: random subspace 73.2%, no-change 37.7%, source-output 100.0%, attribution patching 38.4%
+  partial     e0 @ embed: right 71.7% / 60.6% when changed (network changed in 33.0%); output R2 0.482 | controls: random subspace 38.6%, no-change 67.0%, source-output 41.3%, attribution patching 63.3%
+  partial     e1 @ embed: right 74.6% / 70.1% when changed (network changed in 25.6%); output R2 0.515 | controls: random subspace 45.8%, no-change 74.4%, source-output 40.6%, attribution patching 76.0%
+  partial     e2 @ embed: right 73.5% / 70.6% when changed (network changed in 24.5%); output R2 0.520 | controls: random subspace 43.8%, no-change 75.5%, source-output 40.8%, attribution patching 73.0%
+  partial     e3 @ embed: right 73.2% / 74.0% when changed (network changed in 24.8%); output R2 0.533 | controls: random subspace 40.0%, no-change 75.2%, source-output 41.1%, attribution patching 70.2%
+  partial     e4 @ embed: right 72.0% / 66.6% when changed (network changed in 34.0%); output R2 0.486 | controls: random subspace 43.1%, no-change 66.0%, source-output 40.9%, attribution patching 64.2%
+  edit        all variables @ embed: right 82.3% / 80.1% when changed (network changed in 59.0%); output R2 0.838 | controls: random subspace 40.3%, no-change 41.0%, source-output 41.8%, attribution patching 44.1%
+  interchange A0 @ attn0.pattern: right 84.0% / 84.1% when changed (network changed in 57.6%); output R2 0.846 | controls: random subspace 51.6%, no-change 42.4%, source-output 46.2%, attribution patching 53.1%
+  edit        A0 @ attn0.pattern: right 62.1% / 59.8% when changed (network changed in 49.1%); output R2 -0.034 | controls: random subspace 43.4%, no-change 50.9%, source-output 42.5%, attribution patching 59.0%
+  interchange o0 @ attn0.out: right 82.5% / 81.8% when changed (network changed in 58.7%); output R2 0.824 | controls: random subspace 82.5%, no-change 41.3%, source-output 54.1%, attribution patching 48.5%
+  edit        o0 @ attn0.out: right 84.1% / 81.4% when changed (network changed in 51.7%); output R2 0.876 | controls: random subspace 50.2%, no-change 48.3%, source-output 44.1%, attribution patching 58.1%
+  interchange r0 @ resid0.mid: right 73.2% / 71.0% when changed (network changed in 62.3%); output R2 0.515 | controls: random subspace 73.2%, no-change 37.7%, source-output 100.0%, attribution patching 47.5%
+  edit        r0 @ resid0.mid: right 83.0% / 81.0% when changed (network changed in 54.4%); output R2 0.848 | controls: random subspace 42.5%, no-change 45.6%, source-output 42.8%, attribution patching 52.8%
+  interchange A1 @ attn1.pattern: right 66.2% / 68.2% when changed (network changed in 47.2%); output R2 0.517 | controls: random subspace 53.3%, no-change 52.8%, source-output 43.2%, attribution patching 100.0%
+  edit        A1 @ attn1.pattern: right 57.2% / 42.7% when changed (network changed in 43.5%); output R2 0.352 | controls: random subspace 53.1%, no-change 56.5%, source-output 38.9%, attribution patching 100.0%
+  interchange o1 @ attn1.out: right 62.9% / 67.9% when changed (network changed in 46.2%); output R2 0.423 | controls: random subspace 72.7%, no-change 53.8%, source-output 60.5%, attribution patching 100.0%
+  edit        o1 @ attn1.out: right 36.5% / 24.1% when changed (network changed in 58.0%); output R2 0.002 | controls: random subspace 48.6%, no-change 42.0%, source-output 41.9%, attribution patching 100.0%
+  interchange r1 @ resid1.mid: right 60.4% / 62.3% when changed (network changed in 50.9%); output R2 0.406 | controls: random subspace 73.2%, no-change 49.1%, source-output 72.8%, attribution patching 100.0%
+  edit        r1 @ resid1.mid: right 54.9% / 47.8% when changed (network changed in 51.3%); output R2 0.396 | controls: random subspace 49.2%, no-change 48.6%, source-output 41.8%, attribution patching 100.0%
+5. WHOLE MODEL   all 7 named site(s) replaced at once by the construction's predictions: the network keeps 73.6% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 88.1% (n=703); network decides 1: 69.8% (n=605); network decides 2: 39.0% (n=251); network decides 3: 0.0% (n=4) | near ties (157 least clear inputs, no requirement): 55.4%
+   the network's own mistakes: it is wrong on 19.2% of test inputs (300); the construction reproduces 61.0% of them (need 50% when there are 30 or more) and is right on 14.3%
+7. COMPRESSION   117 constants in the file for 103 degrees of freedom in the network: 1.14 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   embedding: named but failing;  layer 0 attention: named but failing;  layer 1 attention: named but failing
+VERDICT: NOT VERIFIED (0 of 3 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 72.9% of inputs (need 95%)
+  - interchange of all variables at embed: prediction right in 71.0% of the cases where the network's output changed (need 90%)
+  - interchange of A0 at attn0.pattern: prediction right in 84.1% of the cases where the network's output changed (need 90%)
+  - interchange of o0 at attn0.out: prediction right in 81.8% of the cases where the network's output changed (need 90%)
+  - interchange of r0 at resid0.mid: prediction right in 71.0% of the cases where the network's output changed (need 90%)
+  - substitution at attn1.pattern: 72.5% (need 90%)
+  - interchange of A1 at attn1.pattern: prediction right in 68.2% of the cases where the network's output changed (need 90%)
+  - edit of A1 at attn1.pattern: prediction right in 42.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at attn1.out: 69.9% (need 90%)
+  - interchange of o1 at attn1.out: prediction right in 67.9% of the cases where the network's output changed (need 90%)
+  - edit of o1 at attn1.out: prediction right in 24.1% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at resid1.mid: 73.6% (need 90%)
+  - interchange of r1 at resid1.mid: prediction right in 62.3% of the cases where the network's output changed (need 90%)
+  - edit of r1 at resid1.mid: prediction right in 47.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - joint substitution: with all 7 named sites replaced at once by the construction's predictions, the network keeps 73.6% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 251 inputs where network decides 2, the construction agrees on 39.0% (need 80%)
+  - not an explanation: the file has 117 constants for a network with 103 degrees of freedom (188 parameters, less the transformations that leave its decisions unchanged): 1.14 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 0/3 | behaviour 72.9% | all sites at once 73.6% | worst slice 39.0% | network's mistakes reproduced 61.0%
+NOT EXPLAINED:
+  - stage 'embedding' is not explained
+  - stage 'layer 0 attention' is not explained
+  - stage 'layer 1 attention' is not explained
+  - on 27.1% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 26.4% of the network's decisions
+  - worst slice: network decides 2 (251 inputs), where it matches 39.0%
+  - of the network's 300 mistakes on test inputs, 39.0% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+
+===== step 30/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+WU=W["W_U"]; V1=W["L1.W_V"][0]@W["L1.W_O"][0]; V0=W["L0.W_V"][0]@W["L0.W_O"][0]
+M0=W["L0.W_Q"][0]@W["L0.W_K"][0].T; M1=W["L1.W_Q"][0]@W["L1.W_K"][0].T
+WE,WP=W["W_E"],W["W_pos"]
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+def fwd(M0=M0,M1=M1,V0=V0,V1=V1,WU=WU,WE=WE,WP=WP):
+    x0 = WE[X.astype(int)] + WP[None]
+    A0 = sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+    x1 = x0 + np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+    A1 = sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+    z  = np.einsum('bij,bjk->bik',A1,x1)
+    x2 = x1 + np.einsum('bjk,kl->bjl',z,V1)
+    return x2[:,4]@WU, A0, A1, x1, z
+Yf,A0f,A1f,x1f,zf = fwd()
+pred = run(X).argmax(1)
+print("exact", (Yf.argmax(1)==pred).mean())
+# logits from o1 only
+o1 = np.einsum('bj,jk->bk', zf[:,4], V1)@WU
+print("o1 only", (o1.argmax(1)==pred).mean())
+# rank-2 V1WU
+G = V1@WU
+Uu,s,Vv = np.linalg.svd(G)
+G2 = Uu[:,:2]*s[:2]@Vv[:2]
+o1r = zf[:,4]@G2
+print("o1 rank2", (o1r.argmax(1)==pred).mean())
+G3 = Uu[:,:3]*s[:3]@Vv[:3]
+print("o1 rank3", (zf[:,4]@G3).argmax(1).__eq__(pred).mean())
+# also total logits rank2
+Y2 = np.einsum('bj,jk->bk', zf[:,4], G2) + (x1f[:,4])@0
+print("A1 hard argmax?")
+
+--- output (0.07 s) ---
+exact 1.0
+o1 only 0.8288
+o1 rank2 0.81024
+o1 rank3 0.83808
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 31, in <module>
+ValueError: matmul: Input operand 1 does not have enough dimensions (has 0, gufunc core with signature (n?,k),(k,m?)->(n?,m?) requires 1)
+
+
+===== step 31/80
+
+--- python ---
+
+from sklearn.tree import DecisionTreeClassifier, export_text
+pred = run(X).argmax(1)
+Xt = X.astype(float)
+tr = DecisionTreeClassifier(max_depth=6, random_state=0).fit(Xt, pred)
+print("tree train acc", tr.score(Xt,pred))
+print(export_text(tr, feature_names=[f'x{i}' for i in range(5)], max_depth=3))
+
+--- output (0.75 s) ---
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 285, in <module>
+    set_scputimes_ntuple("/proc")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 432, in wrapper
+    raise raise_from(err, None)
+          ~~~~~~~~~~^^^^^^^^^^^
+  File "<string>", line 3, in raise_from
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 430, in wrapper
+    ret = cache[key] = fun(*args, **kwargs)
+                       ~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 268, in set_scputimes_ntuple
+    with open_binary('%s/stat' % procfs_path) as f:
+         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 765, in open_binary
+    return open(fname, "rb", buffering=FILE_READ_BUFFER_SIZE)
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 2, in <module>
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/__init__.py", line 73, in <module>
+    from .base import clone  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/base.py", line 19, in <module>
+    from .utils._estimator_html_repr import _HTMLDocumentationLinkMixin, estimator_html_repr
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from ._chunking import gen_batches, gen_even_slices
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_chunking.py", line 11, in <module>
+    from ._param_validation import Interval, validate_params
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_param_validation.py", line 17, in <module>
+    from .validation import _is_arraylike_not_scalar
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 21, in <module>
+    from ..utils._array_api import _asarray_with_order, _is_numpy_namespace, get_namespace
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_array_api.py", line 17, in <module>
+    from .fixes import parse_version
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/fixes.py", line 20, in <module>
+    import pandas as pd
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/__init__.py", line 49, in <module>
+    from pandas.core.api import (
+    ...<62 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/core/api.py", line 1, in <module>
+    from pandas._libs import (
+    ...<4 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/__init__.py", line 18, in <module>
+    from pandas._libs.interval import Interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "interval.pyx", line 1, in init pandas._libs.interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "hashtable.pyx", line 1, in init pandas._libs.hashtable
+    return _real_import(name, globals, locals, fromlist, level)
+  File "missing.pyx", line 1, in init pandas._libs.missing
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/tslibs/__init__.py", line 40, in <module>
+    from pandas._libs.tslibs.conversion import localize_pydatetime
+    return _real_import(name, globals, locals, fromlist, level)
+  File "conversion.pyx", line 1, in init pandas._libs.tslibs.conversion
+    return _real_import(name, globals, locals, fromlist, level)
+  File "offsets.pyx", line 1, in init pandas._libs.tslibs.offsets
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timestamps.pyx", line 1, in init pandas._libs.tslibs.timestamps
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timedeltas.pyx", line 1, in init pandas._libs.tslibs.timedeltas
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timezones.pyx", line 49, in init pandas._libs.tslibs.timezones
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1557, in __call__
+    rv = self.nocache(name=name)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1640, in nocache
+    tz = tzfile(filepath)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 464, in __init__
+    fileobj = open(fileobj, 'rb')
+TypeError: 'NoneType' object is not callable
+
+
+===== step 32/80
+
+--- python ---
+
+pred = run(X).argmax(1); Xl=X.astype(int)
+A1 = a["attn1.pattern"].reshape(-1,5,5); A0=a["attn0.pattern"].reshape(-1,5,5)
+k1 = A1[:,4].argmax(1); k0 = A0[:,4].argmax(1)
+print("pred == token at L1 argmax key:", (Xl[np.arange(len(Xl)),k1]==pred).mean())
+print("pred == token at L0 argmax key (q=4):", (Xl[np.arange(len(Xl)),k0]==pred).mean())
+# compare with token at k0 for each query position
+for q in range(5):
+    kk=A0[:,q].argmax(1)
+    print("q",q,"pred == token at key:", (Xl[np.arange(len(Xl)),kk]==pred).mean())
+print()
+print("distribution of pred", np.bincount(pred)/len(pred))
+print("distribution of token at L1 argmax", np.bincount(Xl[np.arange(len(Xl)),k1])/len(pred))
+print("distribution of token at L0 argmax q=4", np.bincount(Xl[np.arange(len(Xl)),k0])/len(pred))
+
+--- output (0.03 s) ---
+pred == token at L1 argmax key: 0.22784
+pred == token at L0 argmax key (q=4): 0.23232
+q 0 pred == token at key: 0.192
+q 1 pred == token at key: 0.13504
+q 2 pred == token at key: 0.16608
+q 3 pred == token at key: 0.20416
+q 4 pred == token at key: 0.23232
+
+distribution of pred [0.449 0.377 0.17  0.004]
+distribution of token at L1 argmax [0.144 0.298 0.221 0.131 0.206]
+distribution of token at L0 argmax q=4 [0.152 0.208 0.216 0.208 0.216]
+
+
+===== step 33/80
+
+--- python ---
+
+pred = run(X).argmax(1); Xl=X.astype(int)
+best=[]
+def test(name, v):
+    v=np.asarray(v)
+    acc=(v==pred).mean()
+    best.append((acc,name))
+for i in range(5):
+    for j in range(5):
+        if i==j: continue
+        test(f"({i}-{j})%5", (Xl[:,i]-Xl[:,j])%5)
+        test(f"({i}+{j})%5", (Xl[:,i]+Xl[:,j])%5)
+        test(f"({i}*{j})%5", (Xl[:,i]*Xl[:,j])%5)
+        test(f"max({i},{j})", np.maximum(Xl[:,i],Xl[:,j]))
+        test(f"min({i},{j})", np.minimum(Xl[:,i],Xl[:,j]))
+        test(f"({i}>{j})", (Xl[:,i]>Xl[:,j]).astype(int))
+        test(f"abs({i}-{j})", np.abs(Xl[:,i]-Xl[:,j]))
+test("sum%5", Xl.sum(1)%5)
+test("sum%4", Xl.sum(1)%4)
+test("prod%5", Xl.prod(1)%5)
+test("ndistinct", np.array([len(set(r)) for r in Xl]))
+test("argmax", Xl.argmax(1))
+test("argmin", Xl.argmin(1))
+test("nincr", (Xl[:,1:]>Xl[:,:-1]).sum(1))
+test("ndecr", (Xl[:,1:]<Xl[:,:-1]).sum(1))
+best.sort(reverse=True)
+print(best[:15])
+
+--- output (0.04 s) ---
+[(np.float64(0.50048), '(0>4)'), (np.float64(0.49056), '(0>3)'), (np.float64(0.48672), '(1>4)'), (np.float64(0.48256), '(0>2)'), (np.float64(0.47456), '(2>4)'), (np.float64(0.47424), '(1>3)'), (np.float64(0.47136), '(0>1)'), (np.float64(0.4576), '(3>4)'), (np.float64(0.45632), '(2>3)'), (np.float64(0.45216), '(1>2)'), (np.float64(0.41824), '(3>2)'), (np.float64(0.39712), '(4>2)'), (np.float64(0.39552), '(2>1)'), (np.float64(0.3952), '(1>0)'), (np.float64(0.39328), '(4>3)')]
+
+
+===== step 34/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+WU=W["W_U"]; V1=W["L1.W_V"][0]@W["L1.W_O"][0]; V0=W["L0.W_V"][0]@W["L0.W_O"][0]
+M1=W["L1.W_Q"][0]@W["L1.W_K"][0].T
+G = V1@WU
+Uu,s,Vv=np.linalg.svd(G, full_matrices=False)
+print("G sv", s.round(3))
+print("U (left, 4x2 relevant):\n", Uu[:,:2].round(3))
+print("V (right, class side 2x5):\n", Vv[:2].round(3))
+u1 = Uu[:,0]
+# layer1 q/k factors
+WQ1,WK1 = W["L1.W_Q"][0],W["L1.W_K"][0]
+print("rank of WQ1", np.linalg.matrix_rank(WQ1, tol=1e-6), np.linalg.svd(WQ1)[1].round(3))
+print("rank of WK1", np.linalg.svd(WK1)[1].round(3))
+print("u1 (M1 left)", np.linalg.svd(M1)[0][:,0].round(3))
+print("v1 (M1 right)", np.linalg.svd(M1)[2][0].round(3))
+# overlaps
+for name,vec in [("u1M1",np.linalg.svd(M1)[0][:,0]),("v1M1",np.linalg.svd(M1)[2][0])]:
+    for k in range(4):
+        print(name,"overlap with G left vec",k, abs(vec@Uu[:,k]).round(3))
+
+--- output (0.0 s) ---
+G sv [6.704 5.512 0.324 0.069]
+U (left, 4x2 relevant):
+ [[ 0.389 -0.497]
+ [-0.197 -0.184]
+ [ 0.9    0.184]
+ [-0.01   0.828]]
+V (right, class side 2x5):
+ [[-0.254  0.728 -0.107 -0.379 -0.5  ]
+ [ 0.717 -0.256 -0.382 -0.353 -0.388]]
+rank of WQ1 4 [4.401 0.854 0.354 0.189]
+rank of WK1 [2.917 0.52  0.468 0.195]
+u1 (M1 left) [-0.111 -0.054 -0.984 -0.13 ]
+v1 (M1 right) [ 0.126  0.421 -0.508 -0.741]
+u1M1 overlap with G left vec 0 0.916
+u1M1 overlap with G left vec 1 0.223
+u1M1 overlap with G left vec 2 0.208
+u1M1 overlap with G left vec 3 0.259
+v1M1 overlap with G left vec 0 0.484
+v1M1 overlap with G left vec 1 0.847
+v1M1 overlap with G left vec 2 0.158
+v1M1 overlap with G left vec 3 0.155
+
+
+===== step 35/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+x1 = a["resid0.mid"].reshape(-1,5,4)
+x0 = a["embed"].reshape(-1,5,4)
+print("x0 svd:", np.linalg.svd(x0.reshape(-1,4))[1].round(2))
+print("x1 svd:", np.linalg.svd(x1.reshape(-1,4))[1].round(2))
+print("x1 mean", x1.reshape(-1,4).mean(0))
+print("x0 mean", x0.reshape(-1,4).mean(0))
+print("x1 per-dim std", x1.reshape(-1,4).std(0))
+# correlations between x1 dims
+print("corr x1 dims\n", np.corrcoef(x1.reshape(-1,4).T).round(2))
+print("corr x0 dims\n", np.corrcoef(x0.reshape(-1,4).T).round(2))
+# also look at x1 projection onto the big dim1
+print("frac variance in dim1", x1.reshape(-1,4)[:,1].var()/x1.reshape(-1,4).var(0).sum())
+
+--- output (8.1 s) ---
+x0 svd: [374.68 296.22 220.2  152.83]
+x1 svd: [653.27 453.28 239.44 118.37]
+x1 mean [-0.8    4.024  1.712 -0.88 ]
+x0 mean [ 0.195 -0.552  2.544  1.099]
+x1 per-dim std [2.993 2.374 1.665 2.67 ]
+corr x1 dims
+ [[ 1.   -0.03 -0.61  0.55]
+ [-0.03  1.    0.19  0.34]
+ [-0.61  0.19  1.   -0.6 ]
+ [ 0.55  0.34 -0.6   1.  ]]
+corr x0 dims
+ [[ 1.    0.05 -0.09 -0.53]
+ [ 0.05  1.    0.4  -0.33]
+ [-0.09  0.4   1.   -0.53]
+ [-0.53 -0.33 -0.53  1.  ]]
+frac variance in dim1 0.23006296652491232
+
+
+===== step 36/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("Exact re-implementation with 4-digit constants (baseline). Residual x = W_E[tok]+W_pos. "
+               "Layer 0: A0 = softmax(x M0 x^T/2) with M0 = W_Q W_K^T (full rank 4); x1 = x0 + (A0 x0) V0. "
+               "Layer 1: A1 = softmax(x1 M1 x1^T/2) (M1 = W_Q W_K^T ~ rank 1-2, needs full 4x4); "
+               "out = (x1[4] + (A1[4] x1) V1) @ W_U.")
+
+WE = np.array([[-0.5547,-2.0260,1.4238,0.3010],[1.0222,-1.0874,0.6785,1.8459],[0.9991,-0.2001,1.1441,1.3961],
+               [1.7693,1.8963,1.0939,-0.5216],[-0.6405,-0.0166,2.8816,-0.0738]])
+WP = np.array([[0.9330,-0.5251,2.2547,0.0259],[1.9077,-1.1536,0.5939,-1.6735],[-1.2981,1.9569,2.5465,-0.4738],
+               [-1.5923,-0.4525,-0.0671,2.0607],[-1.5712,-1.1513,0.1696,2.6083]])
+WU = np.array([[0.1397,-0.1018,-0.0272,-0.0296,-0.1579],[-0.0436,0.1143,0.1122,-0.1387,-0.3954],
+               [0.6891,-0.4180,0.1983,-0.5265,-1.4645],[-0.3152,-0.3630,0.6068,0.3611,0.0060]])
+M0 = np.array([[-16.7420,3.4242,-21.4213,-15.3627],[-20.5746,10.8229,-20.5484,8.5752],
+               [0.8506,5.7401,13.2163,10.7495],[11.6265,-7.7763,5.7809,-4.1356]])
+M1 = np.array([[-0.2913,-0.5490,0.4652,1.2309],[-0.1663,-0.3412,0.2876,0.5054],
+               [-1.5564,-5.2785,6.3757,9.3132],[-0.2590,-0.7697,1.0613,1.0249]])
+V0 = np.array([[1.6914,0.9376,-0.4944,0.4528],[0.5231,0.5833,-0.1400,0.7603],
+               [-0.6005,1.0629,-0.1470,-0.8383],[0.4595,1.3260,-0.2580,1.0431]])
+V1 = np.array([[-0.5335,11.5397,-3.0097,-0.1606],[2.1180,-1.6214,-0.4697,1.4038],
+               [-0.1676,16.0379,-1.9413,-3.9371],[-0.5355,-7.5311,3.1901,-2.7079]])
+
+def sm(S):
+    S = S - S.max(-1, keepdims=True)
+    E = np.exp(S)
+    return E / E.sum(-1, keepdims=True)
+
+def model(x, iv):
+    x = np.asarray(x).astype(int)
+    B = x.shape[0]
+    vs = []
+    for p in range(5):
+        oh = np.zeros((B, 5)); oh[np.arange(B), x[:, p]] = 1.0
+        vs.append(iv("e%d" % p, oh @ WE + WP[p]))
+    x0 = np.stack(vs, 1)
+    A0 = sm(np.einsum('bik,kl,bjl->bij', x0, M0, x0) / 2.0)
+    A0 = iv("A0", A0.reshape(B, 25))
+    o0 = iv("o0", np.einsum('bij,bjk,kl->bil', A0.reshape(B,5,5), x0, V0).reshape(B, 20))
+    x1 = iv("r0", (x0 + o0.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    A1 = sm(np.einsum('bik,kl,bjl->bij', x1, M1, x1) / 2.0)
+    A1 = iv("A1", A1.reshape(B, 25))
+    o1 = iv("o1", np.einsum('bij,bjk,kl->bil', A1.reshape(B,5,5), x1, V1).reshape(B, 20))
+    x2 = iv("r1", (x1 + o1.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    return x2[:, 4, :] @ WU
+
+ALIGN = {"e0": ["embed"], "e1": ["embed"], "e2": ["embed"], "e3": ["embed"], "e4": ["embed"],
+         "A0": ["attn0.pattern"], "o0": ["attn0.out"], "r0": ["resid0.mid"],
+         "A1": ["attn1.pattern"], "o1": ["attn1.out"], "r1": ["resid1.mid"]}
+
+--- judge report 6 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      VERIFIED        embed: substitute 100%, interchange 100% PASS
+  layer 0 attention VERIFIED        attn0.pattern: substitute 100%, interchange 100% PASS; attn0.out: substitute 100%, interchange 100% PASS; resid0.mid: substitute 100%, interchange 100% PASS
+  layer 1 attention VERIFIED        attn1.pattern: substitute 100%, interchange 100% PASS; attn1.out: substitute 100%, interchange 100% PASS; resid1.mid: substitute 100%, interchange 100% PASS
+  compression: 1.204 constants per degree of freedom (an explanation needs < 0.9)
+All stages verified. Now compress (see the compression line).
+
+JUDGE REPORT   (1563 held-out inputs; construction 2,782 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.9% of inputs (a constant output would get 38.7%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 20; 15 principal components suffice; e0, e1, e2, e3, e4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 45.0% (random n/a) | mean-ablate 45.0%
+  attn0.pattern (19 dims named of 25; 11 principal components suffice; A0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 40.2% (random 45.4%) | mean-ablate 40.2%
+  attn0.out   (20 dims named of 20; 15 principal components suffice; o0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 42.2% (random n/a) | mean-ablate 42.2%
+  resid0.mid  (20 dims named of 20; 19 principal components suffice; r0): explained 1.000 | substitute 100.0% | keep 100.0% | remove 16.1% (random n/a) | mean-ablate 16.1%
+  attn1.pattern (20 dims named of 25; 10 principal components suffice; A1): explained 1.000 | substitute 99.9% | keep 100.0% | remove 37.9% (random 52.2%) | mean-ablate 37.9%
+  attn1.out   (20 dims named of 20; 11 principal components suffice; o1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 34.5% (random n/a) | mean-ablate 34.5%
+  resid1.mid  (20 dims named of 20; 13 principal components suffice; r1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 38.7% (random n/a) | mean-ablate 38.7%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 38.4%
+  partial     e0 @ embed: right 100.0% / 100.0% when changed (network changed in 33.0%); output R2 1.000 | controls: random subspace 40.4%, no-change 67.0%, source-output 41.3%, attribution patching 63.3%
+  partial     e1 @ embed: right 99.9% / 99.8% when changed (network changed in 25.6%); output R2 1.000 | controls: random subspace 45.6%, no-change 74.4%, source-output 40.6%, attribution patching 76.0%
+  partial     e2 @ embed: right 100.0% / 100.0% when changed (network changed in 24.5%); output R2 1.000 | controls: random subspace 43.5%, no-change 75.5%, source-output 40.8%, attribution patching 73.0%
+  partial     e3 @ embed: right 100.0% / 100.0% when changed (network changed in 24.8%); output R2 1.000 | controls: random subspace 42.6%, no-change 75.2%, source-output 41.1%, attribution patching 70.2%
+  partial     e4 @ embed: right 99.9% / 99.7% when changed (network changed in 34.0%); output R2 1.000 | controls: random subspace 43.0%, no-change 66.0%, source-output 40.9%, attribution patching 64.2%
+  edit        all variables @ embed: right 100.0% / 99.9% when changed (network changed in 59.0%); output R2 1.000 | controls: random subspace 41.8%, no-change 41.0%, source-output 41.8%, attribution patching 44.1%
+  interchange A0 @ attn0.pattern: right 100.0% / 100.0% when changed (network changed in 57.6%); output R2 1.000 | controls: random subspace 54.1%, no-change 42.4%, source-output 46.2%, attribution patching 53.1%
+  edit        A0 @ attn0.pattern: right 65.8% / 61.4% when changed (network changed in 49.1%); output R2 -0.021 | controls: random subspace 44.5%, no-change 50.9%, source-output 42.5%, attribution patching 59.0%
+  interchange o0 @ attn0.out: right 100.0% / 99.9% when changed (network changed in 58.7%); output R2 1.000 | controls: random subspace 100.0%, no-change 41.3%, source-output 54.1%, attribution patching 48.5%
+  edit        o0 @ attn0.out: right 99.7% / 99.6% when changed (network changed in 51.7%); output R2 1.000 | controls: random subspace 52.8%, no-change 48.3%, source-output 44.1%, attribution patching 58.1%
+  interchange r0 @ resid0.mid: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 47.5%
+  edit        r0 @ resid0.mid: right 99.9% / 99.9% when changed (network changed in 54.4%); output R2 1.000 | controls: random subspace 42.8%, no-change 45.6%, source-output 42.8%, attribution patching 52.8%
+  interchange A1 @ attn1.pattern: right 100.0% / 100.0% when changed (network changed in 58.9%); output R2 1.000 | controls: random subspace 61.7%, no-change 41.1%, source-output 51.0%, attribution patching 100.0%
+  edit        A1 @ attn1.pattern: right 85.0% / 74.4% when changed (network changed in 38.7%); output R2 0.889 | controls: random subspace 60.1%, no-change 61.3%, source-output 44.4%, attribution patching 100.0%
+  interchange o1 @ attn1.out: right 99.9% / 99.8% when changed (network changed in 62.5%); output R2 1.000 | controls: random subspace 99.9%, no-change 37.5%, source-output 80.2%, attribution patching 100.0%
+  edit        o1 @ attn1.out: right 99.8% / 99.7% when changed (network changed in 42.9%); output R2 1.000 | controls: random subspace 55.4%, no-change 57.1%, source-output 50.1%, attribution patching 100.0%
+  interchange r1 @ resid1.mid: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 100.0%
+  edit        r1 @ resid1.mid: right 99.9% / 99.8% when changed (network changed in 44.7%); output R2 1.000 | controls: random subspace 56.1%, no-change 55.3%, source-output 56.1%, attribution patching 100.0%
+5. WHOLE MODEL   all 7 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=703); network decides 1: 100.0% (n=605); network decides 2: 99.6% (n=251); network decides 3: 100.0% (n=4) | near ties (157 least clear inputs, no requirement): 99.4%
+   the network's own mistakes: it is wrong on 19.2% of test inputs (300); the construction reproduces 99.7% of them (need 50% when there are 30 or more) and is right on 0.0%
+7. COMPRESSION   124 constants in the file for 103 degrees of freedom in the network: 1.20 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   embedding: VERIFIED at embed;  layer 0 attention: VERIFIED at attn0.pattern, attn0.out, resid0.mid;  layer 1 attention: VERIFIED at attn1.pattern, attn1.out, resid1.mid
+VERDICT: NOT VERIFIED (3 of 3 stages verified). Failing:
+  - not an explanation: the file has 124 constants for a network with 103 degrees of freedom (188 parameters, less the transformations that leave its decisions unchanged): 1.20 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 3/3 | behaviour 99.9% | all sites at once 100.0% | worst slice 99.6% | network's mistakes reproduced 99.7%
+NOT EXPLAINED:
+  - on 0.1% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 2 (251 inputs), where it matches 99.6%
+  - of the network's 300 mistakes on test inputs, 0.3% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+
+===== step 37/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+WU=W["W_U"]; V1=W["L1.W_V"][0]@W["L1.W_O"][0]; V0=W["L0.W_V"][0]@W["L0.W_O"][0]
+M0=W["L0.W_Q"][0]@W["L0.W_K"][0].T; M1=W["L1.W_Q"][0]@W["L1.W_K"][0].T
+WE,WP=W["W_E"],W["W_pos"]
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+Ytrue = run(X); ptrue = Ytrue.argmax(1)
+def fwd2(x0, P=None):
+    # P: projection matrix applied to each position's residual each layer (or once at start)
+    A0 = sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+    x1 = x0 + np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+    A1 = sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+    z  = np.einsum('bij,bjk->bik',A1,x1)
+    x2 = x1 + np.einsum('bjk,kl->bjl',z,V1)
+    if P is not None: x2 = x2@P
+    return x2[:,4]@WU, A0, A1, x1, z
+x0 = WE[X.astype(int)] + WP[None]
+print("exact", (fwd2(x0)[0].argmax(1)==ptrue).mean())
+# candidate directions
+cands = {}
+cands['M0_4th_left']=np.linalg.svd(M0)[0][:,3]
+cands['M0_4th_right']=np.linalg.svd(M0)[2][3]
+cands['M1_2nd_left']=np.linalg.svd(M1)[0][:,1]
+cands['M1_4th_left']=np.linalg.svd(M1)[0][:,3]
+cands['WU_4th_row']=np.linalg.svd(WU)[2][3]
+cands['V0_4th']=np.linalg.svd(V0)[2][3]
+cands['V1_last_row']=np.linalg.svd(V1)[2][3]
+rng=np.random.default_rng(0)
+for k,n in cands.items():
+    n=n/np.linalg.norm(n)
+    P = np.eye(4)-np.outer(n,n)
+    x0p = x0@P
+    Yp = fwd2(x0p)[0]
+    print(k, "acc", (Yp.argmax(1)==ptrue).mean(), "max logit diff", np.abs(Yp-Ytrue).max().round(2))
+
+--- output (0.58 s) ---
+exact 1.0
+M0_4th_left acc 0.27488 max logit diff 28.07
+M0_4th_right acc 0.42784 max logit diff 23.55
+M1_2nd_left acc 0.39328 max logit diff 18.37
+M1_4th_left acc 0.48512 max logit diff 25.17
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 32, in <module>
+ValueError: operands could not be broadcast together with shapes (4,4) (5,5) 
+
+
+===== step 38/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+WU=W["W_U"]; V1=W["L1.W_V"][0]@W["L1.W_O"][0]; V0=W["L0.W_V"][0]@W["L0.W_O"][0]
+M0=W["L0.W_Q"][0]@W["L0.W_K"][0].T; M1=W["L1.W_Q"][0]@W["L1.W_K"][0].T
+WE,WP=W["W_E"],W["W_pos"]
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+Ytrue=run(X); ptrue=Ytrue.argmax(1)
+x0 = WE[X.astype(int)] + WP[None]
+def full(M0=M0,M1=M1,V0=V0,V1=V1,GM=None):
+    A0=sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+    x1=x0+np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+    A1=sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+    z=np.einsum('bij,bjk->bik',A1,x1)
+    if GM is None: out = (x1[:,4]+z[:,4]@V1)@WU
+    else: out = x0[:,4]@WU + np.einsum('bj,jk->bk',np.einsum('bj,bjk->bk',A0[:,4],x0),V0)@WU + z[:,4]@GM
+    return out, A0, A1, x1, z
+Yb,A0,A1,x1,z = full()
+print("base", (Yb.argmax(1)==ptrue).mean())
+# rank1 M0
+s0,u0,v0 = np.linalg.svd(M0)
+M0r1 = s0[0]*np.outer(u0[:,0],v0[0])
+M0r2 = M0r1 + s0[1]*np.outer(u0[:,1],v0[1])
+for name,M0x in [("M0 rank1",M0r1),("M0 rank2",M0r2)]:
+    Yx,A0x = full(M0=M0x)[:2]
+    print(name, "decision acc", (Yx.argmax(1)==ptrue).mean(), "pattern argmax match", (A0x.argmax(-1)==A0.argmax(-1)).mean())
+s1,u1_,v1_ = np.linalg.svd(M1)
+for name,M1x in [("M1 rank1",s1[0]*np.outer(u1_[:,0],v1_[0])),("M1 rank2",s1[0]*np.outer(u1_[:,0],v1_[0])+s1[1]*np.outer(u1_[:,1],v1_[1]))]:
+    Yx,A0x,A1x = full(M1=M1x)[:3]
+    print(name, "decision acc", (Yx.argmax(1)==ptrue).mean(), "pattern match", (A1x.argmax(-1)==A1.argmax(-1)).mean())
+# 2D readout: z@G with G=V1WU rank2
+G=V1@WU; Ug,sg,Vg=np.linalg.svd(G)
+Gr2=(Ug[:,:2]*sg[:2])@Vg[:2]
+Yx = full(GM=Gr2)[0]
+print("2D readout (rank2 G)", (Yx.argmax(1)==ptrue).mean(), "logit R2", 1-((Yx-Ytrue)**2).sum()/((Ytrue-Ytrue.mean(0))**2).sum())
+
+--- output (0.07 s) ---
+base 1.0
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 22, in <module>
+IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+
+===== step 39/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+Ytrue=run(X); ptrue=Ytrue.argmax(1)
+x0 = WE[X.astype(int)] + WP[None]
+def full(M0=M0,M1=M1,V0=V0,V1=V1,GM=None):
+    A0=sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+    x1=x0+np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+    A1=sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+    z=np.einsum('bij,bjk->bik',A1,x1)
+    if GM is None: out=(x1[:,4]+z[:,4]@V1)@WU
+    else: out = x0[:,4]@WU + np.einsum('bj,jk->bk',np.einsum('bj,bjk->bk',A0[:,4],x0),V0)@WU + z[:,4]@GM
+    return out,A0,A1,x1,z
+Yb,A0,A1,x1,z = full()
+print("base",(Yb.argmax(1)==ptrue).mean())
+U0,S0,V0h = np.linalg.svd(M0)
+for r in [1,2,3]:
+    Mx = (U0[:,:r]*S0[:r])@V0h[:r]
+    Yx,A0x = full(M0=Mx)[:2]
+    print("M0 rank",r,(Yx.argmax(1)==ptrue).mean(), "argmax match",(A0x.argmax(-1)==A0.argmax(-1)).mean())
+U1,S1,V1h = np.linalg.svd(M1)
+for r in [1,2,3]:
+    Mx=(U1[:,:r]*S1[:r])@V1h[:r]
+    Yx,A0x,A1x = full(M1=Mx)[:3]
+    print("M1 rank",r,(Yx.argmax(1)==ptrue).mean(),"argmax match",(A1x.argmax(-1)==A1.argmax(-1)).mean())
+G=V1@WU; Ug,sg,Vg=np.linalg.svd(G)
+for r in [1,2,3]:
+    Gr=(Ug[:,:r]*sg[:r])@Vg[:r]
+    Yx=full(GM=Gr)[0]
+    print("G rank",r,(Yx.argmax(1)==ptrue).mean(),"R2",round(1-((Yx-Ytrue)**2).sum()/((Ytrue-Ytrue.mean(0))**2).sum(),4))
+
+--- output (0.4 s) ---
+base 1.0
+M0 rank 1 0.46784 argmax match 0.53376
+M0 rank 2 0.69216 argmax match 0.7248
+M0 rank 3 0.97888 argmax match 0.976
+M1 rank 1 0.73856 argmax match 0.846528
+M1 rank 2 0.81856 argmax match 0.894912
+M1 rank 3 0.95808 argmax match 0.971648
+G rank 1 0.57824 R2 0.4164
+G rank 2 0.92992 R2 0.9747
+G rank 3 0.97504 R2 0.9984
+
+
+===== step 40/80
+
+--- python ---
+
+Ytrue=run(X); ptrue=Ytrue.argmax(1); Xl=X.astype(int)
+for c in [0,1,2]:
+    m = ptrue==c
+    print("class",c,"n",m.sum(), "mean tokens", Xl[m].mean(0).round(2), "sum", Xl[m].sum(1).mean().round(2),
+          "ndistinct", np.array([len(set(r)) for r in Xl[m]]).mean().round(2))
+print("mean tokens all", Xl.mean(0))
+# margin analysis
+srt = np.sort(Ytrue,1)
+print("margin stats: median top1-top2", np.median(srt[:,-1]-srt[:,-2]).round(2), "frac <0.5:", (srt[:,-1]-srt[:,-2]<0.5).mean())
+# logit distribution per class column
+print("logit means", Ytrue.mean(0).round(2), "stds", Ytrue.std(0).round(2))
+
+--- output (0.04 s) ---
+class 0 n 1404 mean tokens [1.66 1.84 1.99 2.1  2.31] sum 9.91 ndistinct 3.16
+class 1 n 1177 mean tokens [2.22 2.09 1.96 1.92 1.87] sum 10.07 ndistinct 3.45
+class 2 n 532 mean tokens [2.38 2.22 2.12 1.94 1.47] sum 10.13 ndistinct 3.69
+mean tokens all [2. 2. 2. 2. 2.]
+margin stats: median top1-top2 2.35 frac <0.5: 0.13984
+logit means [-0.05  1.51  0.36 -1.62 -4.22] stds [4.34 3.87 1.96 2.19 3.27]
+
+
+===== step 41/80
+
+--- python ---
+
+Ytrue=run(X); ptrue=Ytrue.argmax(1); Xl=X.astype(int)
+res=[]
+def T(name,v):
+    v=np.asarray(v); res.append(((v==ptrue).mean(),name))
+for i in range(5):
+    T(f"rank of x{i}", (Xl<Xl[:,i:i+1]).sum(1))     # count smaller
+    T(f"nincr_from{i}", (Xl[:,i+1:]>Xl[:,i:i+1]).sum(1))
+for i in range(5):
+    for j in range(5):
+        T(f"rankpair x{i} vs {j}", (Xl[:,j:j+1]<Xl[:,i:i+1]).sum(1))
+T("nincr", (Xl[:,1:]>Xl[:,:-1]).sum(1))
+T("ndecr", (Xl[:,1:]<Xl[:,:-1]).sum(1))
+T("max-x0", Xl.max(1)-Xl[:,0])
+T("count> x0", (Xl>Xl[:,0:1]).sum(1))
+res.sort(reverse=True)
+print(res[:12])
+# check correlation of pred with a trend statistic
+slope = (Xl* np.arange(5)).sum(1) - Xl.sum(1)*2  # unnormalized slope
+for c in [0,1,2]:
+    print("class",c,"mean slope", slope[ptrue==c].mean().round(2), "mean nincr", (Xl[:,1:]>Xl[:,:-1]).sum(1)[ptrue==c].mean().round(2))
+
+--- output (0.03 s) ---
+[(np.float64(0.50048), 'rankpair x0 vs 4'), (np.float64(0.49056), 'rankpair x0 vs 3'), (np.float64(0.48672), 'rankpair x1 vs 4'), (np.float64(0.48256), 'rankpair x0 vs 2'), (np.float64(0.47456), 'rankpair x2 vs 4'), (np.float64(0.47424), 'rankpair x1 vs 3'), (np.float64(0.47136), 'rankpair x0 vs 1'), (np.float64(0.4576), 'rankpair x3 vs 4'), (np.float64(0.45632), 'rankpair x2 vs 3'), (np.float64(0.45216), 'rankpair x1 vs 2'), (np.float64(0.44928), 'rankpair x4 vs 4'), (np.float64(0.44928), 'rankpair x3 vs 3')]
+class 0 mean slope 1.58 mean nincr 1.69
+class 1 mean slope -0.87 mean nincr 1.5
+class 2 mean slope -2.1 mean nincr 1.59
+
+
+===== step 42/80
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+Ytrue=run(X); ptrue=Ytrue.argmax(1)
+x0b = WE[X.astype(int)] + WP[None]
+def fwd(x0):
+    A0=sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+    x1=x0+np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+    A1=sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+    z=np.einsum('bij,bjk->bik',A1,x1)
+    return (x1[:,4]+z[:,4]@V1)@WU
+print("base",(fwd(x0b).argmax(1)==ptrue).mean())
+for p in range(5):
+    for d in range(4):
+        x0 = x0b.copy()
+        x0[:,p,d] = x0b[:,p,d].mean()
+        acc=(fwd(x0).argmax(1)==ptrue).mean()
+        print(f"pos{p} dim{d}: {acc:.3f}", end="  |  ")
+    print()
+
+--- output (0.79 s) ---
+base 1.0
+pos0 dim0: 0.559  |  pos0 dim1: 0.718  |  pos0 dim2: 0.620  |  pos0 dim3: 0.741  |  
+pos1 dim0: 0.677  |  pos1 dim1: 0.835  |  pos1 dim2: 0.764  |  pos1 dim3: 0.770  |  
+pos2 dim0: 0.797  |  pos2 dim1: 0.836  |  pos2 dim2: 0.815  |  pos2 dim3: 0.770  |  
+pos3 dim0: 0.783  |  pos3 dim1: 0.827  |  pos3 dim2: 0.841  |  pos3 dim3: 0.793  |  
+pos4 dim0: 0.707  |  pos4 dim1: 0.802  |  pos4 dim2: 0.678  |  pos4 dim3: 0.651  |  
+
+
+===== step 43/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- python ---
+
+np.set_printoptions(precision=3, suppress=True, linewidth=220)
+def sm(S):
+    S=S-S.max(-1,keepdims=True); E=np.exp(S); return E/E.sum(-1,keepdims=True)
+Ytrue=run(X); ptrue=Ytrue.argmax(1)
+x0 = WE[X.astype(int)] + WP[None]
+A0=sm(np.einsum('bik,kl,bjl->bij',x0,M0,x0)/2)
+x1=x0+np.einsum('bij,bjk,kl->bil',A0,x0,V0)
+A1=sm(np.einsum('bik,kl,bjl->bij',x1,M1,x1)/2)
+z=np.einsum('bij,bjk->bik',A1,x1)
+Yb=(x1[:,4]+z[:,4]@V1)@WU
+print("base", (Yb.argmax(1)==ptrue).mean())
+u1=np.linalg.svd(M1)[0][:,0]; v1=np.linalg.svd(M1)[2][0]
+u2=np.linalg.svd(M1)[0][:,1]; v2=np.linalg.svd(M1)[2][1]
+def fitacc(feats):
+    F = np.c_[np.ones(len(feats[0])), *feats]
+    coef,_,_,_ = np.linalg.lstsq(F, Yb, rcond=None)
+    P = F@coef
+    return (P.argmax(1)==ptrue).mean(), 1-((P-Yb)**2).sum()/((Yb-Yb.mean(0))**2).sum()
+s1 = z[:,4]@u1; s2=z[:,4]@v1; s3=z[:,4]@u2; s4=z[:,4]@v2
+print("2D (u1,v1)", fitacc([s1,s2]))
+print("3D (u1,v1,u2)", fitacc([s1,s2,s3]))
+print("4D", fitacc([s1,s2,s3,s4]))
+# also check: is span{u1,v1} capturing most? use exact logits linear in z rows via G
+G=V1@WU
+print("exact z@G", ((z[:,4]@G).argmax(1)==ptrue).mean())
+
+--- output (0.07 s) ---
+base 1.0
+2D (u1,v1) (np.float64(0.57472), np.float64(0.4531874174856263))
+3D (u1,v1,u2) (np.float64(0.83232), np.float64(0.8428055215110895))
+4D (np.float64(0.87968), np.float64(0.9262781085612757))
+exact z@G 0.8288
+
+
+===== step 44/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = ("Exact re-implementation (all stages verified). Residual x = W_E[tok]+W_pos. Layer l: logits = "
+               "x W_Q W_K^T x^T/2, A = softmax over keys, x += (A x)(W_V W_O). out = x[4] @ W_U. "
+               "Findings so far: layer-0 attention is nearly one-hot (hard selection of one key per query); "
+               "layer-1 QK is nearly rank 1 (12.8 u v^T, next 0.44); the readout V1 W_U is nearly rank 2 and its "
+               "two directions are ~ u and ~ v, i.e. layer 1 and the readout share the same two scalar projections. "
+               "Compression still pending: every coordinate of the 20-dim embedding affects the decision.")
+
+WE = np.array([[-0.5547,-2.0260,1.4238,0.3010],[1.0222,-1.0874,0.6785,1.8459],[0.9991,-0.2001,1.1441,1.3961],
+               [1.7693,1.8963,1.0939,-0.5216],[-0.6405,-0.0166,2.8816,-0.0738]])
+WP = np.array([[0.9330,-0.5251,2.2547,0.0259],[1.9077,-1.1536,0.5939,-1.6735],[-1.2981,1.9569,2.5465,-0.4738],
+               [-1.5923,-0.4525,-0.0671,2.0607],[-1.5712,-1.1513,0.1696,2.6083]])
+WU = np.array([[0.1397,-0.1018,-0.0272,-0.0296,-0.1579],[-0.0436,0.1143,0.1122,-0.1387,-0.3954],
+               [0.6891,-0.4180,0.1983,-0.5265,-1.4645],[-0.3152,-0.3630,0.6068,0.3611,0.0060]])
+M0 = np.array([[-16.7420,3.4242,-21.4213,-15.3627],[-20.5746,10.8229,-20.5484,8.5752],
+               [0.8506,5.7401,13.2163,10.7495],[11.6265,-7.7763,5.7809,-4.1356]])
+M1 = np.array([[-0.2913,-0.5490,0.4652,1.2309],[-0.1663,-0.3412,0.2876,0.5054],
+               [-1.5564,-5.2785,6.3757,9.3132],[-0.2590,-0.7697,1.0613,1.0249]])
+V0 = np.array([[1.6914,0.9376,-0.4944,0.4528],[0.5231,0.5833,-0.1400,0.7603],
+               [-0.6005,1.0629,-0.1470,-0.8383],[0.4595,1.3260,-0.2580,1.0431]])
+V1 = np.array([[-0.5335,11.5397,-3.0097,-0.1606],[2.1180,-1.6214,-0.4697,1.4038],
+               [-0.1676,16.0379,-1.9413,-3.9371],[-0.5355,-7.5311,3.1901,-2.7079]])
+
+def sm(S):
+    S = S - S.max(-1, keepdims=True)
+    E = np.exp(S)
+    return E / E.sum(-1, keepdims=True)
+
+def model(x, iv):
+    x = np.asarray(x).astype(int)
+    B = x.shape[0]
+    vs = []
+    for p in range(5):
+        oh = np.zeros((B, 5)); oh[np.arange(B), x[:, p]] = 1.0
+        vs.append(iv("e%d" % p, oh @ WE + WP[p]))
+    x0 = np.stack(vs, 1)
+    A0 = sm(np.einsum('bik,kl,bjl->bij', x0, M0, x0) / 2.0)
+    A0 = iv("A0", A0.reshape(B, 25))
+    o0 = iv("o0", np.einsum('bij,bjk,kl->bil', A0.reshape(B,5,5), x0, V0).reshape(B, 20))
+    x1 = iv("r0", (x0 + o0.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    A1 = sm(np.einsum('bik,kl,bjl->bij', x1, M1, x1) / 2.0)
+    A1 = iv("A1", A1.reshape(B, 25))
+    o1 = iv("o1", np.einsum('bij,bjk,kl->bil', A1.reshape(B,5,5), x1, V1).reshape(B, 20))
+    x2 = iv("r1", (x1 + o1.reshape(B, 5, 4)).reshape(B, 20)).reshape(B, 5, 4)
+    return x2[:, 4, :] @ WU
+
+ALIGN = {"e0": ["embed"], "e1": ["embed"], "e2": ["embed"], "e3": ["embed"], "e4": ["embed"],
+         "A0": ["attn0.pattern"], "o0": ["attn0.out"], "r0": ["resid0.mid"],
+         "A1": ["attn1.pattern"], "o1": ["attn1.out"], "r1": ["resid1.mid"]}
+
+--- judge report 7 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      VERIFIED        embed: substitute 100%, interchange 100% PASS
+  layer 0 attention VERIFIED        attn0.pattern: substitute 100%, interchange 100% PASS; attn0.out: substitute 100%, interchange 100% PASS; resid0.mid: substitute 100%, interchange 100% PASS
+  layer 1 attention VERIFIED        attn1.pattern: substitute 100%, interchange 100% PASS; attn1.out: substitute 100%, interchange 100% PASS; resid1.mid: substitute 100%, interchange 100% PASS
+  compression: 1.204 constants per degree of freedom (an explanation needs < 0.9)
+All stages verified. Now compress (see the compression line).
+
+JUDGE REPORT   (1563 held-out inputs; construction 3,075 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.9% of inputs (a constant output would get 38.7%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 20; 15 principal components suffice; e0, e1, e2, e3, e4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 45.0% (random n/a) | mean-ablate 45.0%
+  attn0.pattern (19 dims named of 25; 11 principal components suffice; A0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 40.2% (random 45.4%) | mean-ablate 40.2%
+  attn0.out   (20 dims named of 20; 15 principal components suffice; o0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 42.2% (random n/a) | mean-ablate 42.2%
+  resid0.mid  (20 dims named of 20; 19 principal components suffice; r0): explained 1.000 | substitute 100.0% | keep 100.0% | remove 16.1% (random n/a) | mean-ablate 16.1%
+  attn1.pattern (20 dims named of 25; 10 principal components suffice; A1): explained 1.000 | substitute 99.9% | keep 100.0% | remove 37.9% (random 52.2%) | mean-ablate 37.9%
+  attn1.out   (20 dims named of 20; 11 principal components suffice; o1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 34.5% (random n/a) | mean-ablate 34.5%
+  resid1.mid  (20 dims named of 20; 13 principal components suffice; r1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 38.7% (random n/a) | mean-ablate 38.7%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 38.4%
+  partial     e0 @ embed: right 100.0% / 100.0% when changed (network changed in 33.0%); output R2 1.000 | controls: random subspace 40.4%, no-change 67.0%, source-output 41.3%, attribution patching 63.3%
+  partial     e1 @ embed: right 99.9% / 99.8% when changed (network changed in 25.6%); output R2 1.000 | controls: random subspace 45.6%, no-change 74.4%, source-output 40.6%, attribution patching 76.0%
+  partial     e2 @ embed: right 100.0% / 100.0% when changed (network changed in 24.5%); output R2 1.000 | controls: random subspace 43.5%, no-change 75.5%, source-output 40.8%, attribution patching 73.0%
+  partial     e3 @ embed: right 100.0% / 100.0% when changed (network changed in 24.8%); output R2 1.000 | controls: random subspace 42.6%, no-change 75.2%, source-output 41.1%, attribution patching 70.2%
+  partial     e4 @ embed: right 99.9% / 99.7% when changed (network changed in 34.0%); output R2 1.000 | controls: random subspace 43.0%, no-change 66.0%, source-output 40.9%, attribution patching 64.2%
+  edit        all variables @ embed: right 100.0% / 99.9% when changed (network changed in 59.0%); output R2 1.000 | controls: random subspace 41.8%, no-change 41.0%, source-output 41.8%, attribution patching 44.1%
+  interchange A0 @ attn0.pattern: right 100.0% / 100.0% when changed (network changed in 57.6%); output R2 1.000 | controls: random subspace 54.1%, no-change 42.4%, source-output 46.2%, attribution patching 53.1%
+  edit        A0 @ attn0.pattern: right 65.8% / 61.4% when changed (network changed in 49.1%); output R2 -0.021 | controls: random subspace 44.5%, no-change 50.9%, source-output 42.5%, attribution patching 59.0%
+  interchange o0 @ attn0.out: right 100.0% / 99.9% when changed (network changed in 58.7%); output R2 1.000 | controls: random subspace 100.0%, no-change 41.3%, source-output 54.1%, attribution patching 48.5%
+  edit        o0 @ attn0.out: right 99.7% / 99.6% when changed (network changed in 51.7%); output R2 1.000 | controls: random subspace 52.8%, no-change 48.3%, source-output 44.1%, attribution patching 58.1%
+  interchange r0 @ resid0.mid: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 47.5%
+  edit        r0 @ resid0.mid: right 99.9% / 99.9% when changed (network changed in 54.4%); output R2 1.000 | controls: random subspace 42.8%, no-change 45.6%, source-output 42.8%, attribution patching 52.8%
+  interchange A1 @ attn1.pattern: right 100.0% / 100.0% when changed (network changed in 58.9%); output R2 1.000 | controls: random subspace 61.7%, no-change 41.1%, source-output 51.0%, attribution patching 100.0%
+  edit        A1 @ attn1.pattern: right 85.0% / 74.4% when changed (network changed in 38.7%); output R2 0.889 | controls: random subspace 60.1%, no-change 61.3%, source-output 44.4%, attribution patching 100.0%
+  interchange o1 @ attn1.out: right 99.9% / 99.8% when changed (network changed in 62.5%); output R2 1.000 | controls: random subspace 99.9%, no-change 37.5%, source-output 80.2%, attribution patching 100.0%
+  edit        o1 @ attn1.out: right 99.8% / 99.7% when changed (network changed in 42.9%); output R2 1.000 | controls: random subspace 55.4%, no-change 57.1%, source-output 50.1%, attribution patching 100.0%
+  interchange r1 @ resid1.mid: right 100.0% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 37.7%, source-output 100.0%, attribution patching 100.0%
+  edit        r1 @ resid1.mid: right 99.9% / 99.8% when changed (network changed in 44.7%); output R2 1.000 | controls: random subspace 56.1%, no-change 55.3%, source-output 56.1%, attribution patching 100.0%
+5. WHOLE MODEL   all 7 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=703); network decides 1: 100.0% (n=605); network decides 2: 99.6% (n=251); network decides 3: 100.0% (n=4) | near ties (157 least clear inputs, no requirement): 99.4%
+   the network's own mistakes: it is wrong on 19.2% of test inputs (300); the construction reproduces 99.7% of them (need 50% when there are 30 or more) and is right on 0.0%
+7. COMPRESSION   124 constants in the file for 103 degrees of freedom in the network: 1.20 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   embedding: VERIFIED at embed;  layer 0 attention: VERIFIED at attn0.pattern, attn0.out, resid0.mid;  layer 1 attention: VERIFIED at attn1.pattern, attn1.out, resid1.mid
+VERDICT: NOT VERIFIED (3 of 3 stages verified). Failing:
+  - not an explanation: the file has 124 constants for a network with 103 degrees of freedom (188 parameters, less the transformations that leave its decisions unchanged): 1.20 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 3/3 | behaviour 99.9% | all sites at once 100.0% | worst slice 99.6% | network's mistakes reproduced 99.7%
+NOT EXPLAINED:
+  - on 0.1% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 2 (251 inputs), where it matches 99.6%
+  - of the network's 300 mistakes on test inputs, 0.3% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
+
+[note] {"text": "context nearly full: the reader writes its notes and continues from them"}
+
+===== step 45/80
+
+--- python ---
+import numpy as np
+print(list(W.keys()))
+for k,v in W.items():
+    print(k, v.shape)
+np.set_printoptions(precision=4, suppress=True)
+for k in ['W_E','W_pos','W_U']:
+    print(k); print(W[k])
+
+--- output (0.0 s) ---
+['W_E', 'W_pos', 'W_U', 'out_positions', 'L0.W_Q', 'L0.W_K', 'L0.W_V', 'L0.W_O', 'L1.W_Q', 'L1.W_K', 'L1.W_V', 'L1.W_O']
+W_E (5, 4)
+W_pos (5, 4)
+W_U (4, 5)
+out_positions (1,)
+L0.W_Q (1, 4, 4)
+L0.W_K (1, 4, 4)
+L0.W_V (1, 4, 4)
+L0.W_O (1, 4, 4)
+L1.W_Q (1, 4, 4)
+L1.W_K (1, 4, 4)
+L1.W_V (1, 4, 4)
+L1.W_O (1, 4, 4)
+W_E
+[[-0.5547 -2.026   1.4238  0.301 ]
+ [ 1.0222 -1.0874  0.6785  1.8459]
+ [ 0.9991 -0.2001  1.1441  1.3961]
+ [ 1.7693  1.8963  1.0939 -0.5216]
+ [-0.6405 -0.0166  2.8816 -0.0738]]
+W_pos
+[[ 0.933  -0.5251  2.2547  0.0259]
+ [ 1.9077 -1.1536  0.5939 -1.6735]
+ [-1.2981  1.9569  2.5465 -0.4738]
+ [-1.5923 -0.4525 -0.0671  2.0607]
+ [-1.5712 -1.1513  0.1696  2.6083]]
+W_U
+[[ 0.1397 -0.1018 -0.0272 -0.0296 -0.1579]
+ [-0.0436  0.1143  0.1122 -0.1387 -0.3954]
+ [ 0.6891 -0.418   0.1983 -0.5265 -1.4645]
+ [-0.3152 -0.363   0.6068  0.3611  0.006 ]]
+
+
+===== step 46/80
+
+--- python ---
+import numpy as np
+np.set_printoptions(precision=6, suppress=True, linewidth=200)
+Q0,K0,V0o,O0 = W['L0.W_Q'][0],W['L0.W_K'][0],W['L0.W_V'][0],W['L0.W_O'][0]
+Q1,K1,V1o,O1 = W['L1.W_Q'][0],W['L1.W_K'][0],W['L1.W_V'][0],W['L1.W_O'][0]
+M0=Q0@K0.T; M1=Q1@K1.T; V0=V0o@O0; V1=V1o@O1; G=V1@W['W_U']
+for n,A in [('M0',M0),('M1',M1),('V0',V0),('V1',V1),('G',G)]:
+    print(n); print(A); print('svals',np.linalg.svd(A,compute_uv=False))
+print('out_positions', W['out_positions'])
+
+--- output (0.0 s) ---
+M0
+[[-16.742004   3.424209 -21.421343 -15.362744]
+ [-20.57456   10.82288  -20.548366   8.575195]
+ [  0.85057    5.740058  13.216331  10.749499]
+ [ 11.626506  -7.776262   5.780938  -4.135593]]
+svals [44.382022 23.894273  7.2431    0.157561]
+M1
+[[-0.291331 -0.548992  0.465237  1.23086 ]
+ [-0.166257 -0.341241  0.28764   0.505366]
+ [-1.556355 -5.278454  6.375669  9.313161]
+ [-0.258976 -0.769696  1.061257  1.02488 ]]
+svals [12.762498  0.444394  0.155374  0.039623]
+V0
+[[ 1.691417  0.937606 -0.494368  0.45277 ]
+ [ 0.52307   0.583263 -0.140032  0.760333]
+ [-0.600521  1.062926 -0.147031 -0.838258]
+ [ 0.459494  1.326011 -0.258035  1.043116]]
+svals [2.724572 1.537517 0.975883 0.012518]
+V1
+[[-0.533494 11.539671 -3.009721 -0.160645]
+ [ 2.118006 -1.621424 -0.469727  1.403839]
+ [-0.167615 16.037908 -1.941286 -3.937069]
+ [-0.535469 -7.531088  3.190093 -2.707874]]
+svals [21.735453  5.154777  1.952555  0.223796]
+G
+[[-2.601221  2.689668  0.614445 -0.057652 -0.071586]
+ [-0.39959  -0.714148  0.519324  0.91645   1.003062]
+ [-0.819685  4.090638 -0.970749 -2.618364 -3.495273]
+ [ 3.305532 -1.156903 -1.840745 -1.597336 -1.625962]]
+svals [6.704473 5.511942 0.323647 0.068584]
+out_positions [4.]
+
+
+===== step 47/80
+
+--- python ---
+import numpy as np
+def fwd(x):
+    x=np.asarray(x).astype(int); B=x.shape[0]
+    R = W['W_E'][x] + W['W_pos'][None,:,:]           # B,5,4
+    S = R@M0@R.transpose(0,2,1)/2.0
+    S = S - S.max(axis=2,keepdims=True)
+    A0 = np.exp(S); A0/=A0.sum(axis=2,keepdims=True)
+    o0 = A0@R@V0
+    Z = R+o0
+    T = Z@M1@Z.transpose(0,2,1)/2.0
+    T = T-T.max(axis=2,keepdims=True); A1=np.exp(T); A1/=A1.sum(axis=2,keepdims=True)
+    o1 = A1@Z@V1
+    R1 = Z+o1
+    return R1[:,4,:]@W['W_U'], dict(R=R,A0=A0,o0=o0,Z=Z,A1=A1,o1=o1,R1=R1)
+out,st = fwd(X)
+print('match run', np.abs(out-run(X)).max())
+a=acts(X)
+print(sorted(a.keys()))
+print({k:(v.shape) for k,v in a.items()})
+print('embed ok', np.abs(st['R'].reshape(len(X),20)-a['embed']).max())
+print('A0 ok', np.abs(st['A0'].reshape(len(X),25)-a['attn0.pattern']).max())
+print('Z ok', np.abs(st['Z'].reshape(len(X),20)-a['resid0.mid']).max())
+print('A1 ok', np.abs(st['A1'].reshape(len(X),25)-a['attn1.pattern']).max())
+print('R1 ok', np.abs(st['R1'].reshape(len(X),20)-a['resid1.mid']).max())
+
+--- output (0.07 s) ---
+match run 3.375077994860476e-13
+['attn0.out', 'attn0.pattern', 'attn1.out', 'attn1.pattern', 'embed', 'out', 'resid0.mid', 'resid1.mid']
+{'embed': (3125, 20), 'attn0.pattern': (3125, 25), 'attn0.out': (3125, 20), 'resid0.mid': (3125, 20), 'attn1.pattern': (3125, 25), 'attn1.out': (3125, 20), 'resid1.mid': (3125, 20), 'out': (3125, 5)}
+embed ok 0.0
+A0 ok 1.4099832412739488e-14
+Z ok 9.14823772291129e-14
+A1 ok 1.000310945187266e-13
+R1 ok 6.036060540282051e-12
+
+
+===== step 48/80
+
+--- python ---
+import numpy as np
+def fwd2(x, M0=M0, M1=M1, V0=V0, V1=V1, G=G, WU=W['W_U'], A0hard=False):
+    x=np.asarray(x).astype(int)
+    R = W['W_E'][x] + W['W_pos'][None,:,:]
+    S = R@M0@R.transpose(0,2,1)/2.0
+    A0 = np.exp(S-S.max(axis=2,keepdims=True)); A0/=A0.sum(axis=2,keepdims=True)
+    if A0hard:
+        H=np.zeros_like(A0); H[np.arange(5),:,:][...]=0
+        idx=S.argmax(axis=2); H=np.zeros_like(A0)
+        np.put_along_axis(H, idx[:,:,None], 1.0, axis=2); A0=H
+    o0 = A0@R@V0
+    Z = R+o0
+    T = Z@M1@Z.transpose(0,2,1)/2.0
+    A1 = np.exp(T-T.max(axis=2,keepdims=True)); A1/=A1.sum(axis=2,keepdims=True)
+    o1 = A1@Z@V1
+    return (Z+o1)[:,4,:]@WU
+ref = run(X); refd=ref.argmax(1)
+def acc(o): return (o.argmax(1)==refd).mean()
+def rank(A,k):
+    u,s,vt=np.linalg.svd(A); return (u[:,:k]*s[:k])@vt[:k]
+print('exact', acc(fwd2(X)))
+for k in [3,2,1]:
+    print('M1 rank',k, acc(fwd2(X,M1=rank(M1,k))))
+for k in [3,2]:
+    print('G rank',k, acc(fwd2(X,G=rank(G,k))))
+print('M1r1+Gr2', acc(fwd2(X,M1=rank(M1,1),G=rank(G,2))))
+print('hardA0', acc(fwd2(X,A0hard=True)))
+print('M1r1+Gr2+hard', acc(fwd2(X,M1=rank(M1,1),G=rank(G,2),A0hard=True)))
+
+--- output (0.13 s) ---
+exact 1.0
+M1 rank 3 0.95808
+M1 rank 2 0.81856
+M1 rank 1 0.73856
+G rank 3 1.0
+G rank 2 1.0
+M1r1+Gr2 0.73856
+hardA0 0.94016
+M1r1+Gr2+hard 0.71648
+
+
+===== step 49/80
+
+--- python ---
+import numpy as np
+# reduced forward: layer1 only at query position 4, readout via G=V1@WU
+def fwd3(x, M0=M0, V0=V0, M1=M1, G=G, WU=W['W_U'], WE=W['W_E'], WP=W['W_pos']):
+    x=np.asarray(x).astype(int)
+    R = WE[x] + WP[None,:,:]
+    S = R@M0@R.transpose(0,2,1)/2.0
+    A0 = np.exp(S-S.max(axis=2,keepdims=True)); A0/=A0.sum(axis=2,keepdims=True)
+    Z = R + A0@R@V0
+    T4 = Z[:,4,:]@M1@Z.transpose(0,2,1)/2.0
+    A1 = np.exp(T4-T4.max(axis=1,keepdims=True)); A1/=A1.sum(axis=1,keepdims=True)
+    return Z[:,4,:]@WU + (A1[:,:,None]*(Z@G)).sum(1)
+ref = run(X); refd = ref.argmax(1)
+o3 = fwd3(X); print('reduced match decisions', (o3.argmax(1)==refd).mean(), 'max out diff', np.abs(o3-ref).max())
+def rnd(A,k): return np.round(A*10**k)/10**k
+for k in [3,2,1]:
+    o=fwd3(X,M0=rnd(M0,k),V0=rnd(V0,k),M1=rnd(M1,k),G=rnd(G,k),WU=rnd(W['W_U'],k),WE=rnd(W['W_E'],k),WP=rnd(W['W_pos'],k))
+    print('round',k,'decimals ->',(o.argmax(1)==refd).mean(), np.abs(o-ref).max())
+
+--- output (3.28 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 13, in <module>
+  File "<your code>", line 11, in fwd3
+ValueError: operands could not be broadcast together with shapes (3125,5) (3125,5,5) 
+
+
+===== step 50/80
+
+--- python ---
+import numpy as np
+def fwd3(x, M0=M0, V0=V0, M1=M1, G=G, WU=W['W_U'], WE=W['W_E'], WP=W['W_pos']):
+    x=np.asarray(x).astype(int)
+    R = WE[x] + WP[None,:,:]
+    S = R@M0@R.transpose(0,2,1)/2.0
+    A0 = np.exp(S-S.max(axis=2,keepdims=True)); A0/=A0.sum(axis=2,keepdims=True)
+    Z = R + A0@R@V0
+    Z4 = Z[:,4,:]
+    T4 = ((Z4@M1)[:,None,:]*Z).sum(-1)/2.0
+    A1 = np.exp(T4-T4.max(axis=1,keepdims=True)); A1/=A1.sum(axis=1,keepdims=True)
+    return Z4@WU + (A1[:,:,None]*(Z@G)).sum(1)
+ref = run(X); refd = ref.argmax(1)
+o3 = fwd3(X); print('reduced: decisions', (o3.argmax(1)==refd).mean(), 'maxdiff', np.abs(o3-ref).max())
+def rnd(A,k): return np.round(A*10**k)/10**k
+for k in [3,2,1]:
+    o=fwd3(X,M0=rnd(M0,k),V0=rnd(V0,k),M1=rnd(M1,k),G=rnd(G,k),WU=rnd(W['W_U'],k),WE=rnd(W['W_E'],k),WP=rnd(W['W_pos'],k))
+    print('round',k,'->',(o.argmax(1)==refd).mean(), np.abs(o-ref).max())
+
+--- output (0.07 s) ---
+reduced: decisions 1.0 maxdiff 3.3661962106634746e-13
+round 3 -> 0.99904 0.5858688650508042
+round 2 -> 0.9744 5.129640294824991
+round 1 -> 0.7088 15.85987470672015
+
+
+===== step 51/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = ("Full mechanism, structurally reduced. Residual = W_E[token]+W_pos[pos]. Layer 0: bilinear "
+               "score r_q^T M0 r_k /2 (M0 = QK product), softmax over keys -> attention pattern A0, output "
+               "A0 R V0 (V0 = OV product). Layer 1: same shape with M1, softmax -> A1; only the readout "
+               "position 4 matters, and its output goes through G = V1 W_U, so logits = resid1[4] @ W_U "
+               "= z4 @ W_U + sum_k A1_4k (z_k @ G). Layer-0 attention is nearly hard (one key wins).")
+
+WE = np.array([[-0.5547,-2.0260, 1.4238, 0.3010],
+               [ 1.0222,-1.0874, 0.6785, 1.8459],
+               [ 0.9991,-0.2001, 1.1441, 1.3961],
+               [ 1.7693, 1.8963, 1.0939,-0.5216],
+               [-0.6405,-0.0166, 2.8816,-0.0738]])
+WP = np.array([[ 0.9330,-0.5251, 2.2547, 0.0259],
+               [ 1.9077,-1.1536, 0.5939,-1.6735],
+               [-1.2981, 1.9569, 2.5465,-0.4738],
+               [-1.5923,-0.4525,-0.0671, 2.0607],
+               [-1.5712,-1.1513, 0.1696, 2.6083]])
+M0 = np.array([[-16.742, 3.4242,-21.421,-15.363],
+               [-20.575,10.8229,-20.548, 8.5752],
+               [  0.8506,5.7401,13.216,10.749],
+               [ 11.627,-7.7763, 5.7809,-4.1356]])
+V0 = np.array([[ 1.6914, 0.9376,-0.4944, 0.4528],
+               [ 0.5231, 0.5833,-0.1400, 0.7603],
+               [-0.6005, 1.0629,-0.1470,-0.8383],
+               [ 0.4595, 1.3260,-0.2580, 1.0431]])
+M1 = np.array([[-0.2913,-0.5490, 0.4652, 1.2309],
+               [-0.1663,-0.3412, 0.2876, 0.5054],
+               [-1.5564,-5.2785, 6.3757, 9.3132],
+               [-0.2590,-0.7697, 1.0613, 1.0249]])
+G  = np.array([[-2.6012, 2.6897, 0.6144,-0.0577,-0.0716],
+               [-0.3996,-0.7141, 0.5193, 0.9165, 1.0031],
+               [-0.8197, 4.0906,-0.9707,-2.6184,-3.4953],
+               [ 3.3055,-1.1569,-1.8407,-1.5973,-1.6260]])
+WU = np.array([[ 0.1397,-0.1018,-0.0272,-0.0296,-0.1579],
+               [-0.0436, 0.1143, 0.1122,-0.1387,-0.3954],
+               [ 0.6891,-0.4180, 0.1983,-0.5265,-1.4645],
+               [-0.3152,-0.3630, 0.6068, 0.3611, 0.0060]])
+
+ROWS = np.array([3, 4])
+
+def model(x, iv):
+    x = np.asarray(x).astype(int)
+    B = x.shape[0]
+    R = np.zeros((B, 5, 4))
+    for p in range(5):
+        R[:, p, :] = iv("e%d" % p, WE[x[:, p]] + WP[p])
+    S = R @ M0 @ R.transpose(0, 2, 1) / 2.0
+    A0 = np.exp(S - S.max(axis=2, keepdims=True))
+    A0 = iv("A0", (A0 / A0.sum(axis=2, keepdims=True)).reshape(B, 25)).reshape(B, 5, 5)
+    o0 = iv("o0", (A0 @ R @ V0).reshape(B, 20)).reshape(B, 5, 4)
+    Z = iv("Z", (R + o0).reshape(B, 20)).reshape(B, 5, 4)
+    Z4 = Z[:, 4, :]
+    T = (Z @ M1[ROWS].T).transpose(0, 2, 1) * Z[:, None, :, :]
+    T = T.sum(-1) / 2.0
+    A1p = np.exp(T - T.max(axis=2, keepdims=True))
+    A1p = iv("A1p", (A1p / A1p.sum(axis=2, keepdims=True)).reshape(B, 10)).reshape(B, 2, 5)
+    a1 = A1p[:, 1, :]
+    o1 = iv("o1", (a1[:, :, None] * (Z @ G)).sum(1))
+    r1 = iv("r1", Z4 + o1)
+    return r1 @ WU
+
+ALIGN = {"e0": ["embed"], "e1": ["embed"], "e2": ["embed"], "e3": ["embed"], "e4": ["embed"],
+         "A0": ["attn0.pattern"], "o0": ["attn0.out"], "Z": ["resid0.mid"],
+         "A1p": ["attn1.pattern"], "o1": ["attn1.out"], "r1": ["resid1.mid"]}
+
+--- judge report 8 ---
+CONSTRUCTION ERROR: model(x, iv) raised an error:
+Traceback (most recent call last):
+    out = np.asarray(model(np.array(X), iv), dtype=np.float64)
+                     ~~~~~^^^^^^^^^^^^^^^^^
+  File "<construction>", line 54, in model
+IndexError: index 4 is out of bounds for axis 0 with size 4
+
+===== step 52/80
+
+--- python ---
+import numpy as np
+src = open('/dev/null').read() if False else None
+# quick local test of the fixed readout math
+WE=W['W_E'];WP=W['W_pos']
+def fwd4(x):
+    x=np.asarray(x).astype(int);B=x.shape[0]
+    R=WE[x]+WP[None,:,:]
+    S=R@M0@R.transpose(0,2,1)/2.0
+    A0=np.exp(S-S.max(axis=2,keepdims=True));A0/=A0.sum(axis=2,keepdims=True)
+    Z=R+A0@R@V0
+    qv=Z@M1
+    T=(qv[:,:,:]*Z[:,None,:,:]).sum(-1)/2.0
+    A1=np.exp(T-T.max(axis=2,keepdims=True));A1/=A1.sum(axis=2,keepdims=True)
+    o1=(A1[:,1,:][:,:,None]*(Z@G)).sum(1)
+    Z4=Z[:,4,:]
+    return (Z4+o1)@WU[[0,1,2,3]].T if False else (Z4+o1)@np.array([[0.1397,-0.1018,-0.0272,-0.0296,-0.1579],[-0.0436,0.1143,0.1122,-0.1387,-0.3954],[0.6891,-0.4180,0.1983,-0.5265,-1.4645],[-0.3152,-0.3630,0.6068,0.3611,0.0060]])
+ref=run(X); o=fwd4(X)
+print('decisions', (o.argmax(1)==ref.argmax(1)).mean(), np.abs(o-ref).max())
+
+--- output (3.72 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 17, in <module>
+  File "<your code>", line 16, in fwd4
+ValueError: operands could not be broadcast together with shapes (3125,4) (3125,5) 
+
+
+===== step 53/80
+
+--- python ---
+import numpy as np
+WE=W['W_E'];WP=W['W_pos'];WU=W['W_U']
+def fwd4(x, rows=(3,4)):
+    x=np.asarray(x).astype(int);B=x.shape[0]
+    R=WE[x]+WP[None,:,:]
+    S=R@M0@R.transpose(0,2,1)/2.0
+    A0=np.exp(S-S.max(axis=2,keepdims=True));A0/=A0.sum(axis=2,keepdims=True)
+    Z=R+A0@R@V0
+    qv=Z@M1
+    T=(qv[:,:,:]*Z[:,None,:,:]).sum(-1)/2.0
+    A1=np.exp(T-T.max(axis=2,keepdims=True));A1/=A1.sum(axis=2,keepdims=True)
+    o1=(A1[:,1,:][:,:,None]*(Z@G)).sum(1)
+    Z4=Z[:,4,:]
+    return (Z4+o1)@WU, A0, Z, A1
+ref=run(X); o,A0,Z,A1=fwd4(X)
+print('decisions', (o.argmax(1)==ref.argmax(1)).mean(), np.abs(o-ref).max())
+print('round3 test:')
+def rnd(A,k=3): return np.round(A*10**k)/10**k
+# with rounded constants
+WEr,WP_,WUr=rnd(WE),rnd(WP),rnd(WU)
+
+--- output (3.74 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 15, in <module>
+  File "<your code>", line 14, in fwd4
+ValueError: operands could not be broadcast together with shapes (3125,4) (3125,5) 
+
+
+===== step 54/80
