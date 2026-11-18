@@ -441,3 +441,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Decision:** R2 (progressive replacement with error-locating feedback) is the main lever.
 - **11:45** Translation error found and fixed (CHANGES T1, judge glass-2.1): lc_8_6's 'network's own mistakes' numbers were computed against misaligned labels (random 20k subsample of inputs vs full-order labels). All round-2 lc_8_6 mistake numbers are void. No other target has more than 20,000 inputs.
 - **11:48** R2 launched locally (lab/replacer.py, a new entry point; the old path is untouched). It warm-starts from an exact copy plus the reader's own notes and gives intent-v2 certificate feedback, with no verdict. Runs: lc_8_6 (notes from run d7df, the census rule) and M16,10 (notes from v2a), 40 steps each, DeepSeek V4.1 Flash. Checked first: both copy starts reproduce the network exactly (fidelity 100%), S = 1.21 / 1.43, and the judge accepts the sites.
+- **11:56** R2 progress after ~10 min: both runs reached exact programs with all inside claims passing (lc_8_6: fidelity 100%, 7/7 sites, S 0.996; M16,10: 100%, 10/10, S 0.98). No rules substituted yet. Added R2 on lc_6_5 (notes from ca67, the pointer story) and M8,5 (notes from 293b).
+- **12:35 R2 first results.**
+  - **lc_8_6** (40 steps, $0.16): best S 0.90, fidelity 100%, 7/7 claims.
+  - **M16,10** (stopped itself at 23 steps, $0.10): S 0.98, 10/10. Its account: step 1 is an exact two-sided sign rule; steps 2–3 live in 3- and 5-dimensional cones; steps 4–10 "genuinely fill the space" and stay copied. That is ARC's open problem.
+  - **What we learned:**
+    - Progressive replacement removes the old swing. Readers stay exact, with every claim passing.
+    - But in 23–40 steps they make only small structural reductions, not rule-level replacements, on the hardest networks.
+  - **Free check:** promoting the census rule's counts (fixed points, 2-cycles, preimages) to inside claims on lc_8_6.
+    At resid1.mid: substitution 92.4%, interchange 71% (no-change control 43%, random 34%; bar 90%). At resid0.mid
+    the preimage counts fail (substitution 37%). So it is a partial inside account; the network's layer-1 state is
+    not linear in these counts.
+- **12:07** Criterion tightened (stricter; logged in PLAN_SCALING): a passing inside claim is needed after the first step. The census rule meets the old letter but not this, so it doesn't count. R5 launched (top-down strategy; trading exactness for rules is allowed; 80 steps): lc_3_4 (notes 2b58), lc_4_5 (notes 93e7), lc_8_6 (notes d7df). M8,5 follows when its R2 run ends.

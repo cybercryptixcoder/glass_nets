@@ -11,7 +11,7 @@ A construction of a network with **more than 100 parameters** counts as working 
    - Fidelity to the network's decisions is reported with a 95% confidence interval on held-out inputs.
    - Fidelity is **above what the task rule gives** (the prior-only control), with non-overlapping intervals.
      Matching the task rule only would mean we explained the task, not the network.
-2. **Inside claims.** At least one inside variable must be claimed (amended 12:05, before any R2 result: with zero claims rule 2 would pass trivially), and coverage (which stages have one) is reported. Every variable the construction places in the network passes the calibrated judge's
+2. **Inside claims.** At least one inside variable must be claimed (amended 12:05, before any R2 result: with zero claims rule 2 would pass trivially), and coverage (which stages have one) is reported. **Tightened 12:45, after seeing the census rule meet the letter of this rule with token-identity claims at the embedding only:** at least one passing claim must sit at a site AFTER the first computation step (not `embed`, not `h1`). The census rule therefore does NOT count. The change is stricter, so it can't favour a result. Every variable the construction places in the network passes the calibrated judge's
    substitution and interchange tests (rung 2) at that site.
 3. **Not a copy.**
    - Information score S ≤ 0.5. The measure separated every copy (S ≥ 0.77) from the one real big-network account
@@ -31,4 +31,5 @@ A construction of a network with **more than 100 parameters** counts as working 
 | R2 | With its notes plus an exact copy to start from, and progressive replacement, can the reader reach a working construction? | Whether progressive replacement becomes the construction procedure | pending |
 | R3 | Same with a stronger reader | Whether capability is the limit | pending |
 | R4 | Standard analysis tools in the workbench | Only if R1 or R2 show the reader rebuilding them | pending |
-| R5+ | Planned after R1–R2 results | | |
+| R5 | Top-down strategy: find a few low-dimensional quantities at the last site before the readout that pass inside tests and that a stated rule turns into the decision. Then explain those quantities from the previous site. Fidelity may drop, as long as it stays above the task rule. 80 steps | Can the cheap reader reach the strict criterion with this method? | running |
+| R6 | I act as a strong reader on the smallest networks above 100 parameters (lc_3_4, M8,5) | Is the strict criterion reachable at all, and by what method (to feed back into the reader)? | planned |

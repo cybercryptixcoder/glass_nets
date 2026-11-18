@@ -135,7 +135,9 @@ def certificate(target, src, rep, variant="original"):
     cert["by_class"] = cls
     beats = "task" in cert and cert["fidelity_ci"][0] > cert["task_ci"][1]
     cert["beats_task"] = bool(beats)
-    cert["works"] = bool(beats and cert["claims"] >= 1 and cert["claims_passed"] == cert["claims"] and cert["S"] <= 0.5)
+    deep = [x for x, v in cert["sites"].items() if v and x not in ("embed", "h1")]
+    cert["deep_claims_passed"] = len(deep)
+    cert["works"] = bool(beats and len(deep) >= 1 and cert["claims_passed"] == cert["claims"] and cert["S"] <= 0.5)
     # text for the reader
     lo, hi = cert["fidelity_ci"]
     t = [f"CERTIFICATE (no verdict)",
@@ -169,7 +171,18 @@ def key(cert):
     return (cert["works"], cert["beats_task"], cert["claims"] >= 1 and cert["claims_passed"] == cert["claims"], -cert["S"])
 
 
-def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="high", max_tokens=12000, variant="original", start_src=None):
+TOPDOWN = """
+
+STRATEGY: TOP-DOWN, AND TRADE EXACTNESS FOR RULES
+Being exact is NOT the goal: the copy is already exact. The target is an account that (a) stays above the task rule's fidelity, (b) has passing inside claims at sites AFTER the first step (not only the embedding or h1), and (c) has S at or below 0.5. Losing a few points of fidelity to replace a whole matrix by a rule is the right trade.
+Work from the answer backwards:
+1. At the LAST site before the readout, find a FEW quantities (2-6 numbers per input, possibly soft or graded) such that the activation there is close to an affine function of them, and a short stated rule turns them into the decision. Check both with python (regress the site on them; apply your rule). Put them in the file as variables at that site, computed from the input by the simplest formula you can find, and replace everything before them.
+2. Submit and read: fidelity vs the task rule, the inside tests at that site, S.
+3. Then explain where those quantities come from: which earlier-site quantities they are computed from, and how. Add those as variables at the earlier site.
+If a crisp rule loses too much fidelity, use a graded version of it (a soft count, a weighted comparison) whose few coefficients you measure."""
+
+
+def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="high", max_tokens=12000, variant="original", start_src=None, strategy=None):
     if model_name:
         os.environ["HELIX_FLASH_MODEL"] = model_name
     meta = json.loads((LAB / "models" / target / "meta.json").read_text())
@@ -190,7 +203,9 @@ def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="hi
     task = C.task_text(meta, W, {**cfg, "reader": "v1"})
     first = (task + "\n\nYOUR NOTES FROM AN EARLIER STUDY OF THIS NETWORK\n" + notes +
              "\n\nTHE STARTING PROGRAM (an exact copy; replace parts of it with rules)\n```python\n" + start + "```")
-    msgs = [{"role": "system", "content": REPLACE_SYSTEM}, {"role": "user", "content": first}]
+    system = REPLACE_SYSTEM + (TOPDOWN if strategy == "topdown" else "")
+    cfg["strategy"] = strategy
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": first}]
     rec = {"id": run_id, "config": cfg, "started": time.time(), "steps": [], "submissions": [], "cost": 0.0, "status": "running",
            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}}
     save = lambda: (rdir / "run.json").write_text(json.dumps(rec, indent=1))  # noqa: E731
@@ -238,7 +253,7 @@ def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="hi
                 c2, _, _, u2, _ = C.chat(msgs + [{"role": "user", "content": C.NOTES_ASK}], None, "low", 6000, emit, cancelled)
                 rec["cost"] += luminal.cost(u2)
                 bsrc = (rdir / f"submission_{best_n:02d}.py").read_text()
-                msgs = [{"role": "system", "content": REPLACE_SYSTEM}, {"role": "user", "content": task + "\n\nYOUR NOTES\n" + c2 +
+                msgs = [{"role": "system", "content": system}, {"role": "user", "content": task + "\n\nYOUR NOTES\n" + c2 +
                          f"\n\nYOUR BEST PROGRAM SO FAR (submission {best_n})\n```python\n{bsrc}```\nIts certificate:\n" +
                          certificate(target, bsrc, None, variant)[1] + "\n\nContinue replacing parts with rules."}]
                 rec.setdefault("compactions", []).append({"at_step": step, "notes": c2})
@@ -256,8 +271,8 @@ def run(target, notes_from=None, steps=40, model_name=None, tag="r2", effort="hi
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("target"); ap.add_argument("--notes-from"); ap.add_argument("--steps", type=int, default=40)
-    ap.add_argument("--model"); ap.add_argument("--tag", default="r2"); ap.add_argument("--effort", default="high")
+    ap.add_argument("--model"); ap.add_argument("--tag", default="r2"); ap.add_argument("--effort", default="high"); ap.add_argument("--strategy")
     a = ap.parse_args()
-    r = run(a.target, a.notes_from, a.steps, a.model, a.tag, a.effort)
+    r = run(a.target, a.notes_from, a.steps, a.model, a.tag, a.effort, strategy=a.strategy)
     print(json.dumps({"id": r["id"], "status": r["status"], "best": r["best"], "cost": round(r["cost"], 3),
-                      "best_certificate": {k: r["best_certificate"].get(k) for k in ("fidelity", "task", "S", "claims", "claims_passed", "beats_task", "works")}}))
+                      "best_certificate": {k: r["best_certificate"].get(k) for k in ("fidelity", "task", "S", "claims", "claims_passed", "deep_claims_passed", "beats_task", "works")}}))
