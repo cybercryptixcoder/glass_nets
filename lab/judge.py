@@ -284,8 +284,24 @@ def copy_check(source, W):
     else:
         matched = 0.0
     params = int(ws.size)
-    flagged = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
-    return {"literals": len(lits), "params": params, "weights_matched": matched, "flagged": flagged}
+    # A copy can also be rescaled (each unit measured in units of its own gain), which the value match misses. So
+    # also: the largest single array literal (a list of numbers, nested or not) against the network's largest weight
+    # tensor. Writing out a table with at least half as many entries as that tensor is writing out the tensor
+    # (found on AlgZoo M4,4: a 4x4 "recurrent gain matrix" equal to W_h up to per-unit scales).
+    import ast as _ast
+    def nums(node):
+        return sum(1 for n in _ast.walk(node) if isinstance(n, _ast.Constant) and isinstance(n.value, (int, float)) and not isinstance(n.value, bool))
+    try:
+        tables = [nums(n) for n in _ast.walk(_ast.parse(source)) if isinstance(n, (_ast.List, _ast.Tuple))]
+    except SyntaxError:
+        tables = []
+    biggest_table = max(tables, default=0)
+    biggest_tensor = max((int(np.size(v)) for v in W.values()), default=0) if W else 0
+    table_copy = bool(biggest_tensor >= 8 and biggest_table >= 0.5 * biggest_tensor)
+    value_copy = bool(params >= 8 and len(lits) >= 0.5 * params and matched >= 0.5)
+    return {"literals": len(lits), "params": params, "weights_matched": matched, "largest_table": biggest_table,
+            "largest_tensor": biggest_tensor, "value_copy": value_copy, "table_copy": table_copy,
+            "flagged": value_copy or table_copy}
 
 
 def certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng):
@@ -613,10 +629,13 @@ def verdict(rep):
                      f"{e['construction_right_where_network_wrong']:.1%}: it explains the task, not this network")
     cp = rep.get("copy")
     if cp and cp["flagged"]:
-        fails.append(f"weight copy: the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they "
-                     f"reproduce {cp['weights_matched']:.0%} of its weights: this re-implements the weight matrices instead of "
-                     "describing the computation. Write the mechanism in terms of what the variables mean, with only the constants "
-                     "the account needs")
+        why = (f"the file has {cp['literals']} numeric literals for a network of {cp['params']} parameters, and they reproduce "
+               f"{cp['weights_matched']:.0%} of its weights" if cp.get("value_copy", cp["flagged"]) else
+               f"the file writes out a table of {cp['largest_table']} numbers, at least half the size of the network's largest weight "
+               f"tensor ({cp['largest_tensor']} entries), which is that tensor up to rescaling")
+        fails.append(f"weight copy: {why}: this re-implements the weight matrices instead of describing the computation. Write the "
+                     "mechanism in terms of what the variables mean (comparisons, running maxima, counts, thresholds), with only the "
+                     "constants that account needs")
     if not rep["sites"]:
         fails.append("no sites aligned")
     return {"verified": not fails, "fails": fails}
@@ -679,7 +698,8 @@ def render(rep):
     cp = rep.get("copy")
     if cp:
         L.append(f"7. NOT A COPY   {cp['literals']} numeric literals in the file; network parameters {cp['params']}; share of its weights "
-                 f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}" + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
+                 f"(|w| >= 0.05) the literals reproduce: {cp['weights_matched']:.0%}; largest table in the file {cp.get('largest_table', '?')} "
+                 f"numbers vs the largest weight tensor {cp.get('largest_tensor', '?')}" + ("  -> FLAGGED as a weight copy" if cp["flagged"] else ""))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else
                        ("named but failing" if st["named"] else "NOT EXPLAINED (no variable at " + " / ".join(st["sites"]) + ")"))

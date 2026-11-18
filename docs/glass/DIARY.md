@@ -164,3 +164,24 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     such exact values.
   - After: the Boolean constructions are complete again, and the exact copy of M2,2 is still flagged.
   - The change doesn't affect the AlgZoo runs on Colab (their weights aren't round numbers).
+- **Correction on times.** Entries from "20:30" to "21:19" above carry times I estimated; they ran ahead of the clock.
+  The real span was about 20:28–20:58 ET. From here on, times come from `date`. (The Colab job started at
+  01:50 UTC = 20:50 ET, not 21:03.)
+- **21:00 (real)** Check-in. Colab job alive. Queue: 2 done, 4 running (M4,3, M8,5, M8,8, M16,10). **M4,4 (36
+  params) came back VERIFIED AND COMPLETE**: 100% on every whole-model test, including reproducing all 1,608 of the
+  network's mistakes (it's a 60%-accurate network).
+- **21:05** **But the M4,4 construction is a rescaled copy.**
+  - Its own description says the state is updated as `s_t = relu(x_t*S + s_(t-1) @ A)` with "a dense recurrent
+    gain matrix A", in "units of their own input gain". That's W_h with each unit rescaled.
+  - The value-match copy check missed it: the literals reproduce only 23% of the raw weights, because rescaling
+    changes every number.
+  - Fix: a second copy rule. The largest array literal in the file (numbers in one list, nested or not) is compared
+    with the network's largest weight tensor; a table with at least half as many entries is a copy up to rescaling.
+    This rule is invariant to scaling and permutation.
+  - After: M4,4's construction is rejected (complete=False). M2,2's (scalar constants that each mean something)
+    and the Boolean and Tracr constructions still pass. The prompt's rule 7 now names both checks.
+- **Decision:** don't restart the live queue for this (it would interrupt M16,10). The fixed judge reaches the
+  running constructors at their next submission once Colab pulls it (each submission runs `judge.py` fresh). After
+  the first pass, a second pass re-runs the main job on every network whose best construction isn't certified by
+  the current judge (M4,4 at least).
+- `results.py` now prefers `report_current.json` (the current judge's verdict) over the run's own report.

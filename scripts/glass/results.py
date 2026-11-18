@@ -16,7 +16,9 @@ def row(name, j):
     meta = json.loads((LAB / "models" / target / "meta.json").read_text())
     kind = name.split("__")[1]
     cells = [meta["name"].replace("AlgZoo RNN ", ""), str(meta["params"]), kind, j["status"], rid or "-"]
-    rep_p = LAB / "constructions" / target / (rid or "_") / "report.json"
+    rep_p = LAB / "constructions" / target / (rid or "_") / "report_current.json"     # re-judged by the current judge
+    if not rep_p.exists():
+        rep_p = rep_p.with_name("report.json")
     run_p = LAB / "constructions" / target / (rid or "_") / "run.json"
     if rep_p.exists():
         rep = json.loads(rep_p.read_text())
