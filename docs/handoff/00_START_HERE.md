@@ -3,6 +3,13 @@
 *Living entry point, kept current after every working session. Last updated Nov 14, 2026 (branch `constructor-attempt`). Anyone handed
 this repo should be able to continue from these files alone, with no separate handoff.*
 
+## BRANCH `constructor-v2` (2026-11-17). Read this first if you are on this branch.
+
+> Cut from `constructor-attempt` at `d6b706ff`, which stays untouched as the fallback. The job and every planned
+> change, each tied to the failure it catches: `docs/V2_CONSTRUCTOR_PLAN.md`. In short: whole-model constructions
+> of AlgZoo networks, a judge that adds joint substitution, worst-case/error checks and a coverage line, then a
+> blinded run ladder (API runs need Shreyas's OK). Status: plan written; no code changed yet.
+
 ## CURRENT STATE (2026-11-17, session 4, branch `constructor-attempt`). Read this first.
 
 > Session 4 continues session 3 (below). Same rules: work only on `constructor-attempt`; commit and push every
