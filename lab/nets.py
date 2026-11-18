@@ -35,6 +35,21 @@ def mlp(W, x, act, hook=None, acts=None):
     return h("out", a)
 
 
+def rnn_relu(W, x, hook=None, acts=None):
+    """One-layer ReLU RNN with no biases (the AlgZoo architecture, torch.nn.RNN(1, hidden, relu) + Linear).
+    W_x [1, hidden], W_h [hidden, hidden], W_o [hidden, n_out]; x [B, T] real numbers, read one per step.
+        h_0 = 0;  h_t = relu(x_t * W_x + h_{t-1} @ W_h);  out = h_T @ W_o
+    Sites: h1 ... hT (the hidden state after reading x_t) and out."""
+    h = _hooker(hook, acts)
+    a = np.asarray(x, dtype=np.float64)
+    if a.ndim == 1:
+        a = a[None]
+    state = np.zeros((len(a), W["W_h"].shape[0]))
+    for t in range(a.shape[1]):
+        state = h(f"h{t + 1}", np.maximum(a[:, t:t + 1] * W["W_x"] + state @ W["W_h"], 0))
+    return h("out", state @ W["W_o"])
+
+
 def onelayer_transformer(W, tokens, hook=None, acts=None):
     """The Nanda-style 1-layer transformer (no LayerNorm, no biases). tokens: [B, 3] ints -> logits [B, n_out].
     Sites (all [B, width]): embed.0, embed.1, embed.2 (token + position embedding at each position), attn_pattern
@@ -116,6 +131,8 @@ def forward(kind, W, x, hook=None, acts=None):
         return mlp(W, x, kind.split("_")[1], hook, acts)
     if kind == "onelayer_transformer":
         return onelayer_transformer(W, x, hook, acts)
+    if kind == "rnn_relu":
+        return rnn_relu(W, x, hook, acts)
     if kind == "transformer":
         return transformer(W, x, hook, acts)
     raise ValueError(f"no forward pass for {kind}")
@@ -133,6 +150,13 @@ def site_table(kind, W):
                         "output" if last else f"hidden layer {k}"))
             k += 1
         return out
+    if kind == "rnn_relu":
+        T = int(W["seq_len"].ravel()[0]) if "seq_len" in W else None
+        if T is None:
+            raise ValueError("rnn_relu weights need a seq_len entry")
+        hid = W["W_h"].shape[0]
+        return [(f"h{t}", hid, f"hidden state after reading input {t} of {T}", f"step {t}") for t in range(1, T + 1)] + [
+            ("out", W["W_o"].shape[1], "the network's output", "output")]
     if kind == "onelayer_transformer":
         d, m = W["W_E"].shape[1], W["W_in"].shape[1]
         n = W["W_pos"].shape[0]

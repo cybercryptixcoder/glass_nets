@@ -49,7 +49,12 @@ PASS = {"behaviour": 0.95,       # share of inputs on which the construction and
         "necessity": 0.5,        # removing the named subspace must do this share of the damage of mean-ablating the site
         "compact": 2,            # the named subspace may be at most this many times the smallest sufficient PCA subspace (or 4 more)
         "interchange": 0.90,     # interchange predictions right, among cases where the network's decision changed
-        "edit": 0.50}            # partial-interchange and edit predictions right, among cases where the decision changed
+        "edit": 0.50,            # partial-interchange and edit predictions right, among cases where the decision changed
+        # Glass Networks additions (docs/V2_CONSTRUCTOR_PLAN.md items 2-3); each is a construction-level claim:
+        "joint": 0.90,           # decisions kept when EVERY named site is replaced by the construction's prediction at once
+        "worst_slice": 0.80,     # behaviour on the worst slice (the inputs on which the network makes one decision)
+        "errors": 0.50}          # share of the network's own mistakes (vs the task's labels) the construction reproduces
+MIN_SLICE = 30                   # slices and error sets smaller than this are reported but carry no requirement
 
 
 class ConstructionError(Exception):
@@ -135,8 +140,10 @@ def _grouped(out):
 
 def decide(out):
     """The network's decision(s) for each input, [B, n_decisions]: the largest output (within each group of classes),
-    or the sign when there is a single output."""
-    g = _grouped(out)
+    or the sign when there is a single output. Outputs are rounded to 1e-9 first, so that an exact tie (for example
+    an all-zero ReLU state, common in the edit tests of ReLU RNNs) is decided the same way on both sides instead of by
+    floating-point noise."""
+    g = np.round(_grouped(out), 9)
     return g.argmax(-1) if g.shape[-1] > 1 else (g[..., 0] > 0).astype(int)
 
 
@@ -181,10 +188,134 @@ def fit_alignment(V, A, fit):
     return c, vmu, M, D
 
 
+# ---------------------------------------------------------------- whole-model certificate (Glass Networks)
+def load_labels(meta):
+    """The task's correct answers for the domain inputs, when the target has them (meta["labels"]), else None."""
+    f = meta.get("labels")
+    return np.load(LAB / "models" / meta["id"] / f) if f else None
+
+
+def _margin(out):
+    """For each input, how clear the decision is: the gap between the top two outputs (the smallest over decisions),
+    or the size of the single output."""
+    g = _grouped(out)
+    if g.shape[-1] == 1:
+        return np.abs(g[..., 0]).min(-1)
+    top2 = np.sort(g, -1)[..., -2:]
+    return (top2[..., 1] - top2[..., 0]).min(-1)
+
+
+def _row_gap(net, other):
+    """Per input: how far the construction's output is from the network's (KL for classes, squared error otherwise)."""
+    g, h = _grouped(net), _grouped(other)
+    if g.shape[-1] == 1:
+        return ((g - h) ** 2).sum((-1, -2))
+    def lsm(z):
+        z = z - z.max(-1, keepdims=True)
+        return z - np.log(np.exp(z).sum(-1, keepdims=True))
+    p, q = lsm(g), lsm(h)
+    return (np.exp(p) * (p - q)).sum(-1).sum(-1)
+
+
+def _continuous(X):
+    """Real-valued inputs (every dimension takes many values): only then can the disagreement search move them."""
+    X = np.asarray(X)
+    return np.issubdtype(X.dtype, np.floating) and all(len(np.unique(X[:, j])) > 20 for j in range(X.shape[1]))
+
+
+def disagreement_search(kind, W, X, model, rng, starts=200, iters=25):
+    """A short random local search for inputs where the construction and the network make different decisions while
+    the network's own decision is clear (its margin above the 10th percentile over the domain), so that near-ties do
+    not count. Inputs stay inside the domain's range. Catches holes that an average over random inputs hides."""
+    X = np.asarray(X, dtype=np.float64)
+    lo, hi, sd = X.min(0), X.max(0), X.std(0) + 1e-12
+    clear = float(np.quantile(_margin(nets.forward(kind, W, X)), 0.1))
+
+    def score(x):
+        on = nets.forward(kind, W, x)
+        oc, _ = run_model(model, x)
+        ok = _margin(on) >= clear
+        return np.where(ok, _row_gap(on, oc), -1.0), (~same(oc, on)) & ok, on, oc
+
+    idx = rng.choice(len(X), min(starts, len(X)), replace=False)
+    x = X[idx].copy()
+    s0, found0, _, _ = score(x)
+    s, found = s0.copy(), found0.copy()
+    for _ in range(iters):
+        xn = np.clip(x + rng.normal(size=x.shape) * 0.15 * sd, lo, hi)
+        sn, fn, _, _ = score(xn)
+        up = sn > s
+        x[up], s[up], found[up] = xn[up], sn[up], fn[up]
+    on = nets.forward(kind, W, x)
+    oc, _ = run_model(model, x)
+    order = np.argsort(-s)
+    ex = [{"input": [round(float(v), 3) for v in x[i]], "network": decide(on[i:i + 1])[0].tolist(),
+           "construction": decide(oc[i:i + 1])[0].tolist()} for i in order[:5] if found[i]]
+    return {"starts": int(len(idx)), "iterations": iters, "clear_disagreements": int(found.sum()),
+            "found_rate": float(found.mean()), "random_rate": float(found0.mean()), "examples": ex}
+
+
+def certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng):
+    """The construction-level tests added for whole-model claims (plan items 2-3). Writes rep["joint"],
+    rep["worst"], rep["errors"] and rep["search"]."""
+    clean, cons = out_n[test], out_c[test]
+    agree = same(cons, clean)
+    if hats:                                                    # 2. every named site replaced at once
+        o = nets.forward(kind, W, X[test], hook=dict(hats))
+        rep["joint"] = {"sites": list(hats), "match": match(o, clean), "kl": kl(clean, o)}
+    dec = decide(clean)                                         # 3a. behaviour per slice
+    slices = []
+    if dec.shape[1] == 1:
+        for c in np.unique(dec[:, 0]):
+            m = dec[:, 0] == c
+            slices.append({"slice": f"network decides {int(c)}", "n": int(m.sum()), "match": float(agree[m].mean())})
+    marg = _margin(clean)
+    lo = marg <= np.quantile(marg, 0.1)
+    ranked = [x for x in slices if x["n"] >= MIN_SLICE]
+    rep["worst"] = {"slices": slices, "worst": min(ranked, key=lambda x: x["match"]) if ranked else None,
+                    "near_ties": {"slice": "the network's 10% least clear decisions", "n": int(lo.sum()), "match": float(agree[lo].mean())}}
+    if labels is not None:                                      # 3b. the network's own mistakes
+        lab = np.asarray(labels).reshape(len(labels), -1)[test]
+        wrong = ~(dec == lab).all(-1)
+        nw = int(wrong.sum())
+        rep["errors"] = {"network_error_rate": float(wrong.mean()), "n_errors": nw,
+                         "reproduced": float(agree[wrong].mean()) if nw else None,
+                         "construction_right_where_network_wrong": float((decide(cons)[wrong] == lab[wrong]).all(-1).mean()) if nw else None}
+    if _continuous(X):                                          # 3c. search for disagreements
+        rep["search"] = disagreement_search(kind, W, X, model, rng)
+
+
+def coverage(rep):
+    """Plan item 4: one line of what the construction accounts for, and the plain list of what it does not."""
+    v, b = rep["verdict"], rep["behaviour"]
+    un = [f"stage '{name}' is not explained" for name, st in rep["stages"].items() if not st["verified"]]
+    if b["match"] < 1:
+        un.append(f"on {1 - b['match']:.1%} of inputs the construction's decision differs from the network's")
+    j = rep.get("joint")
+    if j and j["match"] < 1:
+        un.append(f"replacing every named site at once loses {1 - j['match']:.1%} of the network's decisions")
+    if rep.get("unaligned_variables"):
+        un.append("variables not placed in the network (untested): " + ", ".join(rep["unaligned_variables"]))
+    w = (rep.get("worst") or {}).get("worst")
+    if w and w["match"] < 1:
+        un.append(f"worst slice: {w['slice']} ({w['n']} inputs), where it matches {w['match']:.1%}")
+    e = rep.get("errors")
+    if e and e["n_errors"] and e["reproduced"] < 1:
+        un.append(f"of the network's {e['n_errors']} mistakes on test inputs, {1 - e['reproduced']:.1%} are not reproduced")
+    sr = rep.get("search")
+    if sr and sr["clear_disagreements"]:
+        un.append(f"a search found {sr['clear_disagreements']} inputs (from {sr['starts']} starts) where the network's decision is clear "
+                  f"and the construction's differs")
+    return {"stages_verified": v["stages_verified"], "stages_total": v["stages_total"], "behaviour": b["match"],
+            "joint": j["match"] if j else None, "worst_slice": w["match"] if w else None,
+            "errors_reproduced": e["reproduced"] if e else None, "unexplained": un}
+
+
 # ---------------------------------------------------------------- the tests
-def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None):
+def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None, labels=None):
     """Returns a report dict. Raises ConstructionError with a message the author can act on.
-    groups: for networks that make several decisions per input (one per position), the number of classes in each."""
+    groups: for networks that make several decisions per input (one per position), the number of classes in each.
+    labels: the task's correct answers for X (optional): enables the test of the network's own mistakes."""
     global GROUPS
     GROUPS = groups
     t0 = time.time()
@@ -231,6 +362,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None):
 
     # 2-4. per site
     rep["sites"], rep["interventions"] = {}, []
+    hats = {}                                       # each named site's predicted activation on the test inputs (joint test)
     base = rng.choice(test, n_pairs); src = rng.choice(test, n_pairs)
     out_c_base = out_c[base]
     for s in [s for s in sites if any(s in w for w in align.values())]:
@@ -242,6 +374,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None):
         A = acts[s]
         c, vmu, M, D = fit_alignment(V, A, fit)                                 # M [K, d] writes, D [d, K] reads
         A_hat = c + (V - vmu) @ M
+        hats[s] = A_hat[test]
         Mp = np.linalg.pinv(M, rcond=1e-8)                                      # [d, K]: activation -> variable coordinates
         rank = int(np.linalg.matrix_rank(M, tol=1e-8 * max(1.0, np.abs(M).max())))
         P = Mp @ M                                                              # projector onto the named subspace
@@ -335,6 +468,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None):
         J = np.concatenate([cols[v] for v in live]) if live else np.array([], int)
         r["used_rank"] = int(np.linalg.matrix_rank(M[J], tol=1e-8 * max(1.0, np.abs(M).max()))) if len(J) else 0
         r["unused_variables"] = [v for v in r["variables"] if v not in live]
+    certificate(rep, kind, W, X, test, out_n, out_c, hats, labels, model, rng)
     varying = {s for s in sites if acts[s].std(0).max() > 1e-9}                 # a site that never changes needs no explanation
     rep["uncovered_sites"] = [s for s in sites if s != "out" and s in varying and s not in rep["sites"]]
     rep["stages"] = {}
@@ -352,6 +486,7 @@ def judge(kind, W, X, source, seed=0, n_pairs=2000, groups=None):
     v["stages_verified"] = sum(bool(st["verified"]) for st in rep["stages"].values())
     v["complete"] = bool(v["verified"] and v["stages_verified"] == v["stages_total"])
     v["score"] = round(rep["behaviour"]["match"] * v["stages_verified"] / max(1, v["stages_total"]), 4)
+    rep["coverage"] = coverage(rep)
     rep["seconds"] = round(time.time() - t0, 2)
     return rep
 
@@ -426,6 +561,19 @@ def verdict(rep):
                 mine.append(f"(at {s} it is enough that EITHER every partial test OR the edit of all variables passes)")
         r["pass"] = not mine
         fails += mine
+    # construction-level claims (Glass Networks): they apply to whatever the construction names
+    j = rep.get("joint")
+    if j and len(j["sites"]) > 1 and j["match"] < PASS["joint"]:
+        fails.append(f"joint substitution: with all {len(j['sites'])} named sites replaced at once by the construction's predictions, the "
+                     f"network keeps {j['match']:.1%} of its decisions (need {PASS['joint']:.0%}): the sites pass one at a time but do not work together")
+    w = (rep.get("worst") or {}).get("worst")
+    if w and w["match"] < PASS["worst_slice"]:
+        fails.append(f"worst slice: on the {w['n']} inputs where {w['slice']}, the construction agrees on {w['match']:.1%} (need {PASS['worst_slice']:.0%})")
+    e = rep.get("errors")
+    if e and e["n_errors"] >= MIN_SLICE and e["reproduced"] < PASS["errors"]:
+        fails.append(f"the network's own mistakes: on the {e['n_errors']} test inputs where the network is wrong, the construction makes the "
+                     f"network's (wrong) decision on {e['reproduced']:.1%} (need {PASS['errors']:.0%}); it is right on "
+                     f"{e['construction_right_where_network_wrong']:.1%}: it explains the task, not this network")
     if not rep["sites"]:
         fails.append("no sites aligned")
     return {"verified": not fails, "fails": fails}
@@ -466,6 +614,25 @@ def render(rep):
         L.append("Ignored (the site is identical for every input, so it holds no variable): " + ", ".join(rep["constant_sites_ignored"]))
     if rep["unaligned_variables"]:
         L.append("Variables in model() with no site in ALIGN (not tested): " + ", ".join(rep["unaligned_variables"]))
+    j = rep.get("joint")
+    if j:
+        L.append(f"5. WHOLE MODEL   all {len(j['sites'])} named site(s) replaced at once by the construction's predictions: the network keeps "
+                 f"{j['match']:.1%} of its decisions (need {PASS['joint']:.0%} when two or more sites are named)")
+    w = rep.get("worst")
+    if w:
+        parts = [f"{x['slice']}: {x['match']:.1%} (n={x['n']})" for x in w["slices"]]
+        L.append("6. WORST CASE   behaviour by the network's decision: " + ("; ".join(parts) if parts else "n/a")
+                 + f" | near ties ({w['near_ties']['n']} least clear inputs, no requirement): {w['near_ties']['match']:.1%}")
+        e = rep.get("errors")
+        if e:
+            L.append(f"   the network's own mistakes: it is wrong on {e['network_error_rate']:.1%} of test inputs ({e['n_errors']}); the construction "
+                     + (f"reproduces {e['reproduced']:.1%} of them (need {PASS['errors']:.0%} when there are {MIN_SLICE} or more) and is right on "
+                        f"{e['construction_right_where_network_wrong']:.1%}" if e["n_errors"] else "has nothing to reproduce"))
+        sr = rep.get("search")
+        if sr:
+            L.append(f"   search for disagreements ({sr['starts']} starts x {sr['iterations']} steps, only inputs where the network's decision is clear): "
+                     f"found {sr['clear_disagreements']} ({sr['found_rate']:.1%}; on the unsearched starting inputs {sr['random_rate']:.1%})"
+                     + ("".join(f"\n     input {x['input']}: network {x['network']}, construction {x['construction']}" for x in sr["examples"])))
     L.append("STAGES   " + ";  ".join(
         f"{name}: " + ("VERIFIED at " + ", ".join(st["verified"]) if st["verified"] else
                        ("named but failing" if st["named"] else "NOT EXPLAINED (no variable at " + " / ".join(st["sites"]) + ")"))
@@ -478,6 +645,14 @@ def render(rep):
     else:
         L.append(f"VERDICT: NOT VERIFIED ({v['stages_verified']} of {v['stages_total']} stages verified). Failing:")
     L += [f"  - {f}" for f in v["fails"]]
+    c = rep.get("coverage")
+    if c:
+        L.append(f"COVERAGE   stages {c['stages_verified']}/{c['stages_total']} | behaviour {c['behaviour']:.1%}"
+                 + (f" | all sites at once {c['joint']:.1%}" if c["joint"] is not None else "")
+                 + (f" | worst slice {c['worst_slice']:.1%}" if c["worst_slice"] is not None else "")
+                 + (f" | network's mistakes reproduced {c['errors_reproduced']:.1%}" if c["errors_reproduced"] is not None else ""))
+        L.append("NOT EXPLAINED:" + (" nothing found by these tests" if not c["unexplained"] else ""))
+        L += [f"  - {u}" for u in c["unexplained"]]
     return "\n".join(L)
 
 
@@ -508,7 +683,7 @@ if __name__ == "__main__":
         sys.exit(0)
     meta, W, X = load_target(a.target, a.variant)
     try:
-        rep = judge(meta["forward"], W, X, Path(a.construction).read_text(), seed=a.seed, groups=meta.get("out_groups"))
+        rep = judge(meta["forward"], W, X, Path(a.construction).read_text(), seed=a.seed, groups=meta.get("out_groups"), labels=load_labels(meta))
     except ConstructionError as e:
         print("CONSTRUCTION ERROR:", e); sys.exit(1)
     print(render(rep))
