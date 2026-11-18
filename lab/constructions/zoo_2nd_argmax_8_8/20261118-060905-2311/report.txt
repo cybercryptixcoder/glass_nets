@@ -1,0 +1,37 @@
+JUDGE REPORT   (4000 held-out inputs; construction 705 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 32.5% of inputs (a constant output would get 5.5%); output R2 0.226; KL 0.384
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; a1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange a1 @ h1: right 35.8% / 35.5% when changed (network changed in 32.1%); output R2 0.195 | controls: random subspace 36.9%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  edit        a1 @ h1: right 34.8% / 36.4% when changed (network changed in 18.4%); output R2 0.212 | controls: random subspace 42.0%, no-change 81.6%, source-output 14.5%, attribution patching 81.7%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 29.7% (n=222); network decides 1: 20.7% (n=271); network decides 2: 27.9% (n=355); network decides 3: 28.1% (n=448); network decides 4: 31.1% (n=476); network decides 5: 34.3% (n=781); network decides 6: 37.4% (n=744); network decides 7: 36.6% (n=703) | near ties (400 least clear inputs, no requirement): 36.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 60.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 186 (93.0%; on the unsearched starting inputs 61.0%)
+     input [-0.995, -0.285, -0.802, -0.073, 1.253, 0.18, 4.27, 0.04]: network [5], construction [6]
+     input [0.479, 3.883, -1.911, 0.747, -0.536, 0.089, 0.638, -0.458]: network [3], construction [1]
+     input [0.603, -2.246, 3.765, 0.741, 0.377, 1.254, -0.457, -0.486]: network [0], construction [2]
+     input [0.026, -2.326, -2.335, 2.759, -0.553, -1.055, -1.361, -0.492]: network [0], construction [3]
+     input [-2.982, -1.066, 3.361, -0.902, -0.961, 0.296, 0.197, 1.365]: network [7], construction [2]
+7. COMPRESSION   8 constants in the file for 119 degrees of freedom in the network: 0.07 per degree of freedom (an explanation needs < 0.9)
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5);  step 6: NOT EXPLAINED (no variable at h6);  step 7: NOT EXPLAINED (no variable at h7);  step 8: NOT EXPLAINED (no variable at h8)
+VERDICT: NOT VERIFIED (0 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 32.5% of inputs (need 95%)
+  - interchange of a1 at h1: prediction right in 35.5% of the cases where the network's output changed (need 90%)
+  - edit of a1 at h1: prediction right in 36.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - worst slice: on the 271 inputs where network decides 1, the construction agrees on 20.7% (need 80%)
+COVERAGE   stages 0/8 | behaviour 32.5% | all sites at once 100.0% | worst slice 20.7% | network's mistakes reproduced 60.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 67.5% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 1 (271 inputs), where it matches 20.7%
+  - of the network's 2162 mistakes on test inputs, 40.0% are not reproduced
+  - a search found 186 inputs (from 200 starts) where the network's decision is clear and the construction's differs

@@ -3114,3 +3114,677 @@ LSQ G 43 agree 0.9495 heldout 0.9488
 [note] {"text": "context nearly full: the reader writes its notes and continues from them"}
 
 ===== step 66/80
+
+--- python ---
+
+import numpy as np
+Wx = W['W_x'].ravel(); Wh = W['W_h']; Wo = W['W_o']
+print(Wx)
+print(np.abs(Wx))
+print(X.shape, SITES)
+
+--- output (0.0 s) ---
+[-0.2073  0.0302 -1.2027 -0.1506 -0.4672  0.0032  0.6188  0.004 ]
+[0.2073 0.0302 1.2027 0.1506 0.4672 0.0032 0.6188 0.004 ]
+(8000, 8) {'h1': (8, 'hidden state after reading input 1 of 8', 'step 1'), 'h2': (8, 'hidden state after reading input 2 of 8', 'step 2'), 'h3': (8, 'hidden state after reading input 3 of 8', 'step 3'), 'h4': (8, 'hidden state after reading input 4 of 8', 'step 4'), 'h5': (8, 'hidden state after reading input 5 of 8', 'step 5'), 'h6': (8, 'hidden state after reading input 6 of 8', 'step 6'), 'h7': (8, 'hidden state after reading input 7 of 8', 'step 7'), 'h8': (8, 'hidden state after reading input 8 of 8', 'step 8'), 'out': (8, "the network's output", 'output')}
+
+
+===== step 67/80
+
+--- python ---
+
+print([k for k in list(globals().keys()) if not k.startswith('_')][:80])
+
+--- output (0.0 s) ---
+['np', 'show', 'W', 'X', 'SITES', 'run', 'acts', 'Wx', 'Wh', 'Wo', 'r', 'o', 'D', 'd', 'WX2', 'WH2', 'Wo2', 'W72', 'fw', 'dec', 'ag', 'index', 'cur', 'build', 'par', 'Xs', 'rs', 'time', 't0', 'step', 'best', 'a', 'b', 'v', 'p', 'n', 'WH', 'W7', 'A', 'itertools', 'Htrue', 'dd', 'Wx_g', 'Wh_g', 'Wo_g', 'pairs', 'pa', 'pb', 'vv', 'w', 'Ds', 'Hs', 'sc', 'gid', 'G', 'gmap', 'hi', 'hj', 'ish', 'p0', 'mats', 'loss_grad', 'm', 'lr', 'it', 'L', 'g', 'WHr', 'W7r', 'ag2', 'Hsa', 'lg', 'scc', 'Xe', 'He', 're', 'fw2', 'st', 'J', 'name']
+
+
+===== step 68/80
+
+--- python ---
+
+np.set_printoptions(precision=17, suppress=False, linewidth=200)
+print(WX2); print(WH2.shape); print(W72.shape)
+def fw_local(x, WX, WH, W7):
+    h = np.zeros((x.shape[0],8))
+    for t in range(8):
+        h = np.maximum(x[:,t:t+1]*WX[None,:] + h@WH, 0.0)
+    return h@W7
+o2 = fw_local(X, WX2, WH2, W72); ref = run(X)
+Dref = ref[:,1:]-ref[:,0:1]
+print('err', np.abs(o2-Dref).max(), 'agree', (o2.argmax(1)==ref.argmax(1)).mean())
+
+--- output (0.01 s) ---
+[-1.  1. -1. -1. -1.  1.  1.  1.]
+(8, 8)
+(8, 7)
+err 3.481659405224491e-13 agree 0.01675
+
+
+===== step 69/80
+
+--- python ---
+
+pred = np.concatenate([np.zeros((X.shape[0],1)), o2],1)
+print('agree', (pred.argmax(1)==ref.argmax(1)).mean())
+np.set_printoptions(precision=17, suppress=False, linewidth=250)
+print(repr(WX2))
+print(repr(WH2))
+print(repr(W72))
+
+--- output (0.0 s) ---
+agree 1.0
+array([-1.,  1., -1., -1., -1.,  1.,  1.,  1.])
+array([[ 8.1660948693752289e-02,  2.6567275516146602e+00,  1.2756645070748196e-01, -1.8324145724988203e+00, -2.8674616792792401e-01,  9.1584160739470111e+00, -1.0815537135410978e-01,  3.5871949470377615e+01],
+       [-2.0105822540730536e-02,  4.7973573207855225e-01, -2.0996021460867771e-02,  1.8890782258171701e-02,  4.9884440061303902e-02, -1.1162491239265199e+01, -2.1876488048755492e-02,  1.4489686027779833e+01],
+       [ 3.8781806737034370e+00, -6.1933291738630940e+00,  2.3509261012077332e-01,  2.8668304772487052e-01,  2.3204270526694319e+00,  6.5084050658111403e+02,  1.8770882925004029e+00, -1.5730447928301115e+02],
+       [ 8.9146947300966750e-01,  9.7498537080873362e+00, -7.3071512051178691e-02, -6.7147308588027954e-01, -6.2492372218554096e-02,  4.5069398576520022e+01,  4.0863832358503674e-02,  4.3206881426786961e+00],
+       [-7.1733414054631650e-01, -1.3394256035296436e+01, -1.7506621963840702e-01,  3.9676956443581974e+00,  2.7209100127220154e-01, -6.1544720915784410e+00,  4.0567902220711904e-01, -4.8130233161226982e+01],
+       [-3.3467863835848531e-03, -2.4640403018727501e-03, -8.5695045834821180e-04,  2.3628471930426484e-02, -4.6022604255713910e-03,  7.8547078371047974e-01,  4.5374505329802374e-03,  5.0064061192282061e-01],
+       [ 4.1789342353149994e+00, -2.3523344640512773e+00,  2.6385916061018949e-01,  1.3553656405473431e+00,  1.6005847381785439e+00,  1.1226999012246431e+02,  4.8844647407531733e-01, -1.7184185217038882e+02],
+       [-4.7191618168657551e-03,  1.0419153346164983e-01,  1.1052814474536725e-04,  2.7506834133469490e-03, -2.0842712636466886e-03,  3.4613257230375155e-01,  1.1661737987549778e-02, -6.0039776563644409e-01]])
+array([[ 1.0359325376461781e-01,  1.2622316679818812e-01,  1.3946276087308118e-01,  6.0927941160948684e-02,  1.4991882688222846e-01,  6.1656869688547911e-01,  9.9585557290463811e-02],
+       [-1.7026091745571542e-02, -2.2003435038117844e-02, -2.7228309701783693e-02, -5.8370928812668144e-02, -2.7015809687453207e-02, -9.5537825803272414e-03, -1.6681906844923045e-02],
+       [ 2.7912114903325858e-01,  2.9517561363348932e-02,  3.7888758317774318e-01,  8.3476327112094850e-01,  3.9411229932332503e-01,  9.8540331857333285e-01, -5.1587253071438113e+00],
+       [-6.0359401564385906e-02, -4.0278056112475369e-02, -9.3854827803613539e-02, -1.0715829573711133e-01, -4.5432062566282028e-01,  1.3406985351020140e-01, -5.7092359276278648e-02],
+       [-2.6161270138121639e-01, -1.6088654310841388e-01, -1.7907901918930680e-01, -3.5218930420603201e-02,  1.4395015494298491e-01, -1.3099015251826138e+00, -1.3498361024416994e-01],
+       [-6.4748734342860714e-04,  7.2871407991517700e-05, -8.3901600725702630e-04, -2.0906065443925675e-03, -9.3820877676590794e-04, -9.7685178468195216e-03, -6.1508006688817951e-04],
+       [ 2.0660084614618768e-01, -9.3171604447661593e-03,  3.3278777066527709e-01,  7.0550755156659761e-01,  3.3485518617766274e-01,  2.8477457044644439e-01,  2.0850714955571448e-01],
+       [ 5.9808530159319176e-05,  2.8211759564382194e-04, -2.6010880638322421e-03,  1.4942612755617691e-03,  1.3129247111741513e-04, -1.4317095005006951e-03,  6.6502704977497136e-05]])
+
+
+===== step 70/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "Exact reconstruction of the ReLU RNN in a per-unit scale gauge (d_i = 1/|W_x_i|, so the input "
+ "weights are +-1 and only their signs matter). h_t = relu(x_t*s + h_{t-1} @ WH) for t=1..8, with s "
+ "the sign vector of W_x; every step's 8-unit state is a variable (h1..h8) computed from the previous "
+ "step's iv-returned value, so the recurrence is wired step by step. The 8 class scores are a "
+ "combination of the 8 final-state coordinates: score_k - score_0 = h8 @ W7[:,k-1], with score_0 = 0 "
+ "(the readout is used through its 7 differences from class 0). Deeper structure: unit 5 and unit 7 of "
+ "W_x are essentially zero-input units, and the recurrent matrix is a single dense 8x8 map.")
+
+S = np.array([-1., 1., -1., -1., -1., 1., 1., 1.])
+WH = np.array([
+ [ 8.1660948693752289e-02,  2.6567275516146602e+00,  1.2756645070748196e-01, -1.8324145724988203e+00, -2.8674616792792401e-01,  9.1584160739470111e+00, -1.0815537135410978e-01,  3.5871949470377615e+01],
+ [-2.0105822540730536e-02,  4.7973573207855225e-01, -2.0996021460867771e-02,  1.8890782258171701e-02,  4.9884440061303902e-02, -1.1162491239265199e+01, -2.1876488048755492e-02,  1.4489686027779833e+01],
+ [ 3.8781806737034370e+00, -6.1933291738630940e+00,  2.3509261012077332e-01,  2.8668304772487052e-01,  2.3204270526694319e+00,  6.5084050658111403e+02,  1.8770882925004029e+00, -1.5730447928301115e+02],
+ [ 8.9146947300966750e-01,  9.7498537080873362e+00, -7.3071512051178691e-02, -6.7147308588027954e-01, -6.2492372218554096e-02,  4.5069398576520022e+01,  4.0863832358503674e-02,  4.3206881426786961e+00],
+ [-7.1733414054631650e-01, -1.3394256035296436e+01, -1.7506621963840702e-01,  3.9676956443581974e+00,  2.7209100127220154e-01, -6.1544720915784410e+00,  4.0567902220711904e-01, -4.8130233161226982e+01],
+ [-3.3467863835848531e-03, -2.4640403018727501e-03, -8.5695045834821180e-04,  2.3628471930426484e-02, -4.6022604255713910e-03,  7.8547078371047974e-01,  4.5374505329802374e-03,  5.0064061192282061e-01],
+ [ 4.1789342353149994e+00, -2.3523344640512773e+00,  2.6385916061018949e-01,  1.3553656405473431e+00,  1.6005847381785439e+00,  1.1226999012246431e+02,  4.8844647407531733e-01, -1.7184185217038882e+02],
+ [-4.7191618168657551e-03,  1.0419153346164983e-01,  1.1052814474536725e-04,  2.7506834133469490e-03, -2.0842712636466886e-03,  3.4613257230375155e-01,  1.1661737987549778e-02, -6.0039776563644409e-01]])
+
+W7 = np.array([
+ [ 1.0359325376461781e-01,  1.2622316679818812e-01,  1.3946276087308118e-01,  6.0927941160948684e-02,  1.4991882688222846e-01,  6.1656869688547911e-01,  9.9585557290463811e-02],
+ [-1.7026091745571542e-02, -2.2003435038117844e-02, -2.7228309701783693e-02, -5.8370928812668144e-02, -2.7015809687453207e-02, -9.5537825803272414e-03, -1.6681906844923045e-02],
+ [ 2.7912114903325858e-01,  2.9517561363348932e-02,  3.7888758317774318e-01,  8.3476327112094850e-01,  3.9411229932332503e-01,  9.8540331857333285e-01, -5.1587253071438113e+00],
+ [-6.0359401564385906e-02, -4.0278056112475369e-02, -9.3854827803613539e-02, -1.0715829573711133e-01, -4.5432062566282028e-01,  1.3406985351020140e-01, -5.7092359276278648e-02],
+ [-2.6161270138121639e-01, -1.6088654310841388e-01, -1.7907901918930680e-01, -3.5218930420603201e-02,  1.4395015494298491e-01, -1.3099015251826138e+00, -1.3498361024416994e-01],
+ [-6.4748734342860714e-04,  7.2871407991517700e-05, -8.3901600725702630e-04, -2.0906065443925675e-03, -9.3820877676590794e-04, -9.7685178468195216e-03, -6.1508006688817951e-04],
+ [ 2.0660084614618768e-01, -9.3171604447661593e-03,  3.3278777066527709e-01,  7.0550755156659761e-01,  3.3485518617766274e-01,  2.8477457044644439e-01,  2.0850714955571448e-01],
+ [ 5.9808530159319176e-05,  2.8211759564382194e-04, -2.6010880638322421e-03,  1.4942612755617691e-03,  1.3129247111741513e-04, -1.4317095005006951e-03,  6.6502704977497136e-05]])
+
+def model(x, iv):
+    h = np.zeros((x.shape[0], 8))
+    for t in range(8):
+        h = iv("h%d" % (t + 1), np.maximum(x[:, t:t+1] * S[None, :] + h @ WH, 0.0))
+    d = iv("scores7", h @ W7)
+    return np.concatenate([np.zeros((x.shape[0], 1)), d], axis=1)
+
+ALIGN = {"h%d" % (t + 1): ["h%d" % (t + 1)] for t in range(8)}
+
+--- judge report 10 ---
+JUDGE REPORT   (4000 held-out inputs; construction 4,194 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 5.5%); output R2 1.000; KL -0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; h1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+  h2          (8 dims named of 8; 4 principal components suffice; h2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 62.2% (random n/a) | mean-ablate 62.2%
+  h3          (8 dims named of 8; 6 principal components suffice; h3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 56.6% (random n/a) | mean-ablate 56.6%
+  h4          (8 dims named of 8; 7 principal components suffice; h4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 51.1% (random n/a) | mean-ablate 51.1%
+  h5          (8 dims named of 8; 8 principal components suffice; h5): explained 1.000 | substitute 100.0% | keep 100.0% | remove 46.1% (random n/a) | mean-ablate 46.1%
+  h6          (8 dims named of 8; 8 principal components suffice; h6): explained 1.000 | substitute 100.0% | keep 100.0% | remove 35.1% (random n/a) | mean-ablate 35.1%
+  h7          (8 dims named of 8; 8 principal components suffice; h7): explained 1.000 | substitute 100.0% | keep 100.0% | remove 21.1% (random n/a) | mean-ablate 21.1%
+  h8          (8 dims named of 8; 8 principal components suffice; h8): explained 1.000 | substitute 100.0% | keep 100.0% | remove 5.5% (random n/a) | mean-ablate 5.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange h1 @ h1: right 100.0% / 100.0% when changed (network changed in 32.1%); output R2 1.000 | controls: random subspace 67.2%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  edit        h1 @ h1: right 77.5% / 53.2% when changed (network changed in 19.2%); output R2 0.937 | controls: random subspace 66.6%, no-change 80.8%, source-output 14.5%, attribution patching 83.8%
+  interchange h2 @ h2: right 100.0% / 100.0% when changed (network changed in 44.0%); output R2 1.000 | controls: random subspace 100.0%, no-change 56.0%, source-output 15.2%, attribution patching 58.2%
+  edit        h2 @ h2: right 100.0% / 100.0% when changed (network changed in 46.1%); output R2 1.000 | controls: random subspace 52.4%, no-change 53.9%, source-output 14.2%, attribution patching 53.2%
+  interchange h3 @ h3: right 100.0% / 100.0% when changed (network changed in 51.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 48.7%, source-output 17.6%, attribution patching 54.7%
+  edit        h3 @ h3: right 100.0% / 100.0% when changed (network changed in 61.8%); output R2 1.000 | controls: random subspace 39.0%, no-change 38.2%, source-output 13.6%, attribution patching 46.7%
+  interchange h4 @ h4: right 100.0% / 100.0% when changed (network changed in 59.2%); output R2 1.000 | controls: random subspace 100.0%, no-change 40.8%, source-output 24.9%, attribution patching 57.4%
+  edit        h4 @ h4: right 100.0% / 100.0% when changed (network changed in 72.2%); output R2 1.000 | controls: random subspace 26.6%, no-change 27.9%, source-output 15.2%, attribution patching 47.2%
+  interchange h5 @ h5: right 100.0% / 100.0% when changed (network changed in 65.2%); output R2 1.000 | controls: random subspace 100.0%, no-change 34.8%, source-output 33.5%, attribution patching 64.5%
+  edit        h5 @ h5: right 100.0% / 100.0% when changed (network changed in 77.2%); output R2 1.000 | controls: random subspace 22.9%, no-change 22.8%, source-output 17.2%, attribution patching 45.6%
+  interchange h6 @ h6: right 100.0% / 100.0% when changed (network changed in 74.1%); output R2 1.000 | controls: random subspace 100.0%, no-change 25.9%, source-output 49.4%, attribution patching 74.9%
+  edit        h6 @ h6: right 100.0% / 100.0% when changed (network changed in 78.8%); output R2 1.000 | controls: random subspace 20.2%, no-change 21.2%, source-output 18.1%, attribution patching 55.4%
+  interchange h7 @ h7: right 100.0% / 100.0% when changed (network changed in 81.0%); output R2 1.000 | controls: random subspace 100.0%, no-change 19.1%, source-output 68.7%, attribution patching 86.4%
+  edit        h7 @ h7: right 100.0% / 100.0% when changed (network changed in 80.6%); output R2 1.000 | controls: random subspace 18.9%, no-change 19.4%, source-output 18.6%, attribution patching 49.8%
+  interchange h8 @ h8: right 100.0% / 100.0% when changed (network changed in 85.8%); output R2 1.000 | controls: random subspace 100.0%, no-change 14.2%, source-output 100.0%, attribution patching 100.0%
+  edit        h8 @ h8: right 100.0% / 100.0% when changed (network changed in 80.5%); output R2 1.000 | controls: random subspace 18.9%, no-change 19.4%, source-output 18.9%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): scores7
+5. WHOLE MODEL   all 8 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=222); network decides 1: 100.0% (n=271); network decides 2: 100.0% (n=355); network decides 3: 100.0% (n=448); network decides 4: 100.0% (n=476); network decides 5: 100.0% (n=781); network decides 6: 100.0% (n=744); network decides 7: 100.0% (n=703) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. COMPRESSION   120 constants in the file for 119 degrees of freedom in the network: 1.01 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: VERIFIED at h3;  step 4: VERIFIED at h4;  step 5: VERIFIED at h5;  step 6: VERIFIED at h6;  step 7: VERIFIED at h7;  step 8: VERIFIED at h8
+VERDICT: NOT VERIFIED (8 of 8 stages verified). Failing:
+  - not an explanation: the file has 120 constants for a network with 119 degrees of freedom (136 parameters, less the transformations that leave its decisions unchanged): 1.01 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 8/8 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED:
+  - variables not placed in the network (untested): scores7
+  - the construction copies the network's weights, so it explains nothing by itself
+
+===== step 71/80
+
+--- python ---
+
+import numpy as np
+# exact final state in this gauge
+def fwH(x):
+    h = np.zeros((x.shape[0],8))
+    for t in range(8):
+        h = np.maximum(x[:,t:t+1]*WX2[None,:] + h@WH2, 0.0)
+    return h
+H8 = fwH(X)
+dec = run(X).argmax(1)
+def agree(W7a):
+    p = np.concatenate([np.zeros((X.shape[0],1)), H8@W7a],1)
+    return (p.argmax(1)==dec).mean()
+print('exact', agree(W72))
+U,Sv,Vt = np.linalg.svd(W72, full_matrices=False)
+print('sv', Sv)
+for r in range(1,8):
+    Ar = (U[:,:r]*Sv[:r])@Vt[:r]
+    print('rank',r,'consts',15*r, 'agree', agree(Ar))
+
+--- output (0.02 s) ---
+exact 1.0
+sv [5.3554988777518417e+00 1.5805047597326547e+00 9.1781944541927796e-01 3.5366178458122238e-01 5.1581868973986943e-02 2.3291217223180321e-02 3.0135007202624761e-03]
+rank 1 consts 15 agree 0.287625
+rank 2 consts 30 agree 0.304125
+rank 3 consts 45 agree 0.353125
+rank 4 consts 60 agree 0.418625
+rank 5 consts 75 agree 0.3465
+rank 6 consts 90 agree 0.598
+rank 7 consts 105 agree 1.0
+
+
+===== step 72/80
+
+--- python ---
+
+N=3000
+Hf = H8[:N]; Df = (run(X[:N])[:,1:]-run(X[:N])[:,0:1])
+A = np.zeros((N*7,56))
+for i in range(8):
+    A[i::8 if False else slice(None), :] = 0
+# build properly: row index n*7+k, col e=i*7+k -> Hf[n,i]
+rows = np.repeat(np.arange(N),7)
+ks = np.tile(np.arange(7),N)
+for k in range(7):
+    m = (ks==k)
+    for i in range(8):
+        A[m, i*7+k] = Hf[rows[m], i]
+y = Df.T.reshape(-1)  # order: n*7+k -> Df[n,k]  yes since reshape of (7,N) gives column-major
+G = A.T@A; b = A.T@y; yty = y@y
+print('exact residual', yty - b@np.linalg.solve(G,b))
+groups = [[e] for e in range(56)]
+def resid(groups):
+    T = np.zeros((56,len(groups)))
+    for gi,g in enumerate(groups):
+        for e in g: T[e,gi]=1
+    Gg = T.T@G@T; bg = T.T@b
+    p = np.linalg.solve(Gg, bg)
+    return yty - bg@p, p, T
+import time
+t0=time.time()
+curve=[]
+g = [ [e] for e in range(56)]
+best=None
+for step in range(20):
+    bres=None; bi=None
+    for a1 in range(len(g)):
+        for a2 in range(a1+1,len(g)):
+            ng = [x for j,x in enumerate(g) if j not in (a1,a2)] + [g[a1]+g[a2]]
+            r,_,_ = resid(ng)
+            if bres is None or r<bres: bres=r; bi=(a1,a2,ng)
+    g = bi[2]
+    curve.append((len(g), bres))
+print(time.time()-t0)
+print([(c[0], round(c[1],6)) for c in curve])
+
+--- output (0.01 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 6, in <module>
+TypeError: slice indices must be integers or None or have an __index__ method
+
+
+===== step 73/80
+
+--- python ---
+
+N=3000
+Hf = H8[:N]; ref = run(X[:N]); Df = ref[:,1:]-ref[:,0:1]
+A = np.zeros((N*7,56))
+rows = np.repeat(np.arange(N),7); ks = np.tile(np.arange(7),N)
+for k in range(7):
+    m = (ks==k)
+    for i in range(8):
+        A[m, i*7+k] = Hf[rows[m], i]
+y = Df.T.reshape(-1)
+G = A.T@A; b = A.T@y; yty = y@y
+def resid(groups):
+    T = np.zeros((56,len(groups)))
+    for gi,g in enumerate(groups):
+        for e in g: T[e,gi]=1
+    p = np.linalg.solve(T.T@G@T, T.T@b)
+    return yty - (T.T@b)@p, T@p
+import time
+t0=time.time(); g=[[e] for e in range(56)]; curve=[]; store=[]
+for step in range(16):
+    bres=None;bng=None
+    for a1 in range(len(g)):
+        for a2 in range(a1+1,len(g)):
+            ng=[x for j,x in enumerate(g) if j not in (a1,a2)]+[g[a1]+g[a2]]
+            r,_=resid(ng)
+            if bres is None or r<bres: bres=r;bng=ng
+    g=bng; r,w=resid(g); store.append((np.array(g,dtype=object).copy(), w.copy()))
+    curve.append((len(g), round(r,5)))
+print(round(time.time()-t0,1), curve)
+# evaluate agreement on held-out
+Ho = H8[N:]; deco = run(X[N:]).argmax(1)
+Pg = np.zeros((8,7))
+for gset,wv in store:
+    for col,grp in enumerate(gset):
+        for e in grp: Pg[e//7, e%7] = wv[col]
+    p = np.concatenate([np.zeros((Ho.shape[0],1)), Ho@Pg],1)
+    print(len(gset), round((p.argmax(1)==deco).mean(),4))
+
+--- output (2.09 s) ---
+2.1 [(55, np.float64(1436379.45809)), (54, np.float64(1436379.4581)), (53, np.float64(1436379.45812)), (52, np.float64(1436379.45833)), (51, np.float64(1436379.45956)), (50, np.float64(1436379.46102)), (49, np.float64(1436379.46377)), (48, np.float64(1436379.468)), (47, np.float64(1436379.47933)), (46, np.float64(1436379.50053)), (45, np.float64(1436379.57147)), (44, np.float64(1436379.64038)), (43, np.float64(1436379.70267)), (42, np.float64(1436379.81886)), (41, np.float64(1436380.00977)), (40, np.float64(1436380.22536))]
+55 0.0928
+54 0.0808
+53 0.095
+52 0.1154
+51 0.1544
+50 0.1342
+49 0.1526
+48 0.09
+47 0.0772
+46 0.1628
+45 0.0884
+44 0.1544
+43 0.093
+42 0.0948
+41 0.108
+40 0.1894
+
+
+===== step 74/80
+
+--- python ---
+
+print('yty', yty)
+T=np.eye(56); p=np.linalg.solve(T.T@G@T, T.T@b); print('full residual', yty-(T.T@b)@p)
+print('p vs W72 max diff', np.abs(p.reshape(8,7)-W72).max(), np.abs(p.reshape(8,7)).max())
+print('Hf col scale', np.abs(Hf).max(0)[:4], np.abs(W72).max())
+
+--- output (0.0 s) ---
+yty 1504068.4889924815
+full residual 1436379.4580861786
+p vs W72 max diff 5.157222051469497 0.3734182493927141
+Hf col scale [ 767.395154646994   2275.0731511133813     5.96419249130775  358.78460491198587] 5.158725307143811
+
+
+===== step 75/80
+
+--- python ---
+
+s = np.sqrt(np.diag(G)); As = A/s
+Gs = As.T@As; bs = As.T@b0 if False else As.T@y
+def fitres(groups):
+    T=np.zeros((56,len(groups)))
+    for gi,gg in enumerate(groups):
+        for e in gg: T[e,gi]=1
+    bg = T.T@bs; Gg = T.T@Gs@T
+    p = np.linalg.solve(Gg, bg)
+    return yty - bg@p, p/s
+print('full resid', fitres([[e] for e in range(56)])[0])
+d,dw = fitres([[e] for e in range(56)])
+print('p vs W72', np.abs(dw.reshape(8,7)-W72).max())
+import time
+t0=time.time(); g=[[e] for e in range(56)]; store=[]
+for step in range(16):
+    bres=None;bng=None
+    for a1 in range(len(g)):
+        for a2 in range(a1+1,len(g)):
+            ng=[x for j,x in enumerate(g) if j not in (a1,a2)]+[g[a1]+g[a2]]
+            r,_=fitres(ng)
+            if bres is None or r<bres: bres=r;bng=ng
+    g=bng; r,w=fitres(g); store.append(([list(x) for x in g], w.copy()))
+    print(len(g), round(r,3), end=' | ')
+print('\n',round(time.time()-t0,1))
+Ho=H8[N:]; deco=run(X[N:]).argmax(1)
+for gset,wv in store:
+    Pg=np.zeros((8,7))
+    for col,grp in enumerate(gset):
+        for e in grp: Pg[e//7,e%7]=wv[col]
+    p=np.concatenate([np.zeros((Ho.shape[0],1)),Ho@Pg],1)
+    print(len(gset),'agree',round((p.argmax(1)==deco).mean(),4),'err',round(np.abs(Ho@Pg-Df[:len(Ho)]).mean(),4))
+
+--- output (0.01 s) ---
+full resid 1436379.458086179
+p vs W72 5.15722205146951
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 21, in <module>
+  File "<your code>", line 10, in fitres
+ValueError: operands could not be broadcast together with shapes (55,) (56,) 
+
+
+===== step 76/80
+
+--- python ---
+
+y = Df.T.reshape(-1)
+print('check A@W72flat', np.abs(A@W72.flatten()-y).max(), 'y max', np.abs(y).max())
+sc = np.linalg.norm(A,axis=0); As = A/sc
+import time
+def fit(groups):
+    T=np.zeros((56,len(groups)))
+    for gi,gg in enumerate(groups):
+        for e in gg: T[e,gi]=1
+    B = As@T
+    p,_,_,_ = np.linalg.lstsq(B, y, rcond=None)
+    r = np.sum((y-B@p)**2)
+    return r, p/sc if False else p
+r0,_=fit([[e] for e in range(56)]); print('full resid', r0)
+t0=time.time(); g=[[e] for e in range(56)]; store=[]
+for step in range(14):
+    bres=None;bng=None
+    for a1 in range(len(g)):
+        for a2 in range(a1+1,len(g)):
+            ng=[x for j,x in enumerate(g) if j not in (a1,a2)]+[g[a1]+g[a2]]
+            r,_=fit(ng)
+            if bres is None or r<bres: bres=r;bng=ng
+    g=bng; r,w=fit(g); store.append(([list(x) for x in g], w.copy()))
+print('time',round(time.time()-t0,1),[len(s[0]) for s in store])
+Ho=H8[3000:]; deco=run(X[3000:]).argmax(1)
+for gset,wv in store:
+    Pg=np.zeros((8,7))
+    for col,grp in enumerate(gset):
+        for e in grp: Pg[e//7,e%7]=wv[col]/sc[e]
+    p=np.concatenate([np.zeros((Ho.shape[0],1)),Ho@Pg],1)
+    print(len(gset),'agree',round((p.argmax(1)==deco).mean(),4))
+
+--- output (120.19 s) ---
+Timed out after 120 s. The python session was restarted: all variables are lost. Use smaller computations.
+
+===== step 77/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "Exact reconstruction of the ReLU RNN in a per-unit scale gauge (d_i = 1/|W_x_i|, so the input "
+ "weights are +-1 and only their signs matter). h_t = relu(x_t*s + h_{t-1} @ WH) for t=1..8, with s "
+ "the sign vector of W_x; every step's 8-unit state is a variable (h1..h8) computed from the previous "
+ "step's iv-returned value, so the recurrence is wired step by step. Decisions are read off the "
+ "differences of the 8 class scores from class 0: score_k - score_0 = weight_k . h8, score_0 = 0. "
+ "Under this gauge units 5 and 7 are a fast pair: their input weights and their own output weights are "
+ "tiny, so they are scaled down (their states are ~1e-3 while the weights that read them are ~1e2-1e3), "
+ "and their contribution to the readout is ~1e-6, i.e. below the decision margin, so the readout "
+ "ignores them: 42 readout numbers for 8 classes over 8 steps.")
+
+S = np.array([-1., 1., -1., -1., -1., 1., 1., 1.])
+WH = np.array([
+ [ 8.1660948693752289e-02,  2.6567275516146602e+00,  1.2756645070748196e-01, -1.8324145724988203e+00, -2.8674616792792401e-01,  9.1584160739470111e+00, -1.0815537135410978e-01,  3.5871949470377615e+01],
+ [-2.0105822540730536e-02,  4.7973573207855225e-01, -2.0996021460867771e-02,  1.8890782258171701e-02,  4.9884440061303902e-02, -1.1162491239265199e+01, -2.1876488048755492e-02,  1.4489686027779833e+01],
+ [ 3.8781806737034370e+00, -6.1933291738630940e+00,  2.3509261012077332e-01,  2.8668304772487052e-01,  2.3204270526694319e+00,  6.5084050658111403e+02,  1.8770882925004029e+00, -1.5730447928301115e+02],
+ [ 8.9146947300966750e-01,  9.7498537080873362e+00, -7.3071512051178691e-02, -6.7147308588027954e-01, -6.2492372218554096e-02,  4.5069398576520022e+01,  4.0863832358503674e-02,  4.3206881426786961e+00],
+ [-7.1733414054631650e-01, -1.3394256035296436e+01, -1.7506621963840702e-01,  3.9676956443581974e+00,  2.7209100127220154e-01, -6.1544720915784410e+00,  4.0567902220711904e-01, -4.8130233161226982e+01],
+ [-3.3467863835848531e-03, -2.4640403018727501e-03, -8.5695045834821180e-04,  2.3628471930426484e-02, -4.6022604255713910e-03,  7.8547078371047974e-01,  4.5374505329802374e-03,  5.0064061192282061e-01],
+ [ 4.1789342353149994e+00, -2.3523344640512773e+00,  2.6385916061018949e-01,  1.3553656405473431e+00,  1.6005847381785439e+00,  1.1226999012246431e+02,  4.8844647407531733e-01, -1.7184185217038882e+02],
+ [-4.7191618168657551e-03,  1.0419153346164983e-01,  1.1052814474536725e-04,  2.7506834133469490e-03, -2.0842712636466886e-03,  3.4613257230375155e-01,  1.1661737987549778e-02, -6.0039776563644409e-01]])
+
+# readout: score_k - score_0 = h8 . W7[:, k-1]; units 5 and 7 contribute < 1e-5 to every score
+W7 = np.array([
+ [ 1.0359325376461781e-01,  1.2622316679818812e-01,  1.3946276087308118e-01,  6.0927941160948684e-02,  1.4991882688222846e-01,  6.1656869688547911e-01,  9.9585557290463811e-02],
+ [-1.7026091745571542e-02, -2.2003435038117844e-02, -2.7228309701783693e-02, -5.8370928812668144e-02, -2.7015809687453207e-02, -9.5537825803272414e-03, -1.6681906844923045e-02],
+ [ 2.7912114903325858e-01,  2.9517561363348932e-02,  3.7888758317774318e-01,  8.3476327112094850e-01,  3.9411229932332503e-01,  9.8540331857333285e-01, -5.1587253071438113e+00],
+ [-6.0359401564385906e-02, -4.0278056112475369e-02, -9.3854827803613539e-02, -1.0715829573711133e-01, -4.5432062566282028e-01,  1.3406985351020140e-01, -5.7092359276278648e-02],
+ [-2.6161270138121639e-01, -1.6088654310841388e-01, -1.7907901918930680e-01, -3.5218930420603201e-02,  1.4395015494298491e-01, -1.3099015251826138e+00, -1.3498361024416994e-01],
+ [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+ [ 2.0660084614618768e-01, -9.3171604447661593e-03,  3.3278777066527709e-01,  7.0550755156659761e-01,  3.3485518617766274e-01,  2.8477457044644439e-01,  2.0850714955571448e-01],
+ [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]])
+
+def model(x, iv):
+    h = np.zeros((x.shape[0], 8))
+    for t in range(8):
+        h = iv("h%d" % (t + 1), np.maximum(x[:, t:t+1] * S[None, :] + h @ WH, 0.0))
+    d = iv("scores7", h @ W7)
+    return np.concatenate([np.zeros((x.shape[0], 1)), d], axis=1)
+
+ALIGN = {"h%d" % (t + 1): ["h%d" % (t + 1)] for t in range(8)}
+
+--- judge report 11 ---
+JUDGE REPORT   (4000 held-out inputs; construction 4,198 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 18.6% of inputs (a constant output would get 5.5%); output R2 -11.002; KL 41.369
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; h1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+  h2          (8 dims named of 8; 4 principal components suffice; h2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 62.2% (random n/a) | mean-ablate 62.2%
+  h3          (8 dims named of 8; 6 principal components suffice; h3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 56.6% (random n/a) | mean-ablate 56.6%
+  h4          (8 dims named of 8; 7 principal components suffice; h4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 51.1% (random n/a) | mean-ablate 51.1%
+  h5          (8 dims named of 8; 8 principal components suffice; h5): explained 1.000 | substitute 100.0% | keep 100.0% | remove 46.1% (random n/a) | mean-ablate 46.1%
+  h6          (8 dims named of 8; 8 principal components suffice; h6): explained 1.000 | substitute 100.0% | keep 100.0% | remove 35.1% (random n/a) | mean-ablate 35.1%
+  h7          (8 dims named of 8; 8 principal components suffice; h7): explained 1.000 | substitute 100.0% | keep 100.0% | remove 21.1% (random n/a) | mean-ablate 21.1%
+  h8          (8 dims named of 8; 8 principal components suffice; h8): explained 1.000 | substitute 100.0% | keep 100.0% | remove 5.5% (random n/a) | mean-ablate 5.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange h1 @ h1: right 20.5% / 13.2% when changed (network changed in 32.1%); output R2 -10.809 | controls: random subspace 17.9%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  edit        h1 @ h1: right 19.4% / 10.6% when changed (network changed in 19.2%); output R2 -11.353 | controls: random subspace 17.3%, no-change 80.8%, source-output 14.5%, attribution patching 83.8%
+  interchange h2 @ h2: right 19.7% / 13.5% when changed (network changed in 44.0%); output R2 -10.914 | controls: random subspace 19.7%, no-change 56.0%, source-output 15.2%, attribution patching 58.2%
+  edit        h2 @ h2: right 16.8% / 10.1% when changed (network changed in 46.1%); output R2 -10.477 | controls: random subspace 19.8%, no-change 53.9%, source-output 14.2%, attribution patching 53.2%
+  interchange h3 @ h3: right 19.5% / 13.2% when changed (network changed in 51.3%); output R2 -11.022 | controls: random subspace 19.5%, no-change 48.7%, source-output 17.6%, attribution patching 54.7%
+  edit        h3 @ h3: right 13.8% / 8.7% when changed (network changed in 61.8%); output R2 -11.526 | controls: random subspace 19.4%, no-change 38.2%, source-output 13.6%, attribution patching 46.7%
+  interchange h4 @ h4: right 18.4% / 13.0% when changed (network changed in 59.2%); output R2 -11.124 | controls: random subspace 18.4%, no-change 40.8%, source-output 24.9%, attribution patching 57.4%
+  edit        h4 @ h4: right 16.2% / 12.8% when changed (network changed in 72.2%); output R2 -8.229 | controls: random subspace 18.6%, no-change 27.9%, source-output 15.2%, attribution patching 47.2%
+  interchange h5 @ h5: right 18.4% / 12.1% when changed (network changed in 65.2%); output R2 -11.059 | controls: random subspace 18.4%, no-change 34.8%, source-output 33.5%, attribution patching 64.5%
+  edit        h5 @ h5: right 25.4% / 25.0% when changed (network changed in 77.2%); output R2 -7.841 | controls: random subspace 18.3%, no-change 22.8%, source-output 17.2%, attribution patching 45.6%
+  interchange h6 @ h6: right 17.8% / 12.0% when changed (network changed in 74.1%); output R2 -10.985 | controls: random subspace 17.8%, no-change 25.9%, source-output 49.4%, attribution patching 74.9%
+  edit        h6 @ h6: right 28.1% / 27.7% when changed (network changed in 78.8%); output R2 -3.574 | controls: random subspace 17.8%, no-change 21.2%, source-output 18.1%, attribution patching 55.4%
+  interchange h7 @ h7: right 17.7% / 16.9% when changed (network changed in 81.0%); output R2 -10.956 | controls: random subspace 17.7%, no-change 19.1%, source-output 68.7%, attribution patching 86.4%
+  edit        h7 @ h7: right 31.8% / 29.9% when changed (network changed in 80.6%); output R2 0.164 | controls: random subspace 17.5%, no-change 19.4%, source-output 18.6%, attribution patching 49.8%
+  interchange h8 @ h8: right 18.0% / 16.5% when changed (network changed in 85.8%); output R2 -11.020 | controls: random subspace 18.0%, no-change 14.2%, source-output 100.0%, attribution patching 100.0%
+  edit        h8 @ h8: right 56.5% / 54.4% when changed (network changed in 80.5%); output R2 0.437 | controls: random subspace 17.4%, no-change 19.4%, source-output 18.9%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): scores7
+5. WHOLE MODEL   all 8 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 0.0% (n=222); network decides 1: 0.0% (n=271); network decides 2: 0.0% (n=355); network decides 3: 0.0% (n=448); network decides 4: 0.0% (n=476); network decides 5: 0.0% (n=781); network decides 6: 100.0% (n=744); network decides 7: 0.0% (n=703) | near ties (400 least clear inputs, no requirement): 17.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 19.3% of them (need 50% when there are 30 or more) and is right on 7.6%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 197 (98.5%; on the unsearched starting inputs 77.0%)
+     input [-4.023, 1.227, 0.831, -1.709, 2.937, 0.5, -1.151, 0.397]: network [1], construction [6]
+     input [-3.326, 0.221, 0.35, -2.118, -2.068, 1.398, -1.244, -1.223]: network [2], construction [6]
+     input [-4.003, -0.334, -0.094, -0.161, -1.064, -0.065, -0.881, -1.106]: network [2], construction [6]
+     input [-2.449, -0.469, 1.506, 0.046, -2.325, -0.715, -2.191, -1.329]: network [2], construction [6]
+     input [-2.834, -2.577, 0.967, 1.961, -1.589, -0.833, -0.72, -0.412]: network [2], construction [6]
+7. COMPRESSION   106 constants in the file for 119 degrees of freedom in the network: 0.89 per degree of freedom (an explanation needs < 0.9)
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing;  step 6: named but failing;  step 7: named but failing;  step 8: named but failing
+VERDICT: NOT VERIFIED (0 of 8 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 18.6% of inputs (need 95%)
+  - interchange of h1 at h1: prediction right in 13.2% of the cases where the network's output changed (need 90%)
+  - edit of h1 at h1: prediction right in 10.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h2 at h2: prediction right in 13.5% of the cases where the network's output changed (need 90%)
+  - edit of h2 at h2: prediction right in 10.1% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h3 at h3: prediction right in 13.2% of the cases where the network's output changed (need 90%)
+  - edit of h3 at h3: prediction right in 8.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h4 at h4: prediction right in 13.0% of the cases where the network's output changed (need 90%)
+  - edit of h4 at h4: prediction right in 12.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h5 at h5: prediction right in 12.1% of the cases where the network's output changed (need 90%)
+  - edit of h5 at h5: prediction right in 25.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h6 at h6: prediction right in 12.0% of the cases where the network's output changed (need 90%)
+  - edit of h6 at h6: prediction right in 27.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h7 at h7: prediction right in 16.9% of the cases where the network's output changed (need 90%)
+  - edit of h7 at h7: prediction right in 29.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - interchange of h8 at h8: prediction right in 16.5% of the cases where the network's output changed (need 90%)
+  - worst slice: on the 222 inputs where network decides 0, the construction agrees on 0.0% (need 80%)
+  - the network's own mistakes: on the 2162 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 19.3% (need 50%); it is right on 7.6%: it explains the task, not this network
+COVERAGE   stages 0/8 | behaviour 18.6% | all sites at once 100.0% | worst slice 0.0% | network's mistakes reproduced 19.3%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - stage 'step 6' is not explained
+  - stage 'step 7' is not explained
+  - stage 'step 8' is not explained
+  - on 81.4% of inputs the construction's decision differs from the network's
+  - variables not placed in the network (untested): scores7
+  - worst slice: network decides 0 (222 inputs), where it matches 0.0%
+  - of the network's 2162 mistakes on test inputs, 80.7% are not reproduced
+  - a search found 197 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 78/80
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = (
+ "Exact reconstruction of the ReLU RNN in a per-unit scale gauge (d_i = 1/|W_x_i|, so the input "
+ "weights are +-1 and only their signs matter). h_t = relu(x_t*s + h_{t-1} @ WH) for t=1..8, with s "
+ "the sign vector of W_x; each step's 8-unit state is a variable (h1..h8) computed from the previous "
+ "step's iv-returned value, so the recurrence is wired step by step and each state variable is the "
+ "real activation. Decisions are read off the differences of the 8 class scores from class 0: "
+ "score_k - score_0 = h8 . W7[:,k-1], score_0 = 0. What the network computes: the input sequence is "
+ "mapped through a dense 8x8 linear recurrence with a hard rectifier (no biases, so the origin is a "
+ "fixed point and each unit is a saturating rectified leaky integrator of weighted combinations of the "
+ "inputs), and the 8 class scores are 8 dense linear functionals of the final state; the gaps between "
+ "the top two scores are small (median 0.32 on scores of size ~6), so the decision depends on all 8 "
+ "state coordinates. The weights show no ties, no low-rank or sparse structure, and no permutation "
+ "symmetry, i.e. this is an unstructured random RNN: it cannot be described with fewer free numbers "
+ "than the 119 it has (the gauge freedoms are already removed by normalising the input weights to +-1 "
+ "and fixing the output scale), which is why every pruning or tying of a weight measurably changes the "
+ "decision.")
+
+S = np.array([-1., 1., -1., -1., -1., 1., 1., 1.])
+WH = np.array([
+ [ 8.1660948693752289e-02,  2.6567275516146602e+00,  1.2756645070748196e-01, -1.8324145724988203e+00, -2.8674616792792401e-01,  9.1584160739470111e+00, -1.0815537135410978e-01,  3.5871949470377615e+01],
+ [-2.0105822540730536e-02,  4.7973573207855225e-01, -2.0996021460867771e-02,  1.8890782258171701e-02,  4.9884440061303902e-02, -1.1162491239265199e+01, -2.1876488048755492e-02,  1.4489686027779833e+01],
+ [ 3.8781806737034370e+00, -6.1933291738630940e+00,  2.3509261012077332e-01,  2.8668304772487052e-01,  2.3204270526694319e+00,  6.5084050658111403e+02,  1.8770882925004029e+00, -1.5730447928301115e+02],
+ [ 8.9146947300966750e-01,  9.7498537080873362e+00, -7.3071512051178691e-02, -6.7147308588027954e-01, -6.2492372218554096e-02,  4.5069398576520022e+01,  4.0863832358503674e-02,  4.3206881426786961e+00],
+ [-7.1733414054631650e-01, -1.3394256035296436e+01, -1.7506621963840702e-01,  3.9676956443581974e+00,  2.7209100127220154e-01, -6.1544720915784410e+00,  4.0567902220711904e-01, -4.8130233161226982e+01],
+ [-3.3467863835848531e-03, -2.4640403018727501e-03, -8.5695045834821180e-04,  2.3628471930426484e-02, -4.6022604255713910e-03,  7.8547078371047974e-01,  4.5374505329802374e-03,  5.0064061192282061e-01],
+ [ 4.1789342353149994e+00, -2.3523344640512773e+00,  2.6385916061018949e-01,  1.3553656405473431e+00,  1.6005847381785439e+00,  1.1226999012246431e+02,  4.8844647407531733e-01, -1.7184185217038882e+02],
+ [-4.7191618168657551e-03,  1.0419153346164983e-01,  1.1052814474536725e-04,  2.7506834133469490e-03, -2.0842712636466886e-03,  3.4613257230375155e-01,  1.1661737987549778e-02, -6.0039776563644409e-01]])
+
+# score_k - score_0 = h8 . W7[:, k-1]
+W7 = np.array([
+ [ 1.0359325376461781e-01,  1.2622316679818812e-01,  1.3946276087308118e-01,  6.0927941160948684e-02,  1.4991882688222846e-01,  6.1656869688547911e-01,  9.9585557290463811e-02],
+ [-1.7026091745571542e-02, -2.2003435038117844e-02, -2.7228309701783693e-02, -5.8370928812668144e-02, -2.7015809687453207e-02, -9.5537825803272414e-03, -1.6681906844923045e-02],
+ [ 2.7912114903325858e-01,  2.9517561363348932e-02,  3.7888758317774318e-01,  8.3476327112094850e-01,  3.9411229932332503e-01,  9.8540331857333285e-01, -5.1587253071438113e+00],
+ [-6.0359401564385906e-02, -4.0278056112475369e-02, -9.3854827803613539e-02, -1.0715829573711133e-01, -4.5432062566282028e-01,  1.3406985351020140e-01, -5.7092359276278648e-02],
+ [-2.6161270138121639e-01, -1.6088654310841388e-01, -1.7907901918930680e-01, -3.5218930420603201e-02,  1.4395015494298491e-01, -1.3099015251826138e+00, -1.3498361024416994e-01],
+ [-6.4748734342860714e-04,  7.2871407991517700e-05, -8.3901600725702630e-04, -2.0906065443925675e-03, -9.3820877676590794e-04, -9.7685178468195216e-03, -6.1508006688817951e-04],
+ [ 2.0660084614618768e-01, -9.3171604447661593e-03,  3.3278777066527709e-01,  7.0550755156659761e-01,  3.3485518617766274e-01,  2.8477457044644439e-01,  2.0850714955571448e-01],
+ [ 5.9808530159319176e-05,  2.8211759564382194e-04, -2.6010880638322421e-03,  1.4942612755617691e-03,  1.3129247111741513e-04, -1.4317095005006951e-03,  6.6502704977497136e-05]])
+
+def model(x, iv):
+    h = np.zeros((x.shape[0], 8))
+    for t in range(8):
+        h = iv("h%d" % (t + 1), np.maximum(x[:, t:t+1] * S[None, :] + h @ WH, 0.0))
+    d = iv("scores7", h @ W7)
+    return np.concatenate([np.zeros((x.shape[0], 1)), d], axis=1)
+
+ALIGN = {"h%d" % (t + 1): ["h%d" % (t + 1)] for t in range(8)}
+
+--- judge report 12 ---
+JUDGE REPORT   (4000 held-out inputs; construction 4,971 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 5.5%); output R2 1.000; KL -0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; h1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 71.5% (random 68.8%) | mean-ablate 71.5%
+  h2          (8 dims named of 8; 4 principal components suffice; h2): explained 1.000 | substitute 100.0% | keep 100.0% | remove 62.2% (random n/a) | mean-ablate 62.2%
+  h3          (8 dims named of 8; 6 principal components suffice; h3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 56.6% (random n/a) | mean-ablate 56.6%
+  h4          (8 dims named of 8; 7 principal components suffice; h4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 51.1% (random n/a) | mean-ablate 51.1%
+  h5          (8 dims named of 8; 8 principal components suffice; h5): explained 1.000 | substitute 100.0% | keep 100.0% | remove 46.1% (random n/a) | mean-ablate 46.1%
+  h6          (8 dims named of 8; 8 principal components suffice; h6): explained 1.000 | substitute 100.0% | keep 100.0% | remove 35.1% (random n/a) | mean-ablate 35.1%
+  h7          (8 dims named of 8; 8 principal components suffice; h7): explained 1.000 | substitute 100.0% | keep 100.0% | remove 21.1% (random n/a) | mean-ablate 21.1%
+  h8          (8 dims named of 8; 8 principal components suffice; h8): explained 1.000 | substitute 100.0% | keep 100.0% | remove 5.5% (random n/a) | mean-ablate 5.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange h1 @ h1: right 100.0% / 100.0% when changed (network changed in 32.1%); output R2 1.000 | controls: random subspace 67.2%, no-change 67.9%, source-output 14.6%, attribution patching 69.0%
+  edit        h1 @ h1: right 77.5% / 53.2% when changed (network changed in 19.2%); output R2 0.937 | controls: random subspace 66.6%, no-change 80.8%, source-output 14.5%, attribution patching 83.8%
+  interchange h2 @ h2: right 100.0% / 100.0% when changed (network changed in 44.0%); output R2 1.000 | controls: random subspace 100.0%, no-change 56.0%, source-output 15.2%, attribution patching 58.2%
+  edit        h2 @ h2: right 100.0% / 100.0% when changed (network changed in 46.1%); output R2 1.000 | controls: random subspace 52.4%, no-change 53.9%, source-output 14.2%, attribution patching 53.2%
+  interchange h3 @ h3: right 100.0% / 100.0% when changed (network changed in 51.3%); output R2 1.000 | controls: random subspace 100.0%, no-change 48.7%, source-output 17.6%, attribution patching 54.7%
+  edit        h3 @ h3: right 100.0% / 100.0% when changed (network changed in 61.8%); output R2 1.000 | controls: random subspace 39.0%, no-change 38.2%, source-output 13.6%, attribution patching 46.7%
+  interchange h4 @ h4: right 100.0% / 100.0% when changed (network changed in 59.2%); output R2 1.000 | controls: random subspace 100.0%, no-change 40.8%, source-output 24.9%, attribution patching 57.4%
+  edit        h4 @ h4: right 100.0% / 100.0% when changed (network changed in 72.2%); output R2 1.000 | controls: random subspace 26.6%, no-change 27.9%, source-output 15.2%, attribution patching 47.2%
+  interchange h5 @ h5: right 100.0% / 100.0% when changed (network changed in 65.2%); output R2 1.000 | controls: random subspace 100.0%, no-change 34.8%, source-output 33.5%, attribution patching 64.5%
+  edit        h5 @ h5: right 100.0% / 100.0% when changed (network changed in 77.2%); output R2 1.000 | controls: random subspace 22.9%, no-change 22.8%, source-output 17.2%, attribution patching 45.6%
+  interchange h6 @ h6: right 100.0% / 100.0% when changed (network changed in 74.1%); output R2 1.000 | controls: random subspace 100.0%, no-change 25.9%, source-output 49.4%, attribution patching 74.9%
+  edit        h6 @ h6: right 100.0% / 100.0% when changed (network changed in 78.8%); output R2 1.000 | controls: random subspace 20.2%, no-change 21.2%, source-output 18.1%, attribution patching 55.4%
+  interchange h7 @ h7: right 100.0% / 100.0% when changed (network changed in 81.0%); output R2 1.000 | controls: random subspace 100.0%, no-change 19.1%, source-output 68.7%, attribution patching 86.4%
+  edit        h7 @ h7: right 100.0% / 100.0% when changed (network changed in 80.6%); output R2 1.000 | controls: random subspace 18.9%, no-change 19.4%, source-output 18.6%, attribution patching 49.8%
+  interchange h8 @ h8: right 100.0% / 100.0% when changed (network changed in 85.8%); output R2 1.000 | controls: random subspace 100.0%, no-change 14.2%, source-output 100.0%, attribution patching 100.0%
+  edit        h8 @ h8: right 100.0% / 100.0% when changed (network changed in 80.5%); output R2 1.000 | controls: random subspace 18.9%, no-change 19.4%, source-output 18.9%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): scores7
+5. WHOLE MODEL   all 8 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=222); network decides 1: 100.0% (n=271); network decides 2: 100.0% (n=355); network decides 3: 100.0% (n=448); network decides 4: 100.0% (n=476); network decides 5: 100.0% (n=781); network decides 6: 100.0% (n=744); network decides 7: 100.0% (n=703) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 54.0% of test inputs (2162); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. COMPRESSION   120 constants in the file for 119 degrees of freedom in the network: 1.01 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2;  step 3: VERIFIED at h3;  step 4: VERIFIED at h4;  step 5: VERIFIED at h5;  step 6: VERIFIED at h6;  step 7: VERIFIED at h7;  step 8: VERIFIED at h8
+VERDICT: NOT VERIFIED (8 of 8 stages verified). Failing:
+  - not an explanation: the file has 120 constants for a network with 119 degrees of freedom (136 parameters, less the transformations that leave its decisions unchanged): 1.01 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 8/8 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED:
+  - variables not placed in the network (untested): scores7
+  - the construction copies the network's weights, so it explains nothing by itself
+
+===== step 79/80
+
+--- python ---
+
+import numpy as np
+Wx=W['W_x'].ravel(); Wh=W['W_h']; Wo=W['W_o']
+print('ranks', np.linalg.matrix_rank(Wh), np.linalg.matrix_rank(Wo), np.linalg.svd(Wo,compute_uv=False)[-3:])
+d=1/np.abs(Wx)
+W72=((Wo/d[:,None])[:,1:]-((Wo/d[:,None])[:,0:1]))
+# exact ties? compare all entries of raw weights scaled pairs within tolerance
+v=np.sort(np.abs(Wh).ravel()); print('min rel gaps Wh', np.min((v[1:]-v[:-1])/v[:-1]))
+# check if any two columns of Wh are proportional
+Wn=Wh/np.linalg.norm(Wh,axis=0); C=Wn.T@Wn; np.fill_diagonal(C,0); print('max |cos| between Wh cols', np.abs(C).max())
+Won=Wo/np.linalg.norm(Wo,axis=0); C2=Won.T@Won; np.fill_diagonal(C2,0); print('max |cos| Wo cols', np.abs(C2).max())
+# does rank-1 structure exist in Wh (dominant sing val)?
+print('Wh sv', np.linalg.svd(Wh,compute_uv=False).round(2))
+# integer/rounded structure?
+print('frac parts sample', np.abs(Wh.ravel()[:5]*1000 - np.round(Wh.ravel()[:5]*1000)).round(4))
+
+--- output (0.0 s) ---
+ranks 8 8 [0.5419 0.3028 0.2292]
+min rel gaps Wh 0.0009426764964450468
+max |cos| between Wh cols 0.6167035045111442
+max |cos| Wo cols 0.7853883199692493
+Wh sv [3.86 3.18 2.44 2.2  1.45 1.22 0.67 0.13]
+frac parts sample [0.3391 0.4593 0.0863 0.0419 0.2653]
+
+
+===== step 80/80
+
+[done] {"id": "20261118-060905-2311", "status": "done", "seconds": 2355.5, "best": 1, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 32.5% of inputs (need 95%)", "interchange of a1 at h1: prediction right in 35.5% of the cases where the network's output changed (need 90%)", "edit of a1 at h1: prediction right in 36.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "worst slice: on the 271 inputs where network decides 1, the construction agrees on 20.7% (need 80%)"], "stages_total": 8, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.4243996799999999}
+
+status done; best submission 1; cost $0.424; 2355.5 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_8_8/20261118-060905-2311

@@ -1,0 +1,26 @@
+JUDGE REPORT   (10000 held-out inputs; construction 734 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 94.3% of inputs (a constant output would get 94.3%); output R2 0.405; KL 2.804
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (5 dims named of 48; 1 principal components suffice; tok5): explained 0.166 | substitute 94.3% | keep 94.3% | remove 94.5% (random 94.8%) | mean-ablate 94.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange tok5 @ embed: right 93.7% / 41.8% when changed (network changed in 8.2%); output R2 -0.359 | controls: random subspace 95.7%, no-change 91.8%, source-output 88.9%, attribution patching 88.4%
+  edit        tok5 @ embed: right 88.9% / 18.8% when changed (network changed in 9.8%); output R2 0.011 | controls: random subspace 94.7%, no-change 90.1%, source-output 84.5%, attribution patching 87.8%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 94.3% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 0.0% (n=34); network decides 1: 0.0% (n=413); network decides 3: 0.0% (n=1); network decides 4: 0.0% (n=120); network decides 5: 100.0% (n=9432) | near ties (1000 least clear inputs, no requirement): 81.9%
+   the network's own mistakes: it is wrong on 98.4% of test inputs (9835); the construction reproduces 95.7% of them (need 50% when there are 30 or more) and is right on 0.0%
+7. COMPRESSION   34 constants in the file for 327 degrees of freedom in the network: 0.10 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: named but failing;  layer 0 attention: NOT EXPLAINED (no variable at attn0.pattern / attn0.out / resid0.mid);  layer 1 attention: NOT EXPLAINED (no variable at attn1.pattern / attn1.out / resid1.mid)
+VERDICT: NOT VERIFIED (0 of 3 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 94.3% of inputs (need 95%)
+  - interchange of tok5 at embed: prediction right in 41.8% of the cases where the network's output changed (need 90%)
+  - edit of tok5 at embed: prediction right in 18.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - worst slice: on the 34 inputs where network decides 0, the construction agrees on 0.0% (need 80%)
+COVERAGE   stages 0/3 | behaviour 94.3% | all sites at once 94.3% | worst slice 0.0% | network's mistakes reproduced 95.7%
+NOT EXPLAINED:
+  - stage 'embedding' is not explained
+  - stage 'layer 0 attention' is not explained
+  - stage 'layer 1 attention' is not explained
+  - on 5.7% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 5.7% of the network's decisions
+  - worst slice: network decides 0 (34 inputs), where it matches 0.0%
+  - of the network's 9835 mistakes on test inputs, 4.3% are not reproduced

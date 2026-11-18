@@ -1,0 +1,664 @@
+
+==== 2026-11-18 08:02:26 attempt 1: /content/helix_probe/lab/constructor.py lc_6_5 --told --no-weights --one-shot --quiet
+
+[start] {"id": "20261118-080226-a3ea", "target": "lc_6_5", "dir": "lab/constructions/lc_6_5/20261118-080226-a3ea"}
+
+===== step 1/80
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def comp(f,g): return tuple(f[g[i]] for i in range(5))
+def powf(f,k):
+    r=tuple(range(5))
+    for _ in range(k): r=comp(f,r)
+    return r
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s:
+                best=max(best,t); break
+    return best
+Y=[maxcycle(f) for f in funcs]
+print(len(funcs), np.bincount(Y))
+# features
+for k in range(1,6):
+    print(k, len(set((tuple(powf(f,j) for j in range(1,k+1)) for f in funcs))))
+# See if (f1,f2,f3) determines Y
+keys={}
+for f,y in zip(funcs,Y):
+    key=tuple(powf(f,j) for j in range(1,4))
+    keys.setdefault(key,set()).add(y)
+print('f1f2f3 ambiguous', sum(len(v)>1 for v in keys.values()))
+# check pairwise combos
+for ks in [(1,2),(1,3),(2,3),(1,4),(2,4),(3,4),(1,5),(2,5),(3,5),(4,5),(1,2,3),(1,2,4),(1,3,4),(2,3,4)]:
+    d={}
+    for f,y in zip(funcs,Y):
+        key=tuple(powf(f,j) for j in ks)
+        d.setdefault(key,set()).add(y)
+    print(ks, 'ambig',sum(len(v)>1 for v in d.values()))
+
+--- output (0.49 s) ---
+3125 [   0 1296 1155  500  150   24]
+1 3125
+2 3125
+3 3125
+4 3125
+5 3125
+f1f2f3 ambiguous 0
+(1, 2) ambig 0
+(1, 3) ambig 0
+(2, 3) ambig 0
+(1, 4) ambig 0
+(2, 4) ambig 191
+(3, 4) ambig 0
+(1, 5) ambig 0
+(2, 5) ambig 0
+(3, 5) ambig 0
+(4, 5) ambig 0
+(1, 2, 3) ambig 0
+(1, 2, 4) ambig 0
+(1, 3, 4) ambig 0
+(2, 3, 4) ambig 0
+
+
+===== step 2/80
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s; seen=set()
+        while x not in seen:
+            seen.add(x); x=f[x]
+        L=len(seen)-list(seen).index(x) # wrong maybe
+    # simpler
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best
+Y=[maxcycle(f) for f in funcs]
+for feats in ['pairs','f2count','fcounts','seqpair']:
+    d={}
+    for f,y in zip(funcs,Y):
+        if feats=='pairs':
+            f2=tuple(f[f[i]] for i in range(5))
+            key=tuple(sorted((f[i],f2[i]) for i in range(5)))
+        elif feats=='f2count':
+            f2=tuple(f[f[i]] for i in range(5))
+            key=(tuple(sorted(f2)),)
+        elif feats=='fcounts':
+            key=(tuple(sorted(f)),)
+        elif feats=='seqpair':
+            f2=tuple(f[f[i]] for i in range(5))
+            key=(f,f2)
+        d.setdefault(key,set()).add(y)
+    print(feats, sum(len(v)>1 for v in d.values()), 'groups',len(d))
+# try counts of categories: c(i) = (f(i)==i, f2(i)==i, f(i)==f2(i)) counts
+for spec in range(1,8):
+    d={}
+    for f,y in zip(funcs,Y):
+        f2=[f[f[i]] for i in range(5)]
+        feats=[]
+        for i in range(5):
+            feats.append((f[i]==i, f2[i]==i, f[i]==f2[i]))
+        # counts of each subset bit pattern
+        cnt=[0]*8
+        for i in range(5): cnt[sum((1<<k)*feats[i][k] for k in range(3))]+=1
+        key=tuple(cnt)
+        d.setdefault(key,set()).add(y)
+    print('cnt',spec,sum(len(v)>1 for v in d.values()))
+    break
+
+--- output (0.06 s) ---
+pairs 0 groups 2395
+f2count 121 groups 126
+fcounts 121 groups 126
+seqpair 0 groups 3125
+cnt 1 4
+
+
+===== step 3/80
+
+--- python ---
+
+import itertools, numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best
+Y=np.array([maxcycle(f) for f in funcs])
+# build count vector of (f(i),f2(i)) 25
+C=[]
+for f in funcs:
+    f2=[f[f[i]] for i in range(5)]
+    c=np.zeros(25)
+    for i in range(5): c[f[i]*5+f2[i]]+=1
+    C.append(c)
+C=np.array(C)
+for model in [LogisticRegression(max_iter=10000,C=1e6), LinearSVC(max_iter=100000,C=1e6)]:
+    model.fit(C,Y)
+    pred=model.predict(C)
+    print(type(model).__name__, (pred==Y).mean(), 'coef shape',model.coef_.shape)
+# Maybe include position? counts by position, pair, i -> 125 dims
+
+--- output (0.81 s) ---
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 285, in <module>
+    set_scputimes_ntuple("/proc")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 432, in wrapper
+    raise raise_from(err, None)
+          ~~~~~~~~~~^^^^^^^^^^^
+  File "<string>", line 3, in raise_from
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 430, in wrapper
+    ret = cache[key] = fun(*args, **kwargs)
+                       ~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 268, in set_scputimes_ntuple
+    with open_binary('%s/stat' % procfs_path) as f:
+         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 765, in open_binary
+    return open(fname, "rb", buffering=FILE_READ_BUFFER_SIZE)
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 3, in <module>
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/__init__.py", line 73, in <module>
+    from .base import clone  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/base.py", line 19, in <module>
+    from .utils._estimator_html_repr import _HTMLDocumentationLinkMixin, estimator_html_repr
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from ._chunking import gen_batches, gen_even_slices
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_chunking.py", line 11, in <module>
+    from ._param_validation import Interval, validate_params
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_param_validation.py", line 17, in <module>
+    from .validation import _is_arraylike_not_scalar
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 21, in <module>
+    from ..utils._array_api import _asarray_with_order, _is_numpy_namespace, get_namespace
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_array_api.py", line 17, in <module>
+    from .fixes import parse_version
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/fixes.py", line 20, in <module>
+    import pandas as pd
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/__init__.py", line 49, in <module>
+    from pandas.core.api import (
+    ...<62 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/core/api.py", line 1, in <module>
+    from pandas._libs import (
+    ...<4 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/__init__.py", line 18, in <module>
+    from pandas._libs.interval import Interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "interval.pyx", line 1, in init pandas._libs.interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "hashtable.pyx", line 1, in init pandas._libs.hashtable
+    return _real_import(name, globals, locals, fromlist, level)
+  File "missing.pyx", line 1, in init pandas._libs.missing
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/tslibs/__init__.py", line 40, in <module>
+    from pandas._libs.tslibs.conversion import localize_pydatetime
+    return _real_import(name, globals, locals, fromlist, level)
+  File "conversion.pyx", line 1, in init pandas._libs.tslibs.conversion
+    return _real_import(name, globals, locals, fromlist, level)
+  File "offsets.pyx", line 1, in init pandas._libs.tslibs.offsets
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timestamps.pyx", line 1, in init pandas._libs.tslibs.timestamps
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timedeltas.pyx", line 1, in init pandas._libs.tslibs.timedeltas
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timezones.pyx", line 49, in init pandas._libs.tslibs.timezones
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1557, in __call__
+    rv = self.nocache(name=name)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1640, in nocache
+    tz = tzfile(filepath)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 464, in __init__
+    fileobj = open(fileobj, 'rb')
+TypeError: 'NoneType' object is not callable
+
+
+===== step 4/80
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best
+Y=np.array([maxcycle(f) for f in funcs])
+C=[]
+for f in funcs:
+    f2=[f[f[i]] for i in range(5)]
+    c=np.zeros(25)
+    for i in range(5): c[f[i]*5+f2[i]]+=1
+    C.append(c)
+C=np.array(C)
+# add bias
+D=np.c_[np.ones(len(C)),C]
+# one-hot
+T=np.eye(5)[Y]
+# train softmax regression by gradient descent
+W=np.zeros((D.shape[1],5))
+for it in range(20000):
+    Z=D@W; Z-=Z.max(1,keepdims=True); P=np.exp(Z); P/=P.sum(1,keepdims=True)
+    G=D.T@(P-T)/len(D)
+    W-=0.5*G
+pred=P.argmax(1)
+print('logreg acc', (pred==Y).mean())
+# linear least squares to one-hot
+W2=np.linalg.lstsq(D,T,rcond=None)[0]
+pred2=(D@W2).argmax(1)
+print('lsq acc', (pred2==Y).mean())
+# check if any linear score for each class separable one vs rest via fast perceptron
+for c in range(5):
+    y=(Y==c)*2-1
+    w=np.zeros(D.shape[1])
+    for it in range(10000):
+        m=y*(D@w)
+        idx=np.where(m<=0)[0]
+        if len(idx)==0: break
+        i=idx[np.random.randint(len(idx))] if False else idx[0]
+        w+=y[i]*D[i]
+    print(c, (np.sign(D@w)==y).mean())
+
+--- output (0.02 s) ---
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 23, in <module>
+IndexError: index 5 is out of bounds for axis 0 with size 5
+
+
+===== step 5/80
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best-1
+Y=np.array([maxcycle(f) for f in funcs])
+print(np.bincount(Y))
+C=[]
+for f in funcs:
+    f2=[f[f[i]] for i in range(5)]
+    c=np.zeros(25)
+    for i in range(5): c[f[i]*5+f2[i]]+=1
+    C.append(c)
+C=np.array(C)
+D=np.c_[np.ones(len(C)),C]
+T=np.eye(5)[Y]
+W=np.zeros((D.shape[1],5))
+for it in range(50000):
+    Z=D@W; Z-=Z.max(1,keepdims=True); P=np.exp(Z); P/=P.sum(1,keepdims=True)
+    G=D.T@(P-T)/len(D)
+    W-=0.5*G
+    if it%10000==0:
+        print(it,(P.argmax(1)==Y).mean(), np.max(np.abs(G)))
+pred=P.argmax(1)
+print('logreg acc', (pred==Y).mean())
+W2=np.linalg.lstsq(D,T,rcond=None)[0]
+pred2=(D@W2).argmax(1)
+print('lsq acc', (pred2==Y).mean())
+
+--- output (38.2 s) ---
+[1296 1155  500  150   24]
+0 0.41472 0.21471999999999974
+10000 0.64992 0.00010779332740467236
+20000 0.64992 5.8501379659646055e-05
+30000 0.64992 4.056870043215742e-05
+40000 0.64992 3.118372284203855e-05
+logreg acc 0.64992
+lsq acc 0.67552
+
+
+===== step 6/80
+
+--- python ---
+
+try:
+    import torch
+    print('torch', torch.__version__)
+except Exception as e:
+    print('no torch', type(e), e)
+
+--- output (0.0 s) ---
+no torch <class 'ImportError'> import of 'torch' is not allowed here (allowed: numpy, math, scipy, sklearn, itertools, collections, ...)
+
+
+===== step 7/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best-1
+Y=np.array([maxcycle(f) for f in funcs])
+# features: indegree counts, sorted indegrees, counts of nodes with indegree 0/1/2...
+for name, fn in [
+ ('indeg_sorted', lambda f: tuple(sorted([sum(1 for x in f if x==i) for i in range(5)]))),
+ ('indeg_counts', lambda f: tuple(sum(1 for i in range(5) if sum(1 for x in f if x==i)==k) for k in range(6))),
+ ('f_sorted', lambda f: tuple(sorted(f))),
+ ('f2_sorted', lambda f: tuple(sorted(f[f[i]] for i in range(5)))),
+ ('pair_hist', lambda f: tuple(sorted((f[i],f[f[i]]) for i in range(5)))),
+]:
+    d={}
+    for f,y in zip(funcs,Y): d.setdefault(fn(f),set()).add(y)
+    print(name, 'ambig keys',sum(len(v)>1 for v in d.values()), 'groups',len(d))
+# Maybe multiset of (i, f(i))? That's f itself, yes.
+
+--- output (0.09 s) ---
+indeg_sorted ambig keys 6 groups 7
+indeg_counts ambig keys 6 groups 7
+f_sorted ambig keys 121 groups 126
+f2_sorted ambig keys 121 groups 126
+pair_hist ambig keys 0 groups 2395
+
+
+===== step 8/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best-1
+def classify(f):
+    F=np.array(f)
+    G=np.array([f[f[i]] for i in range(5)])
+    H=np.array([f[f[f[f[i]]]] for i in range(5)])
+    Ls=[]
+    for s in range(5):
+        fs=F[s]; gs=G[s]; hs=H[s]; fh=F[int(hs)]
+        if fs==s: L=1
+        elif gs==s: L=2
+        elif hs==s: L=4
+        elif fh==s: L=5
+        elif hs==fs: L=3
+        else: L=0
+        Ls.append(L)
+    return max(Ls)-1
+bad=0
+for f in funcs:
+    if classify(f)!=maxcycle(f):
+        bad+=1
+        if bad<5: print('bad',f,classify(f),maxcycle(f))
+print('bad',bad)
+
+--- output (0.03 s) ---
+bad (0, 0, 0, 0, 0) 2 0
+bad (0, 0, 0, 0, 1) 2 0
+bad (0, 0, 0, 0, 2) 2 0
+bad (0, 0, 0, 0, 3) 2 0
+bad 1565
+
+
+===== step 9/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- python ---
+
+import itertools, numpy as np
+funcs=list(itertools.product(range(5), repeat=5))
+def maxcycle(f):
+    best=0
+    for s in range(5):
+        x=s
+        for t in range(1,6):
+            x=f[x]
+            if x==s: best=max(best,t); break
+    return best-1
+def classify(f):
+    F=np.array(f)
+    G=np.array([f[f[i]] for i in range(5)])
+    H=np.array([f[f[f[f[i]]]] for i in range(5)])
+    Fs=[F,G,np.array([F[G[i]] for i in range(5)]),H,np.array([F[H[i]] for i in range(5)])]
+    best=0
+    for s in range(5):
+        for k,Fk in enumerate(Fs,1):
+            if Fk[s]==s:
+                best=max(best,k); break
+    return best-1
+bad=0
+for f in funcs:
+    if classify(f)!=maxcycle(f):
+        bad+=1
+        if bad<5: print('bad',f,classify(f),maxcycle(f))
+print('bad',bad)
+
+--- output (0.05 s) ---
+bad 0
+
+
+===== step 10/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = (
+    "The input is a function f on five points (token at position i is f(i)). "
+    "The embedding site holds, at each position, the one-hot code of the token value; "
+    "the fourth coordinate is omitted because the four remaining coordinates plus the "
+    "affine offset determine all five token embeddings.  Layer 0's attention output is "
+    "the one-hot code of f(f(i)) at each position: it uses the token f(i) as a key and "
+    "copies the token at position f(i).  Layer 1 can apply the same successor operation "
+    "either to the original token (giving f^3(i)) or to the layer-0 token (giving f^4(i)); "
+    "both compact codes are exposed at attn1.out, and the construction uses the one "
+    "actually present.  The final readout tests, for each position, the first k in 1..5 "
+    "with f^k(i)=i; positions that return are exactly the points on cycles, and the "
+    "largest such k is the longest cycle length, returned as class k-1.  All operations "
+    "are set/indicator operations, so the construction has no fitted numerical constants "
+    "beyond 0.5 used for the exact integer comparisons."
+)
+
+def _tokens(x):
+    x = np.asarray(x)
+    if x.ndim == 1:
+        x = x[None, :]
+    if x.shape[1] == 5:
+        return x.astype(int)
+    if x.shape[1] == 25 and np.all((x == 0) | (x == 1)):
+        return x.reshape(-1, 5, 5).argmax(axis=-1).astype(int)
+    return x[:, :5].astype(int)
+
+def _oh4(tok):
+    B = tok.shape[0]
+    out = np.zeros((B, 5, 4))
+    for a in range(4):
+        out[:, :, a] = (tok == a)
+    return out
+
+def _full(oh4):
+    oh4 = np.asarray(oh4)
+    return np.concatenate([oh4, 1 - oh4.sum(axis=-1, keepdims=True)], axis=-1)
+
+def _numeric(oh4):
+    full = _full(oh4)
+    vals = np.arange(5, dtype=float)
+    return full @ vals
+
+def model(x, iv):
+    tok = _tokens(x)
+    B = tok.shape[0]
+
+    t4 = _oh4(tok).reshape(B, 20)
+    t4 = iv("token", t4)
+    t4 = np.asarray(t4).reshape(B, 5, 4)
+    tfull = _full(t4)
+
+    f2full = np.einsum('bij,bjk->bik', tfull, tfull)
+    f2_4 = f2full[:, :, :4].reshape(B, 20)
+    f2_4 = iv("f2", f2_4)
+    f2_4 = np.asarray(f2_4).reshape(B, 5, 4)
+    f2full = _full(f2_4)
+
+    f3full = np.einsum('bij,bjk->bik', f2full, tfull)
+    f4full = np.einsum('bij,bjk->bik', f2full, f2full)
+    f3_4 = f3full[:, :, :4].reshape(B, 20)
+    f4_4 = f4full[:, :, :4].reshape(B, 20)
+    f3_4 = iv("f3", f3_4)
+    f4_4 = iv("f4", f4_4)
+    f3_4 = np.asarray(f3_4).reshape(B, 5, 4)
+    f4_4 = np.asarray(f4_4).reshape(B, 5, 4)
+
+    F = _numeric(t4)
+    G = _numeric(f2_4)
+    H3 = _numeric(f3_4)
+    H4 = _numeric(f4_4)
+
+    # If one of the two layer-1 codes is absent (a degenerate probe), use the other.
+    v3 = float(np.var(H3))
+    v4 = float(np.var(H4))
+    if v4 * 20 < v3:
+        H = H3
+    else:
+        H = H4
+
+    B = F.shape[0]
+    ar = np.arange(B)
+    rG = np.clip(np.rint(G).astype(int), 0, 4)
+    rH = np.clip(np.rint(H).astype(int), 0, 4)
+
+    F3 = np.zeros_like(F)
+    F5 = np.zeros_like(F)
+    for s in range(5):
+        F3[:, s] = F[ar, rG[:, s]]
+        F5[:, s] = F[ar, rH[:, s]]
+
+    best = np.zeros(B, dtype=int)
+    for s in range(5):
+        vals = [F[:, s], G[:, s], F3[:, s], H[:, s], F5[:, s]]
+        for k, val in enumerate(vals, start=1):
+            hit = (np.abs(val - s) < 0.5) & (best == 0)
+            best[hit] = k
+
+    cls = np.maximum(best - 1, 0)
+    out = np.zeros((B, 5))
+    out[np.arange(B), cls] = 2
+    return out
+
+ALIGN = {
+    "token": ["embed"],
+    "f2": ["attn0.out"],
+    "f3": ["attn1.out"],
+    "f4": ["attn1.out"],
+}
+
+--- judge report 1 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      named, failing  embed: substitute 100%, interchange 87% fail
+  layer 0 attention named, failing  attn0.out: substitute 43%, interchange 31% fail
+  layer 1 attention named, failing  attn1.out: substitute 34%, interchange 6% fail
+  compression: 0.0 constants per degree of freedom (an explanation needs < 0.9)
+FIX FIRST: stage 'embedding'
+
+JUDGE REPORT   (1563 held-out inputs; construction 3,566 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 86.9% of inputs (a constant output would get 15.2%); output R2 -0.094; KL 0.593
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 30; 20 principal components suffice; token): explained 1.000 | substitute 100.0% | keep 100.0% | remove 15.2% (random 29.1%) | mean-ablate 15.2%
+  attn0.out   (20 dims named of 30; 21 principal components suffice; f2): explained 0.257 | substitute 42.7% | keep 59.8% | remove 38.8% (random 35.8%) | mean-ablate 43.8%
+  attn1.out   (30 dims named of 30; 16 principal components suffice; f3, f4): explained 0.234 | substitute 33.6% | keep 100.0% | remove 30.8% (random n/a) | mean-ablate 30.8%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange token @ embed: right 88.5% / 86.8% when changed (network changed in 65.8%); output R2 -0.088 | controls: random subspace 31.6%, no-change 34.2%, source-output 100.0%, attribution patching 33.7%
+  edit        token @ embed: right 66.5% / 60.6% when changed (network changed in 54.6%); output R2 -0.195 | controls: random subspace 28.3%, no-change 45.4%, source-output 42.9%, attribution patching 44.1%
+  interchange f2 @ attn0.out: right 41.0% / 31.5% when changed (network changed in 53.8%); output R2 -0.074 | controls: random subspace 34.9%, no-change 46.2%, source-output 37.6%, attribution patching 73.7%
+  edit        f2 @ attn0.out: right 44.1% / 23.0% when changed (network changed in 47.1%); output R2 -0.127 | controls: random subspace 29.3%, no-change 52.9%, source-output 33.3%, attribution patching 77.1%
+  interchange all variables @ attn1.out: right 37.5% / 6.4% when changed (network changed in 36.0%); output R2 -0.145 | controls: random subspace 23.8%, no-change 63.9%, source-output 41.0%, attribution patching 100.0%
+  partial     f3 @ attn1.out: right 65.9% / 5.9% when changed (network changed in 26.1%); output R2 -0.118 | controls: random subspace 46.8%, no-change 73.9%, source-output 36.5%, attribution patching 100.0%
+  partial     f4 @ attn1.out: right 43.4% / 13.3% when changed (network changed in 29.6%); output R2 -0.118 | controls: random subspace 22.1%, no-change 70.4%, source-output 34.9%, attribution patching 100.0%
+  edit        all variables @ attn1.out: right 43.0% / 6.8% when changed (network changed in 43.2%); output R2 -0.085 | controls: random subspace 29.6%, no-change 56.8%, source-output 36.5%, attribution patching 100.0%
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 35.2% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 97.7% (n=656); network decides 1: 82.1% (n=588); network decides 2: 75.2% (n=238); network decides 3: 69.1% (n=81) | near ties (157 least clear inputs, no requirement): 64.3%
+   the network's own mistakes: it is wrong on 5.0% of test inputs (78); the construction reproduces 6.4% of them (need 50% when there are 30 or more) and is right on 91.0%
+7. COMPRESSION   0 constants in the file for 191 degrees of freedom in the network: 0.00 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: named but failing;  layer 0 attention: named but failing;  layer 1 attention: named but failing
+VERDICT: NOT VERIFIED (0 of 3 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 86.9% of inputs (need 95%)
+  - interchange of token at embed: prediction right in 86.8% of the cases where the network's output changed (need 90%)
+  - substitution at attn0.out: 42.7% (need 90%)
+  - interchange of f2 at attn0.out: prediction right in 31.5% of the cases where the network's output changed (need 90%)
+  - edit of f2 at attn0.out: prediction right in 23.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at attn1.out: 33.6% (need 90%)
+  - interchange of all variables at attn1.out: prediction right in 6.4% of the cases where the network's output changed (need 90%)
+  - partial of f3 at attn1.out: prediction right in 5.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of f4 at attn1.out: prediction right in 13.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at attn1.out: prediction right in 6.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at attn1.out it is enough that EITHER every partial test OR the edit of all variables passes)
+  - joint substitution: with all 3 named sites replaced at once by the construction's predictions, the network keeps 35.2% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 81 inputs where network decides 3, the construction agrees on 69.1% (need 80%)
+  - the network's own mistakes: on the 78 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 6.4% (need 50%); it is right on 91.0%: it explains the task, not this network
+COVERAGE   stages 0/3 | behaviour 86.9% | all sites at once 35.2% | worst slice 69.1% | network's mistakes reproduced 6.4%
+NOT EXPLAINED:
+  - stage 'embedding' is not explained
+  - stage 'layer 0 attention' is not explained
+  - stage 'layer 1 attention' is not explained
+  - on 13.1% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 64.8% of the network's decisions
+  - worst slice: network decides 3 (81 inputs), where it matches 69.1%
+  - of the network's 78 mistakes on test inputs, 93.6% are not reproduced
+
+[done] {"id": "20261118-080226-a3ea", "status": "done", "seconds": 472.7, "best": 1, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 86.9% of inputs (need 95%)", "interchange of token at embed: prediction right in 86.8% of the cases where the network's output changed (need 90%)", "substitution at attn0.out: 42.7% (need 90%)", "interchange of f2 at attn0.out: prediction right in 31.5% of the cases where the network's output changed (need 90%)", "edit of f2 at attn0.out: prediction right in 23.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "substitution at attn1.out: 33.6% (need 90%)", "interchange of all variables at attn1.out: prediction right in 6.4% of the cases where the network's output changed (need 90%)", "partial of f3 at attn1.out: prediction right in 5.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "partial of f4 at attn1.out: prediction right in 13.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "edit of all variables at attn1.out: prediction right in 6.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "(at attn1.out it is enough that EITHER every partial test OR the edit of all variables passes)", "joint substitution: with all 3 named sites replaced at once by the construction's predictions, the network keeps 35.2% of its decisions (need 90%): the sites pass one at a time but do not work together", "worst slice: on the 81 inputs where network decides 3, the construction agrees on 69.1% (need 80%)", "the network's own mistakes: on the 78 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 6.4% (need 50%); it is right on 91.0%: it explains the task, not this network"], "stages_total": 3, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.069654276}
+
+status done; best submission 1; cost $0.070; 472.7 s; /content/helix_probe/lab/constructions/lc_6_5/20261118-080226-a3ea

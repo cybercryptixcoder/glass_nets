@@ -1,0 +1,21 @@
+JUDGE REPORT   (128 held-out inputs; construction 2,513 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 53.1%); output R2 -17.110; KL 0.002
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (12 dims named of 12; 8 principal components suffice; emb): explained 1.000 | substitute 100.0% | keep 100.0% | remove 53.1% (random n/a) | mean-ablate 53.1%
+  resid0.mid  (12 dims named of 12; 11 principal components suffice; r0): explained 1.000 | substitute 100.0% | keep 100.0% | remove 53.1% (random n/a) | mean-ablate 53.1%
+  attn1.pattern (12 dims named of 16; 8 principal components suffice; p1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 47.7% (random 60.4%) | mean-ablate 47.7%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange emb @ embed: right 100.0% / 100.0% when changed (network changed in 51.5%); output R2 -17.561 | controls: random subspace 100.0%, no-change 48.4%, source-output 100.0%, attribution patching 61.7%
+  edit        emb @ embed: right 97.7% / 94.1% when changed (network changed in 39.2%); output R2 -10.156 | controls: random subspace 61.7%, no-change 60.8%, source-output 60.5%, attribution patching 73.4%
+  interchange r0 @ resid0.mid: right 100.0% / 100.0% when changed (network changed in 51.5%); output R2 -17.561 | controls: random subspace 100.0%, no-change 48.4%, source-output 100.0%, attribution patching 63.1%
+  edit        r0 @ resid0.mid: right 96.9% / 92.5% when changed (network changed in 42.2%); output R2 -12.792 | controls: random subspace 61.3%, no-change 57.8%, source-output 59.1%, attribution patching 65.9%
+  interchange p1 @ attn1.pattern: right 97.9% / 94.6% when changed (network changed in 39.9%); output R2 -10.570 | controls: random subspace 75.3%, no-change 60.2%, source-output 71.2%, attribution patching 100.0%
+  edit        p1 @ attn1.pattern: right 97.3% / 88.9% when changed (network changed in 24.3%); output R2 -13.373 | controls: random subspace 75.3%, no-change 75.6%, source-output 59.3%, attribution patching 100.0%
+5. WHOLE MODEL   all 3 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 1: 100.0% (n=60); network decides 2: 100.0% (n=68) | near ties (13 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 83.6% of test inputs (107); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+7. COMPRESSION   48 constants in the file for 59 degrees of freedom in the network: 0.81 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: VERIFIED at embed;  layer 0 attention: VERIFIED at resid0.mid;  layer 1 attention: VERIFIED at attn1.pattern
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 3/3 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED: nothing found by these tests

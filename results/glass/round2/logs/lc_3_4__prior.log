@@ -1,0 +1,250 @@
+
+==== 2026-11-18 07:48:16 attempt 1: /content/helix_probe/lab/constructor.py lc_3_4 --told --no-weights --one-shot --quiet
+
+[start] {"id": "20261118-074816-d122", "target": "lc_3_4", "dir": "lab/constructions/lc_3_4/20261118-074816-d122"}
+
+===== step 1/80
+
+--- python ---
+print([k for k in globals().keys() if k in ['W','X','run','acts','SITES']])
+try:
+    print(type(W), W.keys() if hasattr(W,'keys') else '')
+except Exception as e:
+    print('W err', e)
+try:
+    print(np.shape(X))
+except Exception as e:
+    print('X err', e)
+--- output (0.0 s) ---
+[]
+W err name 'W' is not defined
+X err name 'X' is not defined
+
+
+===== step 2/80
+
+===== step 3/80
+
+--- python ---
+import numpy as np, itertools
+
+def longest_cycle(f):
+    best=1
+    for i in range(4):
+        seen=[]
+        cur=i
+        while cur not in seen:
+            seen.append(cur)
+            cur=f[cur]
+        cyc=len(seen)-seen.index(cur)
+        if cyc>best: best=cyc
+    return best-1
+
+# test all functions
+from collections import Counter
+cnt=Counter()
+for f in itertools.product(range(4), repeat=4):
+    cnt[longest_cycle(f)] += 1
+print(cnt, sum(cnt.values()))
+# check a few
+for f in [(0,1,2,0),(1,2,3,0),(3,3,3,3),(1,0,3,2)]:
+    print(f, longest_cycle(f))
+--- output (0.0 s) ---
+Counter({0: 125, 1: 93, 2: 32, 3: 6}) 256
+(0, 1, 2, 0) 0
+(1, 2, 3, 0) 3
+(3, 3, 3, 3) 0
+(1, 0, 3, 2) 1
+
+
+===== step 4/80
+
+--- python ---
+import numpy as np, itertools
+
+CODE = np.array([[1,0,0],[0,1,0],[0,0,1],[0,0,0]], dtype=float)
+
+def _lens(tt):
+    B = tt.shape[0]
+    L = np.zeros(B, dtype=int)
+    for b in range(B):
+        f = tt[b]
+        best = 1
+        for i in range(4):
+            seen = []
+            cur = int(i)
+            while cur not in seen:
+                seen.append(cur)
+                cur = int(f[cur])
+            cyc = len(seen) - seen.index(cur)
+            if cyc > best: best = cyc
+        L[b] = best - 1
+    return L
+
+def model(x, iv):
+    x = np.asarray(x, dtype=int)
+    B = x.shape[0]
+    oh = []
+    for p in range(4):
+        v = np.zeros((B,4))
+        v[np.arange(B), x[:,p]] = 1.0
+        oh.append(v)
+    v0 = iv("tok0", oh[0]); v1 = iv("tok1", oh[1]); v2 = iv("tok2", oh[2]); v3 = iv("tok3", oh[3])
+    tt = np.stack([np.argmax(v, axis=1) for v in (v0,v1,v2,v3)], axis=1)
+    L = _lens(tt)
+    code = CODE[L]
+    c = iv("cls", code)
+    logits = np.stack([c[:,0], c[:,1], c[:,2], 1.0 - c[:,0] - c[:,1] - c[:,2]], axis=1)
+    return logits
+
+def ident(name, val):
+    return val
+
+# test all inputs
+X = np.array(list(itertools.product(range(4), repeat=4)))
+out = model(X, ident)
+pred = np.argmax(out, axis=1)
+true = np.array([_lens(X)[i] for i in range(len(X))])
+print('accuracy', np.mean(pred==true))
+print('first few', out[:5], pred[:5], true[:5])
+# test override cls from another input
+B=3; A=10
+x = X[[B]]
+c_orig = CODE[_lens(X[[B]])[0]]
+c_A = CODE[_lens(X[[A]])[0]]
+def iv_override(name, val):
+    if name=='cls':
+        return c_A[None,:]
+    return val
+out2 = model(x, iv_override)
+print('override pred', np.argmax(out2), 'A true', _lens(X[[A]])[0])
+--- output (0.19 s) ---
+accuracy 1.0
+first few [[1. 0. 0. 0.]
+ [1. 0. 0. 0.]
+ [1. 0. 0. 0.]
+ [1. 0. 0. 0.]
+ [1. 0. 0. 0.]] [0 0 0 0 0] [0 0 0 0 0]
+override pred 0 A true 0
+
+
+===== step 5/80
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = (
+    "Computes the longest cycle length of the input function f on {0,1,2,3}. "
+    "The embedding site is exactly one-hot token indicators per position (an affine "
+    "function of these spans the token+position embeddings).  The final residual at "
+    "the last position holds a 3D code for the answer class: classes 0,1,2,3 map to "
+    "(1,0,0),(0,1,0),(0,0,1),(0,0,0).  A linear barycentric readout recovers the "
+    "four logits.  The model uses the iv-returned token and class variables so that "
+    "embedding or final-residual interventions propagate causally."
+)
+
+CODE = np.array([[1.0, 0.0, 0.0],
+                 [0.0, 1.0, 0.0],
+                 [0.0, 0.0, 1.0],
+                 [0.0, 0.0, 0.0]])
+
+def _lens(tt):
+    B = tt.shape[0]
+    L = np.zeros(B, dtype=int)
+    for b in range(B):
+        f = tt[b]
+        best = 1
+        for i in range(4):
+            seen = []
+            cur = int(i)
+            while cur not in seen:
+                seen.append(cur)
+                cur = int(f[cur])
+            cyc = len(seen) - seen.index(cur)
+            if cyc > best:
+                best = cyc
+        L[b] = best - 1
+    return L
+
+def model(x, iv):
+    x = np.asarray(x, dtype=int)
+    B = x.shape[0]
+
+    # one-hot token variable per position at the embedding site
+    oh = []
+    for p in range(4):
+        v = np.zeros((B, 4))
+        v[np.arange(B), x[:, p]] = 1.0
+        oh.append(v)
+    v0 = iv("tok0", oh[0])
+    v1 = iv("tok1", oh[1])
+    v2 = iv("tok2", oh[2])
+    v3 = iv("tok3", oh[3])
+
+    # decode the (possibly intervened) tokens
+    tt = np.stack([np.argmax(v, axis=1) for v in (v0, v1, v2, v3)], axis=1)
+    L = _lens(tt)
+
+    # final-residual class code at the last position
+    c = iv("cls", CODE[L])
+
+    # barycentric readout: [x, y, z, 1-x-y-z]
+    logits = np.stack([c[:, 0], c[:, 1], c[:, 2],
+                       1.0 - c[:, 0] - c[:, 1] - c[:, 2]], axis=1)
+    return logits
+
+ALIGN = {
+    "tok0": ["embed"],
+    "tok1": ["embed"],
+    "tok2": ["embed"],
+    "tok3": ["embed"],
+    "cls":  ["resid1.mid"],
+}
+
+--- judge report 1 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      named, failing  embed: substitute 100%, interchange 82% fail
+  layer 0 attention not named       
+  layer 1 attention named, failing  resid1.mid: substitute 87%, interchange 63% fail
+  compression: 0.0 constants per degree of freedom (an explanation needs < 0.9)
+FIX FIRST: stage 'embedding'
+
+JUDGE REPORT   (128 held-out inputs; construction 2,093 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 85.9% of inputs (a constant output would get 52.3%); output R2 -0.260; KL 0.658
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (12 dims named of 12; 12 principal components suffice; tok0, tok1, tok2, tok3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 52.3% (random n/a) | mean-ablate 52.3%
+  resid1.mid  (3 dims named of 12; 10 principal components suffice; cls): explained 0.014 | substitute 86.7% | keep 68.8% | remove 46.9% (random 63.8%) | mean-ablate 52.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 84.7% / 82.3% when changed (network changed in 61.1%); output R2 -0.254 | controls: random subspace 84.7%, no-change 39.0%, source-output 100.0%, attribution patching 47.2%
+  partial     tok0 @ embed: right 88.2% / 82.3% when changed (network changed in 28.5%); output R2 -0.240 | controls: random subspace 48.7%, no-change 71.5%, source-output 46.0%, attribution patching 76.4%
+  partial     tok1 @ embed: right 88.2% / 83.6% when changed (network changed in 32.0%); output R2 -0.216 | controls: random subspace 45.1%, no-change 68.0%, source-output 44.5%, attribution patching 65.8%
+  partial     tok2 @ embed: right 89.8% / 88.3% when changed (network changed in 26.0%); output R2 -0.218 | controls: random subspace 41.9%, no-change 74.0%, source-output 40.5%, attribution patching 76.2%
+  partial     tok3 @ embed: right 88.8% / 84.8% when changed (network changed in 34.3%); output R2 -0.224 | controls: random subspace 45.5%, no-change 65.7%, source-output 45.2%, attribution patching 65.6%
+  edit        all variables @ embed: right 58.9% / 46.2% when changed (network changed in 50.5%); output R2 -0.066 | controls: random subspace 53.8%, no-change 49.5%, source-output 50.2%, attribution patching 59.6%
+  interchange cls @ resid1.mid: right 62.4% / 63.0% when changed (network changed in 45.6%); output R2 -0.409 | controls: random subspace 51.0%, no-change 54.4%, source-output 62.0%, attribution patching 100.0%
+  edit        cls @ resid1.mid: right 65.8% / 42.6% when changed (network changed in 32.8%); output R2 -0.289 | controls: random subspace 36.2%, no-change 67.2%, source-output 57.5%, attribution patching 100.0%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 86.7% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 91.0% (n=67); network decides 1: 90.9% (n=44); network decides 2: 50.0% (n=16); network decides 3: 100.0% (n=1) | near ties (13 least clear inputs, no requirement): 30.8%
+   the network's own mistakes: it is wrong on 14.1% of test inputs (18); the construction reproduces 0.0% of them (need 50% when there are 30 or more) and is right on 100.0%
+7. COMPRESSION   0 constants in the file for 59 degrees of freedom in the network: 0.00 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: named but failing;  layer 0 attention: NOT EXPLAINED (no variable at attn0.pattern / attn0.out / resid0.mid);  layer 1 attention: named but failing
+VERDICT: NOT VERIFIED (0 of 3 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 85.9% of inputs (need 95%)
+  - interchange of all variables at embed: prediction right in 82.3% of the cases where the network's output changed (need 90%)
+  - substitution at resid1.mid: 86.7% (need 90%)
+  - interchange of cls at resid1.mid: prediction right in 63.0% of the cases where the network's output changed (need 90%)
+  - edit of cls at resid1.mid: prediction right in 42.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - joint substitution: with all 2 named sites replaced at once by the construction's predictions, the network keeps 86.7% of its decisions (need 90%): the sites pass one at a time but do not work together
+COVERAGE   stages 0/3 | behaviour 85.9% | all sites at once 86.7% | worst slice 90.9% | network's mistakes reproduced 0.0%
+NOT EXPLAINED:
+  - stage 'embedding' is not explained
+  - stage 'layer 0 attention' is not explained
+  - stage 'layer 1 attention' is not explained
+  - on 14.1% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 13.3% of the network's decisions
+  - worst slice: network decides 1 (44 inputs), where it matches 90.9%
+  - of the network's 18 mistakes on test inputs, 100.0% are not reproduced
+
+[done] {"id": "20261118-074816-d122", "status": "done", "seconds": 457.3, "best": 1, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 85.9% of inputs (need 95%)", "interchange of all variables at embed: prediction right in 82.3% of the cases where the network's output changed (need 90%)", "substitution at resid1.mid: 86.7% (need 90%)", "interchange of cls at resid1.mid: prediction right in 63.0% of the cases where the network's output changed (need 90%)", "edit of cls at resid1.mid: prediction right in 42.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "joint substitution: with all 2 named sites replaced at once by the construction's predictions, the network keeps 86.7% of its decisions (need 90%): the sites pass one at a time but do not work together"], "stages_total": 3, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.06129528}
+
+status done; best submission 1; cost $0.061; 457.3 s; /content/helix_probe/lab/constructions/lc_3_4/20261118-074816-d122
