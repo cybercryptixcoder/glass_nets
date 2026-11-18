@@ -43,15 +43,13 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (21:37 ET)
+## Current state (21:53 ET)
 
-- **Pass 1 done** (18 jobs). Under the current judge, certified: **M4,3** (blinded main run; its prior-only control
-  fails 1/3) and **M2,2** (but only its prior-only construction, with 0 constants; the main run's 8 constants are a
-  rescaled re-description). Not certified: M4,4, M8,5, M8,8, M16,10. Shuffled controls fail except M2,2 (a 10-weight
-  network is always simple).
-- **Pass 2 running** (started 21:35 ET): fresh main runs for M2,2, M4,4, M8,5 and M8,8; then M16,10 continued to 160
-  steps (queued 5th).
-- Next: monitor; when pass 2 ends, re-judge, then the final report.
+- Pass 1 done; **pass 2 running** (M8,5 and M8,8 fresh runs; M16,10 continued to 160 steps, at about 117).
+- Certified under the current judge: **M4,3** (blinded main run, 0.78 constants per degree of freedom; its prior
+  control fails) and **M2,2** (its prior-only 0-constant construction). Everything else is either not explained
+  or a re-description (≥ 1.0 constants per degree of freedom).
+- Next: monitor; when pass 2 ends, final re-judge, `results.py`, and the final report.
 
 ## Checklist
 
