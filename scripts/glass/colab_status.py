@@ -2,7 +2,12 @@
 import json, os, subprocess, time
 def sh(c):
     return subprocess.run(c, shell=True, capture_output=True, text=True, timeout=30).stdout.strip()
-print("job:", "alive" if sh("pgrep -f run_ladder.py") else "NOT RUNNING")
+def alive():
+    try:
+        os.kill(int(open("/content/glass_job.pid").read()), 0); return True
+    except Exception:
+        return False
+print("job:", "alive" if alive() else "NOT RUNNING")
 q = "/content/helix_probe/results/glass/queue.json"
 if os.path.exists(q):
     st = json.load(open(q)); c = {}

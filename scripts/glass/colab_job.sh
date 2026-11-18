@@ -8,6 +8,7 @@
 #     files to the branch, rebasing on the remote first.
 # Restarting this script continues the queue (run_ladder.py resumes interrupted runs).
 cd /content/helix_probe || exit 1
+echo $$ > /content/glass_job.pid
 SYNC_SECONDS=${SYNC_SECONDS:-120}
 PATHS="results/glass lab/constructions/zoo_2nd_argmax_*"
 
