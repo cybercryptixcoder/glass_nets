@@ -46,12 +46,21 @@ def certified_now(target, run_id):
     return bool(rep["verdict"]["complete"])
 
 
+EXTEND = {"zoo_2nd_argmax_16_10": 160}     # networks whose pass-1 run is continued (same run, its notes kept) rather
+                                         # than restarted: ARC's challenge network, where 80 steps is clearly short
+
+
 def pass2_jobs(st):
     out = []
     for t in LADDER:
         j = st.get(f"{t}__main")
         if j and j["status"] == "done" and not certified_now(t, j.get("run_id")):
-            out.append((f"{t}__main2", t, ["--steps", str(MAIN_STEPS)]))
+            if t in EXTEND:
+                st[f"{t}__main2"] = {"target": t, "args": ["--steps", str(EXTEND[t])], "status": "pending", "attempts": 0,
+                                     "run_id": j["run_id"], "note": "continues the pass-1 run"}
+                out.append((f"{t}__main2", t, ["--steps", str(EXTEND[t])]))
+            else:
+                out.append((f"{t}__main2", t, ["--steps", str(MAIN_STEPS)]))
     return out
 
 
@@ -152,7 +161,8 @@ def main():
         if j["status"] == "running":
             j["status"] = "interrupted"
     save_state(st)
-    base = jobs() + ([x for x in pass2_jobs(st) if x[0] not in st] + [x for x in jobs2(st)] if a.pass2 else [x for x in jobs2(st)])
+    new2 = [x for x in pass2_jobs(st) if st.get(x[0], {}).get("status") in (None, "pending")] if a.pass2 else []
+    base = jobs() + new2 + [x for x in jobs2(st) if x[0] not in {n for n, _, _ in new2}]
     todo = [x for x in base if (not a.only or x[0] in a.only) and st.get(x[0], {}).get("status") not in ("done", "failed")]
     print(f"{len(todo)} jobs to run: " + ", ".join(n for n, _, _ in todo), flush=True)
     if a.dry:
