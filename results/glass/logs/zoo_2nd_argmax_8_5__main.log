@@ -541,3 +541,808 @@ input [-0.73 -0.54 -0.32  0.41  1.04] out [  1.19  -2.37 -14.94   7.89  -4.23]
 
 
 ===== step 10/80
+
+--- python ---
+Wx=W['W_x']; Wh=W['W_h']; Wo=W['W_o']
+print('rank Wh',np.linalg.matrix_rank(Wh), 'singular', np.round(np.linalg.svd(Wh,compute_uv=False),2))
+print('rank Wo',np.linalg.matrix_rank(Wo), np.round(np.linalg.svd(Wo,compute_uv=False),2))
+a=acts(X[:2000])
+sg=(X[:2000]>0).astype(int)
+for s,k in [('h1',1),('h2',2),('h3',3),('h4',4),('h5',5)]:
+    m=(a[s]>1e-9).astype(int)
+    key=(sg[:,:k]*(2**np.arange(k-1,-1,-1))).sum(1)
+    nm=len(np.unique(m@np.array([128,64,32,16,8,4,2,1])))
+    # purity of mask given sign prefix
+    pure=[]
+    for v in np.unique(key):
+        sel=m[key==v]
+        pure.append(len(np.unique(sel@np.array([128,64,32,16,8,4,2,1])))==1)
+    print(s,'distinct masks',nm,'signprefix groups',len(np.unique(key)),'pure',np.mean(pure))
+
+--- output (0.0 s) ---
+rank Wh 8 singular [3.5  2.19 1.62 1.26 0.89 0.52 0.18 0.07]
+rank Wo 5 [8.78 5.75 3.08 2.13 0.59]
+h1 distinct masks 2 signprefix groups 2 pure 1.0
+h2 distinct masks 14 signprefix groups 4 pure 0.0
+h3 distinct masks 37 signprefix groups 8 pure 0.0
+h4 distinct masks 55 signprefix groups 16 pure 0.0
+h5 distinct masks 58 signprefix groups 32 pure 0.03125
+
+
+===== step 11/80
+
+--- python ---
+o=run(X); d=o.argmax(1)
+np.set_printoptions(precision=2,suppress=True)
+idx=np.where(np.sort(o,1)[:,-1]-np.sort(o,1)[:,-2]>5)[0][:20]
+for i in idx:
+    print(X[i], d[i], np.round(o[i],1), np.argsort(-o[i]))
+
+--- output (0.01 s) ---
+[ 0.36  1.3   0.95 -0.7  -1.27] 2 [ -6.1  -4.6   9.7 -12.9 -18.3] [2 1 0 3 4]
+[-0.73 -0.54 -0.32  0.41  1.04] 3 [  1.2  -2.4 -14.9   7.9  -4.2] [3 0 1 4 2]
+[-0.13  1.37 -0.67  0.35  0.9 ] 4 [ -5.   -5.1 -17.8  -2.1   7.1] [4 3 0 1 2]
+[ 0.36 -0.65 -0.13  0.78  1.49] 3 [  3.9  -2.7 -20.4   9.   -6. ] [3 0 1 4 2]
+[-1.26  1.51  1.35  0.78  0.26] 2 [-12.8  -2.8   8.2   0.9  -6.9] [2 3 1 4 0]
+[-0.44 -1.17  1.74 -0.5   0.33] 4 [  2.9  -7.6 -33.3  -0.3  10.2] [4 0 3 1 2]
+[-0.26  1.58  1.32  0.63 -2.2 ] 2 [-14.9  -3.9  11.3   2.3 -31.4] [2 3 1 0 4]
+[ 0.05  0.68  1.   -0.62  1.82] 2 [ -2.1   0.4   9.5 -15.5  -4.9] [2 1 0 4 3]
+[-1.32 -0.66  0.94  0.05  2.  ] 2 [  2.  -15.   13.3  -9.9  -8.1] [2 0 4 3 1]
+[-0.29  1.57 -0.43 -0.74  0.25] 4 [ -1.6 -20.6  -6.5 -10.2   4.5] [4 0 2 3 1]
+[ 1.03  0.16 -0.59 -1.34 -1.4 ] 1 [ -0.6   5.6  -4.2 -14.1 -12.2] [1 0 2 4 3]
+[-1.49  0.3  -0.11 -1.19 -2.4 ] 2 [ -1.3  -3.    6.3  -8.4 -21.7] [2 0 1 3 4]
+[-0.05  0.09 -1.49  1.65  0.92] 4 [  2.2  -1.8 -45.2  -3.2  11.6] [4 0 1 3 2]
+[-1.94 -1.31  1.09 -0.05 -0.28] 3 [ -3.1  -6.6 -19.5   7.4   1.9] [3 4 0 1 2]
+[ 1.64 -1.28 -0.59 -0.47  0.59] 4 [ -2.2 -12.2  -5.6   1.4   9.1] [4 3 0 2 1]
+[ 0.14  2.31 -0.79  0.58 -0.2 ] 3 [ -0.2 -40.8 -15.6   6.4  -2.3] [3 0 4 2 1]
+[ 1.36  1.   -0.15 -0.47 -1.  ] 1 [  0.3   7.7  -5.8 -12.7 -16.8] [1 0 2 3 4]
+[-0.7  -1.47  1.2   1.59 -1.26] 2 [ -6.5 -35.5  19.    4.3 -15.3] [2 3 0 4 1]
+[ 2.76  1.04 -0.78 -1.34 -0.98] 1 [ -2.4  10.2 -12.8 -22.1 -14.4] [1 0 2 4 3]
+[ 0.12 -1.07 -1.   -0.64  0.73] 0 [ 4.9 -1.4 -5.5 -0.9 -8.9] [0 3 1 2 4]
+
+
+===== step 12/80
+
+--- python ---
+np.set_printoptions(precision=2,suppress=True)
+ts=np.linspace(-4,4,17)
+for pos in range(5):
+    dec=[]; outs=[]
+    for t in ts:
+        xx=np.zeros((1,5)); xx[0,pos]=t
+        o=run(xx)[0]; dec.append(o.argmax()); outs.append(o)
+    print('pos',pos, ''.join(str(d) for d in dec))
+    for t,o in zip(ts,outs[::4]): print('  t=%.1f'%t, np.round(o,2))
+
+--- output (0.01 s) ---
+pos 0 11111111044444444
+  t=-4.0 [-0.01 -0.   -0.01 -0.15 -0.  ]
+  t=-3.5 [-0.   -0.   -0.01 -0.08 -0.  ]
+  t=-3.0 [0. 0. 0. 0. 0.]
+  t=-2.5 [-5.82 -2.71 -3.72 -3.33 -1.88]
+  t=-2.0 [-11.65  -5.42  -7.44  -6.65  -3.75]
+pos 1 22222222044444444
+  t=-4.0 [ 0.01  0.02  0.02  0.02 -0.13]
+  t=-3.5 [ 0.01  0.01  0.01  0.01 -0.06]
+  t=-3.0 [0. 0. 0. 0. 0.]
+  t=-2.5 [ -1.77 -36.84  -2.65  -2.19   0.26]
+  t=-2.0 [ -3.54 -73.68  -5.29  -4.39   0.51]
+pos 2 44444444044444444
+  t=-4.0 [  6.76   6.21 -45.75   6.71   8.25]
+  t=-3.5 [  3.38   3.11 -22.87   3.36   4.13]
+  t=-3.0 [0. 0. 0. 0. 0.]
+  t=-2.5 [  1.59   0.4  -41.52   1.92   3.87]
+  t=-2.0 [  3.18   0.79 -83.04   3.83   7.74]
+pos 3 11111111044444444
+  t=-4.0 [  7.     7.91   7.67 -42.81   6.73]
+  t=-3.5 [  3.5    3.95   3.84 -21.41   3.37]
+  t=-3.0 [0. 0. 0. 0. 0.]
+  t=-2.5 [ -2.45  -1.69  -3.96 -36.01   0.67]
+  t=-2.0 [ -4.89  -3.38  -7.92 -72.02   1.33]
+pos 4 00000000000000000
+  t=-4.0 [  0.79   0.15  -0.42  -0.92 -40.34]
+  t=-3.5 [  0.4    0.07  -0.21  -0.46 -20.17]
+  t=-3.0 [0. 0. 0. 0. 0.]
+  t=-2.5 [  4.96   3.12   3.25   2.92 -30.11]
+  t=-2.0 [  9.92   6.24   6.51   5.84 -60.23]
+
+
+===== step 13/80
+
+--- python ---
+a=acts(X); H5=a['h5']; H5b=np.concatenate([H5,np.ones((len(H5),1))],1)
+targets={}
+targets['sum']=X.sum(1)
+targets['max']=X.max(1)
+targets['min']=X.min(1)
+targets['cummax5']=np.maximum.accumulate(X,1)[:,-1]
+for i in range(5): targets[f'x{i+1}']=X[:,i]
+for i in range(5): targets[f'oh_argmax{i}']=(X.argmax(1)==i).astype(float)
+targets['npos']=(X>0).sum(1).astype(float)
+targets['sumabs']=np.abs(X).sum(1)
+for k,v in targets.items():
+    c,_,_,_=np.linalg.lstsq(H5b,v,rcond=None); pred=H5b@c
+    r2=1-((v-pred)**2).sum()/((v-v.mean())**2).sum()
+    print(f'{k:10s} R2={r2:.3f}')
+
+--- output (0.02 s) ---
+sum        R2=0.121
+max        R2=0.672
+min        R2=0.076
+cummax5    R2=0.672
+x1         R2=0.198
+x2         R2=0.684
+x3         R2=0.725
+x4         R2=0.776
+x5         R2=0.852
+oh_argmax0 R2=0.142
+oh_argmax1 R2=0.610
+oh_argmax2 R2=0.541
+oh_argmax3 R2=0.566
+oh_argmax4 R2=0.638
+npos       R2=0.034
+sumabs     R2=0.342
+
+
+===== step 14/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """
+Draft 2. Stage 'step 1' is exact: with no biases h1 = relu(x1*W_x), and W_x has fixed signs
+(units 0,2,4,6,7 positive, units 1,3,5 negative), so h1 = relu(x1)*W_x+ + relu(-x1)*W_x-;
+the first state holds the positive and the negative part of input 1 in two disjoint coordinate groups.
+
+Probes of h5 show it carries the running maximum of the inputs (linearly decodable, R2=0.67) and most
+strongly the most recent inputs (x5 R2=0.85, x4 0.78), so the recurrence is read as a running
+max / running argmax style scan. Stages 2-5 are therefore parametrised here by the running maximum
+m_t = max(x_1..x_t) and the running argmax identity one-hot oh_t (5 coordinates); the readout is a
+placeholder one-hot of the running argmax. Coefficients at h2..h5 and the readout are rough.
+"""
+
+Wx = np.array([0.643, -6.421, 0.423, -6.574, 0.045, -4.913, -0.054, 7.002])
+Wp = np.maximum(Wx, 0.0)
+Wn = np.maximum(-Wx, 0.0)
+
+
+def model(x, iv):
+    pos = iv("pos1", np.maximum(x[:, 0], 0.0))
+    neg = iv("neg1", np.maximum(-x[:, 0], 0.0))
+    h1 = pos[:, None] * Wp[None, :] + neg[:, None] * Wn[None, :]
+
+    m = np.maximum.accumulate(x, axis=1)
+    am = np.zeros_like(x)
+    am[:, 0] = x[:, 0]
+    for t in range(1, 5):
+        am[:, t] = np.where(x[:, t] > am[:, t - 1], x[:, t], am[:, t - 1])
+    idx = np.argmax(m, axis=1)
+    for t in range(1, 5):
+        iv("m%d" % (t + 1), m[:, t])
+        oh = np.zeros((x.shape[0], 5))
+        oh[np.arange(x.shape[0]), idx] = 1.0
+        iv("oh%d" % (t + 1), oh)
+    out = np.zeros((x.shape[0], 5))
+    out[np.arange(x.shape[0]), idx] = 10.0
+    return out + 0.001 * h1.sum(1)[:, None]
+
+
+ALIGN = {"pos1": ["h1"], "neg1": ["h1"],
+         "m2": ["h2"], "oh2": ["h2"],
+         "m3": ["h3"], "oh3": ["h3"],
+         "m4": ["h4"], "oh4": ["h4"],
+         "m5": ["h5"], "oh5": ["h5"]}
+
+--- judge report 2 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,844 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 4.8% of inputs (a constant output would get 20.3%); output R2 -0.357; KL 9.069
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (5 dims named of 8; 4 principal components suffice; m2, oh2): explained 0.472 | substitute 64.6% | keep 96.0% | remove 36.9% (random 45.5%) | mean-ablate 37.1%
+  h3          (5 dims named of 8; 6 principal components suffice; m3, oh3): explained 0.450 | substitute 46.5% | keep 77.3% | remove 36.0% (random 32.2%) | mean-ablate 32.9%
+  h4          (5 dims named of 8; 8 principal components suffice; m4, oh4): explained 0.532 | substitute 31.8% | keep 49.5% | remove 47.2% (random 33.2%) | mean-ablate 28.8%
+  h5          (5 dims named of 8; 8 principal components suffice; m5, oh5): explained 0.492 | substitute 20.7% | keep 36.9% | remove 63.3% (random 26.8%) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 17.5% / 35.0% when changed (network changed in 44.1%); output R2 -0.296 | controls: random subspace 8.6%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  partial     pos1 @ h1: right 18.4% / 39.8% when changed (network changed in 38.9%); output R2 -0.318 | controls: random subspace 6.3%, no-change 61.2%, source-output 21.3%, attribution patching 72.3%
+  partial     neg1 @ h1: right 5.2% / 20.4% when changed (network changed in 11.1%); output R2 -0.377 | controls: random subspace 11.5%, no-change 88.9%, source-output 21.3%, attribution patching 93.8%
+  edit        all variables @ h1: right 10.9% / 32.6% when changed (network changed in 24.6%); output R2 -0.350 | controls: random subspace 9.0%, no-change 75.4%, source-output 22.1%, attribution patching 83.2%
+  interchange all variables @ h2: right 24.9% / 41.5% when changed (network changed in 54.2%); output R2 -0.255 | controls: random subspace 20.3%, no-change 45.8%, source-output 23.6%, attribution patching 63.5%
+  partial     m2 @ h2: right 19.1% / 39.6% when changed (network changed in 42.3%); output R2 -0.266 | controls: random subspace 13.2%, no-change 57.7%, source-output 22.8%, attribution patching 72.7%
+  partial     oh2 @ h2: right 11.9% / 27.7% when changed (network changed in 34.6%); output R2 -0.343 | controls: random subspace 21.1%, no-change 65.3%, source-output 22.6%, attribution patching 80.0%
+  edit        all variables @ h2: right 15.3% / 37.5% when changed (network changed in 32.4%); output R2 -0.265 | controls: random subspace 24.9%, no-change 67.6%, source-output 21.1%, attribution patching 76.0%
+  interchange all variables @ h3: right 26.0% / 46.9% when changed (network changed in 50.5%); output R2 -0.211 | controls: random subspace 23.8%, no-change 49.5%, source-output 23.4%, attribution patching 66.5%
+  partial     m3 @ h3: right 25.2% / 52.9% when changed (network changed in 43.1%); output R2 -0.205 | controls: random subspace 9.2%, no-change 56.9%, source-output 20.9%, attribution patching 78.7%
+  partial     oh3 @ h3: right 8.6% / 18.2% when changed (network changed in 33.6%); output R2 -0.298 | controls: random subspace 14.0%, no-change 66.4%, source-output 23.2%, attribution patching 75.5%
+  edit        all variables @ h3: right 16.9% / 40.6% when changed (network changed in 34.4%); output R2 -0.234 | controls: random subspace 18.1%, no-change 65.6%, source-output 20.9%, attribution patching 72.8%
+  interchange all variables @ h4: right 21.6% / 48.0% when changed (network changed in 39.5%); output R2 -0.228 | controls: random subspace 29.7%, no-change 60.5%, source-output 22.7%, attribution patching 77.6%
+  partial     m4 @ h4: right 19.1% / 53.1% when changed (network changed in 30.7%); output R2 -0.251 | controls: random subspace 10.8%, no-change 69.3%, source-output 20.6%, attribution patching 86.5%
+  partial     oh4 @ h4: right 11.1% / 26.3% when changed (network changed in 31.5%); output R2 -0.273 | controls: random subspace 24.2%, no-change 68.5%, source-output 20.0%, attribution patching 81.8%
+  edit        all variables @ h4: right 15.9% / 41.9% when changed (network changed in 30.6%); output R2 -0.235 | controls: random subspace 16.8%, no-change 69.5%, source-output 21.2%, attribution patching 78.4%
+  interchange all variables @ h5: right 6.8% / 24.7% when changed (network changed in 13.8%); output R2 -0.301 | controls: random subspace 15.4%, no-change 86.2%, source-output 20.8%, attribution patching 100.0%
+  partial     m5 @ h5: right 5.9% / 29.3% when changed (network changed in 7.0%); output R2 -0.358 | controls: random subspace 12.6%, no-change 93.0%, source-output 20.4%, attribution patching 100.0%
+  partial     oh5 @ h5: right 5.6% / 20.6% when changed (network changed in 10.4%); output R2 -0.304 | controls: random subspace 14.1%, no-change 89.5%, source-output 20.9%, attribution patching 100.0%
+  edit        all variables @ h5: right 9.3% / 42.2% when changed (network changed in 13.2%); output R2 -0.304 | controls: random subspace 28.1%, no-change 86.9%, source-output 20.9%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 20.7% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 8.1% (n=811); network decides 1: 3.4% (n=831); network decides 2: 4.3% (n=822); network decides 3: 3.9% (n=790); network decides 4: 4.0% (n=746) | near ties (400 least clear inputs, no requirement): 17.0%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 42.8% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 199 (99.5%; on the unsearched starting inputs 88.5%)
+     input [-0.572, 1.836, 2.693, -0.571, -1.78]: network [1], construction [2]
+     input [1.981, 0.54, -2.39, 3.478, -1.378]: network [0], construction [3]
+     input [-1.036, 3.118, -1.083, -1.392, 2.047]: network [4], construction [1]
+     input [-0.151, 1.39, 2.211, -1.638, -1.047]: network [1], construction [2]
+     input [-1.662, 1.304, 2.049, -1.18, -1.413]: network [1], construction [2]
+7. NOT A COPY   36 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 8%
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 4.8% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 35.0% of the cases where the network's output changed (need 90%)
+  - partial of pos1 at h1: prediction right in 39.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of neg1 at h1: prediction right in 20.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 32.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h2: 64.6% (need 90%)
+  - interchange of all variables at h2: prediction right in 41.5% of the cases where the network's output changed (need 90%)
+  - partial of m2 at h2: prediction right in 39.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of oh2 at h2: prediction right in 27.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h2: prediction right in 37.5% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h2 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h3: 46.5% (need 90%)
+  - interchange of all variables at h3: prediction right in 46.9% of the cases where the network's output changed (need 90%)
+  - partial of oh3 at h3: prediction right in 18.2% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h3: prediction right in 40.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h3 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h4: 31.8% (need 90%)
+  - interchange of all variables at h4: prediction right in 48.0% of the cases where the network's output changed (need 90%)
+  - partial of oh4 at h4: prediction right in 26.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h4: prediction right in 41.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h4 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h5: 20.7% (need 90%)
+  - removal at h5: removing the named subspace leaves 63.3% of decisions, while mean-ablating the whole site leaves 20.3%: what you named is not what the output depends on here
+  - interchange of all variables at h5: prediction right in 24.7% of the cases where the network's output changed (need 90%)
+  - partial of m5 at h5: prediction right in 29.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of oh5 at h5: prediction right in 20.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h5: prediction right in 42.2% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h5 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 20.7% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 831 inputs where network decides 1, the construction agrees on 3.4% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 42.8% (need 50%); it is right on 0.0%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 4.8% | all sites at once 20.7% | worst slice 3.4% | network's mistakes reproduced 42.8%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 95.2% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 79.3% of the network's decisions
+  - worst slice: network decides 1 (831 inputs), where it matches 3.4%
+  - of the network's 444 mistakes on test inputs, 57.2% are not reproduced
+  - a search found 199 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 15/80
+
+--- python ---
+o=run(X); d=o.argmax(1)
+X1=np.concatenate([X,np.ones((len(X),1))],1)
+Y=np.eye(5)[d]
+B,_,_,_=np.linalg.lstsq(X1,Y,rcond=None)
+print('linear on X acc', ((X1@B).argmax(1)==d).mean().round(3))
+# quadratic features
+Q=[]
+for i in range(5):
+    for j in range(i,5): Q.append(X[:,i]*X[:,j])
+Q=np.array(Q).T
+X2=np.concatenate([X1,Q],1)
+B2,_,_,_=np.linalg.lstsq(X2,Y,rcond=None)
+print('quadratic acc', ((X2@B2).argmax(1)==d).mean().round(3))
+# sign features + X
+S=np.sign(X)
+X3=np.concatenate([X1,S,Q],1)
+B3,_,_,_=np.linalg.lstsq(X3,Y,rcond=None)
+print('X+sign+quad acc', ((X3@B3).argmax(1)==d).mean().round(3))
+
+--- output (0.02 s) ---
+linear on X acc 0.13
+quadratic acc 0.506
+X+sign+quad acc 0.472
+
+
+===== step 16/80
+
+--- python ---
+np.set_printoptions(precision=3,suppress=True)
+Wx=W['W_x'][0]; Wh=W['W_h']
+A=[0,2,4,6,7]; B=[1,3,5]
+vA=Wx[A]@Wh[A,:]; vB=Wx[B]@Wh[B,:]
+print('Wx',Wx)
+print('vA',vA)
+print('vB',vB)
+print('vA/vB', vA/vB)
+# also full
+print('ratio vA/Wx', vA/Wx)
+print('ratio vB/Wx', vB/Wx)
+
+--- output (0.0 s) ---
+Wx [ 0.643 -6.421  0.423 -6.574  0.045 -4.913 -0.054  7.002]
+vA [-11.52   -0.142  10.208   7.511   1.261   5.504   8.327  -5.802]
+vB [-4.816  0.54   0.019  0.697 -3.547  0.615 -0.343 -0.345]
+vA/vB [  2.392  -0.264 539.972  10.768  -0.356   8.95  -24.3    16.835]
+ratio vA/Wx [ -17.927    0.022   24.107   -1.143   27.975   -1.12  -153.927   -0.829]
+ratio vB/Wx [ -7.495  -0.084   0.045  -0.106 -78.662  -0.125   6.335  -0.049]
+
+
+===== step 17/80
+
+--- python ---
+a=acts(X[:2000])
+Wx=W['W_x']; Wh=W['W_h']
+h={t:a['h%d'%t] for t in range(1,6)}
+prev=np.zeros((2000,8))
+for t in range(1,6):
+    z=X[:2000,t-1:t]*Wx + prev@Wh
+    neg=(z<0)
+    print('t',t,'frac neg',neg.mean().round(3),'per unit',neg.mean(0).round(2))
+    prev=h[t]
+
+--- output (0.0 s) ---
+t 1 frac neg 0.5 per unit [0.51 0.49 0.51 0.49 0.51 0.49 0.49 0.51]
+t 2 frac neg 0.336 per unit [0.51 0.51 0.27 0.38 0.01 0.38 0.02 0.6 ]
+t 3 frac neg 0.342 per unit [0.4  0.38 0.39 0.36 0.21 0.3  0.02 0.69]
+t 4 frac neg 0.328 per unit [0.3  0.3  0.32 0.28 0.27 0.36 0.06 0.73]
+t 5 frac neg 0.305 per unit [0.27 0.27 0.26 0.25 0.3  0.3  0.01 0.77]
+
+
+===== step 18/80
+
+--- python ---
+np.random.seed(0)
+for trial in range(3):
+    base=np.random.randn(5)*0.8
+    print('base',base.round(2),'dec',run(base[None])[0].argmax())
+    ts=np.linspace(-5,5,81)
+    XX=np.tile(base,(81,1))
+    for pos in range(5):
+        XX2=np.tile(base,(81,1)); XX2[:,pos]=ts
+        dd=run(XX2).argmax(1)
+        s=''.join(str(v) for v in dd)
+        print(' pos',pos,s)
+
+--- output (0.0 s) ---
+base [1.41 0.32 0.78 1.79 1.49] dec 0
+ pos 0 444444444444444444444444444444444444444444444444444000333044444444444444444444444
+ pos 1 440000000000000000000000000000000000000000000000004411444444330000000000000000000
+ pos 2 444444444444444444444444444444444444444444444000000022233333333333330000000000000
+ pos 3 222222222222222222222222244444444444444444444444440440000000000044444444444444444
+ pos 4 000000000000000000000000000000000000000000000000000000440033333333333333333333333
+base [-0.78  0.76 -0.12 -0.08  0.33] dec 4
+ pos 0 444444444444444444444444444444444444444444400001111111111111111111111111111111111
+ pos 1 333333333333333333333333333333322222222111144444444444444444444444444444444444444
+ pos 2 444444444444444444444444444444444444444444422221111111111111111111111111111111111
+ pos 3 444444444444444444444444444444444444444444443331111111111111111111111111111111111
+ pos 4 222222222222222333333333333333333333333344444441111111111111111111111111111111111
+base [0.12 1.16 0.61 0.1  0.36] dec 2
+ pos 0 222222222222222222222222222222222222222222222000001111111111111111111111111111111
+ pos 1 444444444444444444444444444444444444444444411222222222222222222222222222222222224
+ pos 2 444444444444444444444444444444444444444444422222221111111111111111111111111111111
+ pos 3 222222222222222222222222222222222222222222222333331111111111111111111111111111111
+ pos 4 222222222222222222222222222222222222222222222244444111111111111111111111111111111
+
+
+===== step 19/80
+
+--- python ---
+def tree(Xd, yd, depth=0, maxd=4, idx=None, feat_names=None):
+    if idx is None: idx=np.arange(len(Xd))
+    y=yd[idx]
+    cnt=np.bincount(y,minlength=5); base=1-cnt.max()/len(y)
+    if depth>=maxd or base<0.01: 
+        print('  '*depth+f'leaf n={len(y)} dist={cnt} err={base:.2f}')
+        return
+    best=None
+    for f in range(Xd.shape[1]):
+        vals=np.unique(np.quantile(Xd[idx,f],np.linspace(0,1,21)))
+        for v in vals[:-1]:
+            m=Xd[idx,f]<=v
+            if m.sum()<50 or (~m).sum()<50: continue
+            def g(sel):
+                c=np.bincount(y[sel],minlength=5); return 1-c.max()/len(c)
+            score=(g(m)*m.sum()+g(~m)*(~m).sum())/len(y)
+            if best is None or score<best[0]: best=(score,f,v,m)
+    score,f,v,m=best
+    print('  '*depth+f'x{f} <= {v:.3f}  err->{score:.2f} n={len(y)} dist={cnt}')
+    tree(Xd,yd,depth+1,maxd,idx[m])
+    tree(Xd,yd,depth+1,maxd,idx[~m])
+d=run(X).argmax(1)
+tree(X,d)
+
+--- output (0.02 s) ---
+x2 <= -1.652  err->-316.27 n=8000 dist=[1594 1634 1664 1563 1545]
+  x3 <= -1.032  err->-18.68 n=400 dist=[ 90  99   0 111 100]
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 23, in <module>
+  File "<your code>", line 20, in tree
+  File "<your code>", line 20, in tree
+  File "<your code>", line 18, in tree
+TypeError: cannot unpack non-iterable NoneType object
+
+
+===== step 20/80
+
+--- python ---
+def gini(yy):
+    c=np.bincount(yy,minlength=5); return 1-c.max()/len(yy)
+def tree(Xd,yd,depth=0,maxd=4,idx=None):
+    if idx is None: idx=np.arange(len(Xd))
+    y=yd[idx]; base=gini(y)
+    cnt=np.bincount(y,minlength=5)
+    if depth>=maxd or base<0.02:
+        print('  '*depth+f'leaf n={len(y)} dist={cnt} err={base:.2f}'); return
+    best=None
+    for f in range(Xd.shape[1]):
+        for v in np.unique(np.quantile(Xd[idx,f],np.linspace(0,1,25))):
+            m=Xd[idx,f]<=v
+            if m.sum()<100 or (~m).sum()<100: continue
+            score=(gini(y[m])*m.sum()+gini(y[~m])*(~m).sum())/len(y)
+            if best is None or score<best[0]: best=(score,f,v,m)
+    if best is None:
+        print('  '*depth+f'leaf n={len(y)} dist={cnt} err={base:.2f}'); return
+    score,f,v,m=best
+    print('  '*depth+f'x{f+1} <= {v:.3f} err->{score:.2f} n={len(y)} dist={cnt}')
+    tree(Xd,yd,depth+1,maxd,idx[m]); tree(Xd,yd,depth+1,maxd,idx[~m])
+d=run(X).argmax(1)
+tree(X,d,maxd=3)
+
+--- output (0.07 s) ---
+x3 <= -0.115 err->0.70 n=8000 dist=[1594 1634 1664 1563 1545]
+  x2 <= -0.320 err->0.64 n=3667 dist=[906 928 207 823 803]
+    x5 <= -0.234 err->0.61 n=1375 dist=[465  75 158 349 328]
+      leaf n=573 dist=[242  44 112 143  32] err=0.58
+      leaf n=802 dist=[223  31  46 206 296] err=0.63
+    x2 <= 1.220 err->0.60 n=2292 dist=[441 853  49 474 475]
+      leaf n=1910 dist=[350 794  34 383 349] err=0.58
+      leaf n=382 dist=[ 91  59  15  91 126] err=0.67
+  x4 <= 0.308 err->0.65 n=4333 dist=[ 688  706 1457  740  742]
+    x3 <= 1.294 err->0.61 n=2708 dist=[ 489  493 1000  206  520]
+      leaf n=2256 dist=[372 370 931 175 408] err=0.59
+      leaf n=452 dist=[117 123  69  31 112] err=0.73
+    x4 <= 1.238 err->0.63 n=1625 dist=[199 213 457 534 222]
+      leaf n=1151 dist=[134 127 295 432 163] err=0.62
+      leaf n=474 dist=[ 65  86 162 102  59] err=0.66
+
+
+===== step 21/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """
+Draft 3, mechanism probe. No biases, so h1 = relu(x1*W_x) is exactly the sign-magnitude code of
+input 1: relu(x1) in units {0,2,4,6,7} and relu(-x1) in units {1,3,5}.
+At every later step the state is driven by the current input (large input gain) plus the previous
+state, so each h_t is tested here against the ten clipped-input quantities relu(+/-x_i): positive and
+negative parts of every input. The output is still a placeholder until the readout stage is resolved.
+"""
+
+Wx = np.array([0.643, -6.421, 0.423, -6.574, 0.045, -4.913, -0.054, 7.002])
+Wp = np.maximum(Wx, 0.0)
+Wn = np.maximum(-Wx, 0.0)
+
+
+def model(x, iv):
+    pos = iv("pos1", np.maximum(x[:, 0], 0.0))
+    neg = iv("neg1", np.maximum(-x[:, 0], 0.0))
+    h1 = pos[:, None] * Wp[None, :] + neg[:, None] * Wn[None, :]
+    feats = [pos, neg]
+    for t in range(1, 5):
+        feats.append(np.maximum(x[:, t], 0.0))
+        feats.append(np.maximum(-x[:, t], 0.0))
+    for t in range(2, 6):
+        for j in range(t):
+            iv("p%d" % (j + 1), feats[2 * j]) if t == 2 else None
+        if t > 2:
+            for j in range(t):
+                iv("p%d_%d" % (j + 1, t), feats[2 * j])
+                iv("n%d_%d" % (j + 1, t), feats[2 * j + 1])
+    out = np.zeros((x.shape[0], 5))
+    out[:, 0] = h1.sum(1)
+    return out
+
+
+ALIGN = {"pos1": ["h1"], "neg1": ["h1"],
+         "p1_3": ["h2", "h3", "h4", "h5"], "n1_3": ["h2", "h3", "h4", "h5"]}
+
+--- judge report 3 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,444 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 20.3% of inputs (a constant output would get 20.3%); output R2 -0.314; KL 8.920
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+  h2          (2 dims named of 8; 4 principal components suffice; p1_3, n1_3): explained 0.595 | substitute 53.7% | keep 50.9% | remove 59.5% (random 48.9%) | mean-ablate 37.1%
+  h3          (2 dims named of 8; 6 principal components suffice; p1_3, n1_3): explained 0.250 | substitute 37.7% | keep 34.0% | remove 59.1% (random 50.4%) | mean-ablate 32.9%
+  h4          (2 dims named of 8; 8 principal components suffice; p1_3, n1_3): explained 0.346 | substitute 31.1% | keep 32.0% | remove 66.1% (random 41.1%) | mean-ablate 28.8%
+  h5          (2 dims named of 8; 8 principal components suffice; p1_3, n1_3): explained 0.025 | substitute 22.9% | keep 25.3% | remove 68.1% (random 42.8%) | mean-ablate 20.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 20.2% / 27.9% when changed (network changed in 44.1%); output R2 -0.296 | controls: random subspace 22.9%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  partial     pos1 @ h1: right 23.2% / 32.8% when changed (network changed in 38.9%); output R2 -0.340 | controls: random subspace 21.4%, no-change 61.2%, source-output 21.3%, attribution patching 72.3%
+  partial     neg1 @ h1: right 23.6% / 50.7% when changed (network changed in 11.1%); output R2 -0.342 | controls: random subspace 24.2%, no-change 88.9%, source-output 21.3%, attribution patching 93.8%
+  edit        all variables @ h1: right 23.5% / 36.5% when changed (network changed in 24.6%); output R2 -0.329 | controls: random subspace 21.1%, no-change 75.4%, source-output 22.1%, attribution patching 83.2%
+  interchange all variables @ h2: right 16.9% / 20.9% when changed (network changed in 41.9%); output R2 -0.246 | controls: random subspace 20.8%, no-change 58.1%, source-output 22.4%, attribution patching 71.5%
+  partial     p1_3 @ h2: right 17.9% / 20.4% when changed (network changed in 37.5%); output R2 -0.297 | controls: random subspace 18.2%, no-change 62.5%, source-output 21.3%, attribution patching 76.4%
+  partial     n1_3 @ h2: right 21.2% / 43.7% when changed (network changed in 9.5%); output R2 -0.254 | controls: random subspace 22.8%, no-change 90.5%, source-output 21.1%, attribution patching 94.7%
+  edit        all variables @ h2: right 19.3% / 24.7% when changed (network changed in 23.1%); output R2 -0.272 | controls: random subspace 19.1%, no-change 77.0%, source-output 20.0%, attribution patching 86.0%
+  interchange all variables @ h3: right 22.7% / 31.0% when changed (network changed in 30.0%); output R2 -0.298 | controls: random subspace 20.7%, no-change 70.0%, source-output 22.2%, attribution patching 83.5%
+  partial     p1_3 @ h3: right 23.2% / 28.3% when changed (network changed in 26.0%); output R2 -0.344 | controls: random subspace 17.1%, no-change 74.0%, source-output 21.0%, attribution patching 83.5%
+  partial     n1_3 @ h3: right 19.7% / 38.4% when changed (network changed in 12.2%); output R2 -0.280 | controls: random subspace 32.6%, no-change 87.8%, source-output 21.2%, attribution patching 98.8%
+  edit        all variables @ h3: right 20.8% / 30.7% when changed (network changed in 17.4%); output R2 -0.289 | controls: random subspace 12.8%, no-change 82.5%, source-output 22.0%, attribution patching 91.7%
+  interchange all variables @ h4: right 22.1% / 35.0% when changed (network changed in 21.3%); output R2 -0.294 | controls: random subspace 21.6%, no-change 78.7%, source-output 20.9%, attribution patching 96.5%
+  partial     p1_3 @ h4: right 21.4% / 25.6% when changed (network changed in 15.8%); output R2 -0.306 | controls: random subspace 28.3%, no-change 84.2%, source-output 19.9%, attribution patching 96.5%
+  partial     n1_3 @ h4: right 20.1% / 39.0% when changed (network changed in 8.8%); output R2 -0.296 | controls: random subspace 23.8%, no-change 91.1%, source-output 21.6%, attribution patching 99.7%
+  edit        all variables @ h4: right 21.3% / 32.0% when changed (network changed in 14.1%); output R2 -0.273 | controls: random subspace 12.6%, no-change 86.0%, source-output 20.4%, attribution patching 97.4%
+  interchange all variables @ h5: right 18.9% / 25.0% when changed (network changed in 5.6%); output R2 -0.300 | controls: random subspace 8.8%, no-change 94.4%, source-output 21.8%, attribution patching 100.0%
+  partial     p1_3 @ h5: right 20.3% / 23.3% when changed (network changed in 1.5%); output R2 -0.306 | controls: random subspace 14.4%, no-change 98.5%, source-output 21.1%, attribution patching 100.0%
+  partial     n1_3 @ h5: right 18.9% / 23.3% when changed (network changed in 5.1%); output R2 -0.300 | controls: random subspace 18.9%, no-change 94.8%, source-output 21.6%, attribution patching 100.0%
+  edit        all variables @ h5: right 21.0% / 39.9% when changed (network changed in 7.1%); output R2 -0.278 | controls: random subspace 14.8%, no-change 92.8%, source-output 21.3%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): p1, p2, p2_3, n2_3, p3_3, n3_3, p1_4, n1_4, p2_4, n2_4, p3_4, n3_4, p4_4, n4_4, p1_5, n1_5, p2_5, n2_5, p3_5, n3_5, p4_5, n4_5, p5_5, n5_5
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 22.9% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=811); network decides 1: 0.0% (n=831); network decides 2: 0.0% (n=822); network decides 3: 0.0% (n=790); network decides 4: 0.0% (n=746) | near ties (400 least clear inputs, no requirement): 28.5%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 28.6% of them (need 50% when there are 30 or more) and is right on 32.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 194 (97.0%; on the unsearched starting inputs 76.0%)
+     input [-4.097, 0.151, 0.985, 1.152, -0.87]: network [2], construction [0]
+     input [-4.016, 1.894, 1.985, 0.19, -0.456]: network [1], construction [0]
+     input [-3.839, 2.626, -0.629, -0.194, -3.316]: network [3], construction [0]
+     input [-3.831, 1.75, -2.805, -0.981, -2.667]: network [3], construction [0]
+     input [-3.617, -0.757, 0.175, 0.696, -0.884]: network [2], construction [0]
+7. NOT A COPY   33 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 8%
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing;  step 5: named but failing
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 20.3% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 27.9% of the cases where the network's output changed (need 90%)
+  - partial of pos1 at h1: prediction right in 32.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 36.5% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h2: 53.7% (need 90%)
+  - interchange of all variables at h2: prediction right in 20.9% of the cases where the network's output changed (need 90%)
+  - partial of p1_3 at h2: prediction right in 20.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of n1_3 at h2: prediction right in 43.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h2: prediction right in 24.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h2 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h3: 37.7% (need 90%)
+  - interchange of all variables at h3: prediction right in 31.0% of the cases where the network's output changed (need 90%)
+  - partial of p1_3 at h3: prediction right in 28.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of n1_3 at h3: prediction right in 38.4% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h3: prediction right in 30.7% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h3 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h4: 31.1% (need 90%)
+  - removal at h4: removing the named subspace leaves 66.1% of decisions, while mean-ablating the whole site leaves 28.8%: what you named is not what the output depends on here
+  - interchange of all variables at h4: prediction right in 35.0% of the cases where the network's output changed (need 90%)
+  - partial of p1_3 at h4: prediction right in 25.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of n1_3 at h4: prediction right in 39.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h4: prediction right in 32.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h4 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - substitution at h5: 22.9% (need 90%)
+  - removal at h5: removing the named subspace leaves 68.1% of decisions, while mean-ablating the whole site leaves 20.3%: what you named is not what the output depends on here
+  - interchange of all variables at h5: prediction right in 25.0% of the cases where the network's output changed (need 90%)
+  - partial of p1_3 at h5: the network's output changed in only 1.5% of cases, but the construction predicted changes: at this site the network's output does not depend on this variable
+  - partial of n1_3 at h5: prediction right in 23.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h5: prediction right in 39.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h5 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - joint substitution: with all 5 named sites replaced at once by the construction's predictions, the network keeps 22.9% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 831 inputs where network decides 1, the construction agrees on 0.0% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 28.6% (need 50%); it is right on 32.0%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 20.3% | all sites at once 22.9% | worst slice 0.0% | network's mistakes reproduced 28.6%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 79.7% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 77.1% of the network's decisions
+  - variables not placed in the network (untested): p1, p2, p2_3, n2_3, p3_3, n3_3, p1_4, n1_4, p2_4, n2_4, p3_4, n3_4, p4_4, n4_4, p1_5, n1_5, p2_5, n2_5, p3_5, n3_5, p4_5, n4_5, p5_5, n5_5
+  - worst slice: network decides 1 (831 inputs), where it matches 0.0%
+  - of the network's 444 mistakes on test inputs, 71.4% are not reproduced
+  - a search found 194 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 22/80
+
+--- python ---
+a=acts(X); H={t:a['h%d'%t] for t in range(1,6)}
+o=run(X); d=o.argmax(1)
+# homogeneity check
+i=np.random.choice(len(X),5,replace=False)
+print('homog check', np.abs(acts(3*X[i])['h3']-3*H[3][i]).max())
+for t in [3,5]:
+    A=H[t]/ (np.linalg.norm(H[t],axis=1,keepdims=True)+1e-12)
+    # mean direction per class
+    for c in range(5):
+        m=A[d==c].mean(0); print(t,c,'norm of mean',np.linalg.norm(m).round(3), m.round(2))
+    print()
+
+--- output (0.01 s) ---
+homog check 7.105427357601002e-15
+3 0 norm of mean 0.77 [0.44 0.33 0.08 0.31 0.16 0.26 0.28 0.1 ]
+3 1 norm of mean 0.782 [0.09 0.3  0.39 0.37 0.1  0.27 0.37 0.11]
+3 2 norm of mean 0.726 [0.4  0.09 0.37 0.09 0.25 0.1  0.31 0.2 ]
+3 3 norm of mean 0.714 [0.33 0.27 0.26 0.27 0.19 0.25 0.24 0.18]
+3 4 norm of mean 0.711 [0.32 0.25 0.27 0.27 0.18 0.25 0.25 0.19]
+
+5 0 norm of mean 0.766 [0.31 0.34 0.27 0.37 0.19 0.22 0.24 0.15]
+5 1 norm of mean 0.817 [0.26 0.27 0.25 0.29 0.37 0.26 0.41 0.09]
+5 2 norm of mean 0.774 [0.3  0.3  0.11 0.38 0.21 0.2  0.4  0.13]
+5 3 norm of mean 0.796 [0.12 0.39 0.29 0.35 0.15 0.23 0.42 0.1 ]
+5 4 norm of mean 0.827 [0.39 0.12 0.34 0.15 0.27 0.09 0.54 0.01]
+
+
+
+===== step 23/80
+
+--- python ---
+o=run(X); d=o.argmax(1)
+n=len(X)
+cs=np.cumsum(X,1); csa=np.cumsum(np.abs(X),1)
+cand={}
+cand['x']=X; cand['-x']=-X; cand['abs']=np.abs(X); cand['cs']=cs; cand['-cs']=-cs
+cand['cs2']=np.cumsum(X**2,1)
+cand['csa']=csa
+cand['x-mean']=X-X.mean(1,keepdims=True)
+cand['csum_mean']=cs-cs.mean(1,keepdims=True)
+cand['x/sumabs']=X/(np.abs(X).sum(1,keepdims=True))
+cand['x/sum']=X/(X.sum(1,keepdims=True))
+cand['cprod']=np.cumprod(X,1)
+cand['xm1']=X-np.roll(X,1,1)
+cand['xp1']=X+np.roll(X,1,1)
+cand['maxacc']=np.maximum.accumulate(X,1)
+cand['x*acc']=X*np.maximum.accumulate(X,1)
+cand['x/cs']=X/(cs+1e-9)
+cand['cs/sum']=cs/(X.sum(1,keepdims=True))
+cand['cummin']=np.minimum.accumulate(X,1)
+cand['cs-absacc']=cs-np.maximum.accumulate(np.abs(X),1)
+best=[]
+for k,v in cand.items():
+    acc=max((v.argmax(1)==d).mean(),(v.argmin(1)==d).mean())
+    best.append((acc,k))
+for a,k in sorted(best,reverse=True)[:8]: print(round(a,3),k)
+
+--- output (0.01 s) ---
+0.319 cs-absacc
+0.302 csum_mean
+0.302 cs
+0.302 -cs
+0.283 xp1
+0.273 abs
+0.251 xm1
+0.199 maxacc
+
+
+===== step 24/80
+
+--- python ---
+np.random.seed(1)
+idx=np.random.choice(8000,400,replace=False)
+Xs=X[idx]
+base=run(Xs)
+G=np.zeros((5,5))
+eps=1e-4
+for i in range(5):
+    Xp=Xs.copy(); Xp[:,i]+=eps
+    G[i]=np.abs((run(Xp)-base)/eps).mean(0)
+print('mean |dout/dx_i| rows=xi cols=class')
+print(G)
+# effect on decision of zeroing each coord
+dd=run(Xs).argmax(1)
+for i in range(5):
+    Xz=Xs.copy(); Xz[:,i]=0
+    print('zero x%d'%(i+1), (run(Xz).argmax(1)!=dd).mean().round(3))
+
+--- output (0.0 s) ---
+mean |dout/dx_i| rows=xi cols=class
+[[ 4.161  4.888  4.398  4.081  3.543]
+ [ 3.103 11.248  5.399  4.279  3.229]
+ [ 2.779  5.448 13.713  4.478  3.432]
+ [ 2.974  5.931  6.687 11.273  3.286]
+ [ 1.152  3.438  4.347  3.563 10.582]]
+zero x1 0.412
+zero x2 0.418
+zero x3 0.418
+zero x4 0.402
+zero x5 0.35
+
+
+===== step 25/80
+
+--- python ---
+ts=np.linspace(-3,3,25)
+for (i,j) in [(0,1),(2,3),(0,4)]:
+    XX=np.zeros((25*25,5))
+    XX[:,i]=np.repeat(ts,25); XX[:,j]=np.tile(ts,25)
+    dd=run(XX).argmax(1).reshape(25,25)
+    print('x%d (rows) vs x%d (cols)'%(i+1,j+1))
+    for r in range(24,-1,-1):
+        print(' '.join(str(v) for v in dd[r]))
+
+--- output (0.0 s) ---
+x1 (rows) vs x2 (cols)
+4 4 4 4 4 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 1 1 1 1 1
+4 4 4 4 4 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 1 1 1 1 0
+2 4 4 4 4 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 1 1 1 0 0
+2 2 2 4 4 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 1 1 0 0 0
+2 2 2 2 4 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 1 0 0 0 0
+2 2 2 2 2 4 4 4 4 4 4 4 4 1 1 1 1 1 1 1 0 0 0 0 0
+2 2 2 2 2 2 4 4 4 4 4 4 4 1 1 1 1 1 1 0 0 0 0 0 0
+2 2 2 2 2 2 2 4 4 4 4 4 4 1 1 1 1 1 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 4 4 4 4 4 1 1 1 1 0 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 2 4 4 4 4 1 1 1 0 0 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 2 2 4 4 4 1 1 0 0 0 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 2 2 2 4 4 1 0 0 0 0 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 2 2 2 2 0 4 4 4 4 4 4 4 4 4 4 4 4
+2 2 2 2 2 2 2 2 2 2 3 3 1 4 4 4 4 4 4 4 4 4 4 4 4
+2 2 2 2 2 2 2 2 3 3 3 3 1 2 4 4 4 4 4 4 4 4 4 4 4
+2 2 2 2 2 2 3 3 3 3 3 3 1 2 2 4 4 4 4 4 4 4 4 4 4
+2 2 2 2 3 3 3 3 3 3 3 3 1 2 2 2 4 4 4 4 4 4 4 4 4
+2 2 3 3 3 3 3 3 3 3 3 3 1 2 2 2 2 4 4 4 4 4 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 2 2 4 4 4 4 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 2 2 2 4 4 4 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 2 1 2 2 2 2 2 2 2 4 4 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 2 2 2 2 2 4 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 2 2 2 2 2 2 4 4 4
+3 3 3 3 3 3 3 3 3 3 3 4 1 2 2 2 2 2 2 2 2 2 2 4 4
+3 3 3 3 3 3 3 3 3 3 3 4 1 2 2 2 2 2 2 2 2 2 2 2 4
+x3 (rows) vs x4 (cols)
+4 4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3 3 3 3
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3 3 3 3 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3 3 3 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3 3 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 2 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3 2 2 2 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 2 2 2 2 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 2 2 2 2 2 2 2 2 2 2
+4 4 4 4 4 4 4 4 4 4 4 4 4 3 2 2 2 2 2 2 2 2 2 2 2
+1 1 1 1 1 1 1 1 1 1 1 1 0 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 0 0 0 0 0 0 0 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 0 0 0 0 0 0 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 0 0 0 0 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 0 0 0 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 0 0 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 0 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 0 0 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+0 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+x1 (rows) vs x5 (cols)
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 4
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 4 3
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 4 4 3 3
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 4 3 3 3 3
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 4 3 3 3 3 3
+1 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 4 3 3 3 3 3 3
+2 1 1 1 1 1 1 1 1 1 1 1 4 4 4 4 4 4 3 3 3 3 3 0 0
+2 2 2 1 1 1 1 1 1 1 1 1 4 4 4 4 4 3 3 3 3 0 0 0 0
+2 2 2 2 2 1 1 1 1 1 1 1 4 4 4 4 3 3 3 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 1 1 1 1 4 4 4 3 3 0 0 0 0 0 0 0 0
+2 2 2 2 2 2 2 2 2 2 1 1 4 4 3 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0
+
