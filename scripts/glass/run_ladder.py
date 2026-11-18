@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LAB = ROOT / "lab"
-RES = ROOT / "results" / "glass"
+RES = ROOT / "results" / "glass" / os.environ.get("GLASS_ROUND", "")   # round 2: results/glass/round2
 STATE = RES / "queue.json"
 LOGS = RES / "logs"
 LADDER = ["zoo_2nd_argmax_2_2", "zoo_2nd_argmax_4_3", "zoo_2nd_argmax_4_4", "zoo_2nd_argmax_8_5", "zoo_2nd_argmax_8_8",
@@ -62,6 +62,28 @@ def pass2_jobs(st):
             else:
                 out.append((f"{t}__main2", t, ["--steps", str(MAIN_STEPS)]))
     return out
+
+
+def jobs_round2():
+    """Round 2 (docs/glass/PLAN_ROUND2.md): the longest-cycle discovery runs (reader v2) interleaved with the A/B on
+    the 2nd-argmax ladder (round 1's reader v1 vs v2, two runs each, same budgets). Each job: (name, target, args, reader)."""
+    lc = [("lc_3_4", 80), ("lc_4_5", 80), ("lc_6_5", 120), ("lc_8_6", 120)]
+    zoo = [(t, 160 if t.endswith("16_10") else 80) for t in LADDER]
+    J = []
+    def ab(t, steps, rep):
+        return [(f"{t}__{r}{rep}", t, ["--steps", str(steps)], r) for r in ("v1", "v2")]
+    J += [(f"lc_3_4__main{k}", "lc_3_4", ["--steps", "80"], "v2") for k in "ab"]
+    J += ab(*zoo[0], "a") + ab(*zoo[1], "a")
+    J += [(f"{t}__main{k}", t, ["--steps", str(st)], "v2") for t, st in lc[1:3] for k in "ab"]
+    J += ab(*zoo[2], "a") + ab(*zoo[3], "a")
+    J += [(f"lc_8_6__main{k}", "lc_8_6", ["--steps", "120"], "v2") for k in "ab"]
+    J += ab(*zoo[4], "a") + ab(*zoo[5], "a")
+    for t, st in zoo:
+        J += ab(t, st, "b")
+    for t, _ in lc:
+        J += [(f"{t}__prior", t, ["--told", "--no-weights", "--one-shot"], "v2"),
+              (f"{t}__shuffled", t, ["--variant", "shuffled", "--steps", "30"], "v2")]
+    return J
 
 
 def jobs():
@@ -114,7 +136,7 @@ def run_status(target, run_id):
     return rec.get("status"), v
 
 
-def run_job(name, target, args, key, st):
+def run_job(name, target, args, key, st, reader="v2"):
     LOGS.mkdir(parents=True, exist_ok=True)
     with _lock:
         j = st.setdefault(name, {"target": target, "args": args, "status": "pending", "attempts": 0, "run_id": None})
@@ -124,7 +146,7 @@ def run_job(name, target, args, key, st):
     cmd = [sys.executable, str(LAB / "constructor.py"), target, *args, "--quiet"]
     if rid:
         cmd += ["--resume", rid]
-    env = dict(os.environ, LUMINAL_API_KEY=key, PYTHONUNBUFFERED="1")
+    env = dict(os.environ, LUMINAL_API_KEY=key, PYTHONUNBUFFERED="1", GLASS_READER=reader)
     with open(LOGS / f"{name}.log", "a") as log:
         log.write(f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} attempt {j['attempts']}: {' '.join(cmd[1:])}\n"); log.flush()
         p = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -145,7 +167,7 @@ def run_job(name, target, args, key, st):
             j["status"] = "failed" if j["attempts"] >= 3 else "interrupted"
         j["run_status"], j["verdict"] = status, v
         save_state(st)
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "glass" / "results.py")], cwd=ROOT)
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "glass" / "results.py")], cwd=ROOT, env=dict(os.environ))
 
 
 def main():
@@ -154,6 +176,7 @@ def main():
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--dry", action="store_true")
     ap.add_argument("--pass2", action="store_true")
+    ap.add_argument("--round2", action="store_true")
     a = ap.parse_args()
     RES.mkdir(parents=True, exist_ok=True)
     st = load_state()
@@ -161,10 +184,13 @@ def main():
         if j["status"] == "running":
             j["status"] = "interrupted"
     save_state(st)
-    new2 = [x for x in pass2_jobs(st) if st.get(x[0], {}).get("status") in (None, "pending")] if a.pass2 else []
-    base = jobs() + new2 + [x for x in jobs2(st) if x[0] not in {n for n, _, _ in new2}]
+    if a.round2:
+        base = jobs_round2()
+    else:
+        new2 = [x for x in pass2_jobs(st) if st.get(x[0], {}).get("status") in (None, "pending")] if a.pass2 else []
+        base = [(*x, "v1") for x in jobs() + new2 + [x for x in jobs2(st) if x[0] not in {n for n, _, _ in new2}]]
     todo = [x for x in base if (not a.only or x[0] in a.only) and st.get(x[0], {}).get("status") not in ("done", "failed")]
-    print(f"{len(todo)} jobs to run: " + ", ".join(n for n, _, _ in todo), flush=True)
+    print(f"{len(todo)} jobs to run: " + ", ".join(x[0] for x in todo), flush=True)
     if a.dry:
         return
     ks = keys()
@@ -176,10 +202,10 @@ def main():
             with _lock:
                 if not queue:
                     return
-                name, target, args = queue.pop(0)
+                name, target, args, reader = queue.pop(0)
             print(f"{time.strftime('%H:%M:%S')} worker {i} starts {name}", flush=True)
             try:
-                run_job(name, target, args, ks[i], st)
+                run_job(name, target, args, ks[i], st, reader)
             except Exception as e:  # noqa: BLE001  (one job's crash must not stop the queue)
                 print(f"worker {i}: {name} crashed: {e}", flush=True)
                 with _lock:

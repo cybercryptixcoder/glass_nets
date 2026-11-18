@@ -8,5 +8,5 @@ def alive():
 if alive():
     print("RUNNING")
 else:
-    subprocess.Popen("cd /content/helix_probe && exec bash scripts/glass/colab_job.sh >> /content/glass.log 2>&1 < /dev/null", shell=True, start_new_session=True)
+    subprocess.Popen("cd /content/helix_probe && GLASS_ROUND=round2 exec bash scripts/glass/colab_job.sh >> /content/glass.log 2>&1 < /dev/null", shell=True, start_new_session=True)
     print("STARTED")

@@ -8,9 +8,13 @@ echo $$ > /content/glass_job.pid
 bash scripts/glass/colab_sync.sh &
 SYNC_PID=$!
 echo "== $(date -u) job start (sync pid $SYNC_PID)"
-python3 scripts/glass/run_ladder.py --workers 4
-echo "== $(date -u) pass 1 finished"
-python3 scripts/glass/run_ladder.py --workers 4 --pass2
+if [ "$GLASS_ROUND" = "round2" ]; then
+  python3 scripts/glass/run_ladder.py --workers 4 --round2
+else
+  python3 scripts/glass/run_ladder.py --workers 4
+  echo "== $(date -u) pass 1 finished"
+  python3 scripts/glass/run_ladder.py --workers 4 --pass2
+fi
 echo "== $(date -u) queue finished"
 kill $SYNC_PID 2>/dev/null
 bash scripts/glass/colab_sync.sh --once

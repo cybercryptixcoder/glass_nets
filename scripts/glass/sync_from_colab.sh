@@ -9,8 +9,8 @@ timeout 100 colab download -s glass1 /content/glass_snapshot.tgz /tmp/glass_snap
   timeout 100 colab download -s glass1 /content/glass_snapshot.tgz /tmp/glass_snapshot.tgz >/dev/null 2>&1
 [ -s /tmp/glass_snapshot.tgz ] || { echo "no snapshot downloaded"; exit 1; }
 tar xzf /tmp/glass_snapshot.tgz
-python3 scripts/glass/results.py
-git add -A results/glass lab/constructions/zoo_2nd_argmax_* 2>/dev/null
+python3 scripts/glass/results.py; GLASS_ROUND=round2 python3 scripts/glass/results.py 2>/dev/null || true
+git add -A results/glass lab/constructions/zoo_2nd_argmax_* lab/constructions/lc_* 2>/dev/null
 if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
 git commit -q -m "glass: Colab results snapshot $(date -u +%H:%M)
 

@@ -1,0 +1,149 @@
+{
+ "name": "AlgZoo longest-cycle transformer (hidden 6, length 5)",
+ "family": "AlgZoo (ARC): longest-cycle transformers",
+ "forward": "transformer",
+ "order": [
+  "W_E",
+  "W_pos",
+  "L0.W_Q",
+  "L0.W_K",
+  "L0.W_V",
+  "L0.W_O",
+  "L1.W_Q",
+  "L1.W_K",
+  "L1.W_V",
+  "L1.W_O",
+  "W_U"
+ ],
+ "protected": [
+  "out_positions"
+ ],
+ "arch": "A 2-layer attention-only transformer: no MLPs, no LayerNorm, no biases, one head per layer, no attention mask (every position attends to every position). Vocabulary 5 tokens, sequences of 5 tokens, residual width 6.\n  x = W_E[tokens] + W_pos                      W_E: 5 x 6, W_pos: 5 x 6\n  per layer l: x = x + softmax(q k^T / sqrt(6)) v W_O,  q = x W_Q, k = x W_K, v = x W_V  (each 6 x 6)\n  out = x[last position] @ W_U                 W_U: 6 x 5\n378 parameters. The output is a score per class; the decision is the largest.",
+ "context": "Each input is a function f on {0..4}: token i is f(i). Output class c stands for 'the longest cycle of f has length c + 1' (follow i -> f(i) -> f(f(i)) ... until it returns).",
+ "tensor_desc": {
+  "W_E": "token embedding (row = token)",
+  "W_pos": "position embedding (row = position)",
+  "W_U": "unembedding (column = class)",
+  "L0.W_Q": "layer 0 q map [head, in, out]",
+  "L0.W_K": "layer 0 k map [head, in, out]",
+  "L0.W_V": "layer 0 v map [head, in, out]",
+  "L0.W_O": "layer 0 o map [head, in, out]",
+  "L1.W_Q": "layer 1 q map [head, in, out]",
+  "L1.W_K": "layer 1 k map [head, in, out]",
+  "L1.W_V": "layer 1 v map [head, in, out]",
+  "L1.W_O": "layer 1 o map [head, in, out]"
+ },
+ "answer": {
+  "short": "length of the longest cycle of the input function, minus 1",
+  "detail": "AlgZoo longest_cycle, hidden 6, length 5, seed 2; accuracy 0.9469 on all 3125 inputs. No published interpretation found (searched Nov 17, 2026)."
+ },
+ "source": "AlgZoo checkpoint https://storage.googleapis.com/arc-ml-public/alg/zoo/longest_cycle_6_5_1073741824_2.pth (MIT-0), converted by lab/targets/build_longest_cycle.py",
+ "input": "token ids, shape [B, 5]",
+ "domain": {
+  "file": "inputs.npy",
+  "text": "Every possible input: all 5**5 = 3125 functions on {0..4}."
+ },
+ "labels": "labels.npy",
+ "test_acc": 0.94688,
+ "numpy_vs_torch_max_err": 5.968558980384842e-13,
+ "id": "lc_6_5",
+ "tensors": [
+  {
+   "name": "W_E",
+   "shape": [
+    5,
+    6
+   ],
+   "desc": "token embedding (row = token)"
+  },
+  {
+   "name": "W_pos",
+   "shape": [
+    5,
+    6
+   ],
+   "desc": "position embedding (row = position)"
+  },
+  {
+   "name": "L0.W_Q",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 0 q map [head, in, out]"
+  },
+  {
+   "name": "L0.W_K",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 0 k map [head, in, out]"
+  },
+  {
+   "name": "L0.W_V",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 0 v map [head, in, out]"
+  },
+  {
+   "name": "L0.W_O",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 0 o map [head, in, out]"
+  },
+  {
+   "name": "L1.W_Q",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 1 q map [head, in, out]"
+  },
+  {
+   "name": "L1.W_K",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 1 k map [head, in, out]"
+  },
+  {
+   "name": "L1.W_V",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 1 v map [head, in, out]"
+  },
+  {
+   "name": "L1.W_O",
+   "shape": [
+    1,
+    6,
+    6
+   ],
+   "desc": "layer 1 o map [head, in, out]"
+  },
+  {
+   "name": "W_U",
+   "shape": [
+    6,
+    5
+   ],
+   "desc": "unembedding (column = class)"
+  }
+ ],
+ "params": 378
+}

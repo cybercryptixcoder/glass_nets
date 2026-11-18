@@ -8,7 +8,8 @@ def alive():
     except Exception:
         return False
 print("job:", "alive" if alive() else "NOT RUNNING")
-q = "/content/helix_probe/results/glass/queue.json"
+q = "/content/helix_probe/results/glass/round2/queue.json"
+if not os.path.exists(q): q = "/content/helix_probe/results/glass/queue.json"
 if os.path.exists(q):
     st = json.load(open(q)); c = {}
     for j in st.values():

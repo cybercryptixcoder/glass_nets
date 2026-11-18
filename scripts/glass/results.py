@@ -8,14 +8,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LAB = ROOT / "lab"
-RES = ROOT / "results" / "glass"
+import os
+RES = ROOT / "results" / "glass" / os.environ.get("GLASS_ROUND", "")
 
 
 def row(name, j):
     target, rid = j["target"], j.get("run_id")
     meta = json.loads((LAB / "models" / target / "meta.json").read_text())
     kind = name.split("__")[1]
-    cells = [meta["name"].replace("AlgZoo RNN ", ""), str(meta["params"]), kind, j["status"], rid or "-"]
+    run_p0 = LAB / "constructions" / target / (rid or "_") / "run.json"
+    if run_p0.exists():
+        kind += " (" + json.loads(run_p0.read_text())["config"].get("reader", "v1") + ")"
+    cells = [meta["name"].replace("AlgZoo RNN ", "").replace("AlgZoo longest-cycle transformer ", "LC "), str(meta["params"]), kind, j["status"], rid or "-"]
     rep_p = LAB / "constructions" / target / (rid or "_") / "report_current.json"     # re-judged by the current judge
     if not rep_p.exists():
         rep_p = rep_p.with_name("report.json")
@@ -46,8 +50,8 @@ def main():
          "run's `report.json`. 'main' = blinded constructor run; 'prior' = prior-only control (told the task, no weights, one "
          "submission); 'shuffled' = the same reader on weights shuffled within each tensor (should fail).*", "",
          "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
-    order = {n: i for i, n in enumerate(sorted(st, key=lambda n: (n.split("__")[1] != "main", n.split("__")[1], json.loads(
-        (LAB / "models" / st[n]["target"] / "meta.json").read_text())["params"])))}
+    order = {n: i for i, n in enumerate(sorted(st, key=lambda n: (st[n]["target"][:2], json.loads(
+        (LAB / "models" / st[n]["target"] / "meta.json").read_text())["params"], n.split("__")[1])))}
     for name in sorted(st, key=order.get):
         L.append("| " + " | ".join(row(name, st[name])) + " |")
     (RES / "RESULTS.md").write_text("\n".join(L) + "\n")

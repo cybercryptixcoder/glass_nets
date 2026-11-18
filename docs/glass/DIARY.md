@@ -328,3 +328,24 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Regression check:** every saved non-LM construction re-judged with glass-2
     (`docs/glass/rejudge_glass2.txt`). Every verdict is identical to the round-1 final verdicts. F1 removed rules
     without changing any answer, as E3 predicted.
+- **23:49** Step 5a/b built: `lab/targets/build_longest_cycle.py`.
+  - Four AlgZoo longest-cycle transformers are converted to the lab's existing `transformer` kind (bidirectional,
+    attention-only, read at the last position). No new network code was needed.
+  - Checked against ARC's own torch forward on **every possible input**: max difference ≤ 9e-13. Labels match
+    ARC's `task_longest_cycle` exactly.
+
+    | Target | Params | Accuracy (exhaustive) | Inputs |
+    |---|---|---|---|
+    | lc_3_4 | 108 | 90.2% | 256 |
+    | lc_4_5 | 188 | 81.0% | 3,125 |
+    | lc_6_5 | 378 | 94.7% | 3,125 |
+    | lc_8_6 | 656 | 85.4% | 46,656 |
+
+  - The judge runs on them (a task-algorithm construction on lc_3_4: 85.9% behaviour, rejected). A 2-step v2
+    smoke run works and records reader v2 and judge glass-2 in its config (deleted afterwards).
+- Round-2 queue (`run_ladder.py --round2`, state in `results/glass/round2/`): 40 jobs.
+  - Longest-cycle: 2 blinded v2 runs per network (80 steps for the two small ones, 120 for the two large ones), plus
+    prior-only and shuffled controls.
+  - The ladder A/B: reader v1 vs v2, two runs each per network, same budgets (80; M16,10 160).
+  - The longest-cycle runs are interleaved early.
+  - Round 1's controls are reused (the frozen judge gives them the same verdicts).
