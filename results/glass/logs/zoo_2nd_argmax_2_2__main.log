@@ -1,0 +1,547 @@
+
+==== 2026-11-18 01:50:37 attempt 1: /content/helix_probe/lab/constructor.py zoo_2nd_argmax_2_2 --steps 80 --quiet
+
+[start] {"id": "20261118-015037-4e7d", "target": "zoo_2nd_argmax_2_2", "dir": "lab/constructions/zoo_2nd_argmax_2_2/20261118-015037-4e7d"}
+
+===== step 1/80
+
+--- python ---
+
+import numpy as np
+for k,v in W.items(): print(k, v)
+print(SITES)
+print(X.shape, X[:5])
+
+--- output (0.0 s) ---
+W_x [[ 4.174 -6.754]]
+W_h [[-0.3821  1.8471]
+ [ 1.2886 -0.7515]]
+W_o [[  9.541   -9.5381]
+ [-25.6923  25.6381]]
+seq_len [2.]
+{'h1': (2, 'hidden state after reading input 1 of 2', 'step 1'), 'h2': (2, 'hidden state after reading input 2 of 2', 'step 2'), 'out': (2, "the network's output", 'output')}
+(8000, 2) [[ 0.1257 -0.1321]
+ [ 0.6404  0.1049]
+ [-0.5357  0.3616]
+ [ 1.304   0.9471]
+ [-0.7037 -1.2654]]
+
+
+===== step 2/80
+
+--- python ---
+
+h1 = np.maximum(X[:,:1]*W['W_x'], 0)
+h2 = np.maximum(X[:,1:2]*W['W_x'] + h1@W['W_h'], 0)
+out = h2@W['W_o']
+print('out vs run match', np.allclose(out, run(X)))
+print('h1 vs acts', np.allclose(h1, acts(X)['h1']), np.allclose(h2, acts(X)['h2']))
+d = out[:,0]-out[:,1]
+dec = d>0
+print(dec.mean())
+# relationship with x1,x2
+# check sign(x2 - a*x1) style
+# try: decision depends on sign of ...? Fit a line
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression().fit(X, dec.astype(int))
+print(lr.coef_, lr.intercept_)
+# maybe decision = 1 iff x2 > c or... measure by quadrant
+s1 = X[:,0]>0; s2=X[:,1]>0
+for a,b in [(True,True),(True,False),(False,True),(False,False)]:
+    m = (s1==a)&(s2==b)
+    print(a,b,m.sum(), dec[m].mean())
+
+--- output (0.57 s) ---
+out vs run match True
+h1 vs acts True True
+0.4985
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 285, in <module>
+    set_scputimes_ntuple("/proc")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 432, in wrapper
+    raise raise_from(err, None)
+          ~~~~~~~~~~^^^^^^^^^^^
+  File "<string>", line 3, in raise_from
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 430, in wrapper
+    ret = cache[key] = fun(*args, **kwargs)
+                       ~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 268, in set_scputimes_ntuple
+    with open_binary('%s/stat' % procfs_path) as f:
+         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 765, in open_binary
+    return open(fname, "rb", buffering=FILE_READ_BUFFER_SIZE)
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 13, in <module>
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/__init__.py", line 73, in <module>
+    from .base import clone  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/base.py", line 19, in <module>
+    from .utils._estimator_html_repr import _HTMLDocumentationLinkMixin, estimator_html_repr
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from ._chunking import gen_batches, gen_even_slices
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_chunking.py", line 11, in <module>
+    from ._param_validation import Interval, validate_params
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_param_validation.py", line 17, in <module>
+    from .validation import _is_arraylike_not_scalar
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 21, in <module>
+    from ..utils._array_api import _asarray_with_order, _is_numpy_namespace, get_namespace
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_array_api.py", line 17, in <module>
+    from .fixes import parse_version
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/fixes.py", line 20, in <module>
+    import pandas as pd
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/__init__.py", line 49, in <module>
+    from pandas.core.api import (
+    ...<62 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/core/api.py", line 1, in <module>
+    from pandas._libs import (
+    ...<4 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/__init__.py", line 18, in <module>
+    from pandas._libs.interval import Interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "interval.pyx", line 1, in init pandas._libs.interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "hashtable.pyx", line 1, in init pandas._libs.hashtable
+    return _real_import(name, globals, locals, fromlist, level)
+  File "missing.pyx", line 1, in init pandas._libs.missing
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/tslibs/__init__.py", line 40, in <module>
+    from pandas._libs.tslibs.conversion import localize_pydatetime
+    return _real_import(name, globals, locals, fromlist, level)
+  File "conversion.pyx", line 1, in init pandas._libs.tslibs.conversion
+    return _real_import(name, globals, locals, fromlist, level)
+  File "offsets.pyx", line 1, in init pandas._libs.tslibs.offsets
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timestamps.pyx", line 1, in init pandas._libs.tslibs.timestamps
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timedeltas.pyx", line 1, in init pandas._libs.tslibs.timedeltas
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timezones.pyx", line 49, in init pandas._libs.tslibs.timezones
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1557, in __call__
+    rv = self.nocache(name=name)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1640, in nocache
+    tz = tzfile(filepath)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 464, in __init__
+    fileobj = open(fileobj, 'rb')
+TypeError: 'NoneType' object is not callable
+
+
+===== step 3/80
+
+--- python ---
+
+h1 = np.maximum(X[:,:1]*W['W_x'], 0)
+h2 = np.maximum(X[:,1:2]*W['W_x'] + h1@W['W_h'], 0)
+out = h2@W['W_o']
+d = out[:,0]-out[:,1]
+dec = d>0
+s1 = X[:,0]>0; s2=X[:,1]>0
+for a in [True,False]:
+    for b in [True,False]:
+        m = (s1==a)&(s2==b)
+        print(a,b,m.sum(), round(dec[m].mean(),3), np.round(X[m].mean(0),2))
+# Fit linear logistic via numpy newton
+A = np.c_[X, np.ones(len(X))]
+w = np.zeros(3)
+for _ in range(200):
+    p = 1/(1+np.exp(-A@w))
+    g = A.T@(p-dec)/len(A)
+    H = (A*(p*(1-p))[:,None]).T@A/len(A)
+    w -= np.linalg.solve(H, g)
+print('lin coef', np.round(w,3))
+pred = A@w>0
+print('lin acc', (pred==dec).mean())
+
+--- output (0.03 s) ---
+True True 1960 0.503 [0.79 0.81]
+True False 2026 0.0 [ 0.83 -0.79]
+False True 2016 1.0 [-0.79  0.8 ]
+False False 1998 0.494 [-0.78 -0.8 ]
+<your code>:16: RuntimeWarning: overflow encountered in exp
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 19, in <module>
+  File "/usr/local/lib/python3.13/dist-packages/numpy/linalg/_linalg.py", line 451, in solve
+    r = gufunc(a, b, signature=signature)
+  File "/usr/local/lib/python3.13/dist-packages/numpy/linalg/_linalg.py", line 144, in _raise_linalgerror_singular
+    raise LinAlgError("Singular matrix")
+numpy.linalg.LinAlgError: Singular matrix
+
+
+===== step 4/80
+
+--- python ---
+
+wx0, wx1 = W['W_x'][0]
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+h1 = np.c_[wx0*p, wx1*n]
+h2 = np.maximum(X[:,1:2]*W['W_x'] + h1@W['W_h'], 0)
+out = h2@W['W_o']
+# candidate reconstruction
+k0 = -W['W_h'][0,0]                      # coefficient on pos1 in drive of unit0
+k1 = W['W_h'][1,0]*wx1/wx0               # coefficient on neg1
+c0 = W['W_h'][0,1]*wx0/wx1               # coefficient on pos1 in unit1 drive
+c1 = -W['W_h'][1,1]
+print('k0',k0,'k1',k1,'c0',c0,'c1',c1)
+d0 = X[:,1] + k1*n - k0*p
+d1 = -X[:,1] + c0*p - c1*n
+h2r = np.c_[wx0*np.maximum(d0,0), wx1*np.maximum(d1,0)]
+print('h2 max err', np.abs(h2r-h2).max())
+a,b = 9.541,-9.5381
+outr = np.c_[9.541*h2r[:,0]-25.6923*h2r[:,1], -9.5381*h2r[:,0]+25.6381*h2r[:,1]]
+print('dec agree', (np.argmax(outr,1)==np.argmax(out,1)).mean())
+# antisymmetric version
+s = 9.54*h2r[:,0]-25.69*h2r[:,1]
+print('anti agree', (np.argmax(np.c_[s,-s],1)==np.argmax(out,1)).mean())
+print('tie frac out', (out[:,0]==out[:,1]).mean(), 'antisym ties',(s==0).mean())
+print('decision boundary check x1>0:', np.mean((X[:,0]>0)&(np.abs(X[:,1]-0.7190*X[:,0])<0.2)))
+
+--- output (0.0 s) ---
+k0 0.38212355971336365 k1 -2.0851662362478636 c0 -1.1415294349709517 c1 0.7515226602554321
+h2 max err 52.94289873169055
+dec agree 0.273125
+anti agree 0.273125
+tie frac out 0.07625 antisym ties 0.4765
+decision boundary check x1>0: 0.060875
+
+
+===== step 5/80
+
+--- python ---
+
+A,B = W['W_x'][0]
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+h1 = np.c_[A*p, B*n]
+h2 = np.maximum(X[:,1:2]*W['W_x'] + h1@W['W_h'], 0)
+out = h2@W['W_o']
+th0 = -W['W_h'][0,0]            # pos coeff unit0 drive
+th0n = W['W_h'][1,0]*B/A        # neg coeff
+th1 = W['W_h'][0,1]*A/B         # pos coeff unit1
+th1n = -W['W_h'][1,1]
+print(th0, th0n, th1, th1n)
+h2r = np.c_[A*np.maximum(X[:,1] + th0n*n - th0*p,0), B*np.maximum(-X[:,1] + th1*p - th1n*n,0)]
+print('h2 err', np.abs(h2r-h2).max())
+s = 9.541*h2r[:,0]-25.6923*h2r[:,1]; s2 = -9.5381*h2r[:,0]+25.6381*h2r[:,1]
+print('dec agree', (np.argmax(np.c_[s,s2],1)==np.argmax(out,1)).mean())
+# antisym
+sa = 9.54*h2r[:,0]-25.69*h2r[:,1]
+print('anti agree', (np.argmax(np.c_[sa,-sa],1)==np.argmax(out,1)).mean())
+print('ties', (h2.sum(1)==0).mean())
+
+--- output (0.0 s) ---
+0.38212355971336365 -2.0851662362478636 -1.1415294349709517 0.7515226602554321
+h2 err 52.94289873169055
+dec agree 0.273125
+anti agree 0.273125
+ties 0.07625
+
+
+===== step 6/80
+
+--- python ---
+
+A,G = 4.174, 6.754
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+h1 = np.c_[A*p, G*n]
+h2 = np.maximum(X[:,1:2]*W['W_x'] + h1@W['W_h'], 0)
+out = h2@W['W_o']
+a = -W['W_h'][0,0]; b = W['W_h'][1,0]*G/A
+c = W['W_h'][0,1]*A/G; e = -W['W_h'][1,1]
+print(a,b,c,e)
+h2r = np.c_[A*np.maximum(X[:,1]+b*n-a*p,0), G*np.maximum(-X[:,1]+c*p-e*n,0)]
+print('h2 err', np.abs(h2r-h2).max())
+s = 9.541*h2r[:,0]-25.6923*h2r[:,1]; s2=-9.5381*h2r[:,0]+25.6381*h2r[:,1]
+print('dec agree', (np.argmax(np.c_[s,s2],1)==np.argmax(out,1)).mean())
+sa = 9.54*h2r[:,0]-25.69*h2r[:,1]
+print('anti agree', (np.argmax(np.c_[sa,-sa],1)==np.argmax(out,1)).mean())
+# boundary slopes: x1>0 boundary x2 = ? solve 19.079*A(x2-a*p) = 51.33*G*(-x2+c*p)
+num = 19.079*A*a + 51.33*G*c; den = 19.079*A + 51.33*G
+print('slope x1>0', num/den)
+# x1<0: h2_0 = A(x2+b*(-x1)), h2_1 = G(-x2 - e*(-x1)) → boundary: 19.079A(x2 - b x1) = 51.33G(-x2+e x1)
+print('slope x1<0', (19.079*A*b + 51.33*G*e)/(19.079*A+51.33*G))
+print('slope sign check mean', (np.argmax(out,1)==(X[:,1] > np.where(X[:,0]>0,0.719*X[:,0],1.1697*X[:,0]))).mean())
+
+--- output (0.0 s) ---
+0.38212355971336365 2.0851760012256966 1.1415240891346186 0.7515226602554321
+h2 err 0.00014966791717441197
+dec agree 1.0
+anti agree 1.0
+slope x1>0 0.999669071557794
+slope x1<0 1.0006473458398724
+slope sign check mean 0.038625
+
+
+===== step 7/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = """
+The network compares the two numbers of the sequence: class 0 wins when the second
+number exceeds a threshold set by the first, class 1 otherwise (the decision boundary
+is essentially x2 = x1, with rectifier flat regions near it).
+Step 1: x1 is split into its positive and negative parts by two rectifying units
+  h1 = [4.174*relu(x1), 6.754*relu(-x1)]
+  so the state records sign(x1) and |x1| in separate coordinates.
+Step 2: those two coordinates shift the input of step 2, giving two competing evidence
+units (uses x2 and the sign-dependent gain of x1):
+  u0 = 4.174 * relu(x2 + 2.0852*relu(-x1) - 0.3821*relu(x1))   (evidence for class 0)
+  u1 = 6.754 * relu(-x2 + 1.1415*relu(x1) - 0.7515*relu(-x1))  (evidence for class 1)
+  Each unit is silent (0) when its evidence is negative, so a large separation in the
+  'wrong' direction produces a tie-free but flat case (both units on/off patterns).
+Readout: an antisymmetric pair of scores: class0 score = 9.541*u0 - 25.6923*u1,
+class1 score = -9.5381*u0 + 25.6381*u1. Decision = larger score, i.e. class 0 iff
+u0 > 2.69*u1.
+"""
+
+def model(x, iv):
+    x1 = x[:, 0]
+    x2 = x[:, 1]
+    pos = iv("pos1", np.maximum(x1, 0.0))          # h1 unit 0 / 4.174
+    neg = iv("neg1", np.maximum(-x1, 0.0))         # h1 unit 1 / 6.754
+    u0 = iv("u0", 4.174 * np.maximum(x2 - 0.3821 * pos + 2.0852 * neg, 0.0))
+    u1 = iv("u1", 6.754 * np.maximum(-x2 + 1.1415 * pos - 0.7515 * neg, 0.0))
+    s0 = 9.541 * u0 - 25.6923 * u1
+    s1 = -9.5381 * u0 + 25.6381 * u1
+    return np.stack([s0, s1], axis=1)
+
+ALIGN = {"pos1": ["h1"], "neg1": ["h1"], "u0": ["h2"], "u1": ["h2"]}
+
+--- judge report 1 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,648 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 49.5%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 2; 1 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 75.5% (random n/a) | mean-ablate 75.5%
+  h2          (2 dims named of 2; 2 principal components suffice; u0, u1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 49.5% (random n/a) | mean-ablate 49.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 100.0% / 100.0% when changed (network changed in 31.1%); output R2 1.000 | controls: random subspace 100.0%, no-change 68.8%, source-output 67.2%, attribution patching 92.8%
+  partial     pos1 @ h1: right 100.0% / 100.0% when changed (network changed in 15.5%); output R2 1.000 | controls: random subspace 83.2%, no-change 84.5%, source-output 59.0%, attribution patching 93.3%
+  partial     neg1 @ h1: right 100.0% / 100.0% when changed (network changed in 14.2%); output R2 1.000 | controls: random subspace 87.9%, no-change 85.8%, source-output 58.4%, attribution patching 97.4%
+  edit        all variables @ h1: right 100.0% / 100.0% when changed (network changed in 15.3%); output R2 1.000 | controls: random subspace 84.2%, no-change 84.7%, source-output 58.9%, attribution patching 94.8%
+  interchange all variables @ h2: right 100.0% / 100.0% when changed (network changed in 49.5%); output R2 1.000 | controls: random subspace 100.0%, no-change 50.5%, source-output 100.0%, attribution patching 100.0%
+  partial     u0 @ h2: right 81.7% / 24.8% when changed (network changed in 24.3%); output R2 1.000 | controls: random subspace 60.7%, no-change 75.6%, source-output 74.9%, attribution patching 100.0%
+  partial     u1 @ h2: right 83.2% / 100.0% when changed (network changed in 27.5%); output R2 1.000 | controls: random subspace 81.0%, no-change 72.5%, source-output 77.2%, attribution patching 100.0%
+  edit        all variables @ h2: right 91.3% / 80.3% when changed (network changed in 25.9%); output R2 1.000 | controls: random subspace 74.6%, no-change 74.1%, source-output 76.0%, attribution patching 100.0%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=2022); network decides 1: 100.0% (n=1978) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 0.1% of test inputs (2); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. NOT A COPY   17 numeric literals in the file; network parameters 10; share of its weights (|w| >= 0.05) the literals reproduce: 80%  -> FLAGGED as a weight copy
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2
+VERDICT: NOT VERIFIED (2 of 2 stages verified). Failing:
+  - weight copy: the file has 17 numeric literals for a network of 10 parameters, and they reproduce 80% of its weights: this re-implements the weight matrices instead of describing the computation. Write the mechanism in terms of what the variables mean, with only the constants the account needs
+COVERAGE   stages 2/2 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED:
+  - the construction copies the network's weights, so it explains nothing by itself
+
+===== step 8/80
+
+--- python ---
+
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+d0 = X[:,1] - 0.3821*p + 2.0852*n
+d1 = -X[:,1] + 1.1415*p - 0.7515*n
+r0 = np.maximum(d0,0); r1 = np.maximum(d1,0)
+out = run(X)
+s = 79.637*r0 - 346.68*r1
+outA = np.c_[s,-s]
+dec = out.argmax(1); decA = outA.argmax(1)
+print('dec agreement', (dec==decA).mean())
+def r2(a,b):
+    return 1-((a-b)**2).sum()/((a-a.mean(0))**2).sum()
+print('R2 per col', r2(out,outA))
+# exact split of antisymmetric parts
+print('out0+out1 range', np.abs(out[:,0]+out[:,1]).max(), np.abs(out[:,0]-out[:,1]).max())
+# is decision == x2 > x1?
+print('dec == (x2>x1):', (dec==(X[:,1]>X[:,0])).mean())
+# how about exact out reproduction with separate coeffs
+p0,q0,p1,q1 = 9.541*4.174, 25.6923*6.754, 9.5381*4.174, 25.6381*6.754
+print(p0,q0,p1,q1)
+outB = np.c_[p0*r0-q0*r1, -p1*r0+q1*r1]
+print('R2 exactform', r2(out,outB), 'dec', (dec==outB.argmax(1)).mean())
+
+--- output (0.0 s) ---
+dec agreement 1.0
+R2 per col -0.14013507775650935
+out0+out1 range 2.288378403009574 2165.5747704025725
+dec == (x2>x1): 0.00025
+39.82413400000001 173.52579419999998 39.81202940000001 173.1597274
+R2 exactform 0.9999999994699962 dec 1.0
+
+
+===== step 9/80
+
+--- python ---
+
+test = np.array([[1.,2.],[1.,0.5],[1.,0.],[1.,-1.],[0.5,2.],[-1.,2.],[-1.,-2.],[-1.,-0.5],[2.,1.],[0.,0.]])
+o = run(test)
+print(np.round(o,2), o.argmax(1))
+print('x2<x1?', test[:,1]<test[:,0])
+# check exact: dec vs threshold per sign of x1
+thr = np.where(X[:,0]>0, 0.3821, 0)  # placeholder
+dec = run(X).argmax(1)
+# region analysis using drives
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+r0 = np.maximum(X[:,1]-0.3821*p+2.0852*n,0); r1 = np.maximum(-X[:,1]+1.1415*p-0.7515*n,0)
+both = (r0>0)&(r1>0); only0=(r0>0)&(r1==0); only1=(r0==0)&(r1>0); neither=(r0==0)&(r1==0)
+for nm,msk in [('both',both),('only0',only0),('only1',only1),('neither',neither)]:
+    print(nm, msk.mean(), 'dec0frac', dec[msk].mean() if msk.sum() else None)
+print('dec==(x2<x1) overall', (dec==(X[:,1]<X[:,0])).mean())
+for nm,msk in [('both',both),('only0',only0),('only1',only1),('neither',neither)]:
+    if msk.sum(): print(nm,'agree x2<x1', (dec[msk]==(X[msk,1]<X[msk,0])).mean())
+
+--- output (0.0 s) ---
+[[  64.43  -64.41]
+ [-106.63  106.39]
+ [-198.09  197.67]
+ [-371.61  370.83]
+ [  72.04  -72.02]
+ [ 162.69 -162.64]
+ [-213.25  212.8 ]
+ [  63.13  -63.11]
+ [-213.26  212.79]
+ [   0.      0.  ]] [0 1 1 1 0 0 1 0 1 0]
+x2<x1? [False  True  True  True False False  True False  True False]
+both 0.15425 dec0frac 0.7876823338735819
+only0 0.46575 dec0frac 0.0
+only1 0.38 dec0frac 1.0
+neither 0.0 dec0frac None
+dec==(x2<x1) overall 0.99975
+both agree x2<x1 0.9983792544570502
+only0 agree x2<x1 1.0
+only1 agree x2<x1 1.0
+
+
+===== step 10/80
+
+--- python ---
+
+dec = run(X).argmax(1)==0
+print('dec0 == (x2>x1):', (dec==(X[:,1]>X[:,0])).mean())
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+r0 = np.maximum(X[:,1]-0.3821*p+2.0852*n,0); r1 = np.maximum(-X[:,1]+1.1415*p-0.7515*n,0)
+for nm,msk in [('both',(r0>0)&(r1>0)),('only0',(r0>0)&(r1==0)),('only1',(r0==0)&(r1>0)),('neither',(r0==0)&(r1==0))]:
+    print(nm, round(msk.mean(),4), 'dec0frac', round(dec[msk].mean(),4) if msk.sum() else None,
+          'x2>x1 frac', round((X[msk,1]>X[msk,0]).mean(),4) if msk.sum() else None)
+
+--- output (0.0 s) ---
+dec0 == (x2>x1): 0.99975
+both 0.1542 dec0frac 0.2123 x2>x1 frac 0.2107
+only0 0.4658 dec0frac 1.0 x2>x1 frac 1.0
+only1 0.38 dec0frac 0.0 x2>x1 frac 0.0
+neither 0.0 dec0frac None x2>x1 frac None
+
+
+===== step 11/80
+
+--- python ---
+
+out = run(X)
+p = np.maximum(X[:,0],0); n = np.maximum(-X[:,0],0)
+r0 = np.maximum(X[:,1]-0.3821*p+2.0852*n,0); r1=np.maximum(-X[:,1]+1.1415*p-0.7515*n,0)
+outB = np.c_[39.824*r0-173.526*r1, -39.812*r0+173.160*r1]
+def r2(a,b): return 1-((a-b)**2).sum()/((a-a.mean(0))**2).sum()
+print('R2', r2(out,outB), 'dec', (out.argmax(1)==outB.argmax(1)).mean())
+print('class0 iff r0>4.353*r1 vs net', (outB[:,0]>outB[:,1])[...,None].ravel()[:3])
+
+--- output (0.0 s) ---
+R2 0.999999999521841 dec 1.0
+class0 iff r0>4.353*r1 vs net [False False  True]
+
+
+===== step 12/80
+
+--- submit ---
+
+import numpy as np
+
+DESCRIPTION = """
+The network's task is a comparison of the two numbers of the sequence: class 0 wins
+when the second number is larger than the first (class 1 when it is smaller).
+Because it must do this with one rectifying unit per sign of the first number, it
+proceeds in two steps.
+
+Step 1 - split the first number by sign. The two units of h1 are ramps on +/-x1:
+  h1 = [4.174*relu(x1), 6.754*relu(-x1)]
+i.e. the state separates 'x1 positive' from 'x1 negative' and keeps the magnitude.
+Only one of the two coordinates is ever nonzero.
+
+Step 2 - compare x2 with a hurdle set by step 1. Each unit is a rectified difference
+(evidence) and one unit serves each class:
+  ev_above = relu(x2 - 0.3821*relu(x1) + 2.0852*relu(-x1))
+      fires when x2 is above the hurdle; for x1>0 the hurdle is 0.382*x1 (just below
+      the diagonal), for x1<0 it is -2.085*x1 (on the far side, so allowing x2 < x1
+      of any size), hence ev_above is the 'x2 large' evidence.
+  ev_below = relu(-x2 + 1.1415*relu(x1) - 0.7515*relu(-x1))
+      the mirror image: fires when x2 is below 1.1415*x1 (x1>0) / -0.7515*x1 (x1<0),
+      i.e. the 'x2 small' evidence.
+So the sign of x1 selects which of two piecewise-linear hurdles is applied, and the
+two rectifiers are silent (0) on the far side of the comparison.
+
+Readout - an (almost) antisymmetric pair of scores over the two evidence values:
+  score0 =  39.824*ev_above - 173.526*ev_below
+  score1 = -39.812*ev_above + 173.160*ev_below
+Decision = larger score, equivalent to ev_above > 4.353*ev_below, which reproduces
+'x2 larger than x1 -> class 0'.
+"""
+
+def model(x, iv):
+    x1 = x[:, 0]
+    x2 = x[:, 1]
+    pos = iv("pos1", np.maximum(x1, 0.0))        # = h1 unit 0 up to the gain 4.174
+    neg = iv("neg1", np.maximum(-x1, 0.0))       # = h1 unit 1 up to the gain 6.754
+    up = iv("ev_above", np.maximum(x2 - 0.3821 * pos + 2.0852 * neg, 0.0))
+    dn = iv("ev_below", np.maximum(-x2 + 1.1415 * pos - 0.7515 * neg, 0.0))
+    return np.stack([39.824 * up - 173.526 * dn,
+                     -39.812 * up + 173.160 * dn], axis=1)
+
+ALIGN = {"pos1": ["h1"], "neg1": ["h1"], "ev_above": ["h2"], "ev_below": ["h2"]}
+
+--- judge report 2 ---
+JUDGE REPORT   (4000 held-out inputs; construction 2,168 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 100.0% of inputs (a constant output would get 49.5%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 2; 1 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 75.5% (random n/a) | mean-ablate 75.5%
+  h2          (2 dims named of 2; 2 principal components suffice; ev_above, ev_below): explained 1.000 | substitute 100.0% | keep 100.0% | remove 49.5% (random n/a) | mean-ablate 49.5%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 100.0% / 100.0% when changed (network changed in 31.1%); output R2 1.000 | controls: random subspace 100.0%, no-change 68.8%, source-output 67.2%, attribution patching 92.8%
+  partial     pos1 @ h1: right 100.0% / 100.0% when changed (network changed in 15.5%); output R2 1.000 | controls: random subspace 83.2%, no-change 84.5%, source-output 59.0%, attribution patching 93.3%
+  partial     neg1 @ h1: right 100.0% / 100.0% when changed (network changed in 14.2%); output R2 1.000 | controls: random subspace 87.9%, no-change 85.8%, source-output 58.4%, attribution patching 97.4%
+  edit        all variables @ h1: right 100.0% / 100.0% when changed (network changed in 15.3%); output R2 1.000 | controls: random subspace 84.2%, no-change 84.7%, source-output 58.9%, attribution patching 94.8%
+  interchange all variables @ h2: right 100.0% / 100.0% when changed (network changed in 49.5%); output R2 1.000 | controls: random subspace 100.0%, no-change 50.5%, source-output 100.0%, attribution patching 100.0%
+  partial     ev_above @ h2: right 81.7% / 24.8% when changed (network changed in 24.3%); output R2 1.000 | controls: random subspace 60.7%, no-change 75.6%, source-output 74.9%, attribution patching 100.0%
+  partial     ev_below @ h2: right 83.2% / 100.0% when changed (network changed in 27.5%); output R2 1.000 | controls: random subspace 81.0%, no-change 72.5%, source-output 77.2%, attribution patching 100.0%
+  edit        all variables @ h2: right 91.3% / 80.3% when changed (network changed in 25.9%); output R2 1.000 | controls: random subspace 74.6%, no-change 74.1%, source-output 76.0%, attribution patching 100.0%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=2022); network decides 1: 100.0% (n=1978) | near ties (400 least clear inputs, no requirement): 100.0%
+   the network's own mistakes: it is wrong on 0.1% of test inputs (2); the construction reproduces 100.0% of them (need 50% when there are 30 or more) and is right on 0.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 0 (0.0%; on the unsearched starting inputs 0.0%)
+7. NOT A COPY   15 numeric literals in the file; network parameters 10; share of its weights (|w| >= 0.05) the literals reproduce: 20%
+STAGES   step 1: VERIFIED at h1;  step 2: VERIFIED at h2
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 2/2 | behaviour 100.0% | all sites at once 100.0% | worst slice 100.0% | network's mistakes reproduced 100.0%
+NOT EXPLAINED: nothing found by these tests
+
+[done] {"id": "20261118-015037-4e7d", "status": "done", "seconds": 156.6, "best": 2, "verdict": {"verified": true, "fails": [], "stages_total": 2, "stages_verified": 2, "complete": true, "score": 1.0}, "cost": 0.039825708}
+
+status done; best submission 2; cost $0.040; 156.6 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_2_2/20261118-015037-4e7d

@@ -1,0 +1,543 @@
+
+==== 2026-11-18 01:53:14 attempt 1: /content/helix_probe/lab/constructor.py zoo_2nd_argmax_8_5 --steps 80 --quiet
+
+[start] {"id": "20261118-015314-6ab4", "target": "zoo_2nd_argmax_8_5", "dir": "lab/constructions/zoo_2nd_argmax_8_5/20261118-015314-6ab4"}
+
+===== step 1/80
+
+--- python ---
+import numpy as np
+np.set_printoptions(precision=3, suppress=True)
+for k,v in W.items():
+    print(k, v.shape)
+    print(v)
+
+--- output (0.0 s) ---
+W_x (1, 8)
+[[ 0.643 -6.421  0.423 -6.574  0.045 -4.913 -0.054  7.002]]
+W_h (8, 8)
+[[ 0.125  0.155  0.476  0.061  0.771  0.036  0.944 -0.163]
+ [-0.465 -0.236  0.272  0.493  0.169 -0.732  0.424 -0.027]
+ [ 0.02  -0.129 -0.107 -0.19  -0.618 -0.424  0.24   0.082]
+ [ 0.528 -0.3   -0.363 -0.847  0.279  0.57   0.199  0.061]
+ [-0.177 -0.324  0.216 -0.252 -0.747 -0.192 -1.207  0.38 ]
+ [ 0.881  0.6    0.126  0.348  0.127  0.07  -0.75   0.024]
+ [ 0.127  0.962 -0.086  0.973  0.546  0.68   0.787 -0.89 ]
+ [-1.656 -0.017  1.419  1.088  0.156  0.815  1.102 -0.828]]
+W_o (8, 5)
+[[ 0.716 -1.137  0.68  -1.948  0.727]
+ [ 0.336 -0.716 -3.905  3.885 -0.239]
+ [ 0.849 -0.069 -3.387  0.567  0.633]
+ [ 0.36  -2.426  4.804 -2.857 -0.673]
+ [-0.403  2.16  -0.467 -0.468 -0.377]
+ [-0.871  4.2   -1.351 -1.31  -0.845]
+ [-0.867 -0.938  0.518  0.679  0.493]
+ [ 0.24   0.317  0.378  0.356 -2.253]]
+seq_len (1,)
+[5.]
+
+
+--- python ---
+print(X.shape)
+a = acts(X[:5])
+for s in SITES:
+    print(s, a[s].shape)
+o = run(X[:5])
+print(o)
+
+--- output (0.0 s) ---
+(8000, 5)
+h1 (5, 8)
+h2 (5, 8)
+h3 (5, 8)
+h4 (5, 8)
+h5 (5, 8)
+out (5, 5)
+[[  0.963  -1.048 -10.82    1.275  -6.007]
+ [ -6.098  -4.585   9.742 -12.911 -18.348]
+ [  2.452   1.554 -21.888   5.05   -7.737]
+ [  1.19   -2.374 -14.94    7.891  -4.227]
+ [ -4.963  -5.088 -17.784  -2.133   7.058]]
+
+
+===== step 2/80
+
+--- python ---
+o=run(X); d=o.argmax(1)
+for cand,name in [(X.argmax(1),'argmax x'),(X.argmin(1),'argmin x'),(X.argmax(1)+1,'argmax+1'),(X.argmin(1)+1,'argmin+1')]:
+    print(name, (d==cand).mean())
+print(np.bincount(d))
+print(np.bincount(X.argmax(1)))
+
+--- output (0.01 s) ---
+argmax x 0.0505
+argmin x 0.001125
+argmax+1 0.186125
+argmin+1 0.2045
+[1594 1634 1664 1563 1545]
+[1607 1614 1528 1613 1638]
+
+
+--- python ---
+a=acts(X[:6])
+print(X[:6])
+for s in ['h1','h2','h3','h4','h5']:
+    print(s); print(a[s])
+
+--- output (0.0 s) ---
+[[ 0.126 -0.132  0.64   0.105 -0.536]
+ [ 0.362  1.304  0.947 -0.704 -1.265]
+ [-0.623  0.041 -2.325 -0.219 -1.246]
+ [-0.732 -0.544 -0.316  0.412  1.043]
+ [-0.129  1.366 -0.665  0.352  0.903]
+ [ 0.094 -0.743 -0.922 -0.458  0.22 ]]
+h1
+[[0.081 0.    0.053 0.    0.006 0.    0.    0.88 ]
+ [0.232 0.    0.153 0.    0.016 0.    0.    2.532]
+ [0.    4.002 0.    4.097 0.    3.062 0.034 0.   ]
+ [0.    4.702 0.    4.814 0.    3.598 0.04  0.   ]
+ [0.    0.825 0.    0.845 0.    0.632 0.007 0.   ]
+ [0.06  0.    0.04  0.    0.004 0.    0.    0.658]]
+h2
+[[0.    0.837 1.227 1.819 0.156 1.346 1.059 0.   ]
+ [0.    0.    4.242 0.    0.526 0.    2.956 7.015]
+ [3.033 0.    0.003 0.    2.231 0.    0.238 0.474]
+ [3.182 3.138 0.    3.106 2.594 2.251 0.312 0.   ]
+ [1.498 0.    0.576 0.    0.521 0.    0.    9.606]
+ [0.    4.766 0.644 5.599 0.088 4.174 0.827 0.   ]]
+h3
+[[ 2.3    0.     0.     0.     0.552  0.     0.611  3.821]
+ [ 0.     0.     9.757  3.341  0.     1.173 10.388  0.   ]
+ [ 0.    14.896  1.593 15.653  0.77  11.652  1.005  0.   ]
+ [ 1.94   1.661  1.925  1.62   2.356  1.012  0.392  0.   ]
+ [ 0.     4.095 14.11  14.671  1.877 10.806 11.544  0.   ]
+ [ 3.929  6.303  0.     5.775  2.846  4.791  0.751  0.   ]]
+h4
+[[ 0.     0.025  6.626  4.061  2.295  2.99   6.19   0.   ]
+ [ 3.857 12.952  0.    10.452  0.685  8.366 10.334  0.   ]
+ [11.491  0.696  0.     0.048  7.351  0.     0.94   0.   ]
+ [ 1.153  0.     1.359  0.     0.     0.     0.001  3.348]
+ [17.003  7.535  0.     0.     2.353  5.891  6.725  0.   ]
+ [ 4.13   3.002  2.45   3.14   4.582  1.363  1.113  0.   ]]
+h5
+[[ 4.933  8.364  0.     5.315  0.     6.093  2.291  0.   ]
+ [ 7.73  17.266  1.342 18.868 14.219 10.299 12.304  0.   ]
+ [ 0.     8.122  6.622  8.253  3.96   5.283  3.082  0.   ]
+ [ 0.     0.     5.594  0.     0.618  0.     5.047  4.45 ]
+ [ 4.836  4.293 11.197  6.804 17.09   0.    17.227  0.   ]
+ [ 1.501  0.     2.541  0.     0.424  0.     0.692  1.962]]
+
+
+===== step 3/80
+
+--- python ---
+d=run(X).argmax(1)
+sg=(X>0).astype(int)
+codes=sg@np.array([16,8,4,2,1])
+import collections
+pure=0; tot=0
+for c in np.unique(codes):
+    m=codes==c
+    vals,cnt=np.unique(d[m],return_counts=True)
+    tot+=1; pure+= (len(vals)==1)
+print('sign patterns', tot, 'pure', pure)
+# maybe decision depends on rank pattern / comparisons
+from sklearn.tree import DecisionTreeClassifier, export_text
+t=DecisionTreeClassifier(max_depth=4).fit(X,d)
+print(t.score(X,d))
+print(export_text(t, precision=2, feature_names=[f'x{i}' for i in range(5)]))
+
+--- output (0.57 s) ---
+sign patterns 32 pure 0
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 285, in <module>
+    set_scputimes_ntuple("/proc")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 432, in wrapper
+    raise raise_from(err, None)
+          ~~~~~~~~~~^^^^^^^^^^^
+  File "<string>", line 3, in raise_from
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 430, in wrapper
+    ret = cache[key] = fun(*args, **kwargs)
+                       ~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_pslinux.py", line 268, in set_scputimes_ntuple
+    with open_binary('%s/stat' % procfs_path) as f:
+         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/psutil/_common.py", line 765, in open_binary
+    return open(fname, "rb", buffering=FILE_READ_BUFFER_SIZE)
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+    exec(compile(code, "<your code>", "exec"), env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<your code>", line 12, in <module>
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/__init__.py", line 73, in <module>
+    from .base import clone  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/base.py", line 19, in <module>
+    from .utils._estimator_html_repr import _HTMLDocumentationLinkMixin, estimator_html_repr
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from ._chunking import gen_batches, gen_even_slices
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_chunking.py", line 11, in <module>
+    from ._param_validation import Interval, validate_params
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_param_validation.py", line 17, in <module>
+    from .validation import _is_arraylike_not_scalar
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 21, in <module>
+    from ..utils._array_api import _asarray_with_order, _is_numpy_namespace, get_namespace
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_array_api.py", line 17, in <module>
+    from .fixes import parse_version
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/fixes.py", line 20, in <module>
+    import pandas as pd
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/__init__.py", line 49, in <module>
+    from pandas.core.api import (
+    ...<62 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/core/api.py", line 1, in <module>
+    from pandas._libs import (
+    ...<4 lines>...
+    )
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/__init__.py", line 18, in <module>
+    from pandas._libs.interval import Interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "interval.pyx", line 1, in init pandas._libs.interval
+    return _real_import(name, globals, locals, fromlist, level)
+  File "hashtable.pyx", line 1, in init pandas._libs.hashtable
+    return _real_import(name, globals, locals, fromlist, level)
+  File "missing.pyx", line 1, in init pandas._libs.missing
+    return _real_import(name, globals, locals, fromlist, level)
+  File "/usr/local/lib/python3.13/dist-packages/pandas/_libs/tslibs/__init__.py", line 40, in <module>
+    from pandas._libs.tslibs.conversion import localize_pydatetime
+    return _real_import(name, globals, locals, fromlist, level)
+  File "conversion.pyx", line 1, in init pandas._libs.tslibs.conversion
+    return _real_import(name, globals, locals, fromlist, level)
+  File "offsets.pyx", line 1, in init pandas._libs.tslibs.offsets
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timestamps.pyx", line 1, in init pandas._libs.tslibs.timestamps
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timedeltas.pyx", line 1, in init pandas._libs.tslibs.timedeltas
+    return _real_import(name, globals, locals, fromlist, level)
+  File "timezones.pyx", line 49, in init pandas._libs.tslibs.timezones
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1557, in __call__
+    rv = self.nocache(name=name)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 1640, in nocache
+    tz = tzfile(filepath)
+  File "/usr/local/lib/python3.13/dist-packages/dateutil/tz/tz.py", line 464, in __init__
+    fileobj = open(fileobj, 'rb')
+TypeError: 'NoneType' object is not callable
+
+
+===== step 4/80
+
+--- python ---
+d=run(X).argmax(1)
+rk=np.argsort(np.argsort(X,1),1)
+# permutation code
+def code(A,b):
+    return A@ (b**np.arange(A.shape[1]))
+c=code(rk,np.array([1,5,25,125,625]))
+u,inv,cnt=np.unique(c,return_inverse=True,return_counts=True)
+pure=0
+for i in range(len(u)):
+    m=inv==i
+    pure+= len(np.unique(d[m]))==1
+print('rank patterns',len(u),'pure',pure)
+# check sum-based
+s=X.sum(1)
+for f,name in [(s,'sum'),(np.abs(X).sum(1),'abssum'),((X>0).sum(1),'npos'),(X.max(1),'max'),(X.min(1),'min'),(np.abs(X).max(1),'absmax')]:
+    # bin into deciles, purity
+    q=np.quantile(f,np.linspace(0,1,11)); b=np.digitize(f,q[1:-1])
+    p=np.mean([len(np.unique(d[b==i]))==1 for i in range(10)])
+    print(name,'purity',p)
+
+--- output (0.02 s) ---
+rank patterns 120 pure 3
+sum purity 0.0
+abssum purity 0.0
+npos purity 0.0
+max purity 0.0
+min purity 0.0
+absmax purity 0.0
+
+
+===== step 5/80
+
+--- python ---
+a=acts(X)
+F=np.concatenate([np.maximum(X,0), np.maximum(-X,0)],1)  # 10 feats
+F1=np.concatenate([F,np.ones((len(X),1))],1)
+for s in ['h1','h2','h3','h4','h5']:
+    A=a[s]
+    coef,res,rank,sv=np.linalg.lstsq(F1,A,rcond=None)
+    pred=F1@coef
+    r2=1-((A-pred)**2).sum(0)/ (A**2).sum(0)
+    print(s, 'rank',rank, np.round(r2,6))
+
+--- output (0.02 s) ---
+h1 rank 11 [1. 1. 1. 1. 1. 1. 1. 1.]
+h2 rank 11 [0.992 0.999 1.    0.962 1.    0.96  1.    0.911]
+h3 rank 11 [0.941 0.963 0.917 0.961 0.962 0.904 0.974 0.821]
+h4 rank 11 [0.898 0.94  0.892 0.941 0.978 0.894 0.964 0.76 ]
+h5 rank 11 [0.89  0.936 0.873 0.931 0.946 0.915 0.875 0.706]
+
+
+===== step 6/80
+
+--- python ---
+a=acts(X[:200])
+print(X[:6])
+for s in ['h1','h2','h3','h4','h5']:
+    print(s, (a[s]>1e-9).astype(int))
+
+--- output (0.0 s) ---
+[[ 0.126 -0.132  0.64   0.105 -0.536]
+ [ 0.362  1.304  0.947 -0.704 -1.265]
+ [-0.623  0.041 -2.325 -0.219 -1.246]
+ [-0.732 -0.544 -0.316  0.412  1.043]
+ [-0.129  1.366 -0.665  0.352  0.903]
+ [ 0.094 -0.743 -0.922 -0.458  0.22 ]]
+h1 [[1 0 1 0 1 0 0 1]
+ [1 0 1 0 1 0 0 1]
+ [0 1 0 1 0 1 1 0]
+ [0 1 0 1 0 1 1 0]
+ [0 1 0 1 0 1 1 0]
+ [1 0 1 0 1 0 0 1]
+ ...
+ [0 1 0 1 0 1 1 0]
+ [0 1 0 1 0 1 1 0]
+ [1 0 1 0 1 0 0 1]
+ [0 1 0 1 0 1 1 0]
+ [1 0 1 0 1 0 0 1]
+ [1 0 1 0 1 0 0 1]]
+h2 [[0 1 1 1 1 1 1 0]
+ [0 0 1 0 1 0 1 1]
+ [1 0 1 0 1 0 1 1]
+ [1 1 0 1 1 1 1 0]
+ [1 0 1 0 1 0 0 1]
+ [0 1 1 1 1 1 1 0]
+ ...
+ [1 1 0 1 1 1 1 0]
+ [1 1 0 1 1 1 1 0]
+ [0 1 1 1 1 1 1 0]
+ [1 0 1 0 1 0 1 1]
+ [0 1 1 1 1 1 1 0]
+ [0 1 1 1 1 1 1 0]]
+h3 [[1 0 0 0 1 0 1 1]
+ [0 0 1 1 0 1 1 0]
+ [0 1 1 1 1 1 1 0]
+ [1 1 1 1 1 1 1 0]
+ [0 1 1 1 1 1 1 0]
+ [1 1 0 1 1 1 1 0]
+ ...
+ [1 1 0 1 1 1 1 0]
+ [1 0 1 0 1 0 1 1]
+ [1 1 0 1 1 1 1 0]
+ [0 1 1 1 1 1 1 0]
+ [1 1 0 1 1 1 1 0]
+ [1 1 0 0 1 1 1 0]]
+h4 [[0 1 1 1 1 1 1 0]
+ [1 1 0 1 1 1 1 0]
+ [1 1 0 1 1 0 1 0]
+ [1 0 1 0 0 0 1 1]
+ [1 1 0 0 1 1 1 0]
+ [1 1 1 1 1 1 1 0]
+ ...
+ [1 1 1 1 1 1 0 0]
+ [0 0 1 0 0 0 1 1]
+ [1 1 1 1 1 0 1 0]
+ [1 0 0 0 0 0 1 1]
+ [1 1 1 1 1 0 1 0]
+ [1 1 1 1 1 1 1 0]]
+h5 [[1 1 0 1 0 1 1 0]
+ [1 1 1 1 1 1 1 0]
+ [0 1 1 1 1 1 1 0]
+ [0 0 1 0 1 0 1 1]
+ [1 1 1 1 1 0 1 0]
+ [1 0 1 0 1 0 1 1]
+ ...
+ [1 0 1 0 1 0 1 1]
+ [0 0 1 0 1 0 1 1]
+ [1 1 1 0 0 0 1 0]
+ [0 1 1 1 1 1 1 0]
+ [0 1 1 1 0 1 1 0]
+ [1 1 1 1 1 1 1 0]]
+
+
+===== step 7/80
+
+[note] {"text": "asked the reader to submit now"}
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = """
+Stage 'step 1' only (first draft). The input weight row W_x is split by sign: units 0,2,4,6,7
+have W_x>0 and so are driven only by positive x1; units 1,3,5 have W_x<0 and so are driven only
+by negative x1. Because there are no biases, h1 = relu(x1*W_x) is exactly
+    h1 = relu(x1)*W_x+ + relu(-x1)*W_x-
+with W_x+ = max(W_x,0), W_x- = max(-W_x,0): i.e. the first hidden state carries the positive part
+and the negative part of the first input, in two disjoint coordinate groups (sign-magnitude code).
+Later stages (h2..h5 and the readout) are not explained yet; the output here is a placeholder.
+"""
+
+Wx = np.array([0.643, -6.421, 0.423, -6.574, 0.045, -4.913, -0.054, 7.002])
+Wp = np.maximum(Wx, 0.0)
+Wn = np.maximum(-Wx, 0.0)
+
+
+def model(x, iv):
+    pos = iv("pos1", np.maximum(x[:, 0], 0.0))
+    neg = iv("neg1", np.maximum(-x[:, 0], 0.0))
+    h1 = pos[:, None] * Wp[None, :] + neg[:, None] * Wn[None, :]
+    # placeholder readout (stages h2..h5 not explained yet)
+    s = h1.sum(1)
+    return np.repeat(s[:, None], 5, axis=1)
+
+
+ALIGN = {"pos1": ["h1"], "neg1": ["h1"]}
+
+--- judge report 1 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,111 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 20.3% of inputs (a constant output would get 20.3%); output R2 -0.060; KL 1.297
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 8; 2 principal components suffice; pos1, neg1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 55.4% (random 82.6%) | mean-ablate 55.4%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 20.2% / 27.9% when changed (network changed in 44.1%); output R2 -0.060 | controls: random subspace 22.9%, no-change 55.9%, source-output 22.2%, attribution patching 67.2%
+  partial     pos1 @ h1: right 23.2% / 32.8% when changed (network changed in 38.9%); output R2 -0.073 | controls: random subspace 21.4%, no-change 61.2%, source-output 21.3%, attribution patching 72.3%
+  partial     neg1 @ h1: right 23.6% / 50.7% when changed (network changed in 11.1%); output R2 -0.073 | controls: random subspace 24.2%, no-change 88.9%, source-output 21.3%, attribution patching 93.8%
+  edit        all variables @ h1: right 23.5% / 36.5% when changed (network changed in 24.6%); output R2 -0.072 | controls: random subspace 21.1%, no-change 75.4%, source-output 22.1%, attribution patching 83.2%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=811); network decides 1: 0.0% (n=831); network decides 2: 0.0% (n=822); network decides 3: 0.0% (n=790); network decides 4: 0.0% (n=746) | near ties (400 least clear inputs, no requirement): 28.5%
+   the network's own mistakes: it is wrong on 11.1% of test inputs (444); the construction reproduces 28.6% of them (need 50% when there are 30 or more) and is right on 32.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 160 (80.0%; on the unsearched starting inputs 72.5%)
+     input [-2.055, -2.602, 2.053, 3.47, -0.387]: network [2], construction [0]
+     input [-1.305, 1.409, 2.505, -1.874, -1.441]: network [1], construction [0]
+     input [-0.907, 2.483, 1.46, -1.253, -1.913]: network [2], construction [0]
+     input [-1.114, 2.494, 1.559, -0.944, -1.422]: network [2], construction [0]
+     input [-0.162, 2.545, 1.788, -0.822, -1.8]: network [2], construction [0]
+7. NOT A COPY   17 numeric literals in the file; network parameters 112; share of its weights (|w| >= 0.05) the literals reproduce: 8%
+STAGES   step 1: named but failing;  step 2: NOT EXPLAINED (no variable at h2);  step 3: NOT EXPLAINED (no variable at h3);  step 4: NOT EXPLAINED (no variable at h4);  step 5: NOT EXPLAINED (no variable at h5)
+VERDICT: NOT VERIFIED (0 of 5 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 20.3% of inputs (need 95%)
+  - interchange of all variables at h1: prediction right in 27.9% of the cases where the network's output changed (need 90%)
+  - partial of pos1 at h1: prediction right in 32.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h1: prediction right in 36.5% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h1 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - worst slice: on the 831 inputs where network decides 1, the construction agrees on 0.0% (need 80%)
+  - the network's own mistakes: on the 444 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 28.6% (need 50%); it is right on 32.0%: it explains the task, not this network
+COVERAGE   stages 0/5 | behaviour 20.3% | all sites at once 100.0% | worst slice 0.0% | network's mistakes reproduced 28.6%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - stage 'step 5' is not explained
+  - on 79.7% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 1 (831 inputs), where it matches 0.0%
+  - of the network's 444 mistakes on test inputs, 71.4% are not reproduced
+  - a search found 160 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+===== step 8/80
+
+--- python ---
+o=run(X); d=o.argmax(1)
+cands={}
+cands['x']=X
+cands['abs']=np.abs(X)
+cands['-abs']=-np.abs(X)
+cands['x2']=X**2
+cands['cumsum']=np.cumsum(X,1)
+cands['cumsumabs']=np.cumsum(np.abs(X),1)
+cands['-cumsum']=-np.cumsum(X,1)
+cands['diff']=np.diff(X,axis=1,prepend=0)
+cands['prod_pair']=X*np.roll(X,1,axis=1)
+cands['exp']=np.exp(X)
+for k,v in cands.items():
+    for off in [0,1]:
+        print(k, off, (v.argmax(1)+off==d).mean().round(3), (v.argmin(1)+off==d).mean().round(3))
+
+--- output (0.01 s) ---
+x 0 0.05 0.001
+x 1 0.186 0.204
+abs 0 0.01 0.273
+abs 1 0.206 0.14
+-abs 0 0.273 0.01
+-abs 1 0.14 0.206
+x2 0 0.01 0.273
+x2 1 0.206 0.14
+cumsum 0 0.302 0.07
+cumsum 1 0.044 0.222
+cumsumabs 0 0.193 0.199
+cumsumabs 1 0.0 0.204
+-cumsum 0 0.07 0.302
+-cumsum 1 0.222 0.044
+diff 0 0.242 0.045
+diff 1 0.197 0.167
+prod_pair 0 0.191 0.114
+prod_pair 1 0.178 0.209
+exp 0 0.05 0.001
+exp 1 0.186 0.204
+
+
+===== step 9/80
+
+--- python ---
+a=acts(X)
+for s in ['h1','h2','h3','h4','h5']:
+    A=a[s]; A=A-A.mean(0)
+    sv=np.linalg.svd(A,compute_uv=False); print(s, np.round(sv/sv[0],3))
+# gradient analysis: finite difference
+def grad(x0,eps=1e-4):
+    base=run(x0[None])[0]
+    G=np.zeros((5,5))
+    for i in range(5):
+        xx=x0.copy(); xx[i]+=eps
+        G[:,i]=(run(xx[None])[0]-base)/eps
+    return G
+np.set_printoptions(precision=2,suppress=True)
+for k in range(4):
+    print('input',X[k], 'out',run(X[k:k+1])[0].round(2))
+    print(grad(X[k]).round(1))
+
+--- output (0.01 s) ---
+h1 [1.    0.522 0.    0.    0.    0.    0.    0.   ]
+h2 [1.    0.589 0.342 0.305 0.11  0.015 0.006 0.002]
+h3 [1.    0.881 0.544 0.311 0.276 0.174 0.122 0.047]
+h4 [1.    0.641 0.591 0.344 0.234 0.209 0.143 0.129]
+h5 [1.    0.699 0.581 0.33  0.25  0.207 0.147 0.127]
+input [ 0.13 -0.13  0.64  0.1  -0.54] out [  0.96  -1.05 -10.82   1.27  -6.01]
+[[  3.9  -0.8   1.3  -3.2   0.3]
+ [-16.    3.5   0.6   5.8  -0.8]
+ [ 27.3  -0.4 -21.4  -3.    0.5]
+ [ -7.1  -2.    0.7   8.7  -1. ]
+ [-11.   -1.4   2.1  -4.5  10.6]]
+input [ 0.36  1.3   0.95 -0.7  -1.27] out [ -6.1   -4.59   9.74 -12.91 -18.35]
+[[ 14.2  -0.2 -12.4  -2.1   0.6]
+ [  0.7 -21.1  22.2  -1.1  -0.7]
+ [ -6.2  -0.7  10.4  -2.6  -0.9]
+ [ -9.8  -0.2  -2.9  10.5  -0.8]
+ [ -2.2  -0.6  -5.5  -3.1  10.8]]
+input [-0.62  0.04 -2.33 -0.22 -1.25] out [  2.45   1.55 -21.89   5.05  -7.74]
+[[  3.5  -9.   -2.8   6.1   0.1]
+ [ -0.2 -16.3  -0.3  -6.5   0. ]
+ [ -2.2   6.3  11.5  -7.5  -1.4]
+ [ -1.7   3.6  -2.4   5.    0.4]
+ [  0.5   2.1  -2.   -3.4  10.3]]
+input [-0.73 -0.54 -0.32  0.41  1.04] out [  1.19  -2.37 -14.94   7.89  -4.23]
+[[ -0.6   0.3   3.3  -0.5   2.1]
+ [ -0.3   5.4  -3.3  -7.6   2.3]
+ [  0.4  -1.1   9.2 -33.    1.2]
+ [  0.2  -1.5  -2.6   8.8   2.7]
+ [  0.6  -2.6  -4.5  23.2 -15.6]]
+
+
+===== step 10/80
