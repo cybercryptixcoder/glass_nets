@@ -415,8 +415,10 @@ def better(a, b):
     """Is report a a better result than report b (None = nothing yet)?"""
     if b is None:
         return True
-    ka = (a["verdict"]["complete"], a["verdict"]["score"], a["verdict"]["verified"], -len(a["verdict"]["fails"]))
-    kb = (b["verdict"]["complete"], b["verdict"]["score"], b["verdict"]["verified"], -len(b["verdict"]["fails"]))
+    # a submission the judge flags as a weight copy never beats one that is not (a reader may submit an exact
+    # re-implementation to read the judge's measurements; that must not become the delivered construction)
+    ka = (not (a.get("copy") or {}).get("flagged", False), a["verdict"]["complete"], a["verdict"]["score"], a["verdict"]["verified"], -len(a["verdict"]["fails"]))
+    kb = (not (b.get("copy") or {}).get("flagged", False), b["verdict"]["complete"], b["verdict"]["score"], b["verdict"]["verified"], -len(b["verdict"]["fails"]))
     return ka >= kb
 
 

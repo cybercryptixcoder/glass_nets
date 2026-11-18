@@ -200,3 +200,19 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   (a person, or a model reading the description) is the stronger check later.
 - **21:04** M16,10 mid-run (66 of 80 steps): submission 7 verified 8 of 10 stages; submission 8 tried the task's algorithm and the judge rejected it ("explains the task, not this network": right on 100% of the network's 182 mistakes). Decision: pass 2 *continues* this run to 160 steps (same run, notes kept) instead of a fresh 80-step run, because 80 steps is clearly short for the 432-parameter network. The other networks that fail get a fresh run.
 - **21:09** Every saved non-LM construction re-judged with the current judge (`docs/glass/rejudge_all.txt`); `report_current.*` committed next to each (the originals are kept). Catalog cards now show today's certificates. Changes from the original verdicts: modmul ec84 is no longer complete (worst slice, as in item 0); M4,4 is a copy. Everything else keeps its verdict.
+- **21:11** **M16,10, pass 1 ended (80 steps, 11 submissions, $0.38): not explained.**
+  - The run delivered submission 7, which is an exact re-implementation. The reader labelled it "diagnostic exact
+    re-implementation ... before writing a semantic construction": 439 literals, every weight. The copy check
+    rejects it.
+  - Its real attempts (submissions 3–6, 8, 10, 11) reach at most 1 of 10 stages. They match 95.5% of decisions, but
+    they're the task's algorithm: right on the network's mistakes, not reproducing them.
+  - **A constructor bug this exposed:** the best submission was chosen on stages and score alone, so a flagged copy
+    could become the delivered construction. Fixed in `better()`: a flagged copy never beats a non-copy.
+    Pass 2's continuation recomputes the best with this rule.
+- **M2,2 prior-only control came back VERIFIED AND COMPLETE** (told the task, no weights, one submission).
+  - So on M2,2 the network computes 2nd-argmax-of-two the "obvious" way, and the task's natural decomposition
+    already aligns with its insides.
+  - Consequence for how we report: M2,2's certification isn't evidence of reading the weights. It shows the judge
+    and pipeline work end to end.
+  - The M4,4 prior control (59.8% behaviour, 0/4 stages) behaves as a control should. M4,3's prior control is
+    pending; it's the one that matters.
