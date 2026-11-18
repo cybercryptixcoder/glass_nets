@@ -81,7 +81,7 @@ Status: [x] done, [~] in progress, [ ] not started.
   The new `colab_job.sh` runs pass 1 (all done, skipped) and then `--pass2`: a fresh main run for each network not
   certified by the current judge (M4,4 so far), and a continuation of the M16,10 run to 160 steps.
 - [x] Results table: `results/glass/RESULTS.md` (regenerated after every job and at every relay).
-- [ ] Re-judge every saved construction with the final judge (`scripts/glass/rejudge.py`, CPU, about 25 minutes),
+- [x] Re-judge every saved construction with the final judge (`scripts/glass/rejudge.py`, CPU, about 25 minutes),
   then commit the `report_current.*` files so the catalog shows today's certificates.
 - [ ] Final report to Shreyas: the results table, what each certified construction says, and the controls.
 
@@ -89,7 +89,7 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [x] A catalog page in the lab server (`/catalog`; `lab/catalog.py`, `lab/static/catalog.html`): the list of constructions with their certificates; for a chosen input, run
   the network and the construction side by side; run the judge.
 - [x] End-to-end test (headless Chrome, 21:18): list, playground, intervention, no JS errors.
-- [ ] Re-judge all saved constructions with the current judge (`scripts/glass/rejudge.py`), then commit the `report_current.*` files.
+- [x] Re-judge all saved constructions with the current judge (`scripts/glass/rejudge.py`); `report_current.*` committed.
 - [x] README and START_HERE: say Glass Networks; how to open the catalog (`python3 lab/server.py`, then http://localhost:8765/catalog).
 
 ### E. Monitoring
