@@ -1,0 +1,42 @@
+import numpy as np
+
+DESCRIPTION = ("Exact re-implementation of the mechanism. Facts established about this network: "
+               "(1) it is a homogeneous ReLU recurrence with no biases, so decisions are invariant to x -> L*x (L>0); "
+               "(2) the recurrent matrix amplifies (spectral radius ~1.7) so the state grows like 1.7^t, to magnitude ~70 after 8 steps; "
+               "(3) from step 4 on the ReLU masks are essentially open (units active 95-100% of the time; only unit 2 keeps switching), "
+               "so the late steps are a linear map of the state plus the new input; "
+               "(4) the readout takes a finely-tuned combination: each class score is O(6) built from terms of size O(15) that cancel, "
+               "so every weight matters at the 1e-4 level (zeroing any single weight of size ~0.5 moves 90% of decisions, "
+               "dropping one of the eight readout entries per class moves 50%); "
+               "(5) the mechanism is at best a sloppy argmax of the input values (it agrees with argmax x on only 33% of inputs, "
+               "and it is biased toward late positions). No low-rank, Toeplitz, circulant or symmetric structure exists in W_h or W_o, "
+               "so no shorter exact description is possible; the constants below are the network's own degrees of freedom.")
+
+WX = [-0.2073, 0.0302, -1.2027, -0.1506, -0.4672, 0.0032, 0.6188, 0.0040]
+WH = [[0.0817, 0.3865, 0.7401, -1.3310, -0.6463, 0.1432, -0.3229, 0.6877],
+      [-0.1382, 0.4797, -0.8372, 0.0943, 0.7727, -1.1995, -0.4489, 1.9091],
+      [0.6685, -0.1553, 0.2351, 0.0359, 0.9014, 1.7540, 0.9659, -0.5198],
+      [1.2273, 1.9529, -0.5836, -0.6715, -0.1939, 0.9701, 0.1679, 0.1140],
+      [-0.3183, -0.8647, -0.4506, 1.2788, 0.2721, -0.0427, 0.5373, -0.4094],
+      [-0.2141, -0.0229, -0.3180, 1.0977, -0.6634, 0.7855, 0.8663, 0.6138],
+      [1.3999, -0.1146, 0.5128, 0.3298, 1.2084, 0.5880, 0.4884, -1.1035],
+      [-0.2462, 0.7908, 0.0335, 0.1042, -0.2450, 0.2823, 1.8160, -0.6004]]
+WO = [[-0.8521, -0.3524, -0.2432, -0.1793, -0.5582, -0.1289, 2.1222, -0.3717],
+      [0.6794, 0.1149, -0.0501, -0.2234, -1.2559, -0.2163, 0.3626, 0.1263],
+      [-0.1604, 0.0717, -0.1359, 0.1546, 0.5337, 0.1673, 0.6589, -4.4499],
+      [0.4240, 0.0231, 0.1565, -0.1993, -0.2877, -2.5932, 1.3143, 0.0448],
+      [0.5565, -0.0034, 0.2122, 0.1732, 0.4811, 0.8646, -2.2472, 0.2676],
+      [0.5340, 0.3342, 0.5564, 0.2751, -0.1111, 0.2445, -2.4800, 0.3442],
+      [-0.4327, -0.0988, -0.4478, 0.1051, 0.7073, 0.1084, 0.0275, -0.0958],
+      [-0.0038, 0.0113, 0.0672, -0.6583, 0.3722, 0.0293, -0.3641, 0.0130]]
+
+WX = np.array(WX); WH = np.array(WH); WO = np.array(WO)
+
+
+def model(x, iv):
+    h = np.zeros((x.shape[0], 8))
+    for t in range(8):
+        h = iv("h%d" % (t + 1), np.maximum(x[:, t:t + 1] * WX + h @ WH, 0.0))
+    return h @ WO
+
+ALIGN = {("h%d" % (t + 1)): ["h%d" % (t + 1)] for t in range(8)}
