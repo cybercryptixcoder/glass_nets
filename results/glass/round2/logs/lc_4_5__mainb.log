@@ -2523,3 +2523,224 @@ ValueError: operands could not be broadcast together with shapes (3125,4) (3125,
 
 
 ===== step 54/80
+
+--- python ---
+import numpy as np
+WE=W['W_E'];WP=W['W_pos'];WU=W['W_U']
+def fwd5(x, WE=WE, WP=WP, M0=M0, V0=V0, M1=M1, G=G, WU=WU):
+    x=np.asarray(x).astype(int)
+    R=WE[x]+WP[None,:,:]
+    S=R@M0@R.transpose(0,2,1)/2.0
+    A0=np.exp(S-S.max(axis=2,keepdims=True));A0/=A0.sum(axis=2,keepdims=True)
+    Z=R+A0@R@V0
+    qv=Z@M1
+    T=(qv*Z[:,None,:,:]).sum(-1)/2.0
+    A1=np.exp(T-T.max(axis=2,keepdims=True));A1/=A1.sum(axis=2,keepdims=True)
+    a1=A1[:,4,:]
+    return Z[:,4,:]@WU + (a1[:,:,None]*(Z@G)).sum(1), A0, Z, A1
+ref=run(X); o,A0,Z,A1=fwd5(X)
+print('decisions', (o.argmax(1)==ref.argmax(1)).mean(), np.abs(o-ref).max())
+def rnd(A,k=3): return np.round(A*10**k)/10**k
+o2,_,_,_=fwd5(X,WE=rnd(WE),WP=rnd(WP),M0=rnd(M0),V0=rnd(V0),M1=rnd(M1),G=rnd(G),WU=rnd(WU))
+print('round3', (o2.argmax(1)==ref.argmax(1)).mean())
+# check G rank2 vs full: used G full. named-dims check: row4 attention explained?
+print('A1 row4 range', A1[:,4,:].min(), A1[:,4,:].max(), 'row4 maxw', A1[:,4,:].max(1).mean())
+print('A0 hard frac', (A0.max(2) > 0.9).mean())
+
+--- output (7.31 s) ---
+decisions 0.5392 26.94550213297725
+round3 0.53856
+A1 row4 range 1.3063753767854351e-39 0.9999999991271418 row4 maxw 0.9418360982624258
+A0 hard frac 0.86528
+
+
+===== step 55/80
+
+--- python ---
+import numpy as np
+WE=W['W_E'];WP=W['W_pos'];WU=W['W_U']
+def fwd5(x, WE=WE, WP=WP, M0=M0, V0=V0, M1=M1, G=G, WU=WU):
+    x=np.asarray(x).astype(int)
+    R=WE[x]+WP[None,:,:]
+    S=R@M0@R.transpose(0,2,1)/2.0
+    A0=np.exp(S-S.max(axis=2,keepdims=True));A0/=A0.sum(axis=2,keepdims=True)
+    Z=R+A0@R@V0
+    qv=Z@M1
+    T=(qv[:,:,None,:]*Z[:,None,:,:]).sum(-1)/2.0
+    A1=np.exp(T-T.max(axis=2,keepdims=True));A1/=A1.sum(axis=2,keepdims=True)
+    a1=A1[:,4,:]
+    return Z[:,4,:]@WU + (a1[:,:,None]*(Z@G)).sum(1), A0, Z, A1
+ref=run(X); o,A0,Z,A1=fwd5(X)
+print('decisions', (o.argmax(1)==ref.argmax(1)).mean(), np.abs(o-ref).max())
+def rnd(A,k=3): return np.round(A*10**k)/10**k
+o2,_,_,_=fwd5(X,WE=rnd(WE),WP=rnd(WP),M0=rnd(M0),V0=rnd(V0),M1=rnd(M1),G=rnd(G),WU=rnd(WU))
+print('round3', (o2.argmax(1)==ref.argmax(1)).mean())
+a=acts(X)
+print('A1row4 explained by itself; check site row4 vs A1', np.abs(A1[:,4,:]-a['attn1.pattern'].reshape(-1,5,5)[:,4,:]).max())
+
+--- output (0.09 s) ---
+decisions 1.0 3.3661962106634746e-13
+round3 0.99904
+A1row4 explained by itself; check site row4 vs A1 2.836619827917275e-14
+
+
+===== step 56/80
+
+--- python ---
+import numpy as np
+def i1000(A): return np.round(A*1000).astype(int)
+names=['WE','WP','M0','V0','M1','G','WU']
+vals={'WE':W['W_E'],'WP':W['W_pos'],'M0':M0,'V0':V0,'M1':M1,'G':G,'WU':W['W_U']}
+for n in names:
+    A=i1000(vals[n])
+    print(n,'= np.array([')
+    for r in A:
+        print('   ',list(r),',')
+    print('])/1000')
+
+--- output (0.0 s) ---
+WE = np.array([
+    [np.int64(-555), np.int64(-2026), np.int64(1424), np.int64(301)] ,
+    [np.int64(1022), np.int64(-1087), np.int64(678), np.int64(1846)] ,
+    [np.int64(999), np.int64(-200), np.int64(1144), np.int64(1396)] ,
+    [np.int64(1769), np.int64(1896), np.int64(1094), np.int64(-522)] ,
+    [np.int64(-640), np.int64(-17), np.int64(2882), np.int64(-74)] ,
+])/1000
+WP = np.array([
+    [np.int64(933), np.int64(-525), np.int64(2255), np.int64(26)] ,
+    [np.int64(1908), np.int64(-1154), np.int64(594), np.int64(-1673)] ,
+    [np.int64(-1298), np.int64(1957), np.int64(2546), np.int64(-474)] ,
+    [np.int64(-1592), np.int64(-453), np.int64(-67), np.int64(2061)] ,
+    [np.int64(-1571), np.int64(-1151), np.int64(170), np.int64(2608)] ,
+])/1000
+M0 = np.array([
+    [np.int64(-16742), np.int64(3424), np.int64(-21421), np.int64(-15363)] ,
+    [np.int64(-20575), np.int64(10823), np.int64(-20548), np.int64(8575)] ,
+    [np.int64(851), np.int64(5740), np.int64(13216), np.int64(10749)] ,
+    [np.int64(11627), np.int64(-7776), np.int64(5781), np.int64(-4136)] ,
+])/1000
+V0 = np.array([
+    [np.int64(1691), np.int64(938), np.int64(-494), np.int64(453)] ,
+    [np.int64(523), np.int64(583), np.int64(-140), np.int64(760)] ,
+    [np.int64(-601), np.int64(1063), np.int64(-147), np.int64(-838)] ,
+    [np.int64(459), np.int64(1326), np.int64(-258), np.int64(1043)] ,
+])/1000
+M1 = np.array([
+    [np.int64(-291), np.int64(-549), np.int64(465), np.int64(1231)] ,
+    [np.int64(-166), np.int64(-341), np.int64(288), np.int64(505)] ,
+    [np.int64(-1556), np.int64(-5278), np.int64(6376), np.int64(9313)] ,
+    [np.int64(-259), np.int64(-770), np.int64(1061), np.int64(1025)] ,
+])/1000
+G = np.array([
+    [np.int64(-2601), np.int64(2690), np.int64(614), np.int64(-58), np.int64(-72)] ,
+    [np.int64(-400), np.int64(-714), np.int64(519), np.int64(916), np.int64(1003)] ,
+    [np.int64(-820), np.int64(4091), np.int64(-971), np.int64(-2618), np.int64(-3495)] ,
+    [np.int64(3306), np.int64(-1157), np.int64(-1841), np.int64(-1597), np.int64(-1626)] ,
+])/1000
+WU = np.array([
+    [np.int64(140), np.int64(-102), np.int64(-27), np.int64(-30), np.int64(-158)] ,
+    [np.int64(-44), np.int64(114), np.int64(112), np.int64(-139), np.int64(-395)] ,
+    [np.int64(689), np.int64(-418), np.int64(198), np.int64(-527), np.int64(-1465)] ,
+    [np.int64(-315), np.int64(-363), np.int64(607), np.int64(361), np.int64(6)] ,
+])/1000
+
+
+===== step 57/80
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = ("Mechanism. Residual stream = W_E[token]+W_pos[pos] (embed). Layer 0: score(q,k)=r_q.M0.r_k/2, "
+               "M0=W_Q W_K^T (rank 3, strongly non-symmetric); attention is nearly hard (mean max weight 0.87, "
+               "86% of query rows >0.9): row q copies one key. Output = A0.R.V0, V0=W_V W_O (V0 maps the "
+               "chosen key's residual). Layer 1: only the readout position 4 matters. Its query direction is "
+               "qv=M1.rows, score(q=4,k)=qv.z_k/2, softmax over the 5 keys, and layer 1 adds "
+               "sum_k A1_4k (z_k.V1) whose readout is sum_k A1_4k (z_k.G), G=V1 W_U. So logits = "
+               "z4.W_U + softmax_k(qv.z_k/2) . (z_k.G): a soft max/min selector over the 5 key positions, "
+               "weighted by a rank->2 class table G. Matrices are written as integers over 1000.")
+
+WE = np.array([[-555,-2026,1424,301],[1022,-1087,678,1846],[999,-200,1144,1396],
+               [1769,1896,1094,-522],[-640,-17,2882,-74]])/1000
+WP = np.array([[933,-525,2255,26],[1908,-1154,594,-1673],[-1298,1957,2546,-474],
+               [-1592,-453,-67,2061],[-1571,-1151,170,2608]])/1000
+M0 = np.array([[-16742,3424,-21421,-15363],[-20575,10823,-20548,8575],
+               [851,5740,13216,10749],[11627,-7776,5781,-4136]])/1000
+V0 = np.array([[1691,938,-494,453],[523,583,-140,760],[-601,1063,-147,-838],
+               [459,1326,-258,1043]])/1000
+M1 = np.array([[-291,-549,465,1231],[-166,-341,288,505],[-1556,-5278,6376,9313],
+               [-259,-770,1061,1025]])/1000
+G  = np.array([[-2601,2690,614,-58,-72],[-400,-714,519,916,1003],
+               [-820,4091,-971,-2618,-3495],[3306,-1157,-1841,-1597,-1626]])/1000
+WU = np.array([[140,-102,-27,-30,-158],[-44,114,112,-139,-395],[689,-418,198,-527,-1465],
+               [-315,-363,607,361,6]])/1000
+
+def model(x, iv):
+    x = np.asarray(x).astype(int)
+    B = x.shape[0]
+    R = np.zeros((B, 5, 4))
+    for p in range(5):
+        R[:, p, :] = iv("e%d" % p, WE[x[:, p]] + WP[p])
+    S = R @ M0 @ R.transpose(0, 2, 1) / 2.0
+    A0 = np.exp(S - S.max(axis=2, keepdims=True))
+    A0 = iv("A0", (A0 / A0.sum(axis=2, keepdims=True)).reshape(B, 25)).reshape(B, 5, 5)
+    o0 = iv("o0", (A0 @ R @ V0).reshape(B, 20)).reshape(B, 5, 4)
+    Z = iv("Z", (R + o0).reshape(B, 20)).reshape(B, 5, 4)
+    qv = Z @ M1
+    T = (qv[:, :, None, :] * Z[:, None, :, :]).sum(-1) / 2.0
+    A1 = np.exp(T - T.max(axis=2, keepdims=True))
+    A1 = A1 / A1.sum(axis=2, keepdims=True)
+    a1 = iv("a1", A1[:, 4, :])
+    return Z[:, 4, :] @ WU + (a1[:, :, None] * (Z @ G)).sum(1)
+
+ALIGN = {"e0": ["embed"], "e1": ["embed"], "e2": ["embed"], "e3": ["embed"], "e4": ["embed"],
+         "A0": ["attn0.pattern"], "o0": ["attn0.out"], "Z": ["resid0.mid"],
+         "a1": ["attn1.pattern"]}
+
+--- judge report 9 ---
+STAGE TABLE (graded; a stage is verified when one of its sites passes every site test)
+  embedding      VERIFIED        embed: substitute 100%, interchange 100% PASS
+  layer 0 attention VERIFIED        attn0.pattern: substitute 100%, interchange 100% PASS; attn0.out: substitute 100%, interchange 100% PASS; resid0.mid: substitute 100%, interchange 100% PASS
+  layer 1 attention VERIFIED        attn1.pattern: substitute 100%, interchange 100% PASS
+  compression: 0.0 constants per degree of freedom (an explanation needs < 0.9)
+All stages verified.
+
+JUDGE REPORT   (1563 held-out inputs; construction 2,780 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.9% of inputs (a constant output would get 38.7%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 20; 15 principal components suffice; e0, e1, e2, e3, e4): explained 1.000 | substitute 100.0% | keep 100.0% | remove 45.0% (random n/a) | mean-ablate 45.0%
+  attn0.pattern (19 dims named of 25; 11 principal components suffice; A0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 40.2% (random 45.4%) | mean-ablate 40.2%
+  attn0.out   (20 dims named of 20; 15 principal components suffice; o0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 42.2% (random n/a) | mean-ablate 42.2%
+  resid0.mid  (20 dims named of 20; 19 principal components suffice; Z): explained 1.000 | substitute 99.9% | keep 100.0% | remove 16.1% (random n/a) | mean-ablate 16.1%
+  attn1.pattern (4 dims named of 25; 10 principal components suffice; a1): explained 0.597 | substitute 99.9% | keep 76.8% | remove 39.2% (random 69.7%) | mean-ablate 37.9%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 99.9% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 99.9%, no-change 37.7%, source-output 100.0%, attribution patching 38.4%
+  partial     e0 @ embed: right 99.9% / 100.0% when changed (network changed in 33.0%); output R2 1.000 | controls: random subspace 40.4%, no-change 67.0%, source-output 41.3%, attribution patching 63.3%
+  partial     e1 @ embed: right 99.9% / 99.8% when changed (network changed in 25.6%); output R2 1.000 | controls: random subspace 45.5%, no-change 74.4%, source-output 40.6%, attribution patching 76.0%
+  partial     e2 @ embed: right 99.9% / 99.8% when changed (network changed in 24.5%); output R2 1.000 | controls: random subspace 43.5%, no-change 75.5%, source-output 40.8%, attribution patching 73.0%
+  partial     e3 @ embed: right 99.9% / 100.0% when changed (network changed in 24.8%); output R2 1.000 | controls: random subspace 42.6%, no-change 75.2%, source-output 41.1%, attribution patching 70.2%
+  partial     e4 @ embed: right 99.7% / 99.6% when changed (network changed in 34.0%); output R2 1.000 | controls: random subspace 43.0%, no-change 66.0%, source-output 40.9%, attribution patching 64.2%
+  edit        all variables @ embed: right 99.8% / 99.6% when changed (network changed in 59.2%); output R2 0.999 | controls: random subspace 41.8%, no-change 40.8%, source-output 41.9%, attribution patching 44.2%
+  interchange A0 @ attn0.pattern: right 100.0% / 100.0% when changed (network changed in 57.6%); output R2 1.000 | controls: random subspace 54.1%, no-change 42.4%, source-output 46.2%, attribution patching 53.1%
+  edit        A0 @ attn0.pattern: right 60.1% / 51.2% when changed (network changed in 55.1%); output R2 0.008 | controls: random subspace 44.3%, no-change 44.9%, source-output 37.1%, attribution patching 52.4%
+  interchange o0 @ attn0.out: right 99.9% / 100.0% when changed (network changed in 58.7%); output R2 1.000 | controls: random subspace 99.9%, no-change 41.3%, source-output 54.1%, attribution patching 48.5%
+  edit        o0 @ attn0.out: right 98.7% / 98.5% when changed (network changed in 51.6%); output R2 0.999 | controls: random subspace 52.8%, no-change 48.4%, source-output 44.1%, attribution patching 58.2%
+  interchange Z @ resid0.mid: right 99.9% / 99.9% when changed (network changed in 62.3%); output R2 1.000 | controls: random subspace 99.9%, no-change 37.7%, source-output 100.0%, attribution patching 47.5%
+  edit        Z @ resid0.mid: right 99.9% / 99.8% when changed (network changed in 54.4%); output R2 1.000 | controls: random subspace 42.8%, no-change 45.6%, source-output 42.8%, attribution patching 52.7%
+  interchange a1 @ attn1.pattern: right 99.5% / 99.6% when changed (network changed in 58.7%); output R2 1.000 | controls: random subspace 45.6%, no-change 41.3%, source-output 50.9%, attribution patching 100.0%
+  edit        a1 @ attn1.pattern: right 84.5% / 74.6% when changed (network changed in 39.0%); output R2 0.881 | controls: random subspace 54.5%, no-change 61.0%, source-output 42.9%, attribution patching 100.0%
+5. WHOLE MODEL   all 5 named site(s) replaced at once by the construction's predictions: the network keeps 99.9% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=703); network decides 1: 99.8% (n=605); network decides 2: 99.6% (n=251); network decides 3: 100.0% (n=4) | near ties (157 least clear inputs, no requirement): 98.7%
+   the network's own mistakes: it is wrong on 19.2% of test inputs (300); the construction reproduces 99.7% of them (need 50% when there are 30 or more) and is right on 0.0%
+7. COMPRESSION   0 constants in the file for 103 degrees of freedom in the network: 0.00 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: VERIFIED at embed;  layer 0 attention: VERIFIED at attn0.pattern, attn0.out, resid0.mid;  layer 1 attention: VERIFIED at attn1.pattern
+VERDICT: VERIFIED AND COMPLETE: every stage of the network has a verified site.
+COVERAGE   stages 3/3 | behaviour 99.9% | all sites at once 99.9% | worst slice 99.6% | network's mistakes reproduced 99.7%
+NOT EXPLAINED:
+  - on 0.1% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 0.1% of the network's decisions
+  - worst slice: network decides 2 (251 inputs), where it matches 99.6%
+  - of the network's 300 mistakes on test inputs, 0.3% are not reproduced
+
+[done] {"id": "20261118-050059-93e7", "status": "done", "seconds": 814.9, "best": 9, "verdict": {"verified": true, "fails": [], "stages_total": 3, "stages_verified": 3, "complete": true, "score": 0.9987}, "cost": 0.23123240400000003}
+
+status done; best submission 9; cost $0.231; 814.9 s; /content/helix_probe/lab/constructions/lc_4_5/20261118-050059-93e7

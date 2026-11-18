@@ -1,0 +1,34 @@
+JUDGE REPORT   (128 held-out inputs; construction 1,057 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 52.3% of inputs (a constant output would get 52.3%); output R2 -0.270; KL 1.160
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (12 dims named of 12; 12 principal components suffice; e0, e1, e2, e3): explained 1.000 | substitute 100.0% | keep 100.0% | remove 52.3% (random n/a) | mean-ablate 52.3%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ embed: right 51.6% / 42.8% when changed (network changed in 61.1%); output R2 -0.264 | controls: random subspace 51.6%, no-change 39.0%, source-output 100.0%, attribution patching 47.2%
+  partial     e0 @ embed: right 51.0% / 39.6% when changed (network changed in 28.5%); output R2 -0.250 | controls: random subspace 38.0%, no-change 71.5%, source-output 46.0%, attribution patching 76.4%
+  partial     e1 @ embed: right 52.4% / 39.8% when changed (network changed in 32.0%); output R2 -0.227 | controls: random subspace 50.6%, no-change 68.0%, source-output 44.5%, attribution patching 65.8%
+  partial     e2 @ embed: right 48.6% / 34.0% when changed (network changed in 26.0%); output R2 -0.228 | controls: random subspace 46.2%, no-change 74.0%, source-output 40.5%, attribution patching 76.2%
+  partial     e3 @ embed: right 51.6% / 41.3% when changed (network changed in 34.3%); output R2 -0.234 | controls: random subspace 40.4%, no-change 65.7%, source-output 45.2%, attribution patching 65.6%
+  edit        all variables @ embed: right 49.8% / 39.6% when changed (network changed in 53.8%); output R2 -0.053 | controls: random subspace 51.6%, no-change 46.2%, source-output 48.2%, attribution patching 58.4%
+5. WHOLE MODEL   all 1 named site(s) replaced at once by the construction's predictions: the network keeps 100.0% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 100.0% (n=67); network decides 1: 0.0% (n=44); network decides 2: 0.0% (n=16); network decides 3: 0.0% (n=1) | near ties (13 least clear inputs, no requirement): 15.4%
+   the network's own mistakes: it is wrong on 14.1% of test inputs (18); the construction reproduces 33.3% of them (need 50% when there are 30 or more) and is right on 27.8%
+7. COMPRESSION   24 constants in the file for 59 degrees of freedom in the network: 0.41 per degree of freedom (an explanation needs < 0.9)
+STAGES   embedding: named but failing;  layer 0 attention: NOT EXPLAINED (no variable at attn0.pattern / attn0.out / resid0.mid);  layer 1 attention: NOT EXPLAINED (no variable at attn1.pattern / attn1.out / resid1.mid)
+VERDICT: NOT VERIFIED (0 of 3 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 52.3% of inputs (need 95%)
+  - interchange of all variables at embed: prediction right in 42.8% of the cases where the network's output changed (need 90%)
+  - partial of e0 at embed: prediction right in 39.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of e1 at embed: prediction right in 39.8% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of e2 at embed: prediction right in 34.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of e3 at embed: prediction right in 41.3% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at embed: prediction right in 39.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at embed it is enough that EITHER every partial test OR the edit of all variables passes)
+  - worst slice: on the 44 inputs where network decides 1, the construction agrees on 0.0% (need 80%)
+COVERAGE   stages 0/3 | behaviour 52.3% | all sites at once 100.0% | worst slice 0.0% | network's mistakes reproduced 33.3%
+NOT EXPLAINED:
+  - stage 'embedding' is not explained
+  - stage 'layer 0 attention' is not explained
+  - stage 'layer 1 attention' is not explained
+  - on 47.7% of inputs the construction's decision differs from the network's
+  - worst slice: network decides 1 (44 inputs), where it matches 0.0%
+  - of the network's 18 mistakes on test inputs, 66.7% are not reproduced
