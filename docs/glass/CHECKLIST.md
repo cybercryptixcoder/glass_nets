@@ -43,6 +43,12 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
+## Current state (21:11 ET)
+
+- Colab job alive. Pass 1: M2,2 complete; M4,3 complete; M4,4 rejected (copy); M16,10 not explained (80 steps);
+  M8,5 and M8,8 running; controls running (M2,2 prior-only passed too, M4,4 prior failed as expected).
+- Next: when pass 1 ends, start pass 2 by hand (see C). Then the final report.
+
 ## Checklist
 
 Status: [x] done, [~] in progress, [ ] not started.
