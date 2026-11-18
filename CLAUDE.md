@@ -1,0 +1,50 @@
+# Read this first: the working rules for this repository
+
+*Binding for every session and every agent working on this repo. Set by Shreyas on Nov 18, 2026 after rounds 1–2
+showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_REVIEW.md` §7).*
+
+## Read before doing anything
+1. `docs/glass/INTENT.md`: what we are building and why. The code serves this document.
+2. `docs/glass/CHECKLIST.md`: current state.
+3. `docs/glass/CHANGES.md`: the change ledger.
+4. `docs/glass/EVIDENCE_LADDER.md`: what the judge measures.
+5. `docs/PROJECT_REVIEW.md`: the history and why we went in circles.
+
+## The build routine: intent first, then implementation, never patches
+
+1. **State the intent** as a question with a yes/no answer, and the decision each answer leads to.
+2. **Build the measurement first, and prove it on known cases before any run.** Cases that must pass, cases that must
+   fail (including attempts to beat it, written *before* the measure is designed), and controls.
+3. **Implement exactly the intent.** Check the implementation against the intent on the known cases. A mismatch here
+   is a translation error: fix the code, don't touch the intent.
+4. **Before spending, show that the experiment can answer its question:** how many runs, and which result means yes
+   and which means no.
+5. **Run, then read the outputs by hand** (files, transcripts, notes) before trusting any summary number.
+6. **A failure is one of two things.**
+   - A translation error: the code didn't match the intent.
+   - An intent error: what we asked for was wrong.
+   An intent error is recorded in `INTENT.md` with its evidence, the intent is revised, and the code is rebuilt from
+   it. Nothing else counts as a "fix".
+
+## Hard rules
+- **No code change without a `CHANGES.md` entry first:**
+  - the observed failure (run id + file);
+  - the cause, shown by a minimal reproduction;
+  - the change;
+  - a test that fails before and passes after;
+  - cases not used to design it;
+  - the verdicts that must not change.
+  A change that can't fill every field is an experiment: behind a flag, off by default, never used for claims.
+- **The measurement is frozen during a round.** A change is a new, named version.
+- **No pass line or threshold is chosen by looking at the results it will judge.** Lines come from controls.
+- **One kind of change per round:** judge or reader, never both.
+- **Free experiments first:** re-score and re-read saved runs before paying for new ones. Runs are small and
+  question-driven (minutes, not hours).
+- **Before claiming anything new,** compare it against prior work.
+- **Ask Shreyas** before spending money, starting a round, or changing `INTENT.md`.
+
+## Standing rules
+- Plain English and plain markdown in docs and messages. No artifacts or widgets.
+- Document every step, decision and failure (`docs/glass/DIARY.md`), and keep the checklist current.
+- Keys live only in the gitignored `lab/.env`. The repo is public: never commit, push or print them.
+- Never edit the branch `constructor-attempt`.

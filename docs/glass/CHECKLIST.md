@@ -43,6 +43,8 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
+## NOW (Nov 18, 11:00): intent v2 written (`INTENT.md`, from `DIAGNOSIS_ABOVE_32.md` and `EVIDENCE_LADDER.md`). Rebuild order step 1 is waiting for Shreyas's go. Rules: `CLAUDE.md`.
+
 ## CHANGE RULE (binding; LEARNINGS E12): no code change without a CHANGES.md entry (failure → reproduced cause → before/after test incl. held-out + adversarial cases → verdicts that must not change). Otherwise it is a flagged, off-by-default experiment. Validate the judge before any run spend. No thresholds fitted to outcomes. One kind of change per round.
 
 See also `docs/PROJECT_REVIEW.md` (whole-project review, Nov 18; decisions for Shreyas in §10).

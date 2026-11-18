@@ -5,6 +5,7 @@ writes a **construction**: a small Python program that stands in for the whole n
 at the network's internal sites. An independent judge then certifies it with measured tests. Certified
 constructions go into a catalog you can run and test.
 
+- **Agents and new sessions: read `CLAUDE.md` first** (binding working rules), then `docs/glass/INTENT.md`.
 - **Start here:** `docs/glass/CHECKLIST.md` (the current plan and state) and `docs/glass/DIARY.md` (every step and
   decision).
 - **Results:** `results/glass/RESULTS.md`.

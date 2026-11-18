@@ -19,6 +19,8 @@ Read in this order:
   - "no patchwork": fix only what traces support, and show that the fix helps;
   - always have something finished on hand.
 
+## UPDATE Nov 18 11:00: read `CLAUDE.md` and `INTENT.md` first; they supersede the plans below.
+
 ## UPDATE 2026-11-18 09:51 ET: READ REPORT_ROUND2 'CORRECTIONS' and LEARNINGS E12 first. The 04:10 'next round' list is superseded; the glass-3 rule there is retracted.
 
 ## UPDATE 04:10 ET Nov 18: round 2 is FINISHED (40/40) and fully synced

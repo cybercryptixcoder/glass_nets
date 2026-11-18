@@ -54,3 +54,40 @@ is a later decision.
   explanations.
 - Run their agent (once their code is released, or rebuilt from the paper) on an AlgZoo network, where there is no
   human answer key and nothing to remember. Score it with our judge.
+
+## Deeper analysis (Nov 18, 2026): what we take from it
+
+**What they built, and why that way.**
+- A frontier model (Claude Opus 4.1) with the field's standard tools, run in an explicit loop: analyse → state 3–5
+  hypotheses → design experiments → revise.
+- It is handed a circuit that is already localised, and asked for the role of each component.
+- They chose replication tasks because those are the only places with human answer keys, so the output could be
+  scored.
+
+**How well it works.** The agent "appears competitive" with the human experts. But the paper's real result is that
+this evaluation can't be trusted:
+- the human keys are ambiguous;
+- outcome-only scoring hides the process;
+- the model may simply remember the published answer.
+Their proposed fix is an intrinsic test (swap components, measure the output change). That is the same family as our
+interchange tests.
+
+**Is theirs more complete than ours?**
+- **For our goal, no.** It does not handle whole networks, produces no runnable output, issues no certificate, and
+  needs a human answer key.
+- **It is stronger in three ways:**
+  - a much stronger reader;
+  - standard tools, so the reader doesn't spend steps writing its own analysis code;
+  - an explicit hypothesis loop.
+
+**What we adopt, by the change rule (`CLAUDE.md`).** Nothing yet.
+- Our traces (`DIAGNOSIS_ABOVE_32.md`) show our readers *do* find real structure on bigger networks. The bottleneck
+  is our intent and measurement, which their system doesn't address. Their own conclusion, that evaluation is the
+  bottleneck, agrees.
+- Candidates to test later, each as a question with a decision:
+  - (a) does a stronger reader change the outcome under the version-2 intent?
+  - (b) what share of our reader's steps goes into writing analysis code that a fixed tool would replace?
+
+**The lesson that does apply now.** "Outcome-only scoring hides the process." We save the process, but the judge
+ignores it. Our readers' understanding (the pointer-chasing story, the census rule) lived in notes the judge never
+read. Version 2 makes the account's claims what gets tested (INTENT change 4).
