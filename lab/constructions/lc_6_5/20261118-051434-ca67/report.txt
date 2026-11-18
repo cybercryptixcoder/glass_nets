@@ -1,0 +1,38 @@
+JUDGE REPORT   (1563 held-out inputs; construction 4,442 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 99.7% of inputs (a constant output would get 15.2%); output R2 1.000; KL 0.000
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  embed       (20 dims named of 30; 20 principal components suffice; embed): explained 1.000 | substitute 100.0% | keep 100.0% | remove 15.2% (random 29.1%) | mean-ablate 15.2%
+  attn0.pattern (20 dims named of 25; 13 principal components suffice; pat0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 42.6% (random 38.9%) | mean-ablate 42.6%
+  attn0.out   (30 dims named of 30; 21 principal components suffice; a0): explained 1.000 | substitute 99.9% | keep 100.0% | remove 43.8% (random n/a) | mean-ablate 43.8%
+  resid0.mid  (30 dims named of 30; 26 principal components suffice; r0): explained 1.000 | substitute 99.8% | keep 100.0% | remove 42.0% (random n/a) | mean-ablate 42.0%
+  attn1.out   (20 dims named of 30; 16 principal components suffice; a1): explained 1.000 | substitute 99.6% | keep 100.0% | remove 30.8% (random 43.0%) | mean-ablate 30.8%
+  resid1.mid  (30 dims named of 30; 22 principal components suffice; r1): explained 1.000 | substitute 99.5% | keep 100.0% | remove 15.2% (random n/a) | mean-ablate 15.2%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange embed @ embed: right 99.9% / 99.8% when changed (network changed in 65.8%); output R2 1.000 | controls: random subspace 33.4%, no-change 34.2%, source-output 100.0%, attribution patching 33.7%
+  edit        embed @ embed: right 58.1% / 55.5% when changed (network changed in 64.9%); output R2 -0.308 | controls: random subspace 40.3%, no-change 35.1%, source-output 32.5%, attribution patching 38.2%
+  interchange pat0 @ attn0.pattern: right 99.7% / 99.7% when changed (network changed in 65.4%); output R2 1.000 | controls: random subspace 70.2%, no-change 34.6%, source-output 35.4%, attribution patching 51.6%
+  edit        pat0 @ attn0.pattern: right 60.9% / 51.2% when changed (network changed in 64.6%); output R2 -0.013 | controls: random subspace 53.2%, no-change 35.4%, source-output 29.4%, attribution patching 59.4%
+  interchange a0 @ attn0.out: right 99.8% / 99.8% when changed (network changed in 68.2%); output R2 1.000 | controls: random subspace 99.8%, no-change 31.8%, source-output 35.9%, attribution patching 51.1%
+  edit        a0 @ attn0.out: right 98.5% / 98.2% when changed (network changed in 62.6%); output R2 0.999 | controls: random subspace 49.6%, no-change 37.4%, source-output 33.5%, attribution patching 54.4%
+  interchange r0 @ resid0.mid: right 99.9% / 99.8% when changed (network changed in 65.8%); output R2 1.000 | controls: random subspace 99.9%, no-change 34.2%, source-output 100.0%, attribution patching 51.0%
+  edit        r0 @ resid0.mid: right 99.4% / 99.3% when changed (network changed in 60.0%); output R2 1.000 | controls: random subspace 39.2%, no-change 40.0%, source-output 39.1%, attribution patching 56.8%
+  interchange a1 @ attn1.out: right 99.6% / 99.6% when changed (network changed in 65.1%); output R2 1.000 | controls: random subspace 44.4%, no-change 34.8%, source-output 82.3%, attribution patching 100.0%
+  edit        a1 @ attn1.out: right 91.8% / 89.4% when changed (network changed in 48.5%); output R2 0.970 | controls: random subspace 43.9%, no-change 51.5%, source-output 51.3%, attribution patching 100.0%
+  interchange r1 @ resid1.mid: right 99.9% / 99.8% when changed (network changed in 65.8%); output R2 1.000 | controls: random subspace 99.9%, no-change 34.2%, source-output 100.0%, attribution patching 100.0%
+  edit        r1 @ resid1.mid: right 99.2% / 98.7% when changed (network changed in 49.9%); output R2 1.000 | controls: random subspace 51.6%, no-change 50.1%, source-output 51.8%, attribution patching 100.0%
+Variables in model() with no site in ALIGN (not tested): pat1
+5. WHOLE MODEL   all 6 named site(s) replaced at once by the construction's predictions: the network keeps 99.5% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 99.7% (n=656); network decides 1: 100.0% (n=588); network decides 2: 99.2% (n=238); network decides 3: 98.8% (n=81) | near ties (157 least clear inputs, no requirement): 96.8%
+   the network's own mistakes: it is wrong on 5.0% of test inputs (78); the construction reproduces 94.9% of them (need 50% when there are 30 or more) and is right on 5.1%
+7. COMPRESSION   354 constants in the file for 191 degrees of freedom in the network: 1.85 per degree of freedom (an explanation needs < 0.9)  -> FLAGGED: a re-description, not an explanation
+STAGES   embedding: VERIFIED at embed;  layer 0 attention: VERIFIED at attn0.pattern, attn0.out, resid0.mid;  layer 1 attention: VERIFIED at attn1.out, resid1.mid
+VERDICT: NOT VERIFIED (3 of 3 stages verified). Failing:
+  - not an explanation: the file has 354 constants for a network with 191 degrees of freedom (378 parameters, less the transformations that leave its decisions unchanged): 1.85 per degree of freedom (limit 0.9). It re-describes the weights (copied, rescaled, regrouped or normalised) instead of finding the rule; an explanation needs clearly fewer numbers
+COVERAGE   stages 3/3 | behaviour 99.7% | all sites at once 99.5% | worst slice 98.8% | network's mistakes reproduced 94.9%
+NOT EXPLAINED:
+  - on 0.3% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 0.5% of the network's decisions
+  - variables not placed in the network (untested): pat1
+  - worst slice: network decides 3 (81 inputs), where it matches 98.8%
+  - of the network's 78 mistakes on test inputs, 5.1% are not reproduced
+  - the construction copies the network's weights, so it explains nothing by itself
