@@ -356,3 +356,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - M4,3 v2a: COMPLETE in 1 submission, 0.78 constants per dof, i.e. at the claim line. It is a re-description in a P,D,Q,E basis, not a compression; the account matches E9.
   - M2,2: v1 and v2 both COMPLETE.
 - **00:15** Check-in: 6 done, 4 running (lc_3_4 mainb, lc_4_5 maina/b, lc_6_5 a/b). M4,3 v1a: COMPLETE, 5 submissions, 0.78 constants per dof, the same result as v2a, which took 1 submission. No new lc results.
+- **00:26** Check-in: 8 done, 4 running.
+  - lc_4_5 mainb and lc_6_5 maina are glass-2 COMPLETE, but both are E10 copies (integer mantissas over 1000, or times S/T scales).
+  - lc_4_5 does carry a partial account: layer 0 is near-hard copying (86% of rows have max weight > 0.9), and layer 1 at the readout is a soft max/min selector over the keys through a class table G. That is a lead to follow, not a claim.
+  - lc_3_4 mainb: not verified (0/3, 52%).
+  - So far 3 of 3 lc COMPLETEs are E10 copies, all from the v2 reader. No claim.
