@@ -1,0 +1,47 @@
+JUDGE REPORT   (4000 held-out inputs; construction 1,830 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 98.2% of inputs (a constant output would get 34.8%); output R2 -0.018; KL 0.447
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (2 dims named of 4; 1 principal components suffice; a1, b1): explained 1.000 | substitute 100.0% | keep 100.0% | remove 57.9% (random 49.9%) | mean-ablate 57.9%
+  h2          (4 dims named of 4; 3 principal components suffice; a2, b2, r12p, r12m, r12s, r12n): explained 0.997 | substitute 98.7% | keep 100.0% | remove 33.2% (random n/a) | mean-ablate 33.2%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange all variables @ h1: right 98.5% / 99.0% when changed (network changed in 51.2%); output R2 -0.020 | controls: random subspace 57.1%, no-change 48.8%, source-output 37.4%, attribution patching 93.0%
+  partial     a1 @ h1: right 98.4% / 98.1% when changed (network changed in 28.3%); output R2 -0.038 | controls: random subspace 62.5%, no-change 71.7%, source-output 36.8%, attribution patching 97.0%
+  partial     b1 @ h1: right 98.5% / 99.0% when changed (network changed in 29.8%); output R2 -0.037 | controls: random subspace 54.0%, no-change 70.2%, source-output 36.1%, attribution patching 96.4%
+  edit        all variables @ h1: right 98.6% / 99.0% when changed (network changed in 28.7%); output R2 -0.038 | controls: random subspace 60.8%, no-change 71.2%, source-output 36.4%, attribution patching 96.5%
+  interchange all variables @ h2: right 49.1% / 42.2% when changed (network changed in 62.7%); output R2 -0.051 | controls: random subspace 49.3%, no-change 37.2%, source-output 49.9%, attribution patching 65.3%
+  partial     a2 @ h2: right 77.3% / 71.8% when changed (network changed in 9.0%); output R2 -0.029 | controls: random subspace 51.2%, no-change 91.0%, source-output 35.5%, attribution patching 97.6%
+  partial     b2 @ h2: right 77.3% / 67.7% when changed (network changed in 9.8%); output R2 -0.031 | controls: random subspace 52.8%, no-change 90.2%, source-output 35.7%, attribution patching 97.7%
+  partial     r12p @ h2: right 73.2% / 2.9% when changed (network changed in 27.2%); output R2 -0.072 | controls: random subspace 41.5%, no-change 72.8%, source-output 36.9%, attribution patching 94.6%
+  partial     r12m @ h2: right 74.7% / 1.6% when changed (network changed in 25.0%); output R2 -0.079 | controls: random subspace 46.4%, no-change 75.0%, source-output 36.4%, attribution patching 95.5%
+  partial     r12s @ h2: right 81.5% / 4.0% when changed (network changed in 18.9%); output R2 -0.026 | controls: random subspace 52.2%, no-change 81.0%, source-output 35.1%, attribution patching 96.6%
+  partial     r12n @ h2: right 81.0% / 3.9% when changed (network changed in 19.4%); output R2 -0.027 | controls: random subspace 41.1%, no-change 80.5%, source-output 35.1%, attribution patching 96.7%
+  edit        all variables @ h2: right 60.1% / 27.0% when changed (network changed in 43.5%); output R2 -0.043 | controls: random subspace 42.4%, no-change 56.5%, source-output 40.5%, attribution patching 82.5%
+5. WHOLE MODEL   all 2 named site(s) replaced at once by the construction's predictions: the network keeps 98.7% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 95.8% (n=1390); network decides 1: 99.6% (n=1328); network decides 2: 99.1% (n=1282) | near ties (400 least clear inputs, no requirement): 84.0%
+   the network's own mistakes: it is wrong on 1.8% of test inputs (74); the construction reproduces 0.0% of them (need 50% when there are 30 or more) and is right on 100.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 18 (9.0%; on the unsearched starting inputs 0.5%)
+     input [2.889, -0.466, -0.456]: network [0], construction [2]
+     input [3.076, -0.149, -0.157]: network [0], construction [1]
+     input [2.009, -0.463, -0.469]: network [0], construction [1]
+     input [1.284, -1.294, -1.32]: network [0], construction [1]
+     input [-1.728, 0.548, 0.538]: network [0], construction [2]
+7. NOT A COPY   15 numeric literals in the file; network parameters 32; share of its weights (|w| >= 0.05) the literals reproduce: 0%; largest table in the file 1 numbers vs the largest weight tensor 16
+STAGES   step 1: VERIFIED at h1;  step 2: named but failing;  step 3: NOT EXPLAINED (no variable at h3)
+VERDICT: NOT VERIFIED (1 of 3 stages verified). Failing:
+  - interchange of all variables at h2: prediction right in 42.2% of the cases where the network's output changed (need 90%)
+  - partial of r12p at h2: prediction right in 2.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of r12m at h2: prediction right in 1.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of r12s at h2: prediction right in 4.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - partial of r12n at h2: prediction right in 3.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - edit of all variables at h2: prediction right in 27.0% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - (at h2 it is enough that EITHER every partial test OR the edit of all variables passes)
+  - the network's own mistakes: on the 74 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 0.0% (need 50%); it is right on 100.0%: it explains the task, not this network
+COVERAGE   stages 1/3 | behaviour 98.2% | all sites at once 98.7% | worst slice 95.8% | network's mistakes reproduced 0.0%
+NOT EXPLAINED:
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - on 1.8% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 1.3% of the network's decisions
+  - worst slice: network decides 0 (1390 inputs), where it matches 95.8%
+  - of the network's 74 mistakes on test inputs, 100.0% are not reproduced
+  - a search found 18 inputs (from 200 starts) where the network's decision is clear and the construction's differs
