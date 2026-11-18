@@ -375,3 +375,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - M16,10 v1a: 0 constants with a scale factor, an E10 copy.
   - lc_8_6 mainb: not verified (1/3, 92.4%).
   - All 4 lc targets have finished both main runs. No run meets the claim criterion.
+- **03:59** Sync (Shreyas asked); status above relayed.
