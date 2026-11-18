@@ -8,7 +8,11 @@ interrupted runtime.
   run folder (constructor.py --resume <run id>), up to 3 attempts.
 - After each job, results/glass/RESULTS.md is regenerated (scripts/glass/results.py).
 
-Run:  python3 scripts/glass/run_ladder.py [--workers 4] [--only job ...] [--dry]
+Pass 2 (--pass2): every network whose first main run did not end certified (VERIFIED AND COMPLETE under the current
+judge, re-judged here) gets one more blinded main run, "<target>__main2". Job: a second chance after judge changes
+made during pass 1 (the copy rules), and a first measure of run-to-run variation.
+
+Run:  python3 scripts/glass/run_ladder.py [--workers 4] [--only job ...] [--dry] [--pass2]
 Keys: LUMINAL_API_KEYS (comma-separated) in lab/.env.
 """
 import argparse, json, os, re, subprocess, sys, threading, time
@@ -24,6 +28,33 @@ LADDER = ["zoo_2nd_argmax_2_2", "zoo_2nd_argmax_4_3", "zoo_2nd_argmax_4_4", "zoo
 MAIN_STEPS, SHUFFLED_STEPS = 80, 30
 
 
+def certified_now(target, run_id):
+    """Re-judge a run's construction with the current judge (writing report_current.*); True if complete."""
+    rdir = LAB / "constructions" / target / (run_id or "_")
+    if not (rdir / "construction.py").exists():
+        return False
+    sys.path.insert(0, str(LAB))
+    import judge
+    meta, W, X = judge.load_target(target)
+    try:
+        rep = judge.judge(meta["forward"], W, X, (rdir / "construction.py").read_text(), groups=meta.get("out_groups"),
+                          labels=judge.load_labels(meta))
+    except judge.ConstructionError:
+        return False
+    (rdir / "report_current.json").write_text(json.dumps(rep, indent=1, default=str))
+    (rdir / "report_current.txt").write_text(judge.render(rep) + "\n")
+    return bool(rep["verdict"]["complete"])
+
+
+def pass2_jobs(st):
+    out = []
+    for t in LADDER:
+        j = st.get(f"{t}__main")
+        if j and j["status"] == "done" and not certified_now(t, j.get("run_id")):
+            out.append((f"{t}__main2", t, ["--steps", str(MAIN_STEPS)]))
+    return out
+
+
 def jobs():
     """Main blinded runs first, then the controls. Each job: (name, target, constructor args). The main runs start
     with the two smallest, then ARC's challenge network (the most informative, and the longest), then the rest."""
@@ -32,6 +63,11 @@ def jobs():
     out += [(f"{t}__prior", t, ["--told", "--no-weights", "--one-shot"]) for t in LADDER]
     out += [(f"{t}__shuffled", t, ["--variant", "shuffled", "--steps", str(SHUFFLED_STEPS)]) for t in LADDER]
     return out
+
+
+def jobs2(st):
+    """Pass-2 jobs already recorded in the state (so a restart resumes them without re-deciding)."""
+    return [(n, j["target"], j["args"]) for n, j in st.items() if n.endswith("__main2")]
 
 
 _lock = threading.Lock()
@@ -108,6 +144,7 @@ def main():
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--dry", action="store_true")
+    ap.add_argument("--pass2", action="store_true")
     a = ap.parse_args()
     RES.mkdir(parents=True, exist_ok=True)
     st = load_state()
@@ -115,7 +152,8 @@ def main():
         if j["status"] == "running":
             j["status"] = "interrupted"
     save_state(st)
-    todo = [x for x in jobs() if (not a.only or x[0] in a.only) and st.get(x[0], {}).get("status") not in ("done", "failed")]
+    base = jobs() + ([x for x in pass2_jobs(st) if x[0] not in st] + [x for x in jobs2(st)] if a.pass2 else [x for x in jobs2(st)])
+    todo = [x for x in base if (not a.only or x[0] in a.only) and st.get(x[0], {}).get("status") not in ("done", "failed")]
     print(f"{len(todo)} jobs to run: " + ", ".join(n for n, _, _ in todo), flush=True)
     if a.dry:
         return
