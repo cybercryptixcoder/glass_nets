@@ -52,7 +52,7 @@ deleted from here; Shreyas can delete it.)
 - **Running on Colab runtime `glass2`** (started 23:51 ET): the round-2 queue of 40 jobs (`run_ladder.py --round2`;
   state `results/glass/round2/queue.json`; results `results/glass/round2/RESULTS.md`). Relay: `bash
   scripts/glass/sync_from_colab.sh` (session glass2).
-- **Pending:** step 1 (ARC's Drive notes need a permission; it went unanswered twice). The judge must NOT change
+- Step 1 DONE (`M43_VS_ARC.md`, E9): M4,3 is a blind rediscovery of ARC's account. The judge must NOT change
   until round 2 ends (frozen glass-2).
 - At the end:
   - an A/B table, v1 vs v2 on the ladder (networks certified, verified-stage prefix, cost);

@@ -23,3 +23,13 @@ Every claim below points to a file in `lab/constructions/zoo_2nd_argmax_*`.
 mechanisms. E5 says partial progress is invisible. It doesn't say the bar is wrong. Lowering it would move the
 goalposts, so we leave it.
 
+
+## E9. M4,3 was a rediscovery (confidence: high; source `docs/glass/M43_VS_ARC.md`)
+
+- ARC's notes, by Robinson and Hilton, already contain our M4,3 account: signed channels with positive and negative parts, the U/V symmetry, a magnitude-only readout, and reduction to a 2-neuron absolute-value network. The reader found it blind, so this is a validation of the system, not a discovery.
+- New relative to those notes:
+  - the reduced recurrence is a 120° rotation (eigenvalue angle ±119.96°, modulus 0.995);
+  - zeroing the asymmetric coupling costs no accuracy (97.86% → 97.96%);
+  - the result passes causal tests.
+- Our account is missing the link between thresholds and orderings that Hilton gives.
+- Consequence: every claim needs a prior-work comparison before it is made. The catalog and README must call M4,3 a "blind rediscovery of ARC's account".

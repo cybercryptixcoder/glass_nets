@@ -350,3 +350,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - The longest-cycle runs are interleaved early.
   - Round 1's controls are reused (the frozen judge gives them the same verdicts).
 - **23:52** Colab runtime `glass2` created (CPU, high-RAM); detached clone; `.env` uploaded; dry run lists 40 jobs; round-2 job started 04:51 UTC (23:51 ET) with 4 workers. Judge glass-2 is frozen from here until round 2 ends.
+- **23:55** Step 1 done: the Drive connector became available and read all three ARC notes. M4,3 = independent rediscovery of Robinson's symmetric reduction (doc `M43_VS_ARC.md`, E9). New, checked by code: the reduced recurrence is a 120° rotation; the exact reduction loses no accuracy.
