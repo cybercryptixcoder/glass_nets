@@ -185,3 +185,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   the first pass, a second pass re-runs the main job on every network whose best construction isn't certified by
   the current judge (M4,4 at least).
 - `results.py` now prefers `report_current.json` (the current judge's verdict) over the run's own report.
+- **21:01** Pushing the judge fix to Colab: `git pull` there aborted, because the relay commits run folders that exist on Colab as untracked files. Nothing was lost. New `colab_update_code.py` checks out only code paths (`lab/*.py`, `lab/static`, `lab/targets`, `scripts/glass`). Colab now has the table-copy rule (c98ef8ee).

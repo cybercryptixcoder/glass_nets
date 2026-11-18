@@ -74,7 +74,7 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [x] A CPU runtime `glass1` (high-RAM, 8 CPUs). Repo at `/content/helix_probe`, log `/content/glass.log`, pid file `/content/glass_job.pid`, snapshot `/content/glass_snapshot.tgz` (every 2 minutes).
 - [x] Driver `scripts/glass/run_ladder.py`: a queue of runs, one key per worker (4 workers), each run resumable,
   results under `results/glass/<target>/<run>/`, a sync to disk every 2 minutes.
-- [~] Ladder (started 21:03 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
+- [~] Ladder (started 20:50 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
   shuffled-weights control.
 - [ ] Results table: `docs/glass/RESULTS.md`.
 
@@ -100,6 +100,8 @@ Status: [x] done, [~] in progress, [ ] not started.
   snapshot's `results/glass` and `lab/constructions/zoo_*` back (upload and untar); then `colab_start.py`.
   `run_ladder.py` resumes the interrupted runs.
 - Long execs hang. Anything longer than about 30 seconds is launched detached and polled.
+- Code updates on the live runtime: `colab exec -s glass1 -f scripts/glass/colab_update_code.py` (checks out code paths only).
+  **Never `git pull` or `git stash` there**: the run folders on Colab are newer than any commit.
 
 ## How to resume after an interruption
 
