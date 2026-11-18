@@ -43,13 +43,12 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (22:13 ET)
+## Current state (23:30 ET)
 
-- **All runs done** (pass 1: 18 jobs; pass 2: 5). Final report: `docs/glass/REPORT.md`. Results:
-  `results/glass/RESULTS.md`. Certified: M4,3 (blinded); M2,2 (prior-only, 0 constants). Not explained: M4,4, M8,5,
-  M8,8, M16,10 (best: 97% behaviour, 1/10 stages, 45% of mistakes).
-- The Colab runtime `glass1` was stopped at 22:46 ET on Shreyas's word. Nothing is running.
-- Next: Shreyas decides. The proposed next work is in REPORT.md ("What's next"). To run again: `colab new --high-mem -s glass1` and follow the restart steps above.
+- Round 1 done; Colab stopped. **Round 2 plan written and awaiting Shreyas's approval: `docs/glass/PLAN_ROUND2.md`.**
+  His rules for round 2 (23:04 ET): only evidence-backed fixes, no patchwork; compare M4,3 with ARC's notes; pick a
+  no-asterisk discovery target; re-run the ARC ladder; plan first, then wait for approval.
+- Pending approval: opening ARC's Google Drive notes (step 1).
 
 ## Checklist
 

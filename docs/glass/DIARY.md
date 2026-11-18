@@ -295,3 +295,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     compressed construction that verifies some stages.
 - **22:13** **M16,10 continuation finished** (160 steps, 24 submissions, $0.78 in total): not explained. Best compressed attempts: 97.0% behaviour, stage 1 of 10 verified, 45–50% of the network's mistakes reproduced (the 50% bar is close). The reader's closing note: no compact rule reproduces the network's near-tie mistakes, since in the top-gap < 0.02 regime the network still picks the true second max 78% of the time. All runs done: 22 runs, $3.12. Final report written: `docs/glass/REPORT.md`. Colab runtime idle; asked Shreyas whether to stop it.
 - **22:46** Shreyas: stop the runtime. `colab stop -s glass1` done; no sessions remain. All data was already on GitHub. Check-ins end; one already-scheduled check-in fires at 22:54 and finds nothing to do (cancelling it was blocked by the permission system).
+- **23:04** Shreyas set round 2's rules: compare M4,3 with ARC's notes; find our real mistakes and learnings with
+  confidence; no patchwork fixes; find a target we can claim with no asterisks; re-run the ARC ladder; plan
+  everything first, research now, wait for approval.
+- **23:10–23:30** Research and trace analysis (no building).
+  - ARC already has M4,3 "more-or-less" understood: the same checkpoint, an analysis using approximate symmetries,
+    in Drive notes by Robinson, Hilton and Chen. Our M4,3 is a rediscovery, not a discovery. Opening the Drive notes
+    needed a permission that went unanswered.
+  - Community work found: M16,10 (LessWrong comments: running max / second max / spiral; a population-fitted
+    estimator post) and argmedian M4,3 (xabier.me). No public work on the longest-cycle or median families.
+  - Longest-cycle transformers load and run: 2-layer, attention-only, 108–656 params, 81–95% accurate, with input
+    sets small enough to test exhaustively. Chosen as the no-asterisk target.
+  - Trace findings E1–E8 (with file evidence) are in PLAN_ROUND2.md. The key ones:
+    - copies everywhere;
+    - judge rules changed mid-run;
+    - the degrees-of-freedom rule alone suffices;
+    - on M16,10 the reader stopped testing internal stages after submission 16 and spent about 80 steps fitting
+      mistake tables;
+    - M8,5's 0.98/0.89/0.84/0.79 partial progress was invisible behind "0/5";
+    - M4,3's success came from compressing a working copy.
