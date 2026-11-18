@@ -1,0 +1,108 @@
+
+==== 2026-11-18 02:06:01 attempt 1: /content/helix_probe/lab/constructor.py zoo_2nd_argmax_4_4 --told --no-weights --one-shot --quiet
+
+[start] {"id": "20261118-020602-4ec3", "target": "zoo_2nd_argmax_4_4", "dir": "lab/constructions/zoo_2nd_argmax_4_4/20261118-020602-4ec3"}
+
+===== step 1/80
+
+--- submit ---
+import numpy as np
+
+DESCRIPTION = (
+    "Shift register of the four numbers plus a rank readout. The four hidden units are one "
+    "position slot each: at step t the state holds the t numbers read so far, the new number "
+    "driven in by W_x and moved into its own slot by the recurrent shift (h_1 = x1 in slot 0, "
+    "h_2 = (x1, x2), h_3 = (x1, x2, x3), h_4 = all four numbers; slots not yet filled are 0). "
+    "No comparison happens inside the recurrence. The task, 'position of the second-largest "
+    "number', is done by the readout: for each position i count how many of the four numbers "
+    "are larger than it (its rank r_i), and give position i the class logit "
+    "relu(2 - 1.5*|r_i - 1|). That is 2 for the position with exactly one larger number (the "
+    "second largest), 0.5 for a position with no or two larger numbers, and 0 for a position "
+    "with three larger numbers, so the largest logit sits on the position of the second "
+    "largest number."
+)
+
+
+def model(x, iv):
+    b = x.shape[0]
+
+    def col(t):
+        return x[:, t:t + 1]
+
+    # state = running slots for the positions read so far (a shift register)
+    v1 = iv("val1", col(0))
+    v2 = iv("val2", np.concatenate([v1, col(1)], axis=1))
+    v3 = iv("val3", np.concatenate([v2, col(2)], axis=1))
+    v4 = iv("val4", np.concatenate([v3, col(3)], axis=1))
+
+    # readout: one logit per position, peaked at rank 1 (exactly one larger number)
+    out = np.zeros((b, 4))
+    for i in range(4):
+        rank = np.zeros(b)
+        for j in range(4):
+            if j != i:
+                rank = rank + (v4[:, j] > v4[:, i]).astype(float)
+        out[:, i] = np.maximum(2.0 - 1.5 * np.abs(rank - 1.0), 0.0)
+    return out
+
+
+ALIGN = {"val1": ["h1"], "val2": ["h2"], "val3": ["h3"], "val4": ["h4"]}
+
+--- judge report 1 ---
+JUDGE REPORT   (4000 held-out inputs; construction 1,788 chars)
+1. BEHAVIOUR  construction vs network output: same decision on 59.8% of inputs (a constant output would get 26.6%); output R2 0.191; KL 0.347
+2-3. SITES   explained = share of the activation's variance the variables explain;  substitute = network decision kept when the activation is replaced by the construction's prediction;  keep = when only the named subspace of the real activation is kept;  remove = when the named subspace is removed (should be LOW) vs a random subspace of equal size;  mean-ablate = when the whole site is replaced by its mean
+  h1          (1 dims named of 4; 2 principal components suffice; val1): explained 0.738 | substitute 73.0% | keep 65.2% | remove 54.7% (random 69.6%) | mean-ablate 51.5%
+  h2          (2 dims named of 4; 4 principal components suffice; val2): explained 0.763 | substitute 51.9% | keep 55.1% | remove 54.4% (random 34.0%) | mean-ablate 41.2%
+  h3          (3 dims named of 4; 4 principal components suffice; val3): explained 0.598 | substitute 31.1% | keep 41.2% | remove 44.4% (random 29.6%) | mean-ablate 32.4%
+  h4          (4 dims named of 4; 4 principal components suffice; val4): explained 0.428 | substitute 27.5% | keep 100.0% | remove 26.6% (random n/a) | mean-ablate 26.6%
+4. INTERVENTIONS   interchange = everything named at the site is copied from another input's run (need 90%). Then tests that make states no input produces (need 50% of the cases where the decision changed): partial = one variable is copied while the site's other variables stay; edit = a random half of the coordinates of everything named at the site are copied. Where both are run, it is enough that all partial tests pass OR the edit passes. right = the construction predicted the network's new decision (all cases / cases where the decision changed).  controls: the same swap in a random subspace; guessing 'no change'; guessing the source input's output; attribution patching (a first-order estimate computed on the network itself)
+  interchange val1 @ h1: right 52.4% / 49.7% when changed (network changed in 47.2%); output R2 0.157 | controls: random subspace 34.8%, no-change 52.8%, source-output 25.8%, attribution patching 67.8%
+  interchange val2 @ h2: right 40.3% / 39.2% when changed (network changed in 50.5%); output R2 0.034 | controls: random subspace 32.3%, no-change 49.5%, source-output 29.8%, attribution patching 63.6%
+  edit        val2 @ h2: right 44.3% / 38.6% when changed (network changed in 37.7%); output R2 0.084 | controls: random subspace 35.5%, no-change 62.3%, source-output 25.5%, attribution patching 75.0%
+  interchange val3 @ h3: right 35.9% / 34.9% when changed (network changed in 47.5%); output R2 -0.123 | controls: random subspace 36.2%, no-change 52.5%, source-output 31.1%, attribution patching 76.9%
+  edit        val3 @ h3: right 35.9% / 27.2% when changed (network changed in 41.7%); output R2 -0.040 | controls: random subspace 28.5%, no-change 58.3%, source-output 27.4%, attribution patching 79.5%
+  interchange val4 @ h4: right 30.8% / 34.9% when changed (network changed in 31.8%); output R2 -0.204 | controls: random subspace 61.0%, no-change 68.2%, source-output 31.4%, attribution patching 100.0%
+  edit        val4 @ h4: right 32.9% / 26.9% when changed (network changed in 26.6%); output R2 -0.033 | controls: random subspace 34.1%, no-change 73.4%, source-output 25.7%, attribution patching 100.0%
+5. WHOLE MODEL   all 4 named site(s) replaced at once by the construction's predictions: the network keeps 27.5% of its decisions (need 90% when two or more sites are named)
+6. WORST CASE   behaviour by the network's decision: network decides 0: 59.2% (n=1016); network decides 1: 58.3% (n=1049); network decides 2: 69.7% (n=872); network decides 3: 53.7% (n=1063) | near ties (400 least clear inputs, no requirement): 43.5%
+   the network's own mistakes: it is wrong on 40.2% of test inputs (1608); the construction reproduces 0.0% of them (need 50% when there are 30 or more) and is right on 100.0%
+   search for disagreements (200 starts x 25 steps, only inputs where the network's decision is clear): found 175 (87.5%; on the unsearched starting inputs 38.0%)
+     input [-2.316, -1.694, 2.02, -2.281]: network [0], construction [1]
+     input [-3.653, 0.423, -3.278, 0.592]: network [3], construction [1]
+     input [-2.847, 1.146, 3.35, 1.184]: network [1], construction [3]
+     input [-2.75, -1.724, -0.026, -2.603]: network [2], construction [1]
+     input [1.327, 1.597, 0.113, -3.095]: network [1], construction [0]
+7. NOT A COPY   16 numeric literals in the file; network parameters 36; share of its weights (|w| >= 0.05) the literals reproduce: 6%; largest table in the file 1 numbers vs the largest weight tensor 16
+STAGES   step 1: named but failing;  step 2: named but failing;  step 3: named but failing;  step 4: named but failing
+VERDICT: NOT VERIFIED (0 of 4 stages verified). Failing:
+  - behaviour: the construction's output agrees with the network on 59.8% of inputs (need 95%)
+  - substitution at h1: 73.0% (need 90%)
+  - interchange of val1 at h1: prediction right in 49.7% of the cases where the network's output changed (need 90%)
+  - substitution at h2: 51.9% (need 90%)
+  - interchange of val2 at h2: prediction right in 39.2% of the cases where the network's output changed (need 90%)
+  - edit of val2 at h2: prediction right in 38.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h3: 31.1% (need 90%)
+  - interchange of val3 at h3: prediction right in 34.9% of the cases where the network's output changed (need 90%)
+  - edit of val3 at h3: prediction right in 27.2% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - substitution at h4: 27.5% (need 90%)
+  - interchange of val4 at h4: prediction right in 34.9% of the cases where the network's output changed (need 90%)
+  - edit of val4 at h4: prediction right in 26.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)
+  - joint substitution: with all 4 named sites replaced at once by the construction's predictions, the network keeps 27.5% of its decisions (need 90%): the sites pass one at a time but do not work together
+  - worst slice: on the 1063 inputs where network decides 3, the construction agrees on 53.7% (need 80%)
+  - the network's own mistakes: on the 1608 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 0.0% (need 50%); it is right on 100.0%: it explains the task, not this network
+COVERAGE   stages 0/4 | behaviour 59.8% | all sites at once 27.5% | worst slice 53.7% | network's mistakes reproduced 0.0%
+NOT EXPLAINED:
+  - stage 'step 1' is not explained
+  - stage 'step 2' is not explained
+  - stage 'step 3' is not explained
+  - stage 'step 4' is not explained
+  - on 40.2% of inputs the construction's decision differs from the network's
+  - replacing every named site at once loses 72.5% of the network's decisions
+  - worst slice: network decides 3 (1063 inputs), where it matches 53.7%
+  - of the network's 1608 mistakes on test inputs, 100.0% are not reproduced
+  - a search found 175 inputs (from 200 starts) where the network's decision is clear and the construction's differs
+
+[done] {"id": "20261118-020602-4ec3", "status": "done", "seconds": 156.5, "best": 1, "verdict": {"verified": false, "fails": ["behaviour: the construction's output agrees with the network on 59.8% of inputs (need 95%)", "substitution at h1: 73.0% (need 90%)", "interchange of val1 at h1: prediction right in 49.7% of the cases where the network's output changed (need 90%)", "substitution at h2: 51.9% (need 90%)", "interchange of val2 at h2: prediction right in 39.2% of the cases where the network's output changed (need 90%)", "edit of val2 at h2: prediction right in 38.6% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "substitution at h3: 31.1% (need 90%)", "interchange of val3 at h3: prediction right in 34.9% of the cases where the network's output changed (need 90%)", "edit of val3 at h3: prediction right in 27.2% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "substitution at h4: 27.5% (need 90%)", "interchange of val4 at h4: prediction right in 34.9% of the cases where the network's output changed (need 90%)", "edit of val4 at h4: prediction right in 26.9% of the cases where the network's output changed (need 50%; guessing 'no change' gets 0% of these)", "joint substitution: with all 4 named sites replaced at once by the construction's predictions, the network keeps 27.5% of its decisions (need 90%): the sites pass one at a time but do not work together", "worst slice: on the 1063 inputs where network decides 3, the construction agrees on 53.7% (need 80%)", "the network's own mistakes: on the 1608 test inputs where the network is wrong, the construction makes the network's (wrong) decision on 0.0% (need 50%); it is right on 100.0%: it explains the task, not this network"], "stages_total": 4, "stages_verified": 0, "complete": false, "score": 0.0}, "cost": 0.0237111}
+
+status done; best submission 1; cost $0.024; 156.5 s; /content/helix_probe/lab/constructions/zoo_2nd_argmax_4_4/20261118-020602-4ec3
