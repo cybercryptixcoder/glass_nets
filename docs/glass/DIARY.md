@@ -293,3 +293,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Pattern across the ladder:** with the copy rules in place, the reader either finds a compressed account (M4,3)
     or produces an exact re-description (M2,2, M4,4, M8,5, M8,8, M16,10). There's no middle ground yet: a
     compressed construction that verifies some stages.
+- **22:13** **M16,10 continuation finished** (160 steps, 24 submissions, $0.78 in total): not explained. Best compressed attempts: 97.0% behaviour, stage 1 of 10 verified, 45–50% of the network's mistakes reproduced (the 50% bar is close). The reader's closing note: no compact rule reproduces the network's near-tie mistakes, since in the top-gap < 0.02 regime the network still picks the true second max 78% of the time. All runs done: 22 runs, $3.12. Final report written: `docs/glass/REPORT.md`. Colab runtime idle; asked Shreyas whether to stop it.

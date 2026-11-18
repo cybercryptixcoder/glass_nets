@@ -43,13 +43,13 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## Current state (21:53 ET)
+## Current state (22:13 ET)
 
-- Pass 1 done; **pass 2 running** (M8,5 and M8,8 fresh runs; M16,10 continued to 160 steps, at about 117).
-- Certified under the current judge: **M4,3** (blinded main run, 0.78 constants per degree of freedom; its prior
-  control fails) and **M2,2** (its prior-only 0-constant construction). Everything else is either not explained
-  or a re-description (≥ 1.0 constants per degree of freedom).
-- Next: monitor; when pass 2 ends, final re-judge, `results.py`, and the final report.
+- **All runs done** (pass 1: 18 jobs; pass 2: 5). Final report: `docs/glass/REPORT.md`. Results:
+  `results/glass/RESULTS.md`. Certified: M4,3 (blinded); M2,2 (prior-only, 0 constants). Not explained: M4,4, M8,5,
+  M8,8, M16,10 (best: 97% behaviour, 1/10 stages, 45% of mistakes).
+- The Colab runtime `glass1` is idle (CPU, high-RAM). Asked Shreyas whether to stop it.
+- Next: wait for Shreyas. Proposed next work is in REPORT.md ("What's next").
 
 ## Checklist
 
@@ -82,7 +82,7 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [x] A CPU runtime `glass1` (high-RAM, 8 CPUs). Repo at `/content/helix_probe`, log `/content/glass.log`, pid file `/content/glass_job.pid`, snapshot `/content/glass_snapshot.tgz` (every 2 minutes).
 - [x] Driver `scripts/glass/run_ladder.py`: a queue of runs, one key per worker (4 workers), each run resumable,
   results under `results/glass/<target>/<run>/`, a sync to disk every 2 minutes.
-- [~] Ladder (started 20:50 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
+- [x] Ladder (started 20:50 ET, finished 22:05 ET): 2nd argmax M2,2 → M4,3 → larger, up to M16,10 (432 params). Each with the prior-only control and a
   shuffled-weights control.
 - [x] **Pass 2: started by hand at 21:35 ET.** The live job (`colab_job.sh`, started before pass 2 existed) ends after
   pass 1. When `colab_status.py` shows the job is NOT RUNNING, run `colab_update_code.py`, then `colab_start.py`.
@@ -91,7 +91,7 @@ Status: [x] done, [~] in progress, [ ] not started.
 - [x] Results table: `results/glass/RESULTS.md` (regenerated after every job and at every relay).
 - [x] Re-judge every saved construction with the final judge (`scripts/glass/rejudge.py`, CPU, about 25 minutes),
   then commit the `report_current.*` files so the catalog shows today's certificates.
-- [ ] Final report to Shreyas: the results table, what each certified construction says, and the controls.
+- [x] Final report: `docs/glass/REPORT.md`.
 
 ### D. Catalog / playground (in parallel with C)
 - [x] A catalog page in the lab server (`/catalog`; `lab/catalog.py`, `lab/static/catalog.html`): the list of constructions with their certificates; for a chosen input, run
