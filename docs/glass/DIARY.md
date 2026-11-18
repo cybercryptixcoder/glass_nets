@@ -380,3 +380,32 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **09:51** Review with Shreyas. Retracted the 'v2 no better' reading and the proposed glass-3 rule (both patchwork). Wrote the corrections in REPORT_ROUND2, E12 (how it happened, the binding change rule), CHANGES.md (ledger) and the CHECKLIST rule.
 - **10:07** Whole-project review written (`docs/PROJECT_REVIEW.md`) at Shreyas's request: history, parts, experiments, the core problem (no valid 'is it an explanation' measure), why we circle, an audit of earlier decisions, the build routine, and his decisions. Nothing run.
 - **10:42** Diagnosed failures above 32 parameters from the transcripts (DIAGNOSIS_ABOVE_32.md). Researched ARC's evaluation (no harness; surprise accounting; MSE vs sampling) and wrote EVIDENCE_LADDER.md. Wrote INTENT.md (v2: tolerance-based certificate, information versus copy frontier, feedback on errors, reader v1 default). Added CLAUDE.md (binding routine) and pointers. Deeper Pitfalls analysis. No code changed; nothing run.
+- **11:10 PRE-REGISTRATION: rebuild step 1 (proving the information measure).** Written before any measurement code.
+  - **Measure.**
+    - B = bits of the construction file, measured as the raw LZMA (preset 9e) size of its code after removing
+      DESCRIPTION, ALIGN and comments (ast round-trip).
+    - F = agreement with the network's decisions on the target's own inputs.
+    - C(F) = bits of the cheapest *copy* reaching fidelity ≥ F. Copies are the weights quantised to k = 1..16 bits:
+      (i) uniform per tensor, as integers over a scale; (ii) a 2^k-value codebook plus indices. Each is written as a
+      file with a fixed generic forward pass and measured the same way.
+    - Score S = B / C(F).
+  - **Must-fail (each S ≥ 0.8):**
+    - saved copies: lc_3_4 maina, lc_4_5 mainb, lc_6_5 maina, M8,5 v1a, M8,8 v1b, M16,10 v1a, M16,10 v2a;
+    - saved near-copies: lc_4_5 maina, lc_8_6 maina, M4,4 v1a, M8,5 v2a, M16,10 v1b;
+    - the shuffled-network account (lc_3_4 shuffled, judged against its shuffled network);
+    - new disguises written now, applied to M8,5, lc_6_5 and M16,10:
+      - D1 float32 bytes in base64;
+      - D2 6-significant-digit decimals;
+      - D3 16-bit integers over a scale;
+      - D4 a 256-value codebook plus indices;
+      - D5 weights sorted, plus a permutation;
+      - D6 zlib-compressed float16 bytes in base64.
+  - **Must-pass (each S ≤ 0.5):**
+    - M2,2 prior-only account (round 1);
+    - M4,3 round-1 account (c928);
+    - the lc_8_6 run-b account (the census rule).
+  - **Reported but not labelled:** the round-2 M4,3 files (0.78).
+  - **Decision:**
+    - If both conditions hold, the measure goes forward to step 2.
+    - If either fails, the idea is wrong as stated: report it and return to the intent. Do NOT tune the 0.8/0.5
+      lines.
