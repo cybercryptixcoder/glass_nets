@@ -430,3 +430,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     only answers questions by sampling.
   - INTENT change 2 is reopened. The 0.8/0.5 lines stay unused and are not tuned.
 - **11:00** Research on scaling the reader (ARC M16,10 analysis, community work, MIPS, SPD, metric-guided decompilation cleanup). Wrote the reader-scaling plan (DIAGNOSIS_ABOVE_32.md, end; R1–R4) and recorded Shreyas's micro-experiment development loop in INTENT.md. Waiting for a go on R1/R2.
+- **11:55 R1 (free; 20 big-network transcripts).** Steps per run: 21–160. Python calls: 18–137, averaging 500–870
+  characters of code each.
+  - **Submissions rejected only for "not an explanation" (constant-shaving):** 22/25 on M16,10 v2b, 17/17 on lc_6_5 b,
+    11/11 on M8,5 v2b, 8/8 on M8,8 v2a. Overall, most submissions on big networks.
+  - **Key-insight words first appear at steps 1–33.** On the 2nd-argmax networks "running max" appears by step 1–7,
+    but that may be the task guessed, not the network read.
+  - **Answer:** the reader is not short of steps for insight. Most of its budget went into gaming the old copy rule.
+    No sign yet that missing tools are the bottleneck (R4 deferred), or that the 6-step submit rule is.
+  - **Decision:** R2 (progressive replacement with error-locating feedback) is the main lever.
+- **11:45** Translation error found and fixed (CHANGES T1, judge glass-2.1): lc_8_6's 'network's own mistakes' numbers were computed against misaligned labels (random 20k subsample of inputs vs full-order labels). All round-2 lc_8_6 mistake numbers are void. No other target has more than 20,000 inputs.
+- **11:48** R2 launched locally (lab/replacer.py, a new entry point; the old path is untouched). It warm-starts from an exact copy plus the reader's own notes and gives intent-v2 certificate feedback, with no verdict. Runs: lc_8_6 (notes from run d7df, the census rule) and M16,10 (notes from v2a), 40 steps each, DeepSeek V4.1 Flash. Checked first: both copy starts reproduce the network exactly (fidelity 100%), S = 1.21 / 1.43, and the judge accepts the sites.

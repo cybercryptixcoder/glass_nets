@@ -11,7 +11,7 @@ A construction of a network with **more than 100 parameters** counts as working 
    - Fidelity to the network's decisions is reported with a 95% confidence interval on held-out inputs.
    - Fidelity is **above what the task rule gives** (the prior-only control), with non-overlapping intervals.
      Matching the task rule only would mean we explained the task, not the network.
-2. **Inside claims.** Every variable the construction places in the network passes the calibrated judge's
+2. **Inside claims.** At least one inside variable must be claimed (amended 12:05, before any R2 result: with zero claims rule 2 would pass trivially), and coverage (which stages have one) is reported. Every variable the construction places in the network passes the calibrated judge's
    substitution and interchange tests (rung 2) at that site.
 3. **Not a copy.**
    - Information score S ≤ 0.5. The measure separated every copy (S ≥ 0.77) from the one real big-network account

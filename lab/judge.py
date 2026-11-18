@@ -54,7 +54,7 @@ PASS = {"behaviour": 0.95,       # share of inputs on which the construction and
         "joint": 0.90,           # decisions kept when EVERY named site is replaced by the construction's prediction at once
         "worst_slice": 0.80,     # behaviour on the worst slice (the inputs on which the network makes one decision)
         "errors": 0.50}          # share of the network's own mistakes (vs the task's labels) the construction reproduces
-JUDGE_VERSION = "glass-2"         # frozen for round 2 (docs/glass/PLAN_ROUND2.md, F2): every report carries it, and it does
+JUDGE_VERSION = "glass-2.1"         # frozen for round 2 (docs/glass/PLAN_ROUND2.md, F2): every report carries it, and it does
                                  # not change during a benchmark
 MIN_SLICE = 30                   # slices and error sets smaller than this are reported but carry no requirement
 
@@ -191,10 +191,17 @@ def fit_alignment(V, A, fit):
 
 
 # ---------------------------------------------------------------- whole-model certificate (Glass Networks)
-def load_labels(meta):
-    """The task's correct answers for the domain inputs, when the target has them (meta["labels"]), else None."""
+def load_labels(meta, max_n=20000, seed=0):
+    """The task's correct answers for the domain inputs, when the target has them (meta["labels"]), else None.
+    The labels file is in the order of the full input file; nets.domain_inputs subsamples files longer than max_n, so
+    the same subsample is applied here (glass-2.1 fix: lc_8_6 has 46,656 inputs and its labels were misaligned)."""
     f = meta.get("labels")
-    return np.load(LAB / "models" / meta["id"] / f) if f else None
+    if not f:
+        return None
+    L = np.load(LAB / "models" / meta["id"] / f)
+    if len(L) > max_n:
+        L = L[np.random.default_rng(seed).choice(len(L), max_n, replace=False)]
+    return L
 
 
 def _margin(out):
@@ -751,7 +758,7 @@ if __name__ == "__main__":
         sys.exit(0)
     meta, W, X = load_target(a.target, a.variant)
     try:
-        rep = judge(meta["forward"], W, X, Path(a.construction).read_text(), seed=a.seed, groups=meta.get("out_groups"), labels=load_labels(meta))
+        rep = judge(meta["forward"], W, X, Path(a.construction).read_text(), seed=a.seed, groups=meta.get("out_groups"), labels=load_labels(meta, seed=a.seed))
     except ConstructionError as e:
         print("CONSTRUCTION ERROR:", e); sys.exit(1)
     print(render(rep))
