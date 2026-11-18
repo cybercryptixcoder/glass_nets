@@ -377,3 +377,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - All 4 lc targets have finished both main runs. No run meets the claim criterion.
 - **03:59** Sync (Shreyas asked); status above relayed.
 - **04:02** ROUND 2 FINISHED: 40/40; all 757 run files and 70 logs synced (counts match Colab). Wrote REPORT_ROUND2.md (A/B: v2 no better, so revert F3/F4; no lc claim; shuffled lc_3_4 passed, so the judge is too loose) and E11. Coding is left for the next agent.
+- **09:51** Review with Shreyas. Retracted the 'v2 no better' reading and the proposed glass-3 rule (both patchwork). Wrote the corrections in REPORT_ROUND2, E12 (how it happened, the binding change rule), CHANGES.md (ledger) and the CHECKLIST rule.

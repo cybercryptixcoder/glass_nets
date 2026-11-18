@@ -2,6 +2,32 @@
 
 The plan was `PLAN_ROUND2.md`, approved 23:36 ET Nov 17. The runs went from 23:51 to about 03:55 ET on Colab runtime `glass2`: 40 of 40 jobs finished. All run folders (757 files) and all 70 logs are synced to GitHub; file counts on Colab and locally match. API cost: v1 $2.97, v2 runs incl. lc $7.72, total $10.69.
 
+
+## CORRECTIONS (2026-11-18 09:51 ET, after review with Shreyas). These replace the recommendations below.
+
+1. **Retracted: "reader v2 did not beat v1".** The A/B could not have shown a difference.
+   - Its judge (glass-2) passes weight copies, and there were 2 runs per arm.
+   - On the only standard that means "explained", both readers solved only M2,2 and M4,3.
+   - Correct statement: **we have no evidence either way about v2.**
+   - v2 goes back to off-by-default because it was never shown to be needed. No evidence was found against it; this undoes my unjustified change, not a new fix (see E12).
+2. **Retracted: the proposed glass-3 rule.** That was "count every literal except |n| ≤ 10, and pass at < 0.78".
+   - The first half is another rule about how numbers are written. The runs already show three ways to write a copy:
+     - near-complete decimal tables (e.g. lc_8_6 0.88);
+     - scaled whole numbers (lc_3_4 maina, M8,8 v1b, M16,10 v1a);
+     - a value table plus index lists (M16,10 v2a).
+     A rule about written form invites a fourth.
+   - The second half moves the line to just below the copies we have already seen. That fits the threshold to the outcomes it judges.
+   - Both are patchwork.
+3. **What is established as necessary** (direct evidence, not inference):
+   - glass-2 passed files that are the network's weights (7 runs, several saying so in their own DESCRIPTION);
+   - it passed the pre-registered must-fail control (shuffled lc_3_4, 0.81).
+   - So the compression test does not do its one job. Whatever replaces it must:
+     - (a) not depend on how numbers are written: measure the information in the file, not the type of its literals;
+     - (b) take its pass line from structureless controls (shuffled networks), never from where our results fall;
+     - (c) before adoption, reject every copy we already hold, plus copies in encodings written before the rule is designed, and still pass M2,2 and M4,3.
+     If no rule can do (c), that is a finding: compression is the wrong test, and we redesign rather than patch.
+4. **"E10 copy" column below:** this was a heuristic (≥ 20 integers of ≥ 3 digits). It is confirmed by reading the files for lc_3_4 maina, M8,8 v1b, M16,10 v1a and M16,10 v2a (table form).
+
 ## The short answer
 1. **No discovery.** No longest-cycle run meets the pre-registered claim criterion. Every run the judge passed is either a full weight copy (the E10 trick) or a near-copy at 0.81–0.88 constants per degree of freedom. The tasks-only (prior) controls all failed, as they should. But a **shuffled-weights control passed** (lc_3_4, 0.81), which shows that judge glass-2 cannot tell a copy from an explanation.
 2. **M4,3 is a rediscovery, not a discovery.** Our account matches Robinson's and Hilton's notes (`M43_VS_ARC.md`). We add two things the notes don't state: the reduced recurrence is a 120° rotation, and the exact reduction loses no accuracy.

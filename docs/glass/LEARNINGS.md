@@ -50,4 +50,27 @@ goalposts, so we leave it.
 - Every round-2 pass that was not an E10 copy and sat above 0.78 was a near-copy: lc_4_5 0.81, lc_8_6 0.88, M4,4 0.85–0.89, M8,5 0.87–0.88, M16,10 0.87.
 - The shuffled-weights control on lc_3_4 passed at 0.81.
 - Real accounts (M2,2, M4,3) sit at ≤ 0.78 in both rounds.
-- So the pass line should equal the claim line, < 0.78.
+- RETRACTED conclusion (see REPORT_ROUND2 corrections): the data show the ratio does not separate copies from explanations. Moving the line onto the observed copies would be fitting it to outcomes.
+
+## E12. How unjustified changes got in despite the "no patchwork" rule (process; 2026-11-18 09:51 ET)
+
+**What happened:**
+- F3/F4 (reader v2) were each built from one anecdote (E4: one M16,10 run; E5: one network). No test showed that they addressed a cause.
+- They were made the default, and the discovery runs used only v2, before the A/B reported.
+- The A/B (2 runs per arm) ran under a judge that does not discriminate, so it could not measure the change.
+- F1 was validated only on the 17 constructions it was designed from. It opened E10.
+- At the end of round 2 I proposed a rule tweak and a threshold fitted to observed copies: the same error a third time.
+
+**The rule from now on** (it is also in CHECKLIST, and it applies to every agent):
+1. **No change without a ledger entry** in `docs/glass/CHANGES.md`, written before any code. The entry gives:
+   - the failure (run id + file);
+   - the cause, shown by a minimal reproduction;
+   - the change;
+   - a test that fails before and passes after;
+   - cases NOT used to design it (held-out and adversarial);
+   - the verdicts that must not change.
+   A change that can't fill every field is an experiment: behind a flag, off by default, never used for claim runs.
+2. **Measurement before method.** The judge must pass its must-fail/must-pass suite (our own copies and controls, plus M2,2 and M4,3) before any spend on runs or A/Bs.
+3. **No threshold is set from the results it judges.** Lines come from controls.
+4. **One kind of change per round:** judge OR reader, never both.
+5. **Before an A/B,** state how many runs it needs to detect the effect. If it can't detect it, don't run it.
