@@ -43,7 +43,11 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## NOW (Nov 18, 11:00): intent v2 written (`INTENT.md`, from `DIAGNOSIS_ABOVE_32.md` and `EVIDENCE_LADDER.md`). Rebuild order step 1 is waiting for Shreyas's go. Rules: `CLAUDE.md`.
+## NOW (Nov 18, ~13:00 ET): SCALING WORK under Shreyas's go-ahead (11:43). Plan and criterion: `docs/glass/PLAN_SCALING.md`.
+- Micro experiments run LOCALLY (`lab/replacer.py`; the API works from the workspace). Logs: `results/glass/scaling/logs/`; runs are `lab/constructions/<target>/<id>-r2-*` / `-r5-*`.
+- Done: R1 (the readers' budget went to gaming the copy rule); R2 (progressive replacement keeps readers exact, but they don't substitute rules); judge glass-2.1 (lc_8_6 label fix, CHANGES T1); criterion tightened (inside claim after the first step).
+- Running: R5 (top-down, trading exactness for rules) on lc_3_4, lc_4_5, lc_8_6, M8,5, lc_6_5.
+- Status table: `/tmp/r2s.sh`-style summary; see DIARY for every result.
 
 ## CHANGE RULE (binding; LEARNINGS E12): no code change without a CHANGES.md entry (failure → reproduced cause → before/after test incl. held-out + adversarial cases → verdicts that must not change). Otherwise it is a flagged, off-by-default experiment. Validate the judge before any run spend. No thresholds fitted to outcomes. One kind of change per round.
 
