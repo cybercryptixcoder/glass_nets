@@ -1656,3 +1656,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **11:59 modadd decompositions running at a measured pace:** 4k of 30k steps in about 15 minutes (11:40 → 11:55), so both rungs should finish around 13:30.
   - Early sign: every component of the attention query and key matrices goes dead (0 alive in H0's W_Q and W_K). SPD finds them unimportant, as it did for Q/K in the planted transformer.
   - The known-answer script (`scripts/glass/atlas_modadd_known.py`) is ready.
+- **12:17 modadd: 12k of 30k steps on both rungs (on track for about 13:30).** Meanwhile the whole atlas pipeline was smoke-tested on a 200-step modadd decomposition. It runs end to end: 406 mechanisms, about 4 minutes on two local cores. That checks the code path; the numbers mean nothing yet.
