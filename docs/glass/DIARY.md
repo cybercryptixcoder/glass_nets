@@ -1107,3 +1107,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - > 0.5 on ≥ 90% of the inputs where its feature is on AND the target output for that feature is > 0.05 (the mechanism is needed);
     - < 0.1 on ≥ 90% of the inputs where only another feature is on.
   - Pass both → stage (b) results count.
+- **02:06 U19(b) compute note:** at batch 2048 the RNN decomposition ran about 500 steps per 3 minutes (about 3 hours for 30k). I restarted it with batch 512 and 20k steps (about 30–40 minutes), before looking at any of its results. Only the training budget changed; the method and the pass criterion are as pre-registered.
+- **02:08 U19(c) PRE-REGISTRATION (SPD on M8,5; runs only after (a') and (b) pass).** Script: `scripts/glass/units/u19c_m85.py`.
+  - **Target:** zoo_2nd_argmax_8_5 (ARC's seed 3), with the shuffled-weights version as control.
+  - **Setup:** W_x, W_h and W_o are decomposed (C = 20 each), with the U19(a') configuration, 30k steps. Logits are divided by their spread, so the reconstruction loss is relative.
+  - **Measures:**
+    - alive components per matrix;
+    - mean number of components in use per call (L0, importance > 0.1);
+    - decision fidelity with the importance-masked model (masks = importances) and with alive components only;
+    - for each alive W_h component, the best balanced accuracy at predicting its importance > 0.5 from one task event at that step: x_t is a new max; x_t is a new 2nd; x_t is below the 2nd; the max was at t−1; x_t > 0; or the negation of any of these.
+  - **Decision.** "SPD yields a units decomposition of M8,5" if all of these hold:
+    - (i) the importance-masked fidelity is ≥ the task rule (0.879);
+    - (ii) W_h's mean L0 per call is ≤ half its alive count (sparse use);
+    - (iii) ≥ 50% of alive W_h components are event-labelled (balanced accuracy ≥ 0.9), against ≤ 20% in the shuffled control.
+  - Otherwise SPD does not give a readable exact decomposition of M8,5; record which part failed.
