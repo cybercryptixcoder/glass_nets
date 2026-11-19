@@ -90,7 +90,10 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
         for name in mods:   # one matrix at a time
             rec = rec + loss_fn(_run(forward, x, mods, lambda n, k, name=name: masks[n][k] if n == name else None)) / len(mods)
         if coef_ci:         # A38: CI-masked reconstruction (masks = importances, r = 0): every unimportant component off at once
-            if ci_mode == "hard":   # A38b (experiment): on/off masks 1[g > 0.5], straight-through gradient to g
+            if ci_mode == "layer":  # A38c (experiment): one matrix at a time (a random one per step), masks = g, the rest exact
+                pick = list(mods)[int(torch.randint(len(mods), (1,)))]
+                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: lower_leaky(gs[n][k]) if n == pick else None))
+            elif ci_mode == "hard":   # A38b (experiment): on/off masks 1[g > 0.5], straight-through gradient to g
                 def _hm(z):
                     g = lower_leaky(z)
                     return (z > 0.5).to(z.dtype) + g - g.detach()
