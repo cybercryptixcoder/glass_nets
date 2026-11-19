@@ -253,6 +253,14 @@ class ModAddTarget:
     def _rows(self, name):
         return self.P if (name == "W_E" or name.endswith("_W_K") or name.endswith("_W_V")) else 1
 
+    def row_tokens(self, x, name):
+        """A41: the input token values each row of matrix `name` depends on: its own token for matrices called at every
+        position, (a, b) for last-position matrices. The '=' token (p) belongs to both halves of any split."""
+        t = x.argmax(-1); B = len(x)
+        if self._rows(name) == self.P:
+            return self._pm(t[:, :, None].astype(float), B, self.P).astype(int)
+        return t[:, :2].astype(int)
+
     def forward(self, x, mm):
         B, P, V = x.shape
         e = mm("W_E", x.reshape(B * P, V)).reshape(B, P, -1) + torch.as_tensor(self.W_pos[:P], dtype=x.dtype, device=x.device)
@@ -705,6 +713,42 @@ def absorb_residual(tgt, mods, alive, x):
     return info
 
 
+VALUE_SPLIT_SEED = 0
+
+
+def value_heldout(Ftr, ytr, tok_tr, Fte, yte, clear_te, tok_te, p, depth=4):
+    """A41: does the rule carry over to token values never seen when fitting it? Token values 0..p-1 are split into two
+    seeded halves; the rule (same tree settings as the trigger) is fitted on training rows whose tokens all lie in one
+    half and scored (balanced accuracy, clear-cut cases) on test rows whose tokens all lie in the other; both directions,
+    averaged over the directions that can be scored (both classes present). None if neither can be scored."""
+    perm = np.random.default_rng(VALUE_SPLIT_SEED).permutation(p); halves = [perm[:p // 2].tolist(), perm[p // 2:].tolist()]
+    scores = []
+    for A_, B_ in ((0, 1), (1, 0)):
+        inA = np.all(np.isin(tok_tr, halves[A_] + [p]), axis=1)
+        inB = np.all(np.isin(tok_te, halves[B_] + [p]), axis=1) & clear_te
+        yb = yte[inB]
+        if inA.sum() == 0 or not yb.any() or yb.all():
+            continue
+        ya = ytr[inA]
+        if ya.all() or (~ya).all():
+            pr = np.full(int(inB.sum()), bool(ya.all()))
+        else:
+            t_ = DecisionTreeClassifier(max_depth=depth, class_weight="balanced", min_samples_leaf=20, random_state=0).fit(Ftr[inA], ya)
+            pr = t_.predict(Fte[inB])
+        scores.append(0.5 * (pr[yb].mean() + (~pr[~yb]).mean()))
+    return float(np.mean(scores)) if scores else None
+
+
+def mech_label(conf, vh):
+    """A41: 'rule' (trusted and carries over to unseen token values), 'lookup' (trusted on held-out inputs, but only
+    describes the cases seen), 'not explained' (not trusted), 'unchecked' (trusted; unseen values could not be scored)."""
+    if conf < TRUSTED:
+        return "not explained"
+    if vh is None:
+        return "unchecked"
+    return "rule" if vh >= TRUSTED else "lookup"
+
+
 def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0, absorb=False):
     import judge
     _PCACHE.clear()                                              # A39: trigger outputs belong to one build
@@ -757,6 +801,9 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                     trig["task_level"] = {"rule": rule_text(t2, tn), "confidence": float(c2), "confidence_clear": float(_bal(p2[clear], yte[clear])),
                                           "features_used": t2._features_used}
             trig["graded_share"] = float(1 - clear.mean())
+            if hasattr(tgt, "row_tokens") and not isinstance(trees[(k, c)], bool):      # A41
+                vh = value_heldout(Ftr, ytr, tgt.row_tokens(xtr, k), Fte, yte, clear, tgt.row_tokens(xte, k), tgt.p, depth)
+                trig["value_heldout"] = vh; trig["label"] = mech_label(trig["confidence_clear"], vh)
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
