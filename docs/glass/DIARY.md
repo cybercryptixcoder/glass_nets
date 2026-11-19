@@ -1538,3 +1538,16 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - So no single minimality wins. This supports the adaptive design for A28: per network, take the sparsest setting that is precise enough on the training half.
 - **07:03 A28 part 2 built: adaptive decomposition** (`build_adaptive`; CLI `--ladder`). Each network gets a ladder of decompositions, sparsest first. The first whose training-half mechanisms-alone and rebuilt (v3) fidelities clear the task rule + 2 standard errors is used. The test fails before and passes after, including a check that wrecking the held-out half does not change the choice. On argmedian 16_5 (development) it picks 1e-4: training half 1.000 / 0.994 vs bar 0.988; the sparser rungs fail on the rebuilt network (0.905, 0.960).
   - **Still open before pre-registration:** the number of components for 32-wide networks. On the design case at 1e-4, C = 40 passed (i') and (iii) but not v3 (0.975 vs 0.993). Running there: C = 40 at 1e-3 and 3e-4 (CPU and GPU), C = 64 at 3e-4 (GPU), and M16,10 at 3e-4 for its ladder. The A28 test set (s2 seeds) will be fixed once a setting passes the design case.
+- **07:06 A28 adaptive decomposition on the development set (design check): all 7 pass every criterion** (v3; (v) not run).
+
+  | network (task rule) | rung chosen | alone | rebuilt v3 | trusted | off_recall | mechanisms |
+  |---|---|---|---|---|---|---|
+  | argmedian 8_5 (0.705) | default (3e-3) | 1.000 | 0.918 | 0.79 | 0.90 | 39 |
+  | argmedian 8_7 (0.495) | default | 0.924 | 0.865 | 0.67 | 0.84 | 20 |
+  | argmedian 16_5 (0.984) | 1e-4 | 1.000 | 0.989 | 0.64 | 0.93 | 57 |
+  | argmedian 16_7 (0.712) | default | 0.968 | 0.831 | 0.58 | 0.76 | 26 |
+  | M16,10 (0.953) | 1e-3 | 0.997 | 0.968 | 0.62 | 0.81 | 47 |
+  | M8,8 (0.459) | default | 1.000 | 0.834 | 0.62 | 0.82 | 31 |
+  | M8,5 (0.879) | default | 0.998 | 0.915 | 0.74 | 0.86 | 22 |
+
+  - The ladder does what it was built for: weak networks keep the sparse, readable default (20–39 mechanisms); accurate ones get the precision they need. These networks shaped the method, so this is a design check, not evidence. Evidence comes from the A28 test set, once the wide-network setting passes its design case.
