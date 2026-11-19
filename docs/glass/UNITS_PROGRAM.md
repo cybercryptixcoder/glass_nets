@@ -245,7 +245,7 @@ raw/filter units; shuffled control in brackets):
       - (s) DONE: "Where the units program leaves Glass Networks" in UNITS_FINDINGS. It covers the plan against the outcomes, what to build next, and decisions D1–D5 for Shreyas.
       - (t) Step 1 DONE: Goodfire's SPD library clones fine but is LM-only (JAX trainer; torch reference for token LMs). No SPD of AlgZoo or of any RNN was found. M4,3 cannot be the known answer (its account is activation-level).
       - (u) NEXT: U19, a staged SPD build. Each stage is pre-registered with a planted known answer.
-        - (a) Core SPD for one linear layer, \`scripts/glass/units/spd_core.py\`, about 150 lines torch, following Bushnaq et al. 2025: rank-1 subcomponents, causal-importance MLPs, stochastic masks, faithfulness, stochastic-reconstruction and importance-minimality losses.
+        - (a) Core SPD for one linear layer, `scripts/glass/units/spd_core.py`, about 150 lines torch, following Bushnaq et al. 2025: rank-1 subcomponents, causal-importance MLPs, stochastic masks, faithfulness, stochastic-reconstruction and importance-minimality losses.
           - Known answer: a planted toy y = relu(W x) with x sparse in k features and W = Σ_k (feature-k mechanism). SPD must recover k components, each active only when its feature is on (match ≥ 0.9).
         - (b) ReLU RNN version, known answer: a hand-built RNN with two planted mechanisms.
         - (c) M8,5.
