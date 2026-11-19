@@ -637,3 +637,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Remaining in the plan: U7 (transformers) and the ε95 prior-work check.
 - **20:31 (d) PRIOR-WORK CHECK on ε95.** No published quantitative noise tolerance for AlgZoo networks was found. The closest is qualitative: "almost all ablations hurt the accuracy dramatically - the model makes use of all neurons" (LessWrong comment on ARC's post). ARC frames explanations as mechanistic estimates and measures them by MSE versus compute or by surprise accounting, not by tolerance. The ε95 measurement is therefore new as a number, and consistent with what is known qualitatively. Status: a candidate general finding; it needs replication on more networks before any claim.
 - **20:31 U7 SPECIFICATION written (UNITS_PROGRAM §8).** It runs at the next check-in.
+- **20:58 U7 RUN** (spec in UNITS_PROGRAM §8, pre-registered at the last check-in). Attention-unit part first; known answers: tracr_reverse (fixed-position map N−1−i), tracr_hist (same-token).
+- **20:58 U7 known-answer step.** tracr_reverse passes (queries 1–4 → fixed keys 4,3,2,1 = the reversal map, start token at 0). tracr_hist FAILS: best unit 'same token' at every query, but mass only 0.674, because compiled histogram heads also attend to the start token at position 0. That is a translation error in the library (it lacks unit ∪ first position). Fix: add a '+ first position' variant of every unit; rerun everything.
+- **20:59 U7 RESULT (attention units)** (`results/glass/units/u7.json`).
+  - Known answers pass after the fix: tracr_reverse 100% labelled (the correct reversal map), tracr_hist 100% (same token + first position).
+  - Trained lc networks: 8–12% labelled (controls 0–12%). This is far below the 50% bar → NEGATIVE: their attention does not use the library's textbook units.
+  - One exception: lc_4_5 has one pointer (j = x_i) head-query, matching the round-2 reader's "copies one key".
+- **20:59 U7b PRE-REGISTRATION (content lookup).** Layer-0 attention in lc_8_6 is hard (max weight about 0.91) but goes to unlisted keys.
+  - **Question:** for hard queries (max weight ≥ 0.8), is the attended key's TOKEN determined by (query position i, query token x_i), i.e. a lookup "find the token g(i, x_i)"?
+  - **Measure:** the share of inputs where the attended token equals the modal attended token for that (i, x_i).
+  - **Decision.** ≥ 90% on the hard queries of ≥ 3 of the 4 lc networks → "content lookup" is a real unit → add it to the library and rerun U7. Otherwise record the negative.
+- **20:59 U7b RESULT: NEGATIVE** (`results/glass/units/u7b.json`).
+  - Lookup determinism (the attended token fixed by (i, x_i)) is 0.29–0.54 in the trained lc networks vs 0.28–0.57 in shuffled controls.
+  - Hard attention is just as common in shuffled networks (hard share 0.61–0.96), so it is an architectural property, not a learned unit.
+  - **Transformers:** neither the textbook attention units nor content lookup describe the trained longest-cycle networks.

@@ -194,7 +194,16 @@ raw/filter units; shuffled control in brackets):
 - **NEXT (check-in plan):**
   - **(a) DONE (T4, unit map v3):** reproduces P3; M16,10 has 16/160 substitution-grade neuron-steps, M4,3 8/12.
   - **(b) P4 DONE, NEGATIVE:** exact signed pairs M4,3 50% vs 2–19% in the bigger networks; no exact redundancy. M4,3's exactness does not scale. (Original plan:) search for EXACT structure in bigger networks: exact linear invariants or reductions, like M4,3's symmetry, holding on subsets of neurons (local pairings, exact low-rank subspaces, neurons that are exact linear functions of others). Exact pieces are the only units that can be substituted.
-  - **(c) U7 SPEC (pre-registered; run next):**
+  - **(c) U7 DONE (attention part), NEGATIVE.**
+    - Known answers pass after a library fix (tracr_reverse: the reversal map; tracr_hist: same token + first position).
+    - Trained lc networks: 8–12% labelled vs controls 0–12% (bar 50%).
+    - U7b content lookup: determinism 0.29–0.54 vs controls 0.28–0.57.
+    - Hard attention is equally common in shuffled networks.
+  - **NEXT (check-in plan, after U7):**
+    - (e) U7's residual-unit part, as specified below.
+    - (f) Write `docs/glass/UNITS_FINDINGS.md`: the consolidated findings with numbers, prior-work context and limits, for Shreyas.
+    - (g) Put the RNN unit maps in the catalog as per-part-confidence entries (a CHANGES entry first, then an end-to-end test in headless Chrome as with the round-1 catalog).
+  - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
     - **Residual units:** per position, the held-out R² of the decision-relevant residual (the top PCs that preserve decisions) regressed on token one-hots plus relational flags (fixed point, 2-cycle, preimage count).
     - **ε95** on the residual stream.
