@@ -78,25 +78,44 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
-- Nov 19, 03:17 ET (clock):
-  - **A1 done** (`lab/spd.py`, `lab/atlas.py`; test `scripts/glass/atlas_test.py` passes).
-  - **On M8,5** (the design case; saved SPD model), the depth-4 atlas has:
-    - 4 W_x, 11 W_h and 7 W_o mechanisms;
-    - triggers at confidence ≥ 0.9 for 4/4 W_x, 9/11 W_h and 2/7 W_o;
-    - rule-gated fidelity (trusted policy) 0.924, against the task rule's 0.879.
-  - W_o triggers are weak (0.60–0.65); with the trusted policy those mechanisms stay always on.
-  - Depth 4 was chosen on M8,5, so it is fixed for the held-out networks.
-  - Running: SPD of argmedian 8_5 (held out, `/tmp/u19c_am85.log`) and the U19(c) shuffled control (`/tmp/u19c_shuf.log`).
+- Nov 19, 04:06 ET (clock):
+  - **Built and tested:**
+    - A1: SPD engine, triggers, rule-gated fidelity.
+    - A2: effects and specificity.
+    - A4: certificate and catalog.
+    - A5: transformer support (code done; known-answer test pending its SPD).
+    - A6: GPU/CPU jobs.
+    - A7: task-relative effects.
+    - A8: findings with a control comparison.
+    - A9: float32 SPD (validation running).
+    - A10: playground.
+    - A11: atlas comparison.
+    - Readable trigger summaries.
+  - **M8,5 (design case):**
+    - 22 exact mechanisms, 11 with trusted triggers.
+    - Rebuilt network: 92.5% of decisions, against the task rule's 87.9%.
+    - Two functional groups (13 mechanisms) against 0 in the shuffled control.
+    - In the catalog, with a playground.
+  - **Running:**
+    - Colab "atlas":
+      - CPU queue: argmedian 8_5, 8_7, 16_5, 16_7, M8,8, shuffled argmedian 16_5.
+      - GPU queues: planted transformer → lc_3_4; ARC's M16,10 → its shuffled control; lc_6_5 → zoo M16,10 seed 0.
+      - Outputs go to `/content/spd_out2`.
+    - Locally: planted RNN in float32 (the A9 known answer) and lc_4_5 in float32.
+  - **A3** (held-out networks) is pre-registered in DIARY. It is judged when those SPDs finish.
 
 ## 5. Next (in order)
 
-1. **A1: DONE.**
-2. **A2: DONE.**
-3. **A3:** run the atlas on M8,5, argmedian 8_5 and 16_5, and zoo M16,10 seed 0.
-   - Improve triggers by trying alternatives until rule-gated fidelity beats the task rule with most mechanisms at
-     confidence ≥ 0.9, or record why not.
-4. **A4: DONE.**
-5. **A5:** transformers (Tracr known answers first, then the longest-cycle networks).
+1. As SPD outputs land:
+   - download them to `results/glass/atlas/spd/`;
+   - build atlases with controls (`python3 lab/atlas.py T SPD 4 --control-spd SHUF`);
+   - judge A3 against its pre-registered criteria;
+   - run the A5 known-answer test (`atlas_tf_test.py`) and the A9 test (planted RNN float32 through `atlas_test.py`).
+2. If A3 falls short on a criterion, improve that component and try alternatives: features, depth, gating policy, SPD steps.
+3. Run `compare_atlases` on ARC's M16,10 vs zoo M16,10 seed 0 (do mechanisms recur across training runs?).
+4. Transformers: atlases for lc_3_4 … lc_8_6, with controls.
+5. Larger: ARC's 2nd argmax M32,10 (1,344 params) on the GPU.
+6. Write the atlas results up for Shreyas: what works, on which networks, and the findings.
 
 ## 6. How to run what exists
 
