@@ -1600,4 +1600,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - switches off 83–98% of the activity that is not needed;
     - finds mechanisms whose removal matters 142–1,854× more where they are said to be needed;
     - finds functional structure that a shuffled-weights network does not have.
-  - Before today, the largest network with a passing certificate was the 113-parameter M8,5 (the design case). The development history: A18 0/6 → A27 2/6 → A28 5/6.
+  - Held-out history: A18 0/6 (default settings) → A27 2/6 (precise settings; only 16-wide networks passed, up to 400 parameters) → A28 5/6 (adaptive, width-scaled; three 32-wide passes, up to 1,376 parameters).
