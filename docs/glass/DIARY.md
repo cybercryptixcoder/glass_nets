@@ -1865,3 +1865,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Query/key keep 2–4 mechanisms per matrix; 299 mechanisms in all.
 - (ii) is "at least as accurate as the network". For a network that is perfect on all 12,769 inputs, that means not one wrong decision. With 99.92% (about 5 of 6,384 held-out inputs), that is the only miss. A bar that allows sampling error (task rule minus 2 standard errors, as the training-half bar already uses plus 2 SE) would be a new version and would have to be justified and judged on fresh networks. Noted, not changed.
 - A38e (on/off masks, one matrix at a time) planted runs: RNN 5/5/5 at both seeds at step 32,000; transformer Q alive at step 28,000. Final atlas checks shortly.
+
+## Nov 19, 18:48 ET (clock): A38e passes the planted RNN at both seeds; one alignment miss on the planted transformer
+
+- A38e (one matrix at a time, on/off masks): planted RNN ALL PASS at seeds 0 and 1 (A38d split W_h at both). So on/off masks remove the incentive to split, as the A38e entry predicted.
+- Planted transformer: Q keeps 2 mechanisms, and mechanisms alone is 1.000, with every matrix alone at 1.000 (the reference had Q at 0.919). One copy mechanism (W_O, token 0) aligns 0.879 with its token (bar 0.9). A38d also missed one alignment (0.863, a different matrix).
+- Is that the term or chance? Running on Colab CPU: A38e at seeds 1 and 2, and the reference (no term) at seed 1. About 45 min.
