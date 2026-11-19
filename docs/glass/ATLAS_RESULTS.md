@@ -56,6 +56,12 @@ Six well-trained networks that were never used to design anything: seed 2 of six
 
 **The road there (all held out, all pre-registered):** default settings 0 of 6 (A18) → precise settings 2 of 6 (A27; 32-wide networks ran out of components, predicted before the verdict) → adaptive and width-scaled 5 of 6 (A28).
 
+**Development networks with the final pipeline:** 6 of 7 RNNs pass every criterion (the seventh, zoo M16,10 seed 0, is being rerun with the ladder). They include:
+- ARC's 2nd-argmax challenge network M16,10: rebuilt 96.8% vs 95.3%, with 8 functional mechanisms vs 0 in its shuffled control;
+- argmedian 16_5: 98.9% vs 98.4%, 37 vs 0.
+
+Transformers, after fixing a data-split bug (A32): lc_4_5 and lc_6_5 pass, lc_3_4 does not (it keeps its decisions only by switching a third of its not-needed activity). The held-out transformer lc_8_6 is PENDING.
+
 **Known answers** (networks built by hand, so the true mechanisms are known):
 - A recurrent network with 5 planted features: all 15 planted mechanisms recovered.
 - A transformer that copies the previous token: all 16 planted "copy token v" mechanisms recovered.
@@ -75,7 +81,7 @@ Six well-trained networks that were never used to design anything: seed 2 of six
 
 - Transformers: the known answer passes, but real AlgZoo transformers decompose poorly with the default settings (rebuilt 53–77% vs task rules 81–95%). The adaptive settings have not been run on them yet. This is the next build step.
 - Only one network family so far (AlgZoo ReLU RNNs on 2nd-argmax and argmedian). 1,376 parameters is larger than anything certified before in this project, but small in absolute terms.
-- Explanations are often shallow: many trusted rules are time gates ("after step 2"). The certificate says when a mechanism acts and which decision it protects. What it computes is only partly told (reads/writes with unit labels, A29).
+- Explanations are often shallow: many trusted rules are time gates ("after step 2"). The certificate says when a mechanism acts and which decision it protects. What it computes is told only coarsely, as a profile of the unit types it reads and writes (A31). Example, M16,10 W_h.0: "reads relu(max − x_t) 29%, relu(2nd − x_t) 14%…". In 32-wide networks 20–50% of a profile sits on neurons the unit library cannot label.
 - At the precise settings almost every component the decomposition offers is used (57 of 60 in argmedian 16_5), so mechanism counts partly reflect that budget.
 - With absorption, criterion (i') becomes close to automatic whenever the alive mechanisms' input directions span the matrix's inputs: least squares can then make their sum exact on the data. Under A26 the informative criteria are (ii), the triggers keeping the decisions, and (vi), the triggers switching off most not-needed activity. Absorption does not make those easier: at minimality 1e-3 it made (ii) worse (0.876 → 0.723 on argmedian 16_5).
 - Triggers for output-layer mechanisms are often not trusted: their importance is graded, not on/off.
