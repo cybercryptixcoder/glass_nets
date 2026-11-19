@@ -1798,3 +1798,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A41 code done; its test failed before and passes after. A half-circle mechanism is labelled rule (0.916 on unseen values, a thin margin: the arc's ends are placed from half the values). A random set of 8 tokens is trusted on held-out inputs (0.980) but labelled lookup (0.495 on unseen values).
 - modrand_p113 (the memorization known answer): the adders' architecture and recipe on fixed random labels. 100% training accuracy, 0.77% held-out (chance 0.88%), so it memorized. Its decomposition (A35 pipeline) started on the GPU at 17:15.
 - A37: the s1/s2 atlases (main vocabulary) are building locally. They started before A41, so for K2 they will be rebuilt with A41 labels once the A37 verdict is scored (numbers unchanged; labels added).
+
+## Nov 19, 17:23 ET (clock): A37 PASSES its held-out known answer
+
+- Two freshly trained adders, never used for design, decomposed with the unchanged A35 pipeline and read with the A37 angle vocabulary:
+  - s1 (key frequencies {18, 19, 30, 38, 43}): 105 of 125 trusted frequency triggers use a key frequency, 84%.
+  - s2 ({4, 9, 10, 28, 44}): 182 of 211, 86%.
+  - The pre-registered bar was 80% on both; chance 9%. PASS.
+- So at 227k parameters the atlas recovers the known Fourier frequencies of networks it has never seen, from their decompositions, without being told which frequencies matter.
+- Certificates (reported, not part of this verdict):
+  - Both fail (i') as predicted, because the attention query/key weights get no mechanisms (each alone keeps 0.87–0.98 of decisions).
+  - s1 passes everything else: rules rebuild 100.0% of decisions, 71% trusted, specificity 36×, rules switch off 88% of not-needed activity.
+  - s2 misses (ii) by 0.05 points (99.95% vs a perfect network) and passes the rest.
+- Remaining non-key triggers again sit mostly in the attention value matrices and include second harmonics (s2: 8 = 2·4, 56 = 2·28).
+- The A35-vocabulary comparison builds are running; reported when done.

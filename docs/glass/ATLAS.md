@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 17:23 ET (clock): **A37 PASS (held out):** on two fresh 227k-parameter adders, 84% and 86% of trusted frequency triggers use the network's key frequencies (bar 80%, chance 9%). Their certificates fail only (i') (attention Q/K, the known open problem), plus s2's (ii) by 0.05 points.
 - Nov 19, 17:17 ET (clock): A41 (rule vs lookup labels) built and tested; its memorizing known answer (modrand_p113: 100% train, chance on held-out) is being decomposed on the GPU (about 2 h). A37 builds running locally; modmul (A40) at step 24,000.
 - Nov 19, 16:58 ET (clock): A38, A38c and A38d all fail (A38d fixes the planted query but splits a planted RNN mechanism at two seeds). The attention Q/K problem stays open. s1/s2 at step 28,000 (A37 verdict about 17:10); modmul at 20,000.
 - Nov 19, 16:08 ET (clock): A38d planted transformer keeps its Q mechanism at step 8,000 (A38c lost it). Waiting on the planted results (about 17:00), then the s1/s2 verdict for A37 (about 17:00), modmul (A40, about 18:00) and the A38d modadd run.
@@ -115,7 +116,7 @@ nets), where the existing reader and judge already work.
 
 ## 5. Next (in order; plan sent to Shreyas 17:09, see DIARY)
 
-1. A37 verdict on modadd_p113_s1/_s2 (building now).
+1. (Done 17:23: PASS, 84% / 86%.) A37 verdict on modadd_p113_s1/_s2.
 2. A40 verdict on modmul_p113 (decomposition finishing on the GPU): does the atlas pick the discrete-log basis and frequencies by itself?
 3. A41, faithful labelling including memorization (Shreyas, Nov 19 17:05): every mechanism is labelled "rule" (its rule carries over to unseen input values) or "lookup" (memorized cases), never presented as an algorithm when it is case-by-case. Known answers: a network trained on random labels must come out lookup; the adders' MLP mechanisms must come out structured. Pre-register before building.
 4. Attention Q/K kept by the decomposition (A38/A38c/A38d failed): new design, tested first on the planted transformer and planted RNN (about 50 min per try), then the modadd development run, then held out on s3/s4.
