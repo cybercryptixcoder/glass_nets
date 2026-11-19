@@ -1425,3 +1425,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Lower minimality plus absorption makes the mechanisms alone more faithful than the task rule, criterion (i'), for the first time on an accurate network.
   - But then switching mechanisms off by their triggers costs more. Absorbed output directions are larger, so a wrong "off" removes more.
   - **Reading:** in a 98%-accurate network, faithfulness of the parts and safe switching pull against each other. The decision-checked gate keeps the rebuilt network above the bar but can switch off only 20–38% of the not-needed calls.
+- **05:39 A18, three of six held-out networks in: all fail, the same way** (v3 / v4):
+
+  | network (accuracy) | (i') alone | (ii) v3 | (ii) v4 | (iii) | (iv) | (vi) v3 | (vi) v4 |
+  |---|---|---|---|---|---|---|---|
+  | 2nd argmax 16_5_s0 (99.1%) | 0.935 ✗ | 0.872 ✗ | 0.997 ✓ | 0.77 ✓ | 22× ✓ | 0.88 ✓ | 0.17 ✗ |
+  | 2nd argmax 32_5_s0 (99.6%) | 0.944 ✗ | 0.920 ✗ | 0.999 ✓ | 0.84 ✓ | 47× ✓ | 0.85 ✓ | 0.23 ✗ |
+  | argmedian 32_5_s0 (99.5%) | 0.949 ✗ | 0.893 ✗ | 0.996 ✓ | 0.82 ✓ | 103× ✓ | 0.84 ✓ | 0.17 ✗ |
+
+  - **What works on them:** the decomposition, triggers (77–84% trusted), specificity and findings. Example: argmedian 32_5_s0 has 13 mechanisms that keep the answer from moving from the median to the next-larger value; 2nd argmax 32_5_s0 has 11 that stop it from returning the max.
+  - **What fails:** precision against a 99%+ bar. The mechanisms alone keep 93.5–94.9%; rule switching either loses decisions (v3) or can switch off only about a fifth of the not-needed activity (v4).
+  - **Honest note on the development set:** its passing networks are weak at their task (task rules 46–71%), where the bar is easy. Every accurate network so far (16_5 at 98.4%, M16,10 at 95.3%, all A18) fails on precision. This is the problem to solve.
+- **05:39 Next, aimed at precision:** argmedian 16_5 at minimality 3e-4 and 1e-4 (finishing on Colab). A weaker minimality pressure should also make SPD's "not needed" labels more conservative, which is the gating problem. If it helps on the development network, it is tested on a NEW held-out set: seed s1 of the same six A18 architectures (A18 itself has now been seen).
