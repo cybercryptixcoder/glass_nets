@@ -915,6 +915,25 @@ def gloss(a):
     for m in a["matrices"].values():
         for x in m["mechanisms"]:
             x["trigger"]["rule_glossed"] = re.sub(r"neuron (\d+)", sub, x["trigger"]["rule"])
+    if a.get("kind", "rnn") == "rnn":                              # A29: what each mechanism reads and writes
+        def top(vec, kind):
+            v = np.asarray(vec, float); sh = np.abs(v) / (np.abs(v).sum() + 1e-12); order = np.argsort(-sh)
+            out = []
+            for j in order:
+                if out and sh[j] < 0.25:
+                    break
+                name = {"in": "x_t", "neuron": f"neuron {j}" + (f" [≈ {labels[int(j)]}]" if int(j) in labels else ""),
+                        "out": f"output position {j + 1}"}[kind]
+                out.append({"unit": int(j), "share": float(sh[j]), "sign": "+" if v[j] >= 0 else "-", "name": name})
+            return out
+        for k, m in a["matrices"].items():
+            rk, wk = {"W_x": ("in", "neuron"), "W_h": ("neuron", "neuron"), "W_o": ("neuron", "out")}.get(k, (None, None))
+            if rk is None:
+                continue
+            for x in m["mechanisms"]:
+                x["reads"], x["writes"] = top(x["V"], rk), top(x["U"], wk)
+                fmt = lambda es: ", ".join(f"{e['sign']}{e['name']} {100 * e['share']:.0f}%" for e in es)     # noqa: E731
+                x["rw_text"] = f"reads {fmt(x['reads'])} → writes {fmt(x['writes'])}"
     return a
 
 
@@ -949,7 +968,7 @@ def render(a, control=None):
         mech = m["mechanisms"]; confs = [_conf(x) for x in mech]
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
               f"Alive mechanisms reproduce {k} to a relative error of {m['alive_only_rel_error']:.3f}.", "",
-              "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity |", "|---|---|---|---|---|---|"]
+              "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |", "|---|---|---|---|---|---|---|"]
         for x in sorted(mech, key=lambda x: -x["in_use"]):
             e = x.get("effect", {})
             eff = (f"changes the output by {e['effect_when_needed']:.2f} and flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions; "
@@ -957,7 +976,7 @@ def render(a, control=None):
             if e and e.get("role_changes"):
                 eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
-            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} |")
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} | {x.get('rw_text', '')} |")
         L.append("")
     return "\n".join(L)
 
