@@ -1331,3 +1331,35 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Transformers (reported, not judged in A3): lc_6_5: 83 mechanisms, 44 trusted; v2 0.775 vs task rule 0.947, mechanisms alone 0.806. lc_4_5: v2 0.748 vs 0.810, mechanisms alone 0.887. For both, the decomposition (mechanisms alone below the task rule) is the first limit.
 - **05:07 Fresh held-out set A18, fixed now, before any of it is decomposed:** zoo_2nd_argmax_16_5_s0, zoo_2nd_argmax_16_8_s0, zoo_2nd_argmax_32_5_s0, zoo_argmedian_32_5_s0 (Colab CPU), zoo_2nd_argmax_32_10_s0 (1,376 parameters, the largest RNN yet) with its shuffled control, and zoo_argmedian_32_7_s0 (GPU queue 4). From now on the A3 networks are the development set; design changes for (iii) are chosen on them and judged on A18 with A3's criteria (v2 form). (The earlier GPU-4 launch failed: the ids need the `_s0` suffix.)
 - **05:08 Exploring (iii) on the development set** (`scripts/glass/atlas_trigger_sweep.py`): tree depth 4/5/6; confidence on crisp labels only (importance > 0.9 vs < 0.1); trees trained on crisp labels.
+- **05:09 (iii) exploration result (development set only)** and **A19 pre-registration.**
+  - Trusted share at depth 4 / 5 / 6, and at depth 4 scored on clear-cut calls (importance > 0.9 vs < 0.1):
+
+    | network | d4 | d5 | d6 | d4 clear-cut |
+    |---|---|---|---|---|
+    | argmedian 8_5 | 0.69 | 0.69 | 0.69 | 0.79 |
+    | argmedian 8_7 | 0.39 | 0.39 | 0.56 | 0.67 |
+    | argmedian 16_5 | 0.50 | 0.55 | 0.55 | 0.70 |
+    | argmedian 16_7 | 0.29 | 0.38 | 0.38 | 0.58 |
+    | M16,10 | 0.37 | 0.43 | 0.43 | 0.51 |
+    | M8,8 | 0.41 | 0.48 | 0.59 | 0.62 |
+    | M8,5 | 0.58 | 0.63 | 0.63 | 0.74 |
+
+  - Training on clear-cut labels too is mixed (better on M16,10 and M8,5, worse on argmedian 8_5 and 8_7), so it is not adopted.
+  - **A19:** a trigger is trusted when its held-out accuracy on clear-cut calls is ≥ 0.9 (bar unchanged). Each trigger also reports its graded share, so a reader sees how often "needed" is a matter of degree. Gate v2's τ is kept; fidelity (ii) is re-measured under the new trust rule (more triggers are used, so it can drop).
+  - **A18 decision rule (pre-registered):** A3's criteria in this form: (i') mechanisms alone ≥ task rule; (ii) v3 fidelity ≥ task rule; (iii) clear-cut trusted share ≥ 0.5; (iv) median specificity ≥ 10; (vi) v3 off_recall ≥ 0.5; plus (v) functional groups beat the shuffled control for zoo_2nd_argmax_32_10_s0. **Pass: (i')–(iv) and (vi) in ≥ 4 of the 6 A18 networks, and (v).**
+- **05:13 A19 test passes; development set under v3** (`python3 scripts/glass/atlas_a3_eval.py --v3`, all dev atlases rebuilt with A19).
+
+  | network | (i') alone | (ii) v3 vs task rule | (iii) clear-cut trusted | (iv) | (v) | (vi) | result |
+  |---|---|---|---|---|---|---|---|
+  | argmedian 8_5 | 0.963 ✓ | 0.904 vs 0.705 ✓ | 0.79 ✓ | 852× ✓ | - | 0.90 ✓ | PASS |
+  | argmedian 8_7 | 0.900 ✓ | 0.942 vs 0.495 ✓ | 0.67 ✓ | 56× ✓ | - | 0.84 ✓ | PASS |
+  | argmedian 16_5 | 0.900 ✗ | 0.818 vs 0.984 ✗ | 0.70 ✓ | 60× ✓ | 21 vs 1 ✓ | 0.81 ✓ | fail |
+  | argmedian 16_7 | 0.871 ✓ | 0.825 vs 0.712 ✓ | 0.58 ✓ | 34× ✓ | - | 0.76 ✓ | PASS |
+  | M16,10 | 0.963 ✓ | 0.939 vs 0.953 ✗ | 0.51 ✓ | 26× ✓ | (control running) | 0.75 ✓ | fail |
+  | M8,8 | 0.861 ✓ | 0.835 vs 0.459 ✓ | 0.62 ✓ | 46× ✓ | - | 0.82 ✓ | PASS |
+  | M16,10 seed 0 | (SPD running) | | | | | | |
+
+  - 4 of 7 development networks pass (the A3 bar, but these networks shaped A15–A19, so this is not a held-out claim; A18 is).
+  - Trade-off seen: trusting more triggers costs some fidelity (M16,10: v2 0.951 → v3 0.939; argmedian 16_5: 0.839 → 0.818).
+  - The remaining failures are both "decomposition not precise enough for a very accurate network" (16_5: mechanisms alone 0.900 vs 0.984; M16,10: v3 just under 0.953).
+- **05:13 A14 variants for argmedian 16_5 downloaded** (KL at minimality 3e-3 and 1e-3; MSE at 1e-3). Evaluating (i') and (ii).

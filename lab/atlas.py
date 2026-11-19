@@ -512,17 +512,24 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
             alive_err = float((mods[k].W - sum(torch.outer(mods[k].U[c], mods[k].V[c]) for c in alive[k])).norm() / mods[k].W.norm()) if alive[k] else 1.0
         for c in alive[k]:
             ytr, yte = Gtr[:, c] > 0.5, Gte[:, c] > 0.5
+            clear = (Gte[:, c] > 0.9) | (Gte[:, c] < 0.1)           # A19: clear-cut calls (the rest are graded)
+
+            def _bal(p_, y_):
+                return 0.5 * (p_[y_].mean() + (~p_[~y_]).mean()) if y_.any() and (~y_).any() else float((p_ == y_).mean()) if len(y_) else 1.0
             if ytr.all() or (~ytr).all():
                 const = bool(ytr.all()); trees[(k, c)] = const
-                trig = {"rule": "always" if const else "never", "confidence": float((yte == const).mean())}
+                trig = {"rule": "always" if const else "never", "confidence": float((yte == const).mean()),
+                        "confidence_clear": float((yte[clear] == const).mean()) if clear.any() else 1.0}
             else:
                 tree = DecisionTreeClassifier(max_depth=depth, class_weight="balanced", min_samples_leaf=20, random_state=0).fit(Ftr, ytr)
                 tree._fit_values = Ftr
                 p = tree.predict(Fte)
                 conf = 0.5 * (p[yte].mean() + (~p[~yte]).mean()) if yte.any() and (~yte).any() else float((p == yte).mean())
                 trees[(k, c)] = tree
-                trig = {"rule": rule_text(tree, names), "confidence": float(conf), "tree": export_text(tree, feature_names=names, decimals=2)}
+                trig = {"rule": rule_text(tree, names), "confidence": float(conf), "tree": export_text(tree, feature_names=names, decimals=2),
+                        "confidence_clear": float(_bal(p[clear], yte[clear]))}
                 trig["features_used"] = tree._features_used; trig["rule_full"] = getattr(tree, "_rule_full", trig["rule"])
+            trig["graded_share"] = float(1 - clear.mean())
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
@@ -541,17 +548,20 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         atlas["matrices"][k]["alive_only_rel_error_on_data"] = float(np.linalg.norm(A_ @ mods[k]._residual.T) / (np.linalg.norm(A_ @ Wk.T) + 1e-12))
 
     conf = {(k, int(x["id"].rsplit(".", 1)[1])): x["trigger"]["confidence"] for k in MATS for x in atlas["matrices"][k]["mechanisms"]}
+    conf_clear = {(k, int(x["id"].rsplit(".", 1)[1])): x["trigger"]["confidence_clear"] for k in MATS for x in atlas["matrices"][k]["mechanisms"]}
 
-    def g_rules(only=None, trusted=None, tau=None):
+    def g_rules(only=None, trusted=None, tau=None, cf=None):
         """trusted = a confidence bar: a mechanism whose trigger is below it is kept always on (its trigger is not used).
-        tau (A15 gate v2): switch off only where the trigger's P(needed) < tau."""
+        tau (A15 gate v2): switch off only where the trigger's P(needed) < tau. cf: which confidence the bar reads (A19)."""
+        cf = conf if cf is None else cf
+
         def gate(k, names, F, a):
             m = np.zeros((len(F), C))
             if only is not None and k not in only:
                 return m + am[k]
             for c in alive[k]:
                 t = trees[(k, c)]
-                if trusted is not None and conf[(k, c)] < trusted:
+                if trusted is not None and cf[(k, c)] < trusted:
                     m[:, c] = 1.0
                 else:
                     m[:, c] = _trigger_on(t, F, tau)
@@ -571,6 +581,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         variants.append(("rule_gated_W_h_only", g_rules({"W_h"})))
     variants.append(("rule_gated_trusted", g_rules(trusted=TRUSTED)))
     variants.append(("rule_gated_trusted_v2", g_rules(trusted=TRUSTED, tau=GATE_TAU)))      # A15
+    variants.append(("rule_gated_trusted_v3", g_rules(trusted=TRUSTED, tau=GATE_TAU, cf=conf_clear)))   # A19
     for label, gate in variants:
         fid[label] = float(judge.same(net, gated(mods, xte, gate)).mean())
     # A17: the mechanisms alone (every alive mechanism on, the residual removed), in all matrices and in one at a time
@@ -589,12 +600,12 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         atlas["matrices"][k]["mechanisms_alone_fidelity"] = _alone(k)
     atlas["fidelity"] = fid
     work = {}                                                    # A15: does the gate do work? (full network's held-out states)
-    for v, tau in (("v1", None), ("v2", GATE_TAU)):
+    for v, tau, cf in (("v1", None, conf), ("v2", GATE_TAU, conf), ("v3", GATE_TAU, conf_clear)):
         off, offn, n_all, n_not = 0, 0, 0, 0
         for k in MATS:
             _, Fte, Gte = te[k]
             for c in alive[k]:
-                if conf[(k, c)] < TRUSTED:
+                if cf[(k, c)] < TRUSTED:
                     continue
                 on = _trigger_on(trees[(k, c)], Fte, tau) > 0.5
                 not_needed = Gte[:, c] < 0.1
@@ -603,6 +614,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         work[v] = {"off_share": off / n_all if n_all else 0.0, "off_recall": offn / n_not if n_not else 0.0}
     atlas["gate"] = {"tau": GATE_TAU, **work}
     atlas["_trees"], atlas["_alive"], atlas["_conf"] = trees, alive, conf      # kept for the playground (A10); not in JSON
+    atlas["_conf_clear"] = conf_clear
     eff = effects(tgt, mods, xte, te, alive)                     # A2
     for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
@@ -873,9 +885,9 @@ if __name__ == "__main__":
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
     (out / f"{a_.target}_d{a_.depth}{SUF}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
-        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "depth": a_.depth}))
+        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "depth": a_.depth}))
     if ctrl is not None:
-        for k in ("_trees", "_alive", "_conf"):
+        for k in ("_trees", "_alive", "_conf", "_conf_clear"):
             ctrl.pop(k, None)
     a["features"] = FEATURES
     (out / f"{a_.target}_d{a_.depth}{SUF}.json").write_text(json.dumps(a, indent=1))
