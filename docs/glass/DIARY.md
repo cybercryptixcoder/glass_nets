@@ -1824,3 +1824,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - What the labels say about these adders: the MLP and unembedding mechanisms are rules that carry over to unseen numbers. The embedding (s1 34 of 35, s2 48 of 56) and the attention values are mostly lookup: their trusted rules only describe the tokens seen. Whether that is the network or the decomposition is an open question. The rule is about the description, so it reports what it can and can't vouch for.
 - K1: modrand_p113's decomposition had failed at start (the target router sent 'modrand' to the RNN loader). Fixed and relaunched at 17:47; about 1.5 h.
 - A40 (modmul) decompositions finished at 17:27; its atlas builds are running locally.
+
+## Nov 19, 17:55 ET (clock): modmul atlas building (two bases, 449 features; slower), memorizer decomposing
