@@ -15,6 +15,7 @@ import numpy as np
 LAB = Path(__file__).resolve().parent
 CONS = LAB / "constructions"
 MAPS = LAB.parent / "results" / "glass" / "units" / "maps"     # unit maps written by lab/unitmap.py (read only here)
+ATLASES = LAB.parent / "results" / "glass" / "atlas"           # mechanism atlases written by lab/atlas.py (CHANGES A4)
 import judge   # noqa: E402
 import nets    # noqa: E402
 
@@ -74,6 +75,19 @@ def _unit_map(tid):
             "file": f"results/glass/units/maps/{tid}.md"}
 
 
+def _atlas(tid):
+    """The network's mechanism atlas (depth-4 triggers, the fixed setting), without the raw U/V vectors."""
+    f = ATLASES / f"{tid}_d4.json"
+    if not f.exists():
+        return None
+    a = json.loads(f.read_text())
+    for m in a["matrices"].values():
+        for x in m["mechanisms"]:
+            x.pop("U", None); x.pop("V", None); x["trigger"].pop("tree", None)
+    a["file"] = f"results/glass/atlas/{tid}_d4.md"
+    return a
+
+
 def entries():
     cards = []
     for tdir in sorted(CONS.iterdir()):
@@ -98,7 +112,7 @@ def entries():
             "cost": run.get("cost"), "steps": len(run.get("steps", [])),
             "written": "without access to the network (prior-only control: told the task, one submission)" if not run.get("config", {}).get("weights", True)
                        else ("by a blinded reader with the weights" if not run.get("config", {}).get("told") else "by a reader told the task, with the weights"),
-            "unit_map": _unit_map(tdir.name),
+            "unit_map": _unit_map(tdir.name), "atlas": _atlas(tdir.name),
         })
     have = {c["target"] for c in cards}
     for f in sorted(MAPS.glob("*.json")) if MAPS.exists() else []:
@@ -110,7 +124,7 @@ def entries():
                       "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
                       "playable": False, "runs": 0, "status": "unit map only", "stages": "–", "behaviour": None,
                       "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
-                      "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid)})
+                      "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid), "atlas": _atlas(tid)})
     order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3}
     return sorted(cards, key=lambda c: (order[c["status"]], c["params"] or 0))
 

@@ -60,7 +60,7 @@ nets), where the existing reader and judge already work.
 | 2 | Trigger explainer (shallow trees over task features + neuron states, simplified to 'ON when …' rules; held-out balanced accuracy = confidence) | `lab/atlas.py` (A1) | Planted RNN: PASS (exact planted triggers, confidence ≥ 0.98) | built; M8,5 depth 4: W_x 4/4, W_h 9/11, W_o 2/7 at ≥ 0.9 |
 | 3 | Rule-gated construction + fidelity (trusted policy: a trigger switches its mechanism only at confidence ≥ 0.9, otherwise always on) | `lab/atlas.py` (A1) | Planted RNN: PASS (0.997) | built; M8,5 (design case) depth 4: 0.924 vs task rule 0.879 |
 | 4 | Effect + causal specificity per mechanism (remove it at one call; output change where needed vs not; flip rate; which output it lowers/raises) | `lab/atlas.py` (A2) | Planted RNN: PASS | built; M8,5: W_h specificity median ×75 (min ×16) |
-| 5 | Atlas certificate (JSON + markdown) + catalog card | to build (`lab/atlas.py`, catalog) | End to end in headless Chrome, as T5/T6 | not started |
+| 5 | Atlas certificate (JSON + markdown) + catalog card | `lab/atlas.py` render, `lab/catalog.py`, `catalog.html` (A4) | `scripts/glass/atlas_catalog_test.py` (headless Chrome): PASS | built |
 | 6 | Transformer support (attention QK/OV matrices as decomposed weights) | to build | Tracr compiled networks (known mechanisms) | not started |
 
 **Rules for building:**
@@ -89,7 +89,7 @@ nets), where the existing reader and judge already work.
 3. **A3:** run the atlas on M8,5, argmedian 8_5 and 16_5, and zoo M16,10 seed 0.
    - Improve triggers by trying alternatives until rule-gated fidelity beats the task rule with most mechanisms at
      confidence ≥ 0.9, or record why not.
-4. **A4:** certificate, catalog card and end-to-end browser test.
+4. **A4: DONE.**
 5. **A5:** transformers (Tracr known answers first, then the longest-cycle networks).
 
 ## 6. How to run what exists

@@ -217,21 +217,36 @@ def rule_text(tree, names):
         a, b = uniform(t.children_left[i]), uniform(t.children_right[i])
         return a if a is not None and a == b else None
 
-    def paths(i, conds):
+    def paths(i, conds):               # conds: list of (feature, op, value); op in {"<=", ">", "not", "is"}
         u = uniform(i)
         if u is not None:
             return [conds] if u else []
         f, thr = names[t.feature[i]], t.threshold[i]
         binary = set(np.unique(tree._fit_values[:, t.feature[i]])) <= {0.0, 1.0} if hasattr(tree, "_fit_values") else False
-        lo = f"not ({f})" if binary else f"{f} <= {thr:.2f}"
-        hi = f"{f}" if binary else f"{f} > {thr:.2f}"
+        lo, hi = ((f, "not", None), (f, "is", None)) if binary else ((f, "<=", thr), (f, ">", thr))
         return paths(t.children_left[i], conds + [lo]) + paths(t.children_right[i], conds + [hi])
+
+    def text(conds):                    # merge conditions on the same feature: keep the tightest bounds
+        out, seen = [], {}
+        for f, op, v in conds:
+            seen.setdefault(f, []).append((op, v))
+        for f, cs in seen.items():
+            if any(op in ("is", "not") for op, _ in cs):
+                out.append(f"not ({f})" if cs[-1][0] == "not" else f); continue
+            lo = max((v for op, v in cs if op == ">"), default=None); up = min((v for op, v in cs if op == "<="), default=None)
+            if lo is not None and up is not None:
+                out.append(f"{lo:.2f} < {f} <= {up:.2f}")
+            elif lo is not None:
+                out.append(f"{f} > {lo:.2f}")
+            else:
+                out.append(f"{f} <= {up:.2f}")
+        return " AND ".join(out)
     ps = paths(0, [])
     if not ps:
         return "never"
     if ps == [[]]:
         return "always"
-    return "\n".join("ON when " + " AND ".join(p) for p in ps)
+    return "\n".join("ON when " + text(p) for p in ps)
 
 
 # ------------------------------------------------------------------ the atlas
@@ -319,10 +334,37 @@ def summary(a):
     return "\n".join(lines)
 
 
+def render(a):
+    """The atlas certificate in markdown (CHANGES A4)."""
+    f = a["fidelity"]; tr = a["task_rule"]
+    L = [f"# Mechanism atlas: {a['target'].get('target')} ({a['target'].get('variant', '')})", "",
+         "The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mechanism has a readable trigger "
+         "(when it is needed), scored on held-out inputs (its confidence), and an effect (what removing it changes).", "",
+         "## Whole-network certificate", "",
+         f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= {TRUSTED} "
+         f"(otherwise always on): keeps **{100 * f['rule_gated_trusted']:.1f}%** of the network's decisions"
+         + (f"; the task rule alone keeps {100 * tr:.1f}%." if tr is not None else "."),
+         f"- Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. All alive mechanisms on: {100 * f['all_alive']:.1f}%.", ""]
+    for k, m in a["matrices"].items():
+        mech = m["mechanisms"]; confs = [x["trigger"]["confidence"] for x in mech]
+        L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
+              f"Alive mechanisms reproduce {k} to a relative error of {m['alive_only_rel_error']:.3f}.", "",
+              "| mechanism | in use | trigger (when it is needed) | confidence | removing it where needed | specificity |", "|---|---|---|---|---|---|"]
+        for x in sorted(mech, key=lambda x: -x["in_use"]):
+            e = x.get("effect", {})
+            eff = (f"changes the output by {e['effect_when_needed']:.2f} and flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions; "
+                   f"lowers class {e['most_lowered_class']}, raises class {e['most_raised_class']}") if e else "-"
+            spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {x['trigger']['rule'].replace(chr(10), '<br>')} | {x['trigger']['confidence']:.2f} | {eff} | {spec} |")
+        L.append("")
+    return "\n".join(L)
+
+
 if __name__ == "__main__":
     import sys
     tid = sys.argv[1]; model = sys.argv[2] if len(sys.argv) > 2 else None; depth = int(sys.argv[3]) if len(sys.argv) > 3 else 5
     a = build_atlas(planted_rnn() if tid == "planted_rnn" else algzoo_rnn(tid), spd_model=model, depth=depth)
-    print(summary(a))
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
     (out / f"{tid}_d{depth}.json").write_text(json.dumps(a, indent=1))
+    (out / f"{tid}_d{depth}.md").write_text(render(a))
+    print(summary(a))

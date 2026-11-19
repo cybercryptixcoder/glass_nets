@@ -1196,3 +1196,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **M8,5:**
     - Removing a W_h mechanism where its importance says it is needed changes the output 16–266× more than where it is not (median 75×). It flips 6–41% of decisions.
     - Each mechanism gets a readable effect, e.g. W_h.4 "fires when neuron 7 was active and the max is at most 1 step old; removing it lowers position 4 and raises position 1" (confidence 0.99, specificity 266×).
+- **03:23 A4 DONE: atlas certificate and catalog** (CHANGES A4).
+  - `lab/atlas.py` writes `results/glass/atlas/<target>_d4.md`.
+  - The catalog card shows a "Mechanism atlas" section: rule-gated fidelity against the task rule, then one row per mechanism with its trigger, confidence, effect and specificity.
+  - `atlas_catalog_test.py` failed before and passes after (headless Chrome, 22/22 rows for M8,5); T5 and T6 still pass.
+  - Rules are now simplified: same-feature conditions merge to the tightest bounds, e.g. W_x.2 "ON when x_t <= -0.22, or x_t > 0.20".

@@ -81,7 +81,7 @@ function show(i) {
   if (!cur.run) {
     $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)}</span></h2>
     <div class="pad"><div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
-    <p>No construction has been written for this network yet. What is known about its parts is below.</p>${partsHTML(cur.unit_map)}</div>`;
+    <p>No construction has been written for this network yet. What is known about its parts is below.</p>${atlasHTML(cur.atlas)}${partsHTML(cur.unit_map)}</div>`;
     return;
   }
   $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)} / ${esc(cur.run)}</span></h2>
@@ -91,12 +91,29 @@ function show(i) {
     <div class="grid2"><div><h3>Certificate</h3><table>${certRows(cur)}</table></div>
     <div><h3>Not explained</h3>${un.length ? "<ul>" + un.map(u => `<li>${esc(u)}</li>`).join("") + "</ul>" : '<p class="muted">Nothing found by the tests.</p>'}
     ${cur.fails.length ? `<h3>Why it isn't certified</h3><ul>${cur.fails.map(f => `<li class="small">${esc(f)}</li>`).join("")}</ul>` : ""}</div></div>
+    ${atlasHTML(cur.atlas)}
     ${partsHTML(cur.unit_map)}
     <h3>Playground</h3>${cur.playable ? playgroundHTML() : '<p class="muted">The playground runs weight-level networks; language-model constructions are shown with their certificate only.</p>'}
     <details><summary>The construction (Python)</summary><pre>${esc(cur.source)}</pre></details>
     <details><summary>The judge's full report</summary><pre>${esc(cur.report)}</pre></details>
   </div>`;
   if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+}
+
+function atlasHTML(a) {
+  if (!a) return "";
+  const f = a.fidelity, rows = [];
+  for (const [k, m] of Object.entries(a.matrices)) for (const x of m.mechanisms.slice().sort((p, q) => q.in_use - p.in_use)) {
+    const e = x.effect || {};
+    rows.push(`<tr><td class="mono">${esc(x.id)}</td><td>${pct(x.in_use)}</td><td class="mono small">${esc(x.trigger.rule).replace(/\n/g, "<br>")}</td><td>${x.trigger.confidence.toFixed(2)}</td>
+      <td class="small">${e.effect_when_needed == null ? "–" : `flips ${pct(e.decision_flip_rate_when_needed)} of decisions; lowers class ${e.most_lowered_class}, raises class ${e.most_raised_class}`}</td><td>${e.specificity == null ? "–" : e.specificity >= 1e5 ? "only where needed" : e.specificity.toFixed(0) + "×"}</td></tr>`);
+  }
+  return `<div id="atlas"><h3>Mechanism atlas</h3>
+  <p class="small">The weights split <b>exactly</b> into mechanisms. For each: a readable trigger (when it is needed), its confidence on held-out inputs, and what removing it does where it is needed. Specificity: how much more removing it changes the output where its importance says it is needed than where it says not.</p>
+  <table><tr><th>Rebuilt from mechanisms, each switched on by its trigger (trusted triggers only)</th><td><b>${pct(f.rule_gated_trusted)}</b> of the network's decisions${a.task_rule == null ? "" : `; the task rule alone: ${pct(a.task_rule)}`}</td></tr>
+  <tr><th>Every trigger used / own importances / all mechanisms on</th><td>${pct(f.rule_gated)} / ${pct(f.importance_masked)} / ${pct(f.all_alive)}</td></tr></table>
+  <table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+  <p class="small muted">Source: <span class="mono">${esc(a.file)}</span> (lab/atlas.py).</p></div>`;
 }
 
 function partsHTML(u) {
