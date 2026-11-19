@@ -1444,3 +1444,16 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **05:45 Exploratory result: mechanisms recur between ARC's M8,5 and zoo M8,5 seed 0, beyond chance.** Seed 0 (83.7% accurate) has its own atlas now (89.0% rebuilt vs 83.7% task rule; 10 functional mechanisms). The comparison finds 6 recurring mechanisms, 5 of them on role and trigger variables. Example: ARC W_h.4 ↔ seed 0 W_h.7 (similarity 0.83), both stopping the network from returning the max and triggered by the same variables (steps since the max and the 2nd, x_t against the previous max and min).
   - **Chance control:** shuffle seed 0's triggers among its own mechanisms, keeping roles: 1.97 matches on average, 95th percentile 4, P(≥ 5) = 0.003. ARC's M16,10 vs its seed 0: 0 matches (null 0.06).
   - **A25 pre-registration (confirmatory):** build atlases for zoo M8,5 seeds 1–4 (same SPD settings: 30k steps, batch 512, minimality 3e-3). Compare each with ARC's M8,5 (A25's `recurrence_control`, n = 300). **"Mechanisms recur across training runs of M8,5" holds if the real count exceeds the null's 95th percentile in ≥ 3 of the 4 seeds.** Otherwise seed 0's result is treated as chance.
+- **05:47 Precision breakthrough on the development network argmedian 16_5 (98.4% accurate): minimality 1e-4 plus residual absorption passes every criterion.**
+
+  | argmedian 16_5 | alone (i') | v3 (ii) | v4 (ii) | trusted (iii) | spec. (iv) | off_recall v3 / v4 (vi) | mechanisms |
+  |---|---|---|---|---|---|---|---|
+  | minimality 3e-3 (default) | 0.900 | 0.818 | 0.986 | 0.70 | 60× | 0.81 / 0.32 | 22 |
+  | minimality 1e-4 | 0.992 | 0.947 | 0.982 | 0.64 | 561× | 0.93 / 0.84 | 57 |
+  | minimality 1e-4, absorbed | **1.000** | **0.989** | **0.989** | 0.64 | 546× | **0.93 / 0.93** | 57 |
+
+  - A weaker minimality pressure gives more, finer mechanisms (57), and SPD's own importance masks become far more faithful (0.744 → 0.952). That is the label problem from 05:32, solved at the source.
+  - Absorption then removes the leftover residual. The rebuilt network beats the task rule while its triggers switch off 93% of the calls where a mechanism is not needed. 25 mechanisms have task-level explanations.
+  - **A26 pre-registration** (this design used only argmedian 16_5). Held-out set **A27 = seed s1 of the six A18 architectures**, nothing decomposed yet. SPD at minimality 1e-4 (30k steps; CPU batch 512), atlas with absorption.
+    - Criteria as A18: (i') mechanisms alone ≥ task rule; (ii) v3 ≥ task rule; (iii) clear-cut trusted share ≥ 0.5; (iv) median specificity ≥ 10; (vi) v3 off_recall ≥ 0.5; (v) groups beat the shuffled control for zoo_2nd_argmax_32_10_s1.
+    - **Pass: (i')–(iv) and (vi) in ≥ 4 of 6, and (v).** v4 is reported alongside.
