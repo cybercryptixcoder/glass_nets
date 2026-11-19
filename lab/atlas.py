@@ -580,6 +580,38 @@ def findings(a, control=None):
             "control": None if C is None else {k: v for k, v in C.items() if k != "groups"}}
 
 
+def _signature(x):
+    e = x.get("effect") or {}; rc = e.get("role_changes") or []
+    role = (rc[0]["from"], rc[0]["to"]) if rc and rc[0]["share_of_flips"] >= 0.4 and e.get("decision_flip_rate_when_needed", 0) >= 0.05 else None
+    vars_ = frozenset(f for f in x["trigger"].get("features_used", []) if not f.startswith("neuron ")) \
+        if x["trigger"]["confidence"] >= TRUSTED else frozenset()
+    return x["id"].rsplit(".", 1)[0], role, vars_
+
+
+def compare_atlases(a, b, bar=0.5):
+    """Recurring mechanisms between two atlases (CHANGES A11). A mechanism is 'functional' when its removal mostly
+    flips the answer between two specific ranks. Similarity = same matrix role and same dominant role change, times the
+    Jaccard overlap of the task variables its trusted trigger uses (1.0 when neither uses any)."""
+    A = [(x["id"], _signature(x)) for m in a["matrices"].values() for x in m["mechanisms"]]
+    B = [(x["id"], _signature(x)) for m in b["matrices"].values() for x in m["mechanisms"]]
+    fa = [(i, s) for i, s in A if s[1] is not None]; fb = [(i, s) for i, s in B if s[1] is not None]
+
+    def sim(s, t):
+        if s[0] != t[0] or s[1] != t[1]:
+            return 0.0
+        u = s[2] | t[2]
+        return 1.0 if not u else len(s[2] & t[2]) / len(u)
+    cand = sorted(((sim(s, t), i, j) for i, s in fa for j, t in fb), reverse=True)
+    used_a, used_b, pairs = set(), set(), []
+    for sc, i, j in cand:
+        if sc >= bar and i not in used_a and j not in used_b:
+            used_a.add(i); used_b.add(j); pairs.append({"a": i, "b": j, "similarity": sc})
+    share_a = len(used_a) / len(fa) if fa else 0.0; share_b = len(used_b) / len(fb) if fb else 0.0
+    return {"pairs": pairs, "functional_a": len(fa), "functional_b": len(fb), "share_a": share_a, "share_b": share_b,
+            "summary": f"{len(pairs)} recurring mechanisms: {100 * share_a:.0f}% of A's {len(fa)} functional mechanisms "
+                       f"and {100 * share_b:.0f}% of B's {len(fb)} have a counterpart with the same role and trigger variables."}
+
+
 def render(a, control=None):
     """The atlas certificate in markdown (CHANGES A4)."""
     f = a["fidelity"]; tr = a["task_rule"]
