@@ -130,9 +130,36 @@ Every component gets an end-to-end test on a known case (M4,3: whose units are k
 | U3 | done | FAIL: substituting all explained units keeps M16,10 23%, M8,5 76%, argmedian 16,5 82% (bar 95%); one unit at R² 0.98 can cost a third of decisions. Ablation shows the units matter (9–28% kept) | the units are real and used, but only approximate |
 | U1b | done | The rank-based family (current input + sorted history) doesn't capture the residual: joint substitution 19–36% | the residual is not rank structure; position/timing is involved |
 | U6a / U6a' | done | Clock (rotation ≈ k·360°/n): beyond chance only in M4,3, M8,5 and argmedian 8,5 (p ≤ 0.04); not general (3/9; Fisher p 1.2e-3 vs bar 1e-3) | dropped as a general unit |
-| U2 | next | Distributed units: decompose hidden states into directions and repeat U1/U3 on them | |
+| U2 | done | Task quantities are NOT linear directions. Argmedian networks hold the median value at 0.02–0.09 vs 0.60 in shuffled ones; M16,10 holds max 0.99 and 2nd 0.85, not positions | → U6b |
+| U6b | done | Modes (ReLU on/off patterns) covering 90%: up to 18 (M8,5), 74 (M16,10), 114 (argmedian 16,5); compact only in small networks | exact mode decomposition not viable |
+
+**First-sweep conclusion (21:16): "approximate universality, exact individuality".** Function-level units recur and matter, but dense networks' decisions hinge on detail that the units miss. No exact compact route was found (5 tried).
 
 **Working conclusion (20:45).**
 - Units exist at the level of function and recur across networks and tasks (comparators). That supports weak universality.
 - In dense RNNs they are approximate, and the network's decisions hinge on the detail they miss.
 - Candidate build (pending U2): a **unit map** per network. Every neuron or direction gets a verified unit label with per-part confidence (fit R², single-unit substitution fidelity, ablation importance) and total coverage, plus a cross-network unit library. This is the per-part-confidence certificate, and it doesn't need exact substitution.
+
+## 4b. Build decided from the evidence (21:17): the UNIT MAP
+
+**Intent.** For any RNN target, produce a map that labels each neuron at each step with the best unit from a fixed
+library, plus three per-part confidence numbers:
+1. **fit**: R² of the unit formula on held-out inputs;
+2. **sufficiency**: decisions kept when only that neuron is replaced by its formula;
+3. **importance**: decisions lost when that neuron is set to its mean.
+
+It also reports **coverage** (variance-weighted share of neuron-steps with fit ≥ 0.9) against a shuffled-weights
+control, and a cross-network **unit library** (which unit types recur where).
+
+**Why this and not an exact construction:** U3, U1b, U2 and U6b show that no exact compact construction exists at
+these levels for dense RNNs, while the units are real and matter (U1, U3 ablation). The map is honest about both.
+
+**Known-answer tests, written before the code:**
+- **(K1) M16,10.** At least 3 of units {1, 6, 7, 8} must be labelled as max−x_t comparators (the "running max" group
+  singled out independently by ARC's Z. Chen and a LessWrong analyst), with coverage above the shuffled control.
+- **(K2) M4,3.** All of its neurons are labelled as raw-input units (ARC's account: signed input channels), with fit
+  ≥ 0.9.
+- **(K3) Every shuffled network:** coverage of history units ≤ 0.1.
+
+**Then run it on networks never interpreted before** (argmedian 8_5, 8_7, 16_5, 16_7) and publish the unit maps,
+plus the cross-network library, as the first discovery of type (a) and (b).

@@ -561,3 +561,28 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **20:45 U6a' RESULT: the clock is NOT a general unit** (`results/glass/units/u6a2.json`).
   - p ≤ 0.05 in 3/9: M4,3 0.007, M8,5 0.040, argmedian 8,5 0.007. Fisher-combined p = 1.2e-3 (bar 1e-3). Dropped as a general unit.
   - Recorded fact: in those three small networks, the recurrence holds a rotation within 1% of k·360°/n, beyond chance.
+- **20:55 U2 PRE-REGISTRATION (distributed units).** Question: are the task's natural quantities held as directions across neurons?
+  - **Quantities:** running max M, running 2nd max S, running min m, x_t, the AGE (steps ago) of the max and of the 2nd max, and for argmedian the running median.
+  - **Method.** Probe each from h_t with a linear map (fitted on 4,000 inputs, scored on 4,000 others). Control: shuffled weights.
+  - **Decision.**
+    - If at the last step the quantities the task needs (M2 networks: the position of the 2nd max via the ages; argmedian: the median and its position) have R² ≥ 0.9 and the control is clearly lower (≥ 0.3 below) → distributed units exist → U3' (judge test with those variables at the last site).
+    - Otherwise the state encodes something else → U6b (dynamics view).
+- **21:05 U2 RESULT** (`results/glass/units/u2.json`, last step, held-out R² of a linear probe).
+  - The trained networks do NOT hold the task's quantities as linear directions. M16,10 holds max 0.99 and 2nd 0.85, but not positions; the others hold max ≤ 0.68.
+  - The argmedian networks hold the median VALUE at 0.02 / 0.09, versus 0.60 / 0.63 in their shuffled versions: training removes it.
+  - Limit of the measure, noted: positions are categories, so scalar "age" probes are weak evidence.
+  - Decision per the pre-registration: → U6b.
+- **21:07 U6b PRE-REGISTRATION (modes).** Question: how many ReLU on/off patterns does each network use at each step?
+  - **Measure:** the number of distinct patterns needed to cover 90% of 8,000 inputs, per step, versus the shuffled control.
+  - **Decision.**
+    - ≤ 8 patterns at every step for M8,5, M16,10 and argmedian 16,5 → mode decomposition is viable (exact: the network is linear within a pattern) → U6c (are modes chosen by simple comparisons, and do they recur across networks?).
+    - Otherwise modes are too many to read → record it and move to the explicit-remainder build.
+- **21:15 U6b RESULT: modes are too many** (`results/glass/units/u6b.json`). Patterns covering 90%, per step:
+  - M8,5 up to 18; M16,10 up to 74; argmedian 16,5 up to 114. The bar was ≤ 8.
+  - Only small networks are compact: M4,3 ≤ 4, argmedian 8,5 ≤ 9, M8,8 ≤ 11.
+  - Trained networks don't use fewer modes than shuffled ones.
+- **21:16 FIRST-SWEEP CONCLUSION** (U1, U3, U1b, U2, U6a, U6a', U6b).
+  - **Recurring units exist at the level of function** (single-ReLU comparators against running statistics, across sizes and tasks) **and they matter** (ablation). But in dense RNNs they are approximate, and the decisions depend on the detail they miss.
+  - None of the exact routes gives a compact decomposition: neuron formulas, rank formulas, linear task variables, a rotation clock, linear modes.
+  - This is a general finding (discovery type b, provisional; needs a prior-work check): **"approximate universality, exact individuality"**.
+- **21:17 BUILD DECISION (from the evidence): a UNIT MAP**, not an exact units-plus-wiring construction. Intent and tests are in UNITS_PROGRAM §4b, written before any code.
