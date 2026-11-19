@@ -78,22 +78,31 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
-- Nov 19, 05:52 ET (clock):
-  - **Built and tested** (each with a CHANGES entry and a test that failed before and passes after): A1–A13 (engine, triggers, effects, certificate, catalog, playground, comparison, exact residual, narrative), A5 transformers (known answer passes), A9 float32, A15 gate v2, A17 mechanisms alone, A19 clear-cut confidence, A20 glosses, A21 task-level explanations, A22 v3 headline everywhere, A23 decision-checked gate v4, A24 comparison names its basis, A25 recurrence with a chance control, **A26 precise decomposition (minimality 1e-4 + residual absorption)**.
-  - **Main finding of the day:** accurate networks (95–99.6%) fail with the default decomposition (minimality 3e-3) because SPD's "not needed" labels are wrong at small activity and the mechanisms leave a decision-relevant residual. A weaker minimality (1e-4) plus absorbing the residual fixes both on the two development networks tried: argmedian 16_5 (98.4%: rebuilt 98.9%, off_recall 0.93, every criterion passes) and ARC's M16,10 (95.3%, at 1e-3: rebuilt 96.8%, every criterion passes).
-  - **Held-out verdicts:**
-    - A18 (default decomposition, v3 primary, v4 secondary): 4 of 6 in, **all fail** on precision (mechanisms alone 0.82–0.95 vs bars 0.976–0.996). Two (32_10_s0, argmedian 32_7_s0) still decomposing.
-    - **A27 (A26's held-out test: s1 seeds of the same six architectures, minimality 1e-4 + absorption): decompositions running** on Colab CPU. This is the test that matters now.
-  - **Recurrence:** ARC's M8,5 vs zoo M8,5 seed 0: 5 mechanisms match on role and trigger variables vs 1.97 by chance (p = 0.003, exploratory). Confirmatory test on seeds 1–4 pre-registered (≥ 3 of 4 must beat the null's 95th percentile); s1/s2 local, s3/s4 Colab. ARC's M16,10 vs its seed 0: no recurrence.
-  - **Transformers:** known answer passes; real lc networks are limited by the decomposition (to be retried with A26's settings).
+- Nov 19, 07:26 ET (clock):
+  - **Built and tested:** A1–A29. Each has a CHANGES entry and a test that failed before and passes after. The latest:
+    - A26: precise decomposition, minimality 1e-4 plus residual absorption;
+    - A28: adaptive decomposition, a ladder of settings with the sparsest precise-enough one chosen on the training half;
+    - A29: what each mechanism reads and writes, glossed with unit-map labels.
+  - **Held-out verdicts so far:**
+    - A18 (default settings): 0 of 6.
+    - A27 (A26 settings): 2 of 6. Both 16-wide accurate networks pass every criterion; all 32-wide fail from component saturation.
+    - A25 (recurrence across M8,5 training runs): not confirmed. 1 of 4 seeds beats chance; it varies by run.
+  - **Development set with A28 (design check):** all 7 pass every criterion. Weak networks keep the sparse default; accurate ones get denser settings.
+  - **Running now: A28's held-out test** (pre-registered 07:23; s2 seeds of the six architectures).
+    - C = 20 for 16-wide and 40 for 32-wide; ladder 1e-3 / 3e-4 / 1e-4; certificate = decision-checked gate v4.
+    - 15 runs on Colab CPU (32-wide plus the control) and 6 locally (16-wide).
+  - **Transformers:** the known answer passes. The lc runs at 1e-4 were stopped to free Colab for A28 and need restarting.
+  - **Write-up:** `docs/glass/ATLAS_RESULTS.md` (kept current).
 
 ## 5. Next (in order)
 
-1. Judge A27 when its decompositions land (`/tmp/a18_fetch_build.sh`-style: download, `python3 lab/atlas.py T SPD 4 --absorb [--control-spd SHUF]`, then `python3 scripts/glass/atlas_a3_eval.py --v3 <the six s1 ids>`).
-2. Finish A18 (32_10_s0 with control, argmedian 32_7_s0) and record its verdict as pre-registered.
-3. A25: atlases for M8,5 seeds 1–4, `recurrence_control` against ARC's M8,5, judge.
-4. If A27 passes: make minimality 1e-4 + absorption the default; rebuild the development atlases with it (catalog shows them); then transformers (lc_4_5, lc_6_5, lc_3_4) with the same settings.
-5. Write the atlas results up for Shreyas (what works, on which networks, the findings, the limits).
+1. When A28's decompositions land, for each network:
+   `python3 lab/atlas.py T x 4 --ladder SPD_1e-3,SPD_3e-4,SPD_1e-4 [--control-spd SHUF_1e-3,SHUF_3e-4,SHUF_1e-4]`.
+   Then judge with `python3 scripts/glass/atlas_a3_eval.py --v4 <the six s2 ids>`.
+2. If A28 passes: make the adaptive ladder the default pipeline and promote the adaptive atlases to the catalog (`T_d4.json`).
+3. Transformers: rerun lc_4_5 / lc_6_5 at 1e-4 (C scaled to d_model), then build their atlases with absorption.
+4. Deepen explanations (A29 is a start): unit maps for networks that lack them, so reads/writes carry task meaning.
+5. Finish `ATLAS_RESULTS.md` for Shreyas.
 
 ## 6. How to run what exists
 
