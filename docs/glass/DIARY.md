@@ -1776,3 +1776,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Answered Shreyas's question about the catalogue: it exists (36 networks, browsable, certified for most small ones). The gap to discovery-grade is mainly explanation depth ("what it computes") and a stricter trust test, more than size.
 
 ## Nov 19, 16:58 ET (clock): status refreshed; A37 verdict in about 10 minutes
+
+## Nov 19, 17:09 ET (clock): Shreyas on faithfulness and memorization; the plan with a stopping rule
+
+- Shreyas (17:05): the system must be faithful to what the model actually does, and that can be memorization. If an overfit model memorized, the atlas must say so and not invent a mechanism. He also asked for the plan: done, left, the next tangible thing, and when I stop.
+- My earlier wording ("a rule that memorizes cases shouldn't count as an explanation") was imprecise. There are two cases. (1) The network memorized: the faithful description is a case list, and the atlas must say "lookup". (2) The network computes something structured, but the rule-fitter memorized: then the description is unfaithful. Fitting rules on half of the token values and testing them on the other half separates the two. This is now A41: a "rule" vs "lookup" label per mechanism, with a random-label network as the known answer that must come out "lookup".
+- Plan and stopping rule written into ATLAS.md §5 and sent to Shreyas.
+- s1/s2 decompositions finished at 17:05 (11,307 s); A37 builds started (main vocabulary first, then the A35 vocabulary for comparison).

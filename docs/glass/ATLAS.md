@@ -112,14 +112,15 @@ nets), where the existing reader and judge already work.
     - promoting the adaptive atlases to the catalog defaults;
     - deeper "what it computes" explanations.
 
-## 5. Next (in order)
+## 5. Next (in order; plan sent to Shreyas 17:09, see DIARY)
 
-0. Attention Q/K kept by the decomposition: A38/A38c/A38d failed (see CHANGES). Open; the planted transformer (Q alone 0.919 in the reference) and the planted RNN together are the fast test bed for the next design.
-1. (Built; verdict pending the s1/s2 decompositions) A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
-2. (Done: A36 + A39, 33 → 4.7 min.) Faster atlas builds.
-2b. A40: decompose modmul_p113 (A35 pipeline) and score its pre-registered known answer.
-3. More MLP transformers (tracr compiled programs need multi-position outputs in the judge and an adapter with biases).
-4. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (ask Shreyas about cost first).
+1. A37 verdict on modadd_p113_s1/_s2 (building now).
+2. A40 verdict on modmul_p113 (decomposition finishing on the GPU): does the atlas pick the discrete-log basis and frequencies by itself?
+3. A41, faithful labelling including memorization (Shreyas, Nov 19 17:05): every mechanism is labelled "rule" (its rule carries over to unseen input values) or "lookup" (memorized cases), never presented as an algorithm when it is case-by-case. Known answers: a network trained on random labels must come out lookup; the adders' MLP mechanisms must come out structured. Pre-register before building.
+4. Attention Q/K kept by the decomposition (A38/A38c/A38d failed): new design, tested first on the planted transformer and planted RNN (about 50 min per try), then the modadd development run, then held out on s3/s4.
+5. "What it computes" explanations, verified by intervention.
+
+**Stopping rule for this phase.** (a) Success: 1–4 pass their pre-registered held-out tests. That gives a certified catalogue up to the 227k networks, with known answers recovered and memorizing networks flagged; write it up in ATLAS_RESULTS, then stop for Shreyas's review before step 5 or larger networks. (b) Stuck: a step that fails its held-out test after two principled redesigns is recorded as a limit, and work moves to the next step.
 
 ## 6. How to run what exists
 
