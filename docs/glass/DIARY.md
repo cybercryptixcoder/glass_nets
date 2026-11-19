@@ -1672,3 +1672,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - 232 mechanisms; the attention Q/K matrices have none alive; 127 have trusted task-level triggers.
   - **A vocabulary gap noticed after the verdict (recorded, not used to rescue it):** the MLP input W_in reads a mix of the a and b embeddings at the last position, but the pre-registered vocabulary had Fourier features only of "token here" and a+b, not of a and b separately. That is plausibly why W_in has no trusted Fourier trigger. A fix would be a new version, judged on a different network (modmul_p113, same architecture, is available).
   - **Build speed (A36):** the feature cache makes gated runs 1.8× faster; this build took about 33 minutes.
+
+## Nov 19, 13:56 ET (clock): A37 pre-registered (angle vocabulary for modular arithmetic), two fresh held-out networks trained
+
+- Why: reading A35's trusted triggers shows two vocabulary problems. The MLP input matrix has no Fourier feature of a or b (its rows sit at '=', where "token here" is constant), so none of its 40 triggers is trusted. The value matrices' triggers isolate single tokens with near-degenerate splits on unrelated frequencies (`cos(56·token here) <= 1.00`), because "cos(k·t + phase) > c" is a tilted half-plane in (cos, sin) space that a depth-4 tree only approximates.
+- Change (A37): the features become angles "k·v mod 113" (k = 2..56; v = token here, a, b, a+b). A half-circle at frequency k is then one interval of one feature.
+- Held out: trained modadd_p113_s1 and _s2 on the Colab GPU with the original recipe (seeds 1, 2; 8,000 epochs; about 2.5 min each). Both reach 100% test accuracy. Key frequencies from the meta rule (top 5 of embedding Fourier power): s1 {43, 30, 18, 19, 38} (share 0.93), s2 {4, 44, 10, 28, 9} (share 0.87).
+- Pre-registered verdict: on each network, ≥ 80% of trusted triggers that use a k ≥ 2 frequency feature must use a key frequency (chance 9%); PASS only if both pass. Decomposition unchanged from A35. The A35-vocabulary share on the same decompositions is reported for comparison, and (i') is predicted to fail again (Q/K had no mechanisms).
