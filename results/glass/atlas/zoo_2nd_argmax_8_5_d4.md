@@ -7,6 +7,14 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 - Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= 0.9 (otherwise always on): keeps **92.5%** of the network's decisions; the task rule alone keeps 87.9%.
 - Every trigger used (no confidence bar): 73.6%. Mechanisms switched by their own learned importances: 88.3%. All alive mechanisms on: 98.0%.
 
+## Findings
+
+1. The weights split exactly into 22 mechanisms; 12 have a trusted trigger (held-out confidence >= 0.9), 3 are always needed.
+2. 12 of the 12 trusted triggers use a task variable (not only neuron states). Most used: x_t (7), step t (6), x_t minus the previous max (6), x_t minus the previous 2nd (5), steps since the max (4).
+3. 10 mechanism(s) (W_x.2, W_x.12, W_h.8, W_h.9, W_h.15, W_h.16, W_o.0, W_o.2, W_o.14, W_o.16) keep the network from answering rank 3 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 3.
+3. 3 mechanism(s) (W_h.0, W_h.4, W_h.18) keep the network from answering rank 1 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 1.
+4. Rebuilt from mechanisms switched by trusted triggers: 92.5% of decisions (task rule 87.9%).
+
 ## W_x: 4 mechanisms (4 with a trusted trigger)
 
 Alive mechanisms reproduce W_x to a relative error of 0.005.

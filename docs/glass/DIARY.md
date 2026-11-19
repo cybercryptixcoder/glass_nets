@@ -1222,3 +1222,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - W_h.0: rank 2 → rank 1 in 41% of flips.
   - So these mechanisms keep the network from answering the max: a readable functional role, tested by ablation.
 - **03:46 Standing process:** a 15-minute reminder (Shreyas's request) re-schedules itself. Each time: pull Colab outputs, add a dated diary entry, refresh ATLAS §4/§5, commit, push, send Shreyas a short update, then continue. It is not an interruption.
+- **03:51 A8 DONE: atlas findings** (CHANGES A8). The atlas now states its conclusions with numbers. **For M8,5:**
+  1. 22 exact mechanisms, 12 with a trusted trigger, 3 always needed.
+  2. All 12 trusted triggers use task variables. The most used are x_t (7), the step (6), x_t minus the previous max (6), x_t minus the previous 2nd (5) and steps since the max (4).
+  3. Two functional groups:
+     - 10 mechanisms whose removal flips the answer from rank 2 to rank 3;
+     - 3 mechanisms (W_h.0, W_h.4, W_h.18) whose removal flips it from rank 2 to the max (rank 1).
+  4. Rebuilt with trusted triggers: 92.5% of decisions, against the task rule's 87.9%.
+  - Control comparisons are added when the shuffled atlases exist (Colab batch).

@@ -420,6 +420,7 @@ def rule_text(tree, names):
                 out.append(f"{f} <= {up:.2f}")
         return " AND ".join(out)
     ps = paths(0, [])
+    tree._features_used = sorted({f for p in ps for f, _, _ in p})        # A8
     if not ps:
         return "never"
     if ps == [[]]:
@@ -458,6 +459,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                 conf = 0.5 * (p[yte].mean() + (~p[~yte]).mean()) if yte.any() and (~yte).any() else float((p == yte).mean())
                 trees[(k, c)] = tree
                 trig = {"rule": rule_text(tree, names), "confidence": float(conf), "tree": export_text(tree, feature_names=names, decimals=2)}
+                trig["features_used"] = tree._features_used
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
@@ -518,7 +520,46 @@ def summary(a):
     return "\n".join(lines)
 
 
-def render(a):
+def findings(a, control=None):
+    """What the atlas says, as numbered statements (CHANGES A8). A trusted trigger has confidence >= TRUSTED."""
+    def stats(at):
+        mech = [x for m in at["matrices"].values() for x in m["mechanisms"]]
+        trusted = [x for x in mech if x["trigger"]["confidence"] >= TRUSTED and x["trigger"]["rule"] not in ("always", "never")]
+        task_vars = {}
+        for x in trusted:
+            for f in x["trigger"].get("features_used", []):
+                if not f.startswith("neuron "):
+                    task_vars[f] = task_vars.get(f, 0) + 1
+        uses_task = sum(1 for x in trusted if any(not f.startswith("neuron ") for f in x["trigger"].get("features_used", [])))
+        groups = {}
+        for x in mech:
+            rc = x.get("effect", {}).get("role_changes") or []
+            if rc and rc[0]["share_of_flips"] >= 0.4 and x["effect"]["decision_flip_rate_when_needed"] >= 0.05:
+                groups.setdefault((rc[0]["from"], rc[0]["to"]), []).append(x["id"])
+        return {"n": len(mech), "n_trusted": len(trusted), "uses_task": uses_task, "task_vars": task_vars, "groups": groups,
+                "always": sum(1 for x in mech if x["trigger"]["rule"] == "always"), "fid": at["fidelity"]["rule_gated_trusted"], "task_rule": at.get("task_rule")}
+    S = stats(a); out = []
+    out.append(f"1. The weights split exactly into {S['n']} mechanisms; {S['n_trusted']} have a trusted trigger (held-out confidence >= {TRUSTED}), "
+               f"{S['always']} are always needed.")
+    if S["n_trusted"]:
+        top = ", ".join(f"{k} ({v})" for k, v in sorted(S["task_vars"].items(), key=lambda kv: -kv[1])[:5]) or "none"
+        out.append(f"2. {S['uses_task']} of the {S['n_trusted']} trusted triggers use a task variable (not only neuron states). Most used: {top}.")
+    for (fr, to), ids in sorted(S["groups"].items(), key=lambda kv: -len(kv[1])):
+        out.append(f"3. {len(ids)} mechanism(s) ({', '.join(ids)}) keep the network from answering rank {to} instead of rank {fr}: "
+                   f"removing them where needed mostly flips the answer from rank {fr} to rank {to}.")
+    out.append(f"4. Rebuilt from mechanisms switched by trusted triggers: {100 * S['fid']:.1f}% of decisions"
+               + (f" (task rule {100 * S['task_rule']:.1f}%)." if S["task_rule"] is not None else "."))
+    C = None
+    if control is not None:
+        C = stats(control)
+        out.append(f"5. Shuffled-weights control: {C['n']} mechanisms, {C['n_trusted']} trusted triggers, {C['uses_task']} using a task variable "
+                   f"(trained: {S['n']}, {S['n_trusted']}, {S['uses_task']}); functional groups: {sum(len(v) for v in C['groups'].values())} mechanisms "
+                   f"(trained: {sum(len(v) for v in S['groups'].values())}).")
+    return {"statements": out, "groups": {f"{fr}->{to}": ids for (fr, to), ids in S["groups"].items()}, "stats": {k: v for k, v in S.items() if k != "groups"},
+            "control": None if C is None else {k: v for k, v in C.items() if k != "groups"}}
+
+
+def render(a, control=None):
     """The atlas certificate in markdown (CHANGES A4)."""
     f = a["fidelity"]; tr = a["task_rule"]
     L = [f"# Mechanism atlas: {a['target'].get('target')} ({a['target'].get('variant', '')})", "",
@@ -528,7 +569,8 @@ def render(a):
          f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= {TRUSTED} "
          f"(otherwise always on): keeps **{100 * f['rule_gated_trusted']:.1f}%** of the network's decisions"
          + (f"; the task rule alone keeps {100 * tr:.1f}%." if tr is not None else "."),
-         f"- Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. All alive mechanisms on: {100 * f['all_alive']:.1f}%.", ""]
+         f"- Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. All alive mechanisms on: {100 * f['all_alive']:.1f}%.", "",
+         "## Findings", ""] + findings(a, control)["statements"] + [""]
     for k, m in a["matrices"].items():
         mech = m["mechanisms"]; confs = [x["trigger"]["confidence"] for x in mech]
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
