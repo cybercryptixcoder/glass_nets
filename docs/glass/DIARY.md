@@ -1640,3 +1640,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Running:** lc_8_6 (held-out transformer) at 14k of 30k on the GPU. Zoo M16,10 seed 0 ladder rungs (1e-3 / 1e-4) at 18k of 30k locally, to complete the development table.
 - **11:02 Development table complete with the final pipeline: 6 of 7 pass under v4.** Zoo M16,10 seed 0 (91.4%) kept its sparse default rung, which was precise enough on the training half (alone 0.983, v3 0.970 vs bar 0.923). It passes precision and the rebuilt network (0.960 vs 0.914) but fails trust: 0.42 of switched mechanisms have a trusted trigger (bar 0.5).
   - Observation, not a change: the ladder picks by precision only. Trust could also be a selection criterion, but that would be a new version needing its own test set. A28 stays as validated.
+- **11:10 A33 VERDICT (pre-registered 10:21): PASS. The held-out transformer lc_8_6 passes every criterion** with the RNN pipeline unchanged.
+  - The ladder stopped at its sparsest rung (1e-3): training alone 0.992, v3 0.902 vs bar 0.862.
+  - Held out: mechanisms alone 0.990; rebuilt (v4) 0.902 vs task rule 0.854; trusted 0.60; specificity 29×; off_recall 0.89.
+  - 106 mechanisms, 64 with trusted task-level explanations, mostly in terms of token values and positions. Embedding mechanisms switch on by token value ("ON when token f(i) > 3.5", specificity 2,265×); others use position i, fixed points and f(f(i)).
+  - **Scope, stated plainly:** one held-out transformer (lc_8_6 is the only AlgZoo longest-cycle network not used in design); development 2 of 3 (lc_3_4 fails off_recall).
