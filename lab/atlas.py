@@ -14,6 +14,7 @@ Transformers come in a later version (ATLAS.md, A5).
 """
 import json
 import math
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -215,6 +216,9 @@ class TransformerTarget:
             return self.forward(torch.tensor(x), mm).numpy()
 
 
+MODADD_VOCAB = os.environ.get("ATLAS_MODADD_VOCAB", "angle")      # A37; "cossin" = the A35 vocabulary (comparison only)
+
+
 class ModAddTarget:
     """A35: the Nanda-style one-layer transformer with an MLP (no LayerNorm, no biases), e.g. modadd_p113.
     Tokens: a, b, '=' (3 positions). Matrices ([d_out, d_in]): W_E [d, V] on one-hot tokens (every position);
@@ -268,10 +272,19 @@ class ModAddTarget:
         here = t if n == P else t[:, -1:]
         f = {"position": pos, "token here": here, "a": np.repeat(a[:, None], n, 1), "b": np.repeat(b[:, None], n, 1),
              "(a+b) mod 113" if self.p == 113 else f"(a+b) mod {self.p}": np.repeat(s[:, None], n, 1)}
-        for kf in range(1, self.p // 2 + 1):
-            w = 2 * np.pi * kf / self.p
-            f[f"cos({kf}·token here)"] = np.cos(w * here); f[f"sin({kf}·token here)"] = np.sin(w * here)
-            f[f"cos({kf}·(a+b))"] = np.repeat(np.cos(w * s)[:, None], n, 1); f[f"sin({kf}·(a+b))"] = np.repeat(np.sin(w * s)[:, None], n, 1)
+        if MODADD_VOCAB == "cossin":                    # the A35 vocabulary, kept only for the pre-registered A37 comparison
+            for kf in range(1, self.p // 2 + 1):
+                w = 2 * np.pi * kf / self.p
+                f[f"cos({kf}·token here)"] = np.cos(w * here); f[f"sin({kf}·token here)"] = np.sin(w * here)
+                f[f"cos({kf}·(a+b))"] = np.repeat(np.cos(w * s)[:, None], n, 1); f[f"sin({kf}·(a+b))"] = np.repeat(np.sin(w * s)[:, None], n, 1)
+            names = list(f); F = np.stack([np.asarray(v, float) for v in f.values()], -1)
+            return names, self._pm(F.reshape(B * n, -1), B, n)
+        # A37: angle features 'k·v mod p' (where v sits on the circle at frequency k); a half-circle at one frequency is
+        # one interval of one feature. k = 1 is the raw value itself.
+        for kf in range(2, self.p // 2 + 1):
+            f[f"{kf}·token here mod {self.p}"] = (kf * here) % self.p
+            for v_, val in (("a", a), ("b", b), ("(a+b)", s)):
+                f[f"{kf}·{v_} mod {self.p}"] = np.repeat(((kf * val) % self.p)[:, None], n, 1)
         names = list(f); F = np.stack([np.asarray(v, float) for v in f.values()], -1)        # [B, n, F]
         return names, self._pm(F.reshape(B * n, -1), B, n)
 
