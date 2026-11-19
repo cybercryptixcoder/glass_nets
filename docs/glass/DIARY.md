@@ -1626,3 +1626,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
   - lc_3_4 (3-dimensional, 256 inputs) keeps its decisions only by switching few mechanisms. The others pass with no change to the pipeline.
   - **Pre-registration (transformer held-out test, A33):** lc_8_6 (8-dimensional, 2 layers, task rule 0.854; never decomposed). Same pipeline as A28: C = 20, ladder 1e-3 / 3e-4 / 1e-4 on the GPU at batch 2048 (like the development transformers), absorption, selection on training-half alone + v3, certificate v4. Criteria (i'), (ii) v4, (iii), (iv), (vi); (v) does not apply, since transformer outputs have no rank roles. **Pass: all five hold on lc_8_6.**
+- **10:24 ARC's M16,10 (the 2nd-argmax challenge network) passes every criterion with the adaptive pipeline, including its matched control:** rung 1e-3, alone 0.997, rebuilt v4 0.968 vs 0.953, trusted 0.62, specificity 113×, off_recall 0.81, 8 functional mechanisms vs 0 in the shuffled control. This morning its certificate kept 70.0%.
+  - The development table under v4 (`atlas_a3_eval.py --v4`): 6 of 7 pass. The exception is zoo M16,10 seed 0, still on its old default atlas (no ladder decompositions were made for it).
+  - `results/glass/atlas/OVERVIEW.md` regenerated.
+  - lc_8_6 (the held-out transformer) is decomposing on the GPU.
