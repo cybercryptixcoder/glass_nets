@@ -4,7 +4,8 @@
 showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_REVIEW.md` §7).*
 
 ## Read before doing anything
-0. **CURRENT WORK (Nov 18 onward): `docs/glass/UNITS_PROGRAM.md`.** The units hypothesis, research, experiment tree, build intent and status.
+0. **CURRENT WORK (Nov 19 onward): `docs/glass/ATLAS.md`.** The mechanism atlas build (decompose → explain → certify): why the plan changed, intent, components, status and the ordered next steps. Keep its Status and Next sections current after every step.
+   - Background for it: `docs/glass/UNITS_FINDINGS.md` (what the units program established; one-page summary first) and `docs/glass/UNITS_PROGRAM.md` (that program's plan and status; concluded Nov 19).
 1. `docs/glass/INTENT.md`: what we are building and why. The code serves this document.
 2. `docs/glass/CHECKLIST.md`: current state.
 3. `docs/glass/CHANGES.md`: the change ledger.
@@ -26,6 +27,12 @@ showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_R
    - An intent error: what we asked for was wrong.
    An intent error is recorded in `INTENT.md` with its evidence, the intent is revised, and the code is rebuilt from
    it. Nothing else counts as a "fix".
+
+## How to work (Shreyas, Nov 19)
+- **Building is the goal.** Experiments exist only to answer a question a specific build step needs. Name that step in the pre-registration.
+- **When a component falls short, try another way and test it,** quickly and many times if needed. Don't stop at a report of why it doesn't work.
+- **Work continuously.** Go from one step straight into the next; never idle between steps. A scheduled check-in is only a safety net that restarts work if the session has stopped. It is not a cadence.
+- **Update Shreyas when a result lands,** not on a timer.
 
 ## Hard rules
 - **No code change without a `CHANGES.md` entry first:**

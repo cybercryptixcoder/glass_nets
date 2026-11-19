@@ -1,4 +1,7 @@
-# The units program: basic units and their composition (started Nov 18, 2026, 19:10 ET)
+# The units program: basic units and their composition (started Nov 18, 2026, 19:10 ET; CONCLUDED Nov 19)
+
+> **Concluded Nov 19.** Its findings are in `UNITS_FINDINGS.md`. Its last step (SPD, U19) became the basis of the
+> current build, the mechanism atlas: see `ATLAS.md`, which now holds the status and next steps.
 
 *Mandate (Shreyas, 19:06):*
 - Plan and run micro experiments continuously, in minutes not hours. Each one is chosen live from the previous

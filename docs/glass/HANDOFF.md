@@ -1,4 +1,10 @@
-# Glass Networks: handoff to the next agent (written 2026-11-18 01:03 ET)
+# Glass Networks: handoff to the next agent
+
+## CURRENT (Nov 19): read `CLAUDE.md`, then `docs/glass/ATLAS.md`. Everything below this section is history.
+
+---
+
+# (History) handoff written 2026-11-18 01:03 ET
 
 Read in this order:
 1. this file;

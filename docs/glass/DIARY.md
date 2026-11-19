@@ -1174,3 +1174,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - (3) Construction plus certificate: the network as Σ mechanisms, with importance functions REPLACED by the readable rules. Measured: fidelity against the task rule; per-mechanism confidence (rule accuracy); an ablation specificity check (removing mechanism c changes decisions mainly where its rule says it is on).
     - (4) Catalog integration.
   - Each component gets a known-answer test before use (the planted RNN first).
+- **03:13 PLAN CHANGE, approved by Shreyas at 03:11 ET:** from the units program (experiments) to building the **mechanism atlas** (decompose → explain → certify).
+  - The new current-work document is `docs/glass/ATLAS.md`: why, intent, components with tests and status, ordered next steps, how to run.
+  - Routine updated in `CLAUDE.md`:
+    - read ATLAS first;
+    - building is the goal, and experiments only answer a named build step's question;
+    - when something falls short, try another way;
+    - work continuously; the check-in is only a safety net; update Shreyas when results land.
+  - CHECKLIST NOW, the HANDOFF header and the UNITS_PROGRAM header now point to ATLAS.md.
+  - Rule-gated construction prototype on M8,5: fidelity 0.895 (depth 5, task + neuron features) against the task rule's 0.879. Importance-masked fidelity is 0.918–0.927, and all alive mechanisms on gives 0.981 (`results/glass/units/rule_construction_*`).
