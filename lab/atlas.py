@@ -290,8 +290,10 @@ def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu",
     return mods.cpu().double()
 
 
-def load_decomposition(tgt, path, C=20):
+def load_decomposition(tgt, path, C=None):
     d = torch.load(path, weights_only=False)
+    if C is None:                                                 # the number of components is read from the saved U (A14: --C)
+        C = next(v.shape[0] for k, v in d["mods"].items() if k.endswith(".U"))
     mods = torch.nn.ModuleDict({k: spd.Decomposed(v, C).double() for k, v in tgt.weights.items()})
     mods.load_state_dict({k: v.double() for k, v in d["mods"].items()})     # float32 decompositions load as float64 (A9)
     return mods

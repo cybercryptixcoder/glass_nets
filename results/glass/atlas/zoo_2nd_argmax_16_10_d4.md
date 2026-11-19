@@ -15,6 +15,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 3. 3 mechanism(s) (W_h.5, W_h.6, W_o.19) keep the network from answering rank 1 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 1.
 3. 1 mechanism(s) (W_h.3) keep the network from answering rank 3 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 3.
 4. Rebuilt from mechanisms switched by trusted triggers: 93.9% of decisions (task rule 95.3%).
+5. Shuffled-weights control: 13 mechanisms, 9 trusted triggers, 9 using a task variable (trained: 35, 18, 17); functional groups: 0 mechanisms (trained: 4).
 
 ## W_x: 5 mechanisms (5 with a trusted trigger)
 
