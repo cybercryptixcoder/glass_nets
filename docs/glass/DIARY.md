@@ -1853,3 +1853,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A38e (one matrix at a time, on/off masks), at training-batch counts: planted RNN 5/5/5 at seed 0 (step 28,000) and seed 1 (step 26,000); A38d split W_h at both seeds. Planted transformer: Q keeps 2 alive at step 22,000. Atlas checks when they finish.
 - GPU: 6 A42 runs plus 2 memorizer runs. The memorizer is at step 12,000; it slowed when the A42 runs started.
 - ATLAS_RESULTS now has the 227k-parameter section.
+
+## Nov 19, 18:32 ET (clock): development build of the A38d modadd atlas running locally (if Q/K are kept, does the full certificate pass?)

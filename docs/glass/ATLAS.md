@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 18:32 ET (clock): A42 decompositions running (GPU, 6 runs, about 3 h); memorizer (A41 K1) at step 12,000; A38e planted runs (Colab CPU) at 5/5/5 so far; building the A38d modadd atlas locally (development: does the full certificate pass once Q/K are kept?).
 - Nov 19, 18:14 ET (clock): A40 FAIL (modmul 56% vs 80%; the basis is chosen right). Post hoc, rule-labelled (A41) triggers are 90–98% on key frequencies in every network; to be pre-registered as A42 on fresh networks (modmul seed 1 training now, adders s3/s4). Memorizer (A41 K1) decomposing. A38e (one matrix, on/off masks) known-answer runs on Colab CPU.
 - Nov 19, 17:48 ET (clock): A41 K2 PASS (fresh adders' MLP/unembedding mechanisms 82% / 88% rule; embeddings mostly lookup). K1 (memorizer) decomposing, about 19:20. A40 (modmul) atlases building.
 - Nov 19, 17:23 ET (clock): **A37 PASS (held out):** on two fresh 227k-parameter adders, 84% and 86% of trusted frequency triggers use the network's key frequencies (bar 80%, chance 9%). Their certificates fail only (i') (attention Q/K, the known open problem), plus s2's (ii) by 0.05 points.
