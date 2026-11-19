@@ -115,5 +115,6 @@ nets), where the existing reader and judge already work.
 - **Tests** (each fails before its change and passes after): `atlas_test.py` (A1, A2, A12), `atlas_role_test.py` (A7), `atlas_findings_test.py` (A8), `atlas_catalog_test.py` (A4), `atlas_play_test.py` (A10), `atlas_compare_test.py` (A11), `atlas_narrate_test.py` (A13), `atlas_tf_test.py PLANTED_TF.pt` (A5), `atlas_gate_test.py` (A15), `atlas_f3_test.py v3c` (A16), `atlas_resid_test.py` (A17), `atlas_clear_test.py` (A19), `atlas_gloss_test.py` (A20), `atlas_task_test.py` (A21), `atlas_v3_headline_test.py` (A22).
 - **Colab:** session `atlas` (`colab sessions`; set `OAUTHLIB_RELAX_TOKEN_SCOPE=1`).
   - Code: `/content/repo` (upload a tarball of `lab/atlas.py lab/spd.py scripts/glass/atlas_spd_job.py` and untar; models a target needs must be in `/content/repo/lab/models`, upload them as a tarball if missing).
+  - Local background jobs stop when the session pauses (the workspace stops leftover processes); Colab jobs keep running. Put anything longer than a few minutes on Colab.
   - Start jobs with a shell script launched through `setsid` (`subprocess.Popen(["setsid", "bash", script], start_new_session=True)`), so `colab exec` returns at once.
   - Outputs: `/content/spd_out2`; logs: `/content/atlas_logs2`.

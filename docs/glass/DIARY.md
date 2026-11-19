@@ -1611,3 +1611,6 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - M16,10's matched control (1e-3) is at 24k of 30k locally.
   - Transformer ladders (lc_3_4, lc_4_5, lc_6_5; 1e-3 / 3e-4 / 1e-4) are at 20k of 30k on the Colab GPU. lc_8_6 stays reserved as the held-out transformer.
   - **Next:** build the transformer atlases with the ladder; fix the transformer settings on those three; pre-register and run lc_8_6.
+- **09:57 Two notes.**
+  - **Unit maps for the six A28 networks** (`lab/unitmap.py`, about a minute in total), so their certificates now carry glosses (A20, A29). Read by hand on 32_10_s2: rank-1 directions are spread thin; a mechanism's largest read or write is 8–18% of its weight. "Reads neuron 8 [≈ relu(x_t − 2nd)]" is a hint, not a description. Many trusted rules are time gates. Deeper "what it computes" needs something else, e.g. fitting each mechanism's read V_c·a to task quantities, with a known-answer test first. Noted as A31, not started.
+  - **Local background jobs die when a session pauses.** M16,10's control run (local, 24k of 30k) was lost during the pause; restarted. Colab jobs survive. Long jobs belong on Colab.
