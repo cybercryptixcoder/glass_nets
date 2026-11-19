@@ -731,3 +731,37 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - no JavaScript errors.
   - Screenshots of argmedian 16_5 and M16,10 checked by eye.
   - **Noticed, not changed (T5 must not change verdicts):** the AlgZoo cards still carry round-1 "complete" badges from the old judge. Round 2 showed such constructions can be copies (J3, open). The Parts section now sits next to them and shows how little of each network is actually explained.
+- **21:14 U8 PRE-REGISTRATION: do the same units appear across independent training runs?** This is Shreyas's convergence question asked directly, and it also replicates F3 (ε95).
+  - **Networks:** ARC publishes all 5 training seeds per size (checked: HTTP 200 for seeds 0–4). Three sizes × 5 seeds = 15 networks, 13 of them new:
+    - 2nd argmax M8,5 (our existing one is seed 3);
+    - the zoo's 2nd argmax M16,10 (a different checkpoint from ARC's challenge model);
+    - argmedian 16,5 (ours is seed 0).
+  - **Measure:** unit map v3 (`lab/unitmap.py`, unchanged) per network, with its shuffled control. Each neuron's label class is one of: comparator relu(max − x_t), relu(x_t − 2nd), relu(2nd − x_t), relu(x_t − max), relu(x_t − min), other history unit, filter, raw input, or unexplained. Also history coverage and ε95.
+  - **Q1 (convergence).**
+    - A comparator subtype RECURS at a size if it labels at least one neuron in ≥ 4 of 5 seeds, and in ≤ 1 of the 5 shuffled controls.
+    - "Function-level units converge across training runs" if at least one subtype recurs at each of the three sizes.
+    - Otherwise the units are individual to the run.
+  - **Q2 (ε95 replication).** Hypersensitivity replicates if ε95 ≤ 0.05 in ≥ 13 of the 15 networks.
+  - **Descriptive:** how much the unit inventory (counts per class) varies across seeds.
+  - **Infrastructure, not a code change:** seed models are built by a new experiment script (`scripts/glass/units/u8_seeds.py`) under new ids (`..._s<seed>`) with the same conversion and torch check as `build_algzoo.py`. Their maps go to `results/glass/units/seeds/`, not the catalog.
+- **21:15 U8 RESULT** (`results/glass/units/seeds/*.json`, `/tmp/u8.log`, read by hand).
+  - **Known answers:** the existing networks reappear exactly (M8,5 seed 3: ε95 0.0126, history 0.23, control 0.08; argmedian 16,5 seed 0: ε95 0.0100, history 0.16).
+  - **Q1 (convergence): MIXED, so NOT supported as pre-registered** (a subtype must recur at each of the 3 sizes; it does at 1).
+
+    | network | relu(max − x_t), seeds / controls | relu(x_t − 2nd), seeds / controls | recurs? |
+    |---|---|---|---|
+    | M8,5 | 5/5 / 0/5 | 5/5 / 0/5 | both recur |
+    | zoo M16,10 | 3/5 / 1/5 | 4/5 / 2/5 | neither passes |
+    | argmedian 16,5 | – | 3/5 / 0/5 | does not pass |
+
+    - In the M16,10 seeds, 5–11 of 16 neurons are unexplained by the library, so "absent" may mean "not single-neuron" rather than "not there".
+    - ARC's challenge M16,10 (history coverage 0.37) is unusually comparator-rich next to its five zoo siblings (0.02–0.22).
+  - **Q2 (ε95): REPLICATES, 15 of 15 ≤ 0.05.**
+    - M8,5: 0.006–0.013.
+    - Zoo M16,10: 0.003–0.005.
+    - Argmedian 16,5: 0.008–0.010.
+    - ε95 is nearly constant within a size: a property of the task and size, not of the training run. Within 2nd argmax, bigger is more fragile.
+  - **Reading:**
+    - At a small size, training runs converge on the same function-level units (both comparators in all 5 seeds, none in the controls).
+    - At larger sizes the inventory becomes individual: the comparators appear in some runs and not others.
+    - The precision requirement replicates in every run. This updates F1 and F3 of UNITS_FINDINGS.

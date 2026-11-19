@@ -213,6 +213,12 @@ raw/filter units; shuffled control in brackets):
       - The four argmedian networks now have cards ("unit map only").
       - Every AlgZoo RNN card has a Parts section: coverage vs control, ε95, per-neuron labels, and per neuron-step fit, sufficiency, importance, relative error and substitution grade.
       - All maps regenerated with v3 first.
+    - (h) DONE (U8, seeds):
+      - Units converge across runs at M8,5 (5/5 seeds, 0/5 controls) but not at larger sizes (3–4 of 5).
+      - ε95 replicates in 15/15 seed networks.
+    - **NEXT:**
+      - (i) The unexplained argmedian neurons: a data-driven search with sparse pairwise comparisons relu(x_i − x_j), then sufficiency.
+      - (j) A pre-registered prediction test of ε95 on networks not yet measured.
   - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
     - **Residual units:** per position, the held-out R² of the decision-relevant residual (the top PCs that preserve decisions) regressed on token one-hots plus relational flags (fixed point, 2-cycle, preimage count).

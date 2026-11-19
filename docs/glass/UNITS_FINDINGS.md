@@ -54,6 +54,16 @@ This matches ARC/Chen's N7 and N8 and the LessWrong group {N1, N6, N7, N8}.
   "stoicheia" classifier does a similar labelling).
 - The **extension** is that the same unit appears in a different task (argmedian), which no prior work covers.
 
+**Across training runs (U8: ARC's 5 seeds per size, 15 networks):**
+- At M8,5, both comparators appear in all 5 seeds and in none of the shuffled controls. Independent training runs
+  converge on the same function-level units.
+- At larger sizes the inventory becomes individual. In the zoo M16,10 and argmedian 16,5 seeds, the comparators
+  appear in 3–4 of 5 runs, and partly in the controls too.
+- So convergence holds at small size and weakens with size. This did not meet the pre-registered bar of recurring
+  at all three sizes.
+- ARC's challenge M16,10 is unusually comparator-rich next to its five zoo siblings (history coverage 0.37 vs
+  0.02–0.22).
+
 ### F2. Approximate units can't stand in for the network (new as a measured result)
 
 **What:** replace every explained neuron-step by its fitted unit inside the running network, then count how many
@@ -89,6 +99,10 @@ noise level at which 5% of decisions flip. A small ε95 means any account of tha
 | modadd_p113, modmul_p113 | 0.79 |
 | Tracr compiled networks | 0.05–0.32 |
 | Breakout policy MLP (trained, never explained) | 0.02 |
+
+**Replication across training runs (U8):** ε95 ≤ 0.05 in 15 of 15 seed networks, and nearly constant within a
+size: M8,5 0.006–0.013, zoo M16,10 0.003–0.005, argmedian 16,5 0.008–0.010. So it is a property of the task and size,
+not of one training run.
 
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained
@@ -183,7 +197,7 @@ error is what led to the two-routes reading.
 
 - Put the unit maps in the catalog as per-part-confidence entries (next build step).
 - A data-driven or SPD-style decomposition of the unexplained argmedian neurons.
-- Replicate F3 on more networks (more seeds, more tasks) before any public claim.
+- Replicate F3 on more tasks and on more networks that are explained approximately (seeds: done in U8).
 
 ## Sources
 
