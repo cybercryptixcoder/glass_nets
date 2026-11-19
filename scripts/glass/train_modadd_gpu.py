@@ -38,12 +38,15 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--labels", default="task", choices=["task", "random"], help="A41: 'random' = a fixed random label per pair (memorization known answer)")
     a = ap.parse_args()
     torch.manual_seed(a.seed); np.random.seed(a.seed)
     p, dev = a.p, a.device
     A, B = np.meshgrid(np.arange(p), np.arange(p), indexing="ij")
     A, B = A.ravel(), B.ravel()
     y = {"add": (A + B) % p, "sub": (A - B) % p, "mul": (A * B) % p}[a.op]
+    if a.labels == "random":
+        y = np.random.default_rng(1000 + a.seed).integers(0, p, len(A))
     tok = np.stack([A, B, np.full_like(A, p)], 1)
     idx = np.random.permutation(len(A)); n_tr = int(a.frac * len(A))
     tr, te = idx[:n_tr], idx[n_tr:]
@@ -64,7 +67,10 @@ def main():
             print(json.dumps(log[-1]), f"{time.time()-t0:.0f}s", flush=True)
     os.makedirs(a.out, exist_ok=True)
     save_file({k: v.detach().cpu().contiguous() for k, v in m.state_dict().items()}, f"{a.out}/weights.safetensors")
-    json.dump({"op": a.op, "p": p, "frac": a.frac, "seed": a.seed, "epochs": a.epochs,
+    with torch.no_grad():
+        tr_acc = (m(X[trt]).argmax(-1) == Y[trt]).float().mean().item()
+    json.dump({"op": a.op, "p": p, "frac": a.frac, "seed": a.seed, "epochs": a.epochs, "labels": a.labels, "train_acc": tr_acc,
+               "random_labels": y.tolist() if a.labels == "random" else None,
                "train_idx": tr.tolist(), "final": log[-1], "log": log}, open(f"{a.out}/train.json", "w"))
 
 
