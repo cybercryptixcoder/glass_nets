@@ -230,9 +230,8 @@ raw/filter units; shuffled control in brackets):
       - (k3) DONE (U13): joint-substitution rule not met (+15 against +20).
         - At n = 10, h = 32 networks are about half single-neuron units vs 0.06 at h = 16 (superposition-consistent).
       - (k4) DONE (U14): not replicated on argmedian with this library.
-      - (m) NEXT: run U9's data-driven search on argmedian h = 32 vs h = 16. Is the library the reason?
-        - Pre-register: the wider networks' explained share of the unexplained variance ≥ 2× the narrower at both n = 5 and n = 7 → "wider → more unit-like" holds on argmedian once the units are found from data.
-      - (l) NEXT after (m): a one-page summary at the top of UNITS_FINDINGS.
+      - (m) DONE (U15): negative. Wider argmedian networks are not more unit-like even with data-found units, so the width effect is task-specific so far.
+      - (l) NEXT: a one-page summary at the top of UNITS_FINDINGS.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)

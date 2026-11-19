@@ -143,8 +143,10 @@ accuracy for the standard ones):
 - The pre-registered joint-substitution bar was not met (+15 points against +20), partly because the narrow networks
   substitute almost nothing.
 - **Not replicated on argmedian:** wider argmedian networks are far more accurate but no more library-like (coverage
-  ratio 1.6 and 0.8, against a bar of 2). That may be because the library is built from 2nd-argmax quantities; it is
-  open.
+  ratio 1.6 and 0.8, against a bar of 2).
+- The same holds with units found from data rather than from the library (U15: total explained 0.63 vs 0.64 at
+  n = 5, 0.34 vs 0.32 at n = 7).
+- So the width effect is task-specific so far.
 
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained

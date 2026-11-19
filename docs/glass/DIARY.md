@@ -935,3 +935,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Coverage ratio 1.6 (n = 5) and 0.8 (n = 7), against a bar of ≥ 2 at both → not replicated.
   - Accuracy rises a lot with width (n = 7: 0.70 → 0.97), but the library does not describe the wider argmedian networks any better.
   - **Possible reason, not tested:** the library is built from 2nd-argmax quantities (max, 2nd, min). Argmedian needs rank and median quantities; U9 found one soft-rank neuron. So "wider → more unit-like" is shown for 2nd argmax with this library, and is open for argmedian.
+- **22:55 Check-in (trig_01WDV…).** First open NEXT item: (m).
+- **22:55 U15 PRE-REGISTRATION ((m): with units found from data, are wider argmedian networks more unit-like?).**
+  - **Networks:** argmedian n = 5 and n = 7, h = 16 vs h = 32, seeds 0–2 (12 networks). Three seeds rather than five, to keep this to minutes.
+  - **Method:** U9's search, unchanged (`scripts/glass/units/u9_search.py`), on every neuron-step (step ≥ 2) that the v3 library leaves below R² 0.9. Library fits are recomputed with `unit_map(confidence=False)`.
+  - **Known answer:** argmedian 16_5 seed 0 must reproduce U9's explained share for zoo_argmedian_16_5 (0.33).
+  - **Measure:** explained share = the variance-weighted share of the library-unexplained neuron-steps that reach held-out R² ≥ 0.9.
+  - **Decision.**
+    - "Wider → more unit-like" holds on argmedian with data-found units if the h = 32 median explained share ≥ 2× the h = 16 median at BOTH n = 5 and n = 7.
+    - Otherwise it does not, and U14's negative is not just about the library.
+  - **Descriptive:** total explained variance (library units plus searched units) per network.
+- **22:57 U15 RESULT: NEGATIVE** (`results/glass/units/u15_{5,7}.json`, read by hand).
+  - **Known answer:** argmedian 16_5 seed 0 reproduces U9 exactly (search explains 0.33 of the rest).
+  - **Search's explained share of the library-unexplained variance** (median of 3 seeds):
+    - n = 5: h = 16 0.33, h = 32 0.41 (ratio 1.2);
+    - n = 7: h = 16 0.02, h = 32 0.06 (ratio 3.0).
+  - The bar (≥ 2× at both n) is not met.
+  - **Total explained (library plus search), medians:** n = 5 0.63 vs 0.64; n = 7 0.34 vs 0.32. No change with width.
+  - **Decision:** "wider → more unit-like" does not hold on argmedian, even with units found from data (sparse, ≤ 3 terms). U14's negative is not just the library. So the U13 effect is task-specific so far (2nd argmax at n = 10).
+  - **Descriptive:** argmedian at n = 5 is about two-thirds sparse units at both widths; at n = 7, about a third.
