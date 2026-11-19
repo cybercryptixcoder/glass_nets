@@ -1812,3 +1812,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - s2 misses (ii) by 0.05 points (99.95% vs a perfect network) and passes the rest.
 - Remaining non-key triggers again sit mostly in the attention value matrices and include second harmonics (s2: 8 = 2·4, 56 = 2·28).
 - The A35-vocabulary comparison builds are running; reported when done.
+
+## Nov 19, 17:39 ET (clock): A37 comparison; A41's structured known answer being rebuilt
+
+- Same decompositions with the old A35 vocabulary: s1 72% (would fail the 80% bar), s2 84% (would pass). With A37: 84% and 86%. The angle vocabulary is what carries s1 over the bar; on s2 it helps a little.
+- The s1/s2 atlases are being rebuilt with the A41 labels (the chosen rung, absorbed; numbers must match the main files) for A41's structured known answer K2. The memorizing network (K1) is decomposing on the GPU.
