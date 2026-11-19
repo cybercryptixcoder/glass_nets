@@ -69,7 +69,9 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
     """forward(x, mm) -> output, where mm(name, a) applies matrix `name` to a; weights: {name: tensor [d_out, d_in]};
     sample(n) -> a batch of inputs. Returns the trained {name: Decomposed}."""
     torch.manual_seed(seed)
-    mods = nn.ModuleDict({k: Decomposed(v.double(), C).double() for k, v in weights.items()})
+    mods = nn.ModuleDict({k: Decomposed(v.double(), C).double() for k, v in weights.items()}).to(device)
+    _sample = sample
+    sample = lambda n: _sample(n).to(device)        # noqa: E731  (CHANGES A6)
     opt = torch.optim.Adam(mods.parameters(), lr=lr)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / 500) * 0.5 * (1 + math.cos(math.pi * s / steps)))
     for step in range(steps):

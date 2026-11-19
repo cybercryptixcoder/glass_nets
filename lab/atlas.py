@@ -44,7 +44,7 @@ class RNNTarget:
     meta: dict = field(default_factory=dict)
 
     def forward(self, x, mm):
-        h = torch.zeros(x.shape[0], self.H, dtype=x.dtype)
+        h = torch.zeros(x.shape[0], self.H, dtype=x.dtype, device=x.device)
         for t in range(self.N):
             h = torch.relu(mm("W_x", x[:, t]) + mm("W_h", h))
         return mm("W_o", h) / self.out_scale
@@ -103,9 +103,10 @@ def planted_rnn(K=5, N=6, p_on=0.03, n=16000):
 
 # ------------------------------------------------------------------ decomposition
 
-def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000):
-    return spd.decompose(tgt.forward, tgt.weights, tgt.sample, C=C, steps=steps, coef_min=3e-3, p=1.0,
-                         coef_faith=1.0, lr=1e-3, batch=batch, seed=seed, log=log)
+def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu"):
+    mods = spd.decompose(tgt.forward, tgt.weights, tgt.sample, C=C, steps=steps, coef_min=3e-3, p=1.0,
+                         coef_faith=1.0, lr=1e-3, batch=batch, seed=seed, log=log, device=device)
+    return mods.cpu()
 
 
 def load_decomposition(tgt, path, C=20):
