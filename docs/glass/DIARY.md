@@ -1855,3 +1855,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - ATLAS_RESULTS now has the 227k-parameter section.
 
 ## Nov 19, 18:32 ET (clock): development build of the A38d modadd atlas running locally (if Q/K are kept, does the full certificate pass?)
+
+## Nov 19, 18:39 ET (clock): with query/key kept (A38d decomposition, development), the adder's certificate passes 4 of 5; the last miss is the strictest check
+
+- modadd_p113 atlas from the A38d decomposition (development only; A38d is not adopted because it splits a planted RNN mechanism):
+  - (i') mechanisms alone 1.000 ✓ (was 0.597);
+  - (ii) rules rebuild 99.92% of decisions vs a task rule of 100% ✗;
+  - (iii) 77% trusted ✓; (iv) specificity 30× ✓; (vi) rules switch off 83% of not-needed activity ✓.
+  - Query/key keep 2–4 mechanisms per matrix; 299 mechanisms in all.
+- (ii) is "at least as accurate as the network". For a network that is perfect on all 12,769 inputs, that means not one wrong decision. With 99.92% (about 5 of 6,384 held-out inputs), that is the only miss. A bar that allows sampling error (task rule minus 2 standard errors, as the training-half bar already uses plus 2 SE) would be a new version and would have to be justified and judged on fresh networks. Noted, not changed.
+- A38e (on/off masks, one matrix at a time) planted runs: RNN 5/5/5 at both seeds at step 32,000; transformer Q alive at step 28,000. Final atlas checks shortly.
