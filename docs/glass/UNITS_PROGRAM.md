@@ -219,6 +219,7 @@ raw/filter units; shuffled control in brackets):
     - **NEXT:**
       - (i) The unexplained argmedian neurons: a data-driven search with sparse pairwise comparisons relu(x_i − x_j), then sufficiency.
       - (j) A pre-registered prediction test of ε95 on networks not yet measured.
+      - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
     - **Residual units:** per position, the held-out R² of the decision-relevant residual (the top PCs that preserve decisions) regressed on token one-hots plus relational flags (fixed point, 2-cycle, preimage count).

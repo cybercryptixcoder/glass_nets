@@ -765,3 +765,6 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - At a small size, training runs converge on the same function-level units (both comparators in all 5 seeds, none in the controls).
     - At larger sizes the inventory becomes individual: the comparators appear in some runs and not others.
     - The precision requirement replicates in every run. This updates F1 and F3 of UNITS_FINDINGS.
+- **21:16 Check-in bookkeeping.** I tried to replace the pending 21:25 check-in (old text, which lists the finished items e–g) with one carrying the new NEXT items. Deleting it was denied by the permission system, and I did not work around that.
+  - Two check-ins are now pending: trig_011J9d1s1fmaeghJeosZAqbk (old text, ~21:25) and trig_01CBLY4uSWbktvN1g1F6tXJs (new text, ~21:42).
+  - **Rule:** when the OLD one fires, do the work in §8 NEXT but do NOT schedule a successor, so there is only one chain.
