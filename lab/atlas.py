@@ -529,6 +529,18 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                 trig = {"rule": rule_text(tree, names), "confidence": float(conf), "tree": export_text(tree, feature_names=names, decimals=2),
                         "confidence_clear": float(_bal(p[clear], yte[clear]))}
                 trig["features_used"] = tree._features_used; trig["rule_full"] = getattr(tree, "_rule_full", trig["rule"])
+                task_cols = [i for i, nm in enumerate(names) if not nm.startswith("neuron ")]          # A21
+                if not any(f_.startswith("neuron ") for f_ in tree._features_used):
+                    trig["task_level"] = {"rule": trig["rule"], "confidence": trig["confidence"], "confidence_clear": trig["confidence_clear"],
+                                          "features_used": trig["features_used"]}
+                elif task_cols:
+                    tn = [names[i] for i in task_cols]
+                    t2 = DecisionTreeClassifier(max_depth=depth, class_weight="balanced", min_samples_leaf=20, random_state=0).fit(Ftr[:, task_cols], ytr)
+                    t2._fit_values = Ftr[:, task_cols]
+                    p2 = t2.predict(Fte[:, task_cols])
+                    c2 = 0.5 * (p2[yte].mean() + (~p2[~yte]).mean()) if yte.any() and (~yte).any() else float((p2 == yte).mean())
+                    trig["task_level"] = {"rule": rule_text(t2, tn), "confidence": float(c2), "confidence_clear": float(_bal(p2[clear], yte[clear])),
+                                          "features_used": t2._features_used}
             trig["graded_share"] = float(1 - clear.mean())
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
@@ -635,11 +647,22 @@ def summary(a):
     return "\n".join(lines)
 
 
+def _conf(x):
+    """A22: the confidence the certificate trusts: clear-cut (A19), or the all-calls one for atlases built before A19."""
+    return x["trigger"].get("confidence_clear", x["trigger"]["confidence"])
+
+
+def _fid(a):
+    """A22: the certificate's rebuilt-network fidelity: v3 (A15 gate, A19 trust), or older versions if absent."""
+    f = a["fidelity"]
+    return f.get("rule_gated_trusted_v3", f.get("rule_gated_trusted_v2", f["rule_gated_trusted"]))
+
+
 def findings(a, control=None):
     """What the atlas says, as numbered statements (CHANGES A8). A trusted trigger has confidence >= TRUSTED."""
     def stats(at):
         mech = [x for m in at["matrices"].values() for x in m["mechanisms"]]
-        trusted = [x for x in mech if x["trigger"]["confidence"] >= TRUSTED and x["trigger"]["rule"] not in ("always", "never")]
+        trusted = [x for x in mech if _conf(x) >= TRUSTED and x["trigger"]["rule"] not in ("always", "never")]
         task_vars = {}
         for x in trusted:
             for f in x["trigger"].get("features_used", []):
@@ -651,11 +674,17 @@ def findings(a, control=None):
             rc = x.get("effect", {}).get("role_changes") or []
             if rc and rc[0]["share_of_flips"] >= 0.4 and x["effect"]["decision_flip_rate_when_needed"] >= 0.05:
                 groups.setdefault((rc[0]["from"], rc[0]["to"]), []).append(x["id"])
+        na = [x for x in mech if x["trigger"]["rule"] not in ("always", "never")]
+        n_task = sum(1 for x in na if x["trigger"].get("task_level", {}).get("confidence_clear", 0) >= TRUSTED)     # A21
         return {"n": len(mech), "n_trusted": len(trusted), "uses_task": uses_task, "task_vars": task_vars, "groups": groups,
-                "always": sum(1 for x in mech if x["trigger"]["rule"] == "always"), "fid": at["fidelity"]["rule_gated_trusted"], "task_rule": at.get("task_rule")}
+                "n_switched": len(na), "n_task_expl": n_task,
+                "always": sum(1 for x in mech if x["trigger"]["rule"] == "always"), "fid": _fid(at), "task_rule": at.get("task_rule")}
     S = stats(a); out = []
-    out.append(f"1. The weights split exactly into {S['n']} mechanisms; {S['n_trusted']} have a trusted trigger (held-out confidence >= {TRUSTED}), "
+    out.append(f"1. The weights split exactly into {S['n']} mechanisms; {S['n_trusted']} have a trusted trigger (held-out confidence >= {TRUSTED} on clear-cut cases), "
                f"{S['always']} are always needed.")
+    if S["n_switched"]:
+        out.append(f"1b. {S['n_task_expl']} of the {S['n_switched']} mechanisms that are not always on have a task-level explanation "
+                   f"(a trigger in task variables only, confidence >= {TRUSTED} on clear-cut cases).")
     if S["n_trusted"]:
         top = ", ".join(f"{k} ({v})" for k, v in sorted(S["task_vars"].items(), key=lambda kv: -kv[1])[:5]) or "none"
         out.append(f"2. {S['uses_task']} of the {S['n_trusted']} trusted triggers use a task variable (not only neuron states). Most used: {top}.")
@@ -678,7 +707,7 @@ def _signature(x):
     e = x.get("effect") or {}; rc = e.get("role_changes") or []
     role = (rc[0]["from"], rc[0]["to"]) if rc and rc[0]["share_of_flips"] >= 0.4 and e.get("decision_flip_rate_when_needed", 0) >= 0.05 else None
     vars_ = frozenset(f for f in x["trigger"].get("features_used", []) if not f.startswith("neuron ")) \
-        if x["trigger"]["confidence"] >= TRUSTED else frozenset()
+        if _conf(x) >= TRUSTED else frozenset()
     return x["id"].rsplit(".", 1)[0], role, vars_
 
 
@@ -717,13 +746,13 @@ def fact_sheet(a):
     L += (a.get("findings") or findings(a))["statements"]
     for k, mm in a["matrices"].items():
         for x in sorted(mm["mechanisms"], key=lambda x: -x["in_use"]):
-            if x["trigger"]["confidence"] < TRUSTED:
+            if _conf(x) < TRUSTED:
                 continue
             main = x["trigger"]["rule"].split("\n")[0]
             e = x.get("effect") or {}; rc = e.get("role_changes") or []
             eff = (f"; removing it where needed flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions"
                    + (f", mostly from rank {rc[0]['from']} to rank {rc[0]['to']}" if rc else "")) if e else ""
-            L.append(f"Mechanism {x['id']} (in use {100 * x['in_use']:.0f}% of the time, trigger confidence {x['trigger']['confidence']:.2f}): {main}{eff}.")
+            L.append(f"Mechanism {x['id']} (in use {100 * x['in_use']:.0f}% of the time, trigger confidence {_conf(x):.2f}): {main}{eff}.")
     return "\n".join(L)
 
 
@@ -779,6 +808,14 @@ def gloss(a):
     return a
 
 
+def _expl(x):
+    """A21: the explanation shown for a mechanism: its task-level trigger when trusted, else its (glossed) trigger."""
+    tl = x["trigger"].get("task_level")
+    if tl and tl.get("confidence_clear", 0) >= TRUSTED and x["trigger"]["rule"] not in ("always", "never"):
+        return "task-level: " + tl["rule"] + (f" (clear-cut confidence {tl['confidence_clear']:.2f})" if tl["rule"] != x["trigger"]["rule"] else "")
+    return x["trigger"].get("rule_glossed", x["trigger"]["rule"])
+
+
 def render(a, control=None):
     """The atlas certificate in markdown (CHANGES A4)."""
     f = a["fidelity"]; tr = a["task_rule"]
@@ -786,19 +823,23 @@ def render(a, control=None):
          "The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mechanism has a readable trigger "
          "(when it is needed), scored on held-out inputs (its confidence), and an effect (what removing it changes).", "",
          "## Whole-network certificate", "",
-         f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= {TRUSTED} "
-         f"(otherwise always on): keeps **{100 * f['rule_gated_trusted']:.1f}%** of the network's decisions"
+         f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= {TRUSTED} on clear-cut cases; "
+         f"otherwise always on), and switched off only where the trigger gives it under a {100 * GATE_TAU:.0f}% chance of being needed: "
+         f"keeps **{100 * _fid(a):.1f}%** of the network's decisions"
          + (f"; the task rule alone keeps {100 * tr:.1f}%." if tr is not None else "."),
-         f"- Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. All alive mechanisms on: {100 * f['all_alive']:.1f}%.", "",
+         (f"- The mechanisms alone (all on, the small leftover residual removed): {100 * f['mechanisms_alone']:.1f}%. " if "mechanisms_alone" in f else "- ")
+         + f"Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. "
+         f"Earlier gates, for the record: v1 {100 * f['rule_gated_trusted']:.1f}%"
+         + (f", v2 {100 * f['rule_gated_trusted_v2']:.1f}%." if "rule_gated_trusted_v2" in f else "."), "",
          "## Findings", ""] + findings(a, control)["statements"] + [""] + (
          ["## In plain English", "", a["narrative"]["text"], "", f"*({a['narrative']['note']}"
           + (f"; unresolved: {'; '.join(a['narrative']['violations'])}" if a["narrative"]["violations"] else "") + ")*", ""]
          if a.get("narrative") else [])
     for k, m in a["matrices"].items():
-        mech = m["mechanisms"]; confs = [x["trigger"]["confidence"] for x in mech]
+        mech = m["mechanisms"]; confs = [_conf(x) for x in mech]
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
               f"Alive mechanisms reproduce {k} to a relative error of {m['alive_only_rel_error']:.3f}.", "",
-              "| mechanism | in use | trigger (when it is needed) | confidence | removing it where needed | specificity |", "|---|---|---|---|---|---|"]
+              "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity |", "|---|---|---|---|---|---|"]
         for x in sorted(mech, key=lambda x: -x["in_use"]):
             e = x.get("effect", {})
             eff = (f"changes the output by {e['effect_when_needed']:.2f} and flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions; "
@@ -806,7 +847,7 @@ def render(a, control=None):
             if e and e.get("role_changes"):
                 eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
-            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {x['trigger'].get('rule_glossed', x['trigger']['rule']).replace(chr(10), '<br>')} | {x['trigger']['confidence']:.2f} | {eff} | {spec} |")
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} |")
         L.append("")
     return "\n".join(L)
 
@@ -821,14 +862,14 @@ def judge_decide(out):
     return judge.decide(out)[:, 0]
 
 
-def trusted_gate(trees, alive, conf, C):
+def trusted_gate(trees, alive, conf, C, tau=None):
+    """The certificate's gate (A22: pass conf = clear-cut confidences and tau = GATE_TAU for v3)."""
     am = {k: np.isin(np.arange(C), v).astype(float) for k, v in alive.items()}
 
     def gate(k, names, F, a):
         m = np.zeros((len(F), C))
         for c in alive[k]:
-            t = trees[(k, c)]
-            m[:, c] = 1.0 if conf[(k, c)] < TRUSTED else (float(t) if isinstance(t, bool) else t.predict(F))
+            m[:, c] = 1.0 if conf[(k, c)] < TRUSTED else _trigger_on(trees[(k, c)], F, tau)
         return m * am[k]
     return gate
 
@@ -839,7 +880,7 @@ def _load_play(tid):
         P = pickle.loads((LAB.parent / "results" / "glass" / "atlas" / f"{tid}_d4_model.pkl").read_bytes())
         tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"]); set_residuals(mods, P["alive"])
         C = mods[next(iter(mods))].U.shape[0]
-        _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P["conf"], C), **P}
+        _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), C, tau=GATE_TAU if "conf_clear" in P else None), **P}
     return _PLAY[tid]
 
 

@@ -1391,3 +1391,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
     Triggers stated purely in task variables are often almost as good. Planned (A21): each mechanism also gets a task-only trigger, shown as its explanation whenever it is trusted. The gate is unchanged, so no fidelity changes. The certificate then reports how many mechanisms have a task-level explanation.
 - **05:16 Started:** M16,10 at minimality 1e-3 and lc_4_5 at 1e-3 (local CPU); argmedian 16_5 at 3e-4, 1e-4, and 1e-3 for 60k steps (Colab CPU).
+- **05:23 A21 and A22 DONE (presentation; no number changes).**
+  - **A21:** each mechanism also gets a trigger in task variables only, shown as its explanation when trusted on clear-cut cases. Known answer: planted W_x get exactly their planted rule; planted W_h and W_o do not get one, because their truth ("feature j arrived earlier") is not in the task vocabulary. That is the must-fail case.
+  - **A22:** the certificate, findings, comparison, narrative facts, catalog and playground now all use one definition: trusted = clear-cut confidence ≥ 0.9, gate v2 τ = 0.05 (fidelity v3). The certificate lists v1 and v2 for the record and adds "mechanisms alone".
+  - Saved atlases were re-rendered from their JSON (`scripts/glass/atlas_rerender.py`). The catalog, playground, findings, comparison and gloss tests pass.
+  - **Read by hand (argmedian 8_7):** 10 of its 18 switched mechanisms now have a task-level explanation. Most W_h mechanisms switch on by time step ("ON when step t > 3.5"): this 49.5%-accurate network stages its recurrent computation over time rather than by data content. Its W_o mechanisms have no trusted trigger (graded importances).
