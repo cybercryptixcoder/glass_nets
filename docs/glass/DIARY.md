@@ -768,3 +768,30 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **21:16 Check-in bookkeeping.** I tried to replace the pending 21:25 check-in (old text, which lists the finished items e–g) with one carrying the new NEXT items. Deleting it was denied by the permission system, and I did not work around that.
   - Two check-ins are now pending: trig_011J9d1s1fmaeghJeosZAqbk (old text, ~21:25) and trig_01CBLY4uSWbktvN1g1F6tXJs (new text, ~21:42).
   - **Rule:** when the OLD one fires, do the work in §8 NEXT but do NOT schedule a successor, so there is only one chain.
+- **21:17 U9 PRE-REGISTRATION ((i): what do the unexplained argmedian neurons compute?).** A data-driven search, not a guessed library.
+  - **Targets:** every argmedian neuron-step (step ≥ 2) whose best library unit in the v3 map has held-out R² < 0.9. Networks 8_5, 8_7, 16_5 and 16_7.
+  - **Search:** h ≈ relu(Σ c_f f) with at most 3 features, chosen greedily (forward selection) on the first half of the inputs and scored by held-out R² on the second half. The fit is the unit map's own active-set least squares, with no bias.
+  - **Feature pool at step t:**
+    - the inputs x_1..x_t (position-specific);
+    - the order statistics of x_1..x_t (k-th largest);
+    - every pairwise comparison relu(x_i − x_j), i ≠ j ≤ t.
+  - **Known answer (must pass before the argmedian run counts):** on M16,10's library-explained neuron-steps of units 1, 6, 7 and 8 (the comparators), the search must reach R² ≥ 0.9 in ≥ 90% of them.
+  - **Control:** the same search on the same networks with shuffled weights (all neuron-steps of step ≥ 2 that their library leaves unexplained).
+  - **Decision.**
+    - "Sparse comparison units explain the rest" if, in ≥ 3 of 4 argmedian networks, ≥ 50% of the variance of the previously unexplained neuron-steps reaches held-out R² ≥ 0.9, AND the control's explained share is at most half of the original's.
+    - Yes → a unit-map v4 with this class (CHANGES entry first), then joint substitution.
+    - No → record that the argmedian remainder is not sparse in comparisons.
+- **21:17 U9 known answer: PASSES, at the bar.** On M16,10's 21 library-explained comparator neuron-steps (units 1, 6, 7, 8), the search reaches R² ≥ 0.9 in 90% (bar 90%). The greedy search sometimes picks a pairwise comparison first instead of the clean "max − x_t" form, but still fits. This is a marginal pass, noted as such.
+- **21:17 U9 RESULT: NEGATIVE** (`results/glass/units/u9.json`, read by hand).
+  - **Share of the previously unexplained variance now at R² ≥ 0.9** (bar 0.5 in ≥ 3 of 4):
+
+    | network | original | shuffled control |
+    |---|---|---|
+    | argmedian 8_5 | 0.02 | 0.00 |
+    | argmedian 8_7 | 0.03 | 0.00 |
+    | argmedian 16_5 | 0.33 | 0.02 |
+    | argmedian 16_7 | 0.02 | 0.00 |
+
+  - Median held-out R² of the best 3-feature unit: 0.66, 0.52, 0.85, 0.69.
+  - **Observed in 16_5 (descriptive, not a claim):** neuron 10 at step 5 is exactly relu(17.3·relu(x3−x4) + 10.2·relu(x1−x4) + 7.1·relu(x2−x4)) (R² 1.00): a weighted count of how far the earlier inputs exceed x4, i.e. a soft RANK of x4. That is the quantity argmedian needs. Several other 16_5 neurons use pairs like relu(x1−x2) and relu(x2−x1) together, i.e. distance-like terms.
+  - **Decision:** no unit-map v4. The argmedian remainder is not sparse in pairwise comparisons, except a partial soft-rank structure in 16_5.

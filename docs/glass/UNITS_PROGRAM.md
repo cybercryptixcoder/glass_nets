@@ -217,7 +217,9 @@ raw/filter units; shuffled control in brackets):
       - Units converge across runs at M8,5 (5/5 seeds, 0/5 controls) but not at larger sizes (3–4 of 5).
       - ε95 replicates in 15/15 seed networks.
     - **NEXT:**
-      - (i) The unexplained argmedian neurons: a data-driven search with sparse pairwise comparisons relu(x_i − x_j), then sufficiency.
+      - (i) DONE, NEGATIVE (U9).
+        - A sparse search over pairwise comparisons explains only 2–3% of the unexplained argmedian variance (33% in 16_5), against a bar of 50%.
+        - One clean soft-rank unit was found in 16_5.
       - (j) A pre-registered prediction test of ε95 on networks not yet measured.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)

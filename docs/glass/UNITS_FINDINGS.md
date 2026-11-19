@@ -145,6 +145,13 @@ error is what led to the two-routes reading.
 - History-unit coverage is 0.01–0.16 and raw/filter coverage 0.11–0.28.
 - So most of each network is NOT explained by the library.
 
+**The unexplained part (U9):**
+- A data-driven search was run on the remainder. Each neuron got up to 3 terms from the inputs, their order
+  statistics and every pairwise comparison relu(x_i − x_j).
+- It explains only 2–3% of the remaining variance in three networks and 33% in 16_5 (shuffled controls 0–2%).
+- One clean find, in 16_5: a neuron that is exactly a weighted count of how far earlier inputs exceed x4, a soft rank
+  of x4. That is the quantity a median finder needs.
+
 **Status:**
 - This is a partial decomposition, honestly reported per unit. It is not a certified construction.
 - As of Nov 18 I found no public explanation of these networks; xabier.me explains argmedian M4,3 only.
