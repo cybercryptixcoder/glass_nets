@@ -200,7 +200,12 @@ raw/filter units; shuffled control in brackets):
     - U7b content lookup: determinism 0.29–0.54 vs controls 0.28–0.57.
     - Hard attention is equally common in shuffled networks.
   - **NEXT (check-in plan, after U7):**
-    - (e) U7's residual-unit part, as specified below.
+    - (e) DONE, NEGATIVE (U7c).
+      - Known answers pass.
+      - Layer-0 decision-relevant residual full R² 0.71–0.88 (bar 0.9).
+      - Relational share beats shuffled by ≥ 0.2 in only 2 of 4 networks.
+      - Residual ε95 0.8–5% (Tracr 6–10%).
+      - The U7 line is closed.
     - (f) Write `docs/glass/UNITS_FINDINGS.md`: the consolidated findings with numbers, prior-work context and limits, for Shreyas.
     - (g) Put the RNN unit maps in the catalog as per-part-confidence entries (a CHANGES entry first, then an end-to-end test in headless Chrome as with the round-1 catalog).
   - (Original U7 spec:)

@@ -651,3 +651,39 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Lookup determinism (the attended token fixed by (i, x_i)) is 0.29–0.54 in the trained lc networks vs 0.28–0.57 in shuffled controls.
   - Hard attention is just as common in shuffled networks (hard share 0.61–0.96), so it is an architectural property, not a learned unit.
   - **Transformers:** neither the textbook attention units nor content lookup describe the trained longest-cycle networks.
+- **21:03 U7c PRE-REGISTRATION (residual units; the second part of the U7 spec).**
+  - **Question:** after layer-0 attention, does the trained longest-cycle network's residual carry recognisable relational features ("residual units"), even though its attention patterns are not textbook?
+  - **Site:** the write of each attention layer, `attn{l}.out`, at each position i. Layer 0 is the only intermediate site in these 2-layer networks.
+  - **Decision-relevant part:** the smallest number k of top principal components of `attn{l}.out` at position i that keeps ≥ 95% of decisions when the other components are set to their mean. Positions with k = 0 do not matter and are skipped.
+  - **Features** (categorical, one-hot, per position i):
+    - **Baseline (first order):** the token at every position.
+    - **Relational:** fixed point (x_i = i); pointer read x_{x_i}; 2-cycle (x_{x_i} = i); preimage count #{j: x_j = i}; same-token count #{j: x_j = x_i}.
+  - **Score:** variance-weighted held-out R² of the k PC scores (2-fold, least squares). Base R², full R², and relational share = (full − base)/(1 − base).
+  - **Known answers first** (the measure must pass these before the lc runs count):
+    - tracr_hist: full R² ≥ 0.95 at its attention write (same-token count).
+    - tracr_reverse: base R² ≥ 0.95 at the attention layer that moves the tokens (token at a fixed position).
+  - **Decision.** "Relational residual units are real" if, in ≥ 3 of 4 lc networks, the layer-0 decision-relevant residual has full R² ≥ 0.9 (the unit map's labelling bar), AND the relational share beats the shuffled control by ≥ 0.2. Otherwise record the negative.
+  - **ε95 on the residual stream** (descriptive): noise on `resid0.mid` (as a share of each coordinate's spread) at which decision agreement falls to 95%. Expectation stated now: compiled Tracr networks tolerate far more noise than trained lc networks.
+- **21:05 U7c known answers PASS.** tracr_hist: attention write explained at full R² 0.99 (base −0.16, so the same-token count does the work). tracr_reverse: the token-moving layer (attn3) at base R² 1.00.
+  - Reporting fix in the experiment script, before the lc runs: the relational share is undefined when the base R² is about 1 (tracr_reverse gave a division by about 0). It is now reported as None when 1 − base < 0.01. This does not affect any lc number.
+- **21:05 U7c RESULT: NEGATIVE by the pre-registered rule** (`results/glass/units/u7c.json`, read by hand).
+  - **Layer-0 full R²** (bar 0.9): lc_3_4 0.88, lc_4_5 0.71, lc_6_5 0.87, lc_8_6 0.73. Below the bar in all four.
+  - **Relational share, original vs shuffled:**
+
+    | network | original | shuffled | gap |
+    |---|---|---|---|
+    | lc_3_4 | 0.05 | 0.01 | +0.04 |
+    | lc_4_5 | 0.29 | 0.03 | +0.26 |
+    | lc_6_5 | 0.41 | 0.11 | +0.30 |
+    | lc_8_6 | 0.18 | 0.01 | +0.17 |
+
+    Only 2 of 4 clear the +0.2 gap.
+  - **Layer 1 at the output position** (descriptive; the last site before the readout): full R² 0.40–0.52, relational share 0.14–0.41 vs controls 0.03–0.17.
+  - **What layer 0 writes:**
+    - Mostly a first-order mix of "token at position j" (base R² 0.60–0.87).
+    - Plus a partial relational component that training put there (well above shuffled in three networks).
+    - No feature in the library captures it cleanly.
+  - **ε95 on the residual** (`resid0.mid`): trained lc 0.008, 0.025, 0.050, 0.050; Tracr 0.063 and 0.100.
+    - My stated expectation ("compiled networks tolerate far more noise") holds only weakly: about one noise-grid step for the bigger lc networks.
+    - Shuffled controls tolerate more noise (0.06–0.50). Their decisions depend on fewer positions (decision-relevant k is often 1), so this is not a fair comparison of precision.
+  - **Decision:** no residual-unit stage for transformers. The U7 line is closed: in these trained transformers neither the attention patterns nor the layer-0 residual decompose into the library's units. Training adds partial relational structure, but not clean units.
