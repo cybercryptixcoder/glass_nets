@@ -78,6 +78,11 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 11:59 ET (clock). Since 09:47:
+  - A33 PASS: held-out transformer lc_8_6 passes every criterion with the unchanged pipeline (after the A32 data-split fix).
+  - ARC's M16,10 passes with its matched control; the development table under the final pipeline is 6/7.
+  - A31 (read/write profiles by unit label) and A34 (always-on rows grouped) done.
+  - A35: modadd_p113 (227k parameters, MLP transformer, known Fourier mechanism) adapter built and tested; decomposition running on the Colab GPU (3e-4 and 1e-4, C = 160, batch 1024; due about 13:30); its known-answer verdict is pre-registered.
 - Nov 19, 09:47 ET (clock). Since 08:34: development atlases rebuilt with the adaptive pipeline in their main files (catalog/playground show the certified v4 versions); argmedian 16_5 passes every criterion including its matched control (37 vs 0); transformer ladders running on the Colab GPU (lc_3_4/4_5/6_5), lc_8_6 reserved as the held-out transformer.
 - Nov 19, 08:34 ET (clock):
   - **MAIN RESULT: A28 passes its pre-registered held-out test.** 5 of 6 accurate networks (95–99.4%, up to 1,376 parameters, three of them 32-wide) pass every criterion, and the shuffled control shows no functional structure (17 vs 0). The write-up for Shreyas is `docs/glass/ATLAS_RESULTS.md`.
@@ -94,7 +99,7 @@ nets), where the existing reader and judge already work.
 ## 5. Next (in order)
 
 1. (Mostly done) Development atlases rebuilt with `--ladder` into `T_d4.json`; M16,10 waits for its matched control (1e-3, running locally).
-2. Transformers: ladder runs for lc_3_4 / lc_4_5 / lc_6_5 (development), then lc_8_6 held out (pre-register first).
+2. (Done: A33 passes.) Next scale: modadd_p113 known answer (A35, running); then more MLP transformers (tracr compiled programs need multi-position outputs in the judge).
 3. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (Luminal; ask Shreyas about cost first).
 4. Scale further: the next AlgZoo sizes, or a different network family, as a new held-out test.
 

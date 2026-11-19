@@ -1653,3 +1653,6 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **11:40 A35 amendment (compute only; no modadd result had been seen).** At batch 2048 with three rungs in parallel, the modadd decompositions had not reached 2,000 steps in 20 minutes, so 30k steps would take over 5 hours. Now two rungs (3e-4 and 1e-4) at batch 1024, C = 160, 30k steps. The 1e-3 rung is dropped: every accurate network so far needed 3e-4 or lower.
   - The known-answer test (Fourier frequencies) is judged on the rung the ladder picks from these two.
   - The certificate is reported for that rung. Its bar is the task rule, 100% here.
+- **11:59 modadd decompositions running at a measured pace:** 4k of 30k steps in about 15 minutes (11:40 → 11:55), so both rungs should finish around 13:30.
+  - Early sign: every component of the attention query and key matrices goes dead (0 alive in H0's W_Q and W_K). SPD finds them unimportant, as it did for Q/K in the planted transformer.
+  - The known-answer script (`scripts/glass/atlas_modadd_known.py`) is ready.
