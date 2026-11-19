@@ -1783,3 +1783,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - My earlier wording ("a rule that memorizes cases shouldn't count as an explanation") was imprecise. There are two cases. (1) The network memorized: the faithful description is a case list, and the atlas must say "lookup". (2) The network computes something structured, but the rule-fitter memorized: then the description is unfaithful. Fitting rules on half of the token values and testing them on the other half separates the two. This is now A41: a "rule" vs "lookup" label per mechanism, with a random-label network as the known answer that must come out "lookup".
 - Plan and stopping rule written into ATLAS.md §5 and sent to Shreyas.
 - s1/s2 decompositions finished at 17:05 (11,307 s); A37 builds started (main vocabulary first, then the A35 vocabulary for comparison).
+
+## Nov 19, 17:10 ET (clock): A41 pre-registered (rule vs lookup), with a memorizing network as a known answer
+
+- Shreyas's requirement turned into a test. For token-input networks, every trusted mechanism is scored on unseen token values as well as unseen inputs. 'rule' = carries over; 'lookup (memorized cases)' = only describes the cases seen. The certificate is unchanged; the label is added to the atlas and catalogue.
+- Known answers, fixed before building:
+  - K1, memorization: a network with the adders' architecture and recipe trained on random labels (modrand_p113) must have ≥ 80% of its trusted MLP/unembedding mechanisms labelled lookup.
+  - K2, structure: the s1/s2 adders must have ≥ 80% of theirs labelled rule.
+  - The embedding is reported, not judged, because the development probe already showed its rules mostly don't carry over in the original adder.
+- Next: train modrand_p113 on the GPU (random labels; needs 100% training accuracy), start its decomposition, write the test, build the label.
