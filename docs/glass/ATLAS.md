@@ -41,7 +41,12 @@ network's mechanisms, where for each:
 and as a whole:
 
 6. **rule-gated fidelity:** the network rebuilt from its mechanisms, each switched on by its readable rule,
-   reproduces the network's decisions above the task rule.
+   reproduces the network's decisions above the task rule;
+7. **control:** the same atlas built for the network with shuffled weights.
+   - A shuffled network also decomposes sparsely (U19(c) control: masked fidelity 0.97), so decomposability alone
+     proves nothing.
+   - Claims about learned structure rest on what differs from the control: task-related triggers, and effects that
+     follow the task.
 
 - **"Works"** = items 1–6 hold, every number comes from held-out inputs, and the known-answer tests below pass.
 - **"Discovery-grade"** = run on networks nobody has interpreted (the argmedian RNNs, the longest-cycle transformers,
