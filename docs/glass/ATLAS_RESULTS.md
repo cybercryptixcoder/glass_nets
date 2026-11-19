@@ -9,8 +9,12 @@ Give it a trained network. It splits every weight matrix exactly into small rank
 ## How to use it
 
 ```
-python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-4 TARGET      # decompose (minutes to an hour)
-python3 lab/atlas.py TARGET OUT/spd_TARGET_original_30000_512.pt 4 --absorb [--control-spd SHUFFLED.pt]
+# decompose at a few sparsity settings (minutes to an hour each; tag each run)
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=3e-3 --tag=a TARGET
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-3 --tag=b TARGET
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-4 --tag=c TARGET
+# build the atlas from the sparsest one that is precise enough (training half), with absorption
+python3 lab/atlas.py TARGET x 4 --ladder OUT/..._a.pt,OUT/..._b.pt,OUT/..._c.pt [--control-spd SHUF_a.pt,SHUF_b.pt,SHUF_c.pt]
 python3 lab/server.py   # then open /catalog?t=TARGET
 ```
 
@@ -39,6 +43,8 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
 - **The fix (A26):** weaker sparsity pressure, then folding the residual into the mechanisms. It makes both accurate development networks pass every criterion:
   - argmedian 16_5 (98.4% accurate): rebuilt 98.9%, triggers switch off 93% of not-needed calls, 25 task-level explanations;
   - M16,10 (95.3%): rebuilt 96.8%.
+
+**Adaptive decomposition (A28, design check on the development set):** each network gets a short ladder of decompositions, sparsest first. The first one precise enough on the training half is used. All 7 development networks then pass every criterion: weak networks keep the sparse default (20–39 mechanisms), accurate ones get the denser settings (47–57 mechanisms). The wide-network setting is still being designed; then a fresh held-out set.
 
 **Held-out test A18** (six well-trained networks, 93.9–99.6% accurate, up to 1,376 parameters, default settings): **fails, 0 of 6.** Triggers (64–91% trusted) and specificity (11–103×) pass everywhere. Precision fails everywhere: the mechanisms alone keep 45–95% of decisions against bars of 94–99.6%. So either the switched network loses decisions, or almost nothing can be switched safely.
 
