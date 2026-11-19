@@ -90,16 +90,19 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
         for name in mods:   # one matrix at a time
             rec = rec + loss_fn(_run(forward, x, mods, lambda n, k, name=name: masks[n][k] if n == name else None)) / len(mods)
         if coef_ci:         # A38: CI-masked reconstruction (masks = importances, r = 0): every unimportant component off at once
+            def _cm(z):         # A38d: mask VALUE = the importance the atlas uses (clamped to [0, 1]); gradient = the leaky one
+                g = lower_leaky(z)
+                return z.clamp(0, 1) + g - g.detach()
             if ci_mode == "layer":  # A38c (experiment): one matrix at a time (a random one per step), masks = g, the rest exact
                 pick = list(mods)[int(torch.randint(len(mods), (1,)))]
-                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: lower_leaky(gs[n][k]) if n == pick else None))
+                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: _cm(gs[n][k]) if n == pick else None))
             elif ci_mode == "hard":   # A38b (experiment): on/off masks 1[g > 0.5], straight-through gradient to g
                 def _hm(z):
                     g = lower_leaky(z)
                     return (z > 0.5).to(z.dtype) + g - g.detach()
                 rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: _hm(gs[n][k])))
             else:
-                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: lower_leaky(gs[n][k])))
+                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: _cm(gs[n][k])))
             rec = rec + coef_ci * rec_ci
         faith = sum(((m.W - m.weight()) ** 2).mean() for m in mods.values())
         mini = sum((upper_leaky(torch.stack(zs)) ** p).sum(-1).mean() for zs in gs.values())
