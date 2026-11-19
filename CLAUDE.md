@@ -4,6 +4,7 @@
 showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_REVIEW.md` §7).*
 
 ## Read before doing anything
+0. **CURRENT WORK (Nov 18 onward): `docs/glass/UNITS_PROGRAM.md`.** The units hypothesis, research, experiment tree, build intent and status.
 1. `docs/glass/INTENT.md`: what we are building and why. The code serves this document.
 2. `docs/glass/CHECKLIST.md`: current state.
 3. `docs/glass/CHANGES.md`: the change ledger.

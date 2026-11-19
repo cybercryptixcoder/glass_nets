@@ -43,7 +43,9 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## NOW (Nov 18, ~13:00 ET): SCALING WORK under Shreyas's go-ahead (11:43). Plan and criterion: `docs/glass/PLAN_SCALING.md`.
+## NOW (Nov 18, 19:15 ET): THE UNITS PROGRAM, under Shreyas's go-ahead (19:06). Read `docs/glass/UNITS_PROGRAM.md` first; its status table is current.
+
+## EARLIER (Nov 18, ~13:00 ET): SCALING WORK under Shreyas's go-ahead (11:43). Plan and criterion: `docs/glass/PLAN_SCALING.md`.
 - Micro experiments run LOCALLY (`lab/replacer.py`; the API works from the workspace). Logs: `results/glass/scaling/logs/`; runs are `lab/constructions/<target>/<id>-r2-*` / `-r5-*`.
 - Done: R1 (the readers' budget went to gaming the copy rule); R2 (progressive replacement keeps readers exact, but they don't substitute rules); judge glass-2.1 (lc_8_6 label fix, CHANGES T1); criterion tightened (inside claim after the first step).
 - **15:05: nothing running.** R5, R7 and R8 done or stopped. Results and the decisions for Shreyas are at the end of PLAN_SCALING.md.

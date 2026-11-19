@@ -486,3 +486,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - a stronger reader (needs an API key);
     - analysis tools: automatic decision-subspace discovery plus symbolic regression;
     - partial certificates in the catalog for dense networks.
+- **19:07** Started the UNITS PROGRAM (Shreyas 19:06): his hypothesis that networks are compositions of basic units, the same at the level of function and spread over clusters of weights. Research done (universality, component reuse, universal neurons, group-operation universality, Clock/Pizza, modularity, Platonic representations, APD/SPD, weight-sparse transformers, RNN dynamical motifs, RNN universality), experiment tree U1–U7 and conditional build intent are all in docs/glass/UNITS_PROGRAM.md. CLAUDE.md and CHECKLIST point to it.
