@@ -795,3 +795,37 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Median held-out R² of the best 3-feature unit: 0.66, 0.52, 0.85, 0.69.
   - **Observed in 16_5 (descriptive, not a claim):** neuron 10 at step 5 is exactly relu(17.3·relu(x3−x4) + 10.2·relu(x1−x4) + 7.1·relu(x2−x4)) (R² 1.00): a weighted count of how far the earlier inputs exceed x4, i.e. a soft RANK of x4. That is the quantity argmedian needs. Several other 16_5 neurons use pairs like relu(x1−x2) and relu(x2−x1) together, i.e. distance-like terms.
   - **Decision:** no unit-map v4. The argmedian remainder is not sparse in pairwise comparisons, except a partial soft-rank structure in 16_5.
+- **21:19 U10 PRE-REGISTRATION ((j), made causal): does making a network tolerant make approximate unit accounts faithful?**
+  - **Why this instead of a plain ε95 prediction:** F3 is correlational. The modular nets differ from AlgZoo in architecture and task as well as tolerance. An intervention isolates tolerance: train the same architecture on the same task with and without hidden-state noise, then see whether approximate units now stand in for the network.
+  - **Design:**
+    - 2nd argmax M8,5 (ReLU RNN, no biases, as AlgZoo).
+    - 3 seeds × {standard, noise}. Noise = Gaussian of 0.1 × each unit's batch std, added to the hidden state at every step during training only.
+    - Same optimizer, steps and batches for both.
+    - Trained nets are saved as lab targets `u10_m85_{std,noise}_s{seed}` (8,000 standard-normal inputs, labels).
+  - **Pipeline known answer:** the standard nets must look like AlgZoo, with accuracy ≥ 0.75 and ε95 ≤ 0.03. Otherwise the test is inconclusive.
+  - **Measures** (all with existing code): accuracy; ε95 (P3); unit map v3 coverage; JOINT substitution, i.e. every library-explained neuron-step (held-out R² ≥ 0.9, step ≥ 2) replaced by its unit at once, on the held-out half, as the share of decisions kept.
+  - **Predictions:**
+    - (a) Noise-trained median ε95 ≥ 5× the standard median.
+    - (b) Joint substitution ≥ 90% in ≥ 2 of 3 noise-trained nets, and < 90% in ≥ 2 of 3 standard nets.
+    - (b) counts a net only if the substituted neuron-steps hold ≥ 25% of the step-≥2 variance. This guards against a trivial pass from substituting almost nothing.
+  - **Decision.**
+    - (a) and (b) → interventional support for F3: tolerance is what lets approximate unit accounts be faithful. This also gives a design lever: train for tolerance to get explainable networks.
+    - (a) without (b) → tolerance is not sufficient.
+    - Not (a) → inconclusive.
+- **21:23 U10 RESULT: INCONCLUSIVE by the pre-registered rule** (`results/glass/units/u10_8000.json`, read by hand).
+  - **Pipeline known answer FAILED:** standard-trained accuracy 0.744, 0.789, 0.726 (bar ≥ 0.75 for all), because 8,000 steps is far less training than AlgZoo's. ε95 ≤ 0.03 held.
+  - **Prediction (a) FAILED anyway:** noise training did not raise ε95 (noise 0.0158 / 0.0126 / 0.0200 vs standard 0.0158 / 0.0158 / 0.0100; median ratio 1.0, bar 5×). Noise-trained nets are less accurate (0.64–0.69) and have low coverage, so (b) is moot.
+  - **What the failure points to (a new suspicion, to test next).** Training at 10% hidden noise should make a network robust to 10% noise unless something else sets ε95. The candidate is the TASK: 2nd argmax and argmedian have continuous inputs, so some inputs always sit next to a tie (2nd and 3rd largest almost equal). Any perturbation, however small, flips those decisions. A 5% flip budget may therefore be used up by near-tie inputs, whatever the network does inside.
+  - **Rough check:** M2,2's neurons are about relu(x1 − x2). A tie-only model predicts ε95 ≈ 0.15 for it; measured 0.16.
+  - **Consequence:** the modular-arithmetic nets have discrete inputs with no near-ties, so their 0.79 may say more about their task than about tolerance. F3's "two routes" reading may be confounded. It is not to be relied on until U11 settles this.
+- **21:23 U11 PRE-REGISTRATION: is ε95 set by near-tie inputs?**
+  - **Task margin of an input** (input units):
+    - 2nd argmax: min(largest − 2nd largest, 2nd largest − 3rd largest).
+    - argmedian: min gap between the median and its sorted neighbours.
+  - **Measures** for the 9 P3 RNNs (P3's procedure, grid and seeds):
+    - **(i) Clear-half ε95:** ε95 computed only on inputs whose task margin is above the median. The near-tie half is excluded, and the 5% flip budget applies to the clear half alone.
+    - **(ii) Near-tie share of flips:** at ε = the overall ε95, the share of flipped inputs that lie in the lowest-10% task-margin decile.
+  - **Decision** (ratio = clear-half ε95 / overall ε95):
+    - Ratio ≥ 10 in ≥ 6 of 9 → ε95 is dominated by near-ties, and F3 is restated: the precision requirement is a property of the task's decision boundary on near-tie inputs, not internal fragility. The "two routes" reading must then be re-tested on clear inputs.
+    - Ratio < 3 in ≥ 6 of 9 → internal fragility is real, and F3 stands.
+    - Otherwise mixed; report.
