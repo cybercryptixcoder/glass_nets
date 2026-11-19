@@ -42,7 +42,7 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
 
 **Held-out test A18** (six well-trained networks, 93.9–99.6% accurate, up to 1,376 parameters, default settings): **fails, 0 of 6.** Triggers (64–91% trusted) and specificity (11–103×) pass everywhere. Precision fails everywhere: the mechanisms alone keep 45–95% of decisions against bars of 94–99.6%. So either the switched network loses decisions, or almost nothing can be switched safely.
 
-**Held-out test A27** (six new well-trained networks, up to 1,376 parameters, with the A26 fix): PENDING. This is the test of whether the method works on accurate networks.
+**Held-out test A27** (six new well-trained networks, 97.3–99.5% accurate, with the A26 fix): **fails, 2 of 6 (bar 4), but with a clean split.** Both 16-wide networks pass every criterion. For example 2nd argmax 16_5_s1 (99.2%): rebuilt 99.4%, triggers switch off 94% of not-needed calls, specificity 948×. All four 32-wide networks fail: 20 components per matrix are too few for a 32-wide state (all alive, many always on), as predicted before the verdict. Next: components scaled to the width (A28).
 
 ## What the atlases find (examples)
 

@@ -1505,3 +1505,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **06:28 Development: ARC's M16,10 at minimality 1e-4** (vs 1e-3 + absorption at 05:50). Rebuilt 99.6% vs 95.3%, off_recall 0.88, but trusted share 0.48: just under the 0.5 bar. All 60 components alive, 27 always on. At 1e-3 + absorption it passed with trusted share 0.62.
   - **So the best minimality depends on the network:** 1e-4 for argmedian 16_5, 1e-3 for M16,10. "Every component alive" is the warning sign that the decomposition has run out of room.
   - **Idea for the next version (A28, to be designed on development and design-case networks only):** an adaptive decomposition. Run a short ladder of minimality values with the number of components scaled to the width. Pick the sparsest one whose atlas is precise enough on the TRAINING half ((i') and (ii) there), then judge on the held-out half. Weak networks keep sparse, readable decompositions; accurate ones get the precision they need. The C = 20 vs 40 design case (zoo_2nd_argmax_32_8_s0) is running.
+- **06:44 A27 VERDICT (pre-registered 05:47): FAIL, 2 of 6 (bar ≥ 4); (v) holds (13 functional mechanisms vs 0 in the shuffled control).** v4 gives the same split.
+
+  | network (accuracy) | (i') alone | (ii) v3 | (iii) | (iv) | (vi) | result |
+  |---|---|---|---|---|---|---|
+  | 2nd argmax 16_5_s1 (99.2%) | 1.000 ✓ | 0.994 vs 0.992 ✓ | 0.63 ✓ | 948× ✓ | 0.94 ✓ | **PASS** |
+  | 2nd argmax 16_8_s1 (97.7%) | 1.000 ✓ | 0.980 vs 0.977 ✓ | 0.65 ✓ | only where needed ✓ | 0.85 ✓ | **PASS** |
+  | 2nd argmax 32_5_s1 (99.5%) | 0.970 ✗ | 0.996 ✓ | 0.44 ✗ | ✓ | 0.96 ✓ | fail |
+  | argmedian 32_5_s1 (99.5%) | 0.953 ✗ | 1.000 ✓ | 0.29 ✗ | ✓ | 1.00 ✓ | fail |
+  | 2nd argmax 32_10_s1 (99.3%) | 0.964 ✗ | 0.998 ✓ | 0.38 ✗ | ✓ | 0.97 ✓ | fail |
+  | argmedian 32_7_s1 (97.3%) | 0.878 ✗ | 0.915 ✗ | 0.60 ✓ | 723× ✓ | 0.95 ✓ | fail |
+
+  - **What held out:** A26 works on held-out 16-wide accurate networks (97.7–99.2%). Every criterion passes, where the default decomposition failed every 16-wide A18 network.
+  - **What did not:** every 32-wide network fails (i'). With 20 components per matrix the decomposition is saturated: all components alive, many always on, few trusted triggers. This was predicted at 06:04, before the verdict.
+  - **Next (A28):** components scaled to the width, designed on zoo_2nd_argmax_32_8_s0 (outside every test set), then tested on a fresh held-out set.
