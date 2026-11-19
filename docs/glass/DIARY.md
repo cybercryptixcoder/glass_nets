@@ -1121,3 +1121,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - (ii) W_h's mean L0 per call is ≤ half its alive count (sparse use);
     - (iii) ≥ 50% of alive W_h components are event-labelled (balanced accuracy ≥ 0.9), against ≤ 20% in the shuffled control.
   - Otherwise SPD does not give a readable exact decomposition of M8,5; record which part failed.
+- **02:23 U19(a') RESULT (seed 1): FAIL by the revised criterion, by one number** (`results/glass/units/u19a2_tms_seed1.json`).
+  - **W1 PASSES fully:**
+    - 5 alive, one-to-one;
+    - input directions match the features at cosine 1.00;
+    - alive-only reconstruction error 0.004;
+    - importance high when needed on 92–94% of inputs, low when only another feature is on on 100%.
+  - **W2:**
+    - Structure passes: directions 0.991–0.996, reconstruction error 0.024, high when needed 90–93%.
+    - Selectivity fails: one component (feature 1) is low on only 88.8% of the inputs where only another feature is on (bar 90%).
+  - **Diagnosis, checked directly on the saved model (200k fresh inputs):**
+    - For three W2 components, EVERY case where importance ≥ 0.1 while only another feature is on is a case where the target's output for that feature is non-zero (TMS interference: a strong neighbouring feature leaks into output j through the 72° overlap).
+    - In those cases the mechanism IS causally needed, and SPD is right.
+    - Where importance is < 0.1, the target output is non-zero in only 6% of cases.
+    - So "only another feature is on" does not mean "not needed" for W2. That is a second error in how I defined the TMS test, not in the code.
+  - **Decision:**
+    - I will NOT revise the TMS criterion a third time; that would be moving the goalposts.
+    - What the TMS runs establish: SPD recovers the planted structure in both matrices, on two seeds, and its importances track causal need.
+    - The clean gate is (b), the planted RNN with no superposition, so no interference: "needed" is exact there. (b)'s pre-registered criterion now gates (c) alone.
+    - This is a plan change made after seeing (a'), recorded here with its reason.
