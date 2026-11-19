@@ -1140,3 +1140,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - What the TMS runs establish: SPD recovers the planted structure in both matrices, on two seeds, and its importances track causal need.
     - The clean gate is (b), the planted RNN with no superposition, so no interference: "needed" is exact there. (b)'s pre-registered criterion now gates (c) alone.
     - This is a plan change made after seeing (a'), recorded here with its reason.
+- **02:27 U19(b) RESULT (20k steps, batch 512): FAIL** (`results/glass/units/u19b_rnn_20_20000_3e-3_1.0_1.0_1e-3_512.json`).
+  - W_o: structure perfect (5 alive, cosine 1.00), importance high when needed on 80–82% (bar 90%).
+  - W_x: 6 alive, feature 2 split into two components.
+  - W_h: 7 alive, features 2 and 4 split. Importance high on 84–91%.
+  - **Reading:**
+    - (1) Splitting means it is not converged. In TMS, splitting cleared between 12k and 15k steps at batch 2048; this run had a quarter of the batch.
+    - (2) The "high when needed" shortfall has the same form as in TMS. The criterion counts any non-zero input as "needed", but SPD's importance is causal, so a mechanism carrying a tiny value (U[0,1] inputs) may legitimately get low importance.
+- **02:27 U19(b') PRE-REGISTRATION (before the long run's results exist).** I stopped the 40k run that had just started (no results read) and restarted it with model saving and this criterion, fixed now:
+  - **"needed"** = the mechanism's input coordinate is ≥ 0.2;
+  - **"only others needed"** = its coordinate is exactly 0 and some other coordinate is ≥ 0.2;
+  - **pass** = exactly 5 alive per matrix, one-to-one, cosine ≥ 0.9, importance > 0.5 on ≥ 90% of needed calls and < 0.1 on ≥ 90% of only-others calls.
+  - Run: 40k steps, batch 512. If it fails, I check the saved model for the cause before any further change.

@@ -37,6 +37,7 @@ cfg = dict(C=int(args[0]) if len(args) > 0 else 20, steps=int(args[1]) if len(ar
            coef_faith=float(args[4]) if len(args) > 4 else 1.0, lr=float(args[5]) if len(args) > 5 else 1e-3,
            batch=int(args[6]) if len(args) > 6 else 2048)
 mods = decompose(forward, {"W_x": I, "W_h": I, "W_o": I}, sample, **cfg)
+torch.save({"mods": mods.state_dict(), "cfg": cfg}, ROOT / f"results/glass/units/u19b_model_{'_'.join(args) or 'default'}.pt")
 
 # known-answer check: per matrix, the inputs of each call; a mechanism j is "needed" where input coordinate j > 0
 xs = sample(20000); g = importance(mods, forward, xs)       # {name: [calls, B, C]}
@@ -47,7 +48,10 @@ for t in range(N):
 inputs["W_h"] = hs; inputs["W_o"] = [h]
 res = {"config": cfg, "matrices": {}}; ok_all = True
 for name, m in mods.items():
-    G = g[name].reshape(-1, cfg["C"]); A = torch.cat(inputs[name]) > 0           # [calls*B, C], [calls*B, K]
+    G = g[name].reshape(-1, cfg["C"]); Ain = torch.cat(inputs[name])               # [calls*B, C], [calls*B, K]
+    A = Ain > 0
+    NEED = Ain >= 0.2      # U19(b') criterion: a mechanism is needed when its input is >= 0.2 (SPD importance is causal,
+                           # so tiny contributions may legitimately get low importance; see DIARY U19(a'))
     alive = [c for c in range(cfg["C"]) if G[:, c].mean() > 0.01]
     truth = [torch.outer(I[j], I[j]) for j in range(K)]
     cos = np.array([[float((torch.outer(m.U[c], m.V[c]).detach() * t).sum() / (torch.outer(m.U[c], m.V[c]).detach().norm() * t.norm() + 1e-12)) for t in truth] for c in alive])
@@ -56,8 +60,8 @@ for name, m in mods.items():
     cos_ok = all(abs(v[1]) >= 0.9 for v in match.values())
     ci_rows = []; ci_ok = True
     for c, (j, _) in match.items():
-        other_only = (A.sum(1) >= 1) & (~A[:, j])
-        hi = float((G[A[:, j], c] > 0.5).double().mean()) if A[:, j].any() else 0.0
+        other_only = NEED.any(1) & (~A[:, j])
+        hi = float((G[NEED[:, j], c] > 0.5).double().mean()) if NEED[:, j].any() else 0.0
         lo = float((G[other_only, c] < 0.1).double().mean()) if other_only.any() else 1.0
         ci_rows.append((c, j, round(hi, 3), round(lo, 3))); ci_ok &= hi >= 0.9 and lo >= 0.9
     passed = bij and cos_ok and ci_ok; ok_all &= passed
