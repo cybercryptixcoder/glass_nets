@@ -131,6 +131,7 @@ Every component gets an end-to-end test on a known case (M4,3: whose units are k
 | U1b | done | The rank-based family (current input + sorted history) doesn't capture the residual: joint substitution 19–36% | the residual is not rank structure; position/timing is involved |
 | U6a / U6a' | done | Clock (rotation ≈ k·360°/n): beyond chance only in M4,3, M8,5 and argmedian 8,5 (p ≤ 0.04); not general (3/9; Fisher p 1.2e-3 vs bar 1e-3) | dropped as a general unit |
 | U2 | done | Task quantities are NOT linear directions. Argmedian networks hold the median value at 0.02–0.09 vs 0.60 in shuffled ones; M16,10 holds max 0.99 and 2nd 0.85, not positions | → U6b |
+| UNIT MAP | built | v2 passes K1–K3; maps for 11 networks; see §8 | → P1–P4 |
 | U6b | done | Modes (ReLU on/off patterns) covering 90%: up to 18 (M8,5), 74 (M16,10), 114 (argmedian 16,5); compact only in small networks | exact mode decomposition not viable |
 
 **First-sweep conclusion (21:16): "approximate universality, exact individuality".** Function-level units recur and matter, but dense networks' decisions hinge on detail that the units miss. No exact compact route was found (5 tried).
@@ -163,3 +164,32 @@ these levels for dense RNNs, while the units are real and matter (U1, U3 ablatio
 
 **Then run it on networks never interpreted before** (argmedian 8_5, 8_7, 16_5, 16_7) and publish the unit maps,
 plus the cross-network library, as the first discovery of type (a) and (b).
+
+## 8. Results of the unit-map build (21:50) and the next steps
+
+**Unit maps** (`results/glass/units/maps/*.md`; v2 passes K1–K3). Coverage after the first step (history units +
+raw/filter units; shuffled control in brackets):
+
+| Network | History | Raw/filter | Notes |
+|---|---|---|---|
+| M2,2 / M4,3 | 0.00 | 1.00 | fully raw/filter units (matches ARC's signed channels) |
+| M8,5 | 0.23 (0.08) | 0.10 | relu(max−x_t) ×2, relu(x_t−2nd), one filter unit |
+| M16,10 | 0.37 (0.00) | 0.06 | units 1/6/7 relu(max−x_t), 8 relu(2nd−x_t), 4 relu(x_t−2nd): **matches ARC (Chen N7, N8; LessWrong N1/N6/N7/N8)** |
+| M4,4 / M8,8 | 0.00 | ≤ 0.02 | the "amplifying" networks: no units found |
+| argmedian 8_5 / 8_7 / 16_5 / 16_7 (never interpreted) | 0.01 / 0.04 / 0.16 / 0.02 | 0.13 / 0.11 / 0.28 / 0.22 | comparators recur (relu(x_t−min), relu(2nd−x_t), relu(x_t−max)) but most neurons are outside the library |
+
+**Findings to date (provisional; prior-work check pending):**
+1. **Convergent units.** Single-ReLU comparators against a running order statistic recur across sizes AND tasks
+   (2nd argmax, argmedian). An automated map reproduces ARC's hand-found units in M16,10.
+2. **Approximate universality, exact individuality.** In dense RNNs the units are approximate and the decisions
+   depend on what they miss (U3: substitution collapses), and no exact compact decomposition was found by 5 routes.
+3. **The library is task-biased.** It covers 2nd-argmax units far better than argmedian ones. Argmedian networks
+   compute something else for most neurons.
+
+**Next (in order; each a micro experiment with a pre-registered decision):**
+- **P1.** Prior-work check on (1) and (2) before any claim.
+- **P2.** What do the unexplained argmedian neurons compute? A data-driven search, not a guessed library: fit each
+  one with a sparse combination of pairwise comparisons relu(x_i − x_j) and the order statistics; then test
+  sufficiency.
+- **P3.** U7, transformers: unit maps for longest-cycle networks (attention units: pointer, copy, compare).
+- **P4.** Put the unit maps in the catalog as per-part confidence entries (the AlphaFold-style certificate).

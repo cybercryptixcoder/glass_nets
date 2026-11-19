@@ -1,0 +1,143 @@
+# Unit map: zoo_argmedian_16_7
+
+Coverage after the first step (variance-weighted share of neuron-steps fitted at R² ≥ 0.9 on held-out inputs): history units 0.02, raw-input units 0.22. Shuffled-weights control: history 0.00, raw 0.00.
+
+## Per neuron (most common label over its explained steps)
+
+| neuron | label |
+|---|---|
+| 0 | raw input: relu(+3.24*x_prev) |
+| 1 | unexplained |
+| 2 | unexplained |
+| 3 | raw input: relu(-4.02*x_t) |
+| 4 | raw input: relu(-0.58*x_t +0.32*x_prev) |
+| 5 | unexplained |
+| 6 | raw input: relu(-0.86*x_t -2.75*x_prev) |
+| 7 | raw input: relu(+5.50*x_t -0.76*x_prev) |
+| 8 | raw input: relu(-5.75*x_prev) |
+| 9 | unexplained |
+| 10 | comparator: relu(2nd - x_t) |
+| 11 | unexplained |
+| 12 | comparator: relu(x_t - max) |
+| 13 | raw input: relu(-4.42*x_t) |
+| 14 | raw input: relu(+5.00*x_t -3.83*x_prev) |
+| 15 | raw input: relu(+2.62*x_t) |
+
+## Every neuron-step
+
+| step | neuron | unit | fit (held-out R²) | sufficiency | importance |
+|---|---|---|---|---|---|
+| 1 | 0 | raw input: relu(+0.37*x_t) | 1.000 | 100.0% | 2.7% |
+| 1 | 1 | raw input: relu(+1.29*x_t) | 1.000 | 100.0% | 4.5% |
+| 1 | 2 | raw input: relu(+1.35*x_t) | 1.000 | 100.0% | 3.4% |
+| 1 | 3 | raw input: relu(-4.01*x_t) | 1.000 | 100.0% | 12.6% |
+| 1 | 4 | raw input: relu(-0.65*x_t) | 1.000 | 100.0% | 4.7% |
+| 1 | 5 | raw input: relu(-0.53*x_t) | 1.000 | 100.0% | 4.2% |
+| 1 | 6 | raw input: relu(-0.43*x_t) | 1.000 | 100.0% | 1.7% |
+| 1 | 7 | raw input: relu(+5.43*x_t) | 1.000 | 100.0% | 36.3% |
+| 1 | 8 | raw input: relu(+0.08*x_t) | 1.000 | 100.0% | 0.5% |
+| 1 | 9 | raw input: relu(-1.14*x_t) | 1.000 | 100.0% | 4.7% |
+| 1 | 10 | raw input: relu(-4.30*x_t) | 1.000 | 100.0% | 30.2% |
+| 1 | 11 | raw input: relu(+0.27*x_t) | 1.000 | 100.0% | 3.2% |
+| 1 | 12 | raw input: relu(+0.75*x_t) | 1.000 | 100.0% | 4.4% |
+| 1 | 13 | raw input: relu(-4.41*x_t) | 1.000 | 100.0% | 13.2% |
+| 1 | 14 | raw input: relu(+4.53*x_t) | 1.000 | 100.0% | 24.8% |
+| 1 | 15 | raw input: relu(+2.79*x_t) | 1.000 | 100.0% | 11.3% |
+| 2 | 0 | raw input: relu(+3.24*x_prev) | 0.979 | 97.4% | 19.3% |
+| 2 | 1 | relu(+2.88*max) | 0.720 | 94.3% | 11.6% |
+| 2 | 2 | relu(+5.53*max) | 0.318 | 83.0% | 20.8% |
+| 2 | 3 | raw input: relu(-4.02*x_t) | 1.000 | 99.8% | 13.5% |
+| 2 | 4 | raw input: relu(-0.58*x_t +0.32*x_prev) | 0.978 | 99.2% | 7.5% |
+| 2 | 5 | comparator: relu(max - x_t) | 0.646 | 62.0% | 49.9% |
+| 2 | 6 | raw input: relu(-0.86*x_t -2.75*x_prev) | 0.942 | 96.2% | 22.1% |
+| 2 | 7 | raw input: relu(+5.50*x_t -0.76*x_prev) | 1.000 | 99.6% | 31.4% |
+| 2 | 8 | raw input: relu(-5.75*x_prev) | 0.914 | 96.6% | 18.6% |
+| 2 | 9 | comparator: relu(max - x_t) | 0.673 | 92.4% | 12.7% |
+| 2 | 10 | raw input: relu(-4.75*x_t +1.14*x_prev) | 0.979 | 94.3% | 45.1% |
+| 2 | 11 | raw input: relu(+0.77*x_t -2.37*x_prev) | 0.852 | 85.0% | 42.3% |
+| 2 | 12 | comparator: relu(x_t - max) | 0.929 | 99.0% | 5.3% |
+| 2 | 13 | raw input: relu(-4.42*x_t) | 0.993 | 99.3% | 12.7% |
+| 2 | 14 | raw input: relu(+5.00*x_t -3.83*x_prev) | 0.984 | 97.5% | 29.7% |
+| 2 | 15 | raw input: relu(+2.62*x_t) | 0.989 | 99.3% | 9.8% |
+| 3 | 0 | filter: relu(-9.20*x_1 +3.64*x_2 +0.50*x_3) | 0.987 | 94.0% | 49.6% |
+| 3 | 1 | relu(+5.08*max +2.52*max_prev) | 0.637 | 83.8% | 24.4% |
+| 3 | 2 | relu(+6.50*max -4.10*2nd_prev) | 0.355 | 76.5% | 25.8% |
+| 3 | 3 | raw input: relu(-3.92*x_t) | 0.996 | 99.4% | 11.4% |
+| 3 | 4 | filter: relu(-3.37*x_1 +0.98*x_2 -1.02*x_3) | 0.607 | 72.8% | 45.9% |
+| 3 | 5 | relu(+13.04*max_prev) | 0.839 | 71.2% | 59.1% |
+| 3 | 6 | relu(-4.73*x_prev +7.42*max_prev) | 0.464 | 61.2% | 46.9% |
+| 3 | 7 | filter: relu(-1.07*x_1 -0.81*x_2 +5.60*x_3) | 0.996 | 98.5% | 29.9% |
+| 3 | 8 | filter: relu(+2.07*x_1 -7.67*x_2 +0.11*x_3) | 0.995 | 98.9% | 21.3% |
+| 3 | 9 | relu(-5.77*min +4.53*x_prev) | 0.666 | 88.6% | 20.6% |
+| 3 | 10 | relu(-4.34*x_t +2.09*max) | 0.976 | 93.0% | 52.2% |
+| 3 | 11 | relu(-3.72*2nd_prev) | 0.686 | 71.9% | 50.0% |
+| 3 | 12 | filter: relu(+7.95*x_1 -0.09*x_2 +2.39*x_3) | 0.823 | 78.8% | 55.6% |
+| 3 | 13 | filter: relu(+4.50*x_1 +0.21*x_2 -4.37*x_3) | 1.000 | 99.6% | 25.7% |
+| 3 | 14 | raw input: relu(+4.99*x_t -4.17*x_prev) | 0.981 | 96.9% | 33.0% |
+| 3 | 15 | raw input: relu(+2.87*x_t) | 0.984 | 99.2% | 12.2% |
+| 4 | 0 | filter: relu(+2.73*x_1 -9.74*x_2 +3.63*x_3 +0.62*x_4) | 0.983 | 90.4% | 52.9% |
+| 4 | 1 | relu(-3.37*min +8.14*max_prev) | 0.481 | 73.9% | 32.2% |
+| 4 | 2 | relu(+7.25*max -5.87*min) | 0.433 | 63.2% | 42.1% |
+| 4 | 3 | filter: relu(+4.32*x_1 +0.15*x_2 +0.06*x_3 -3.99*x_4) | 0.997 | 98.7% | 26.0% |
+| 4 | 4 | relu(-6.03*min +2.07*x_prev) | 0.334 | 54.7% | 52.8% |
+| 4 | 5 | relu(-4.70*min +11.04*max_prev) | 0.534 | 50.4% | 59.9% |
+| 4 | 6 | relu(-4.06*min +6.37*max_prev) | 0.387 | 59.3% | 48.9% |
+| 4 | 7 | filter: relu(-1.36*x_1 -1.08*x_2 -0.61*x_3 +5.65*x_4) | 0.988 | 96.4% | 33.4% |
+| 4 | 8 | filter: relu(+1.97*x_1 +2.01*x_2 -7.63*x_3 +0.06*x_4) | 0.985 | 96.9% | 26.6% |
+| 4 | 9 | relu(-4.66*min +5.68*max_prev) | 0.387 | 74.7% | 33.6% |
+| 4 | 10 | comparator: relu(max - x_t) | 0.934 | 86.6% | 51.3% |
+| 4 | 11 | relu(+1.54*x_t -5.30*min) | 0.417 | 55.5% | 52.0% |
+| 4 | 12 | relu(-3.01*x_prev +8.57*max_prev) | 0.239 | 48.8% | 55.9% |
+| 4 | 13 | filter: relu(+0.06*x_1 +4.61*x_2 +0.06*x_3 -4.39*x_4) | 0.997 | 98.4% | 29.4% |
+| 4 | 14 | raw input: relu(+4.91*x_t -4.11*x_prev) | 0.986 | 96.5% | 36.9% |
+| 4 | 15 | raw input: relu(+2.91*x_t) | 0.984 | 99.5% | 9.9% |
+| 5 | 0 | filter: relu(+2.36*x_1 +2.76*x_2 -9.88*x_3 +3.54*x_4 +0.59*x_5) | 0.975 | 86.6% | 53.4% |
+| 5 | 1 | relu(+7.79*max -3.57*min) | 0.356 | 62.9% | 41.2% |
+| 5 | 2 | relu(+8.40*max -6.35*min) | 0.462 | 62.7% | 44.6% |
+| 5 | 3 | filter: relu(+0.06*x_1 +4.44*x_2 +0.04*x_3 +0.04*x_4 -4.00*x_5) | 0.994 | 97.2% | 30.4% |
+| 5 | 4 | relu(-4.98*min +2.93*max_prev) | 0.327 | 52.2% | 51.8% |
+| 5 | 5 | relu(-5.92*min +11.58*max_prev) | 0.491 | 51.1% | 57.1% |
+| 5 | 6 | relu(-5.06*min +9.50*max_prev) | 0.501 | 53.5% | 54.6% |
+| 5 | 7 | filter: relu(-1.30*x_1 -1.23*x_2 -0.91*x_3 -0.48*x_4 +5.68*x_5) | 0.978 | 94.2% | 34.6% |
+| 5 | 8 | filter: relu(+1.95*x_1 +1.91*x_2 +1.68*x_3 -7.59*x_4 +0.08*x_5) | 0.970 | 94.7% | 29.4% |
+| 5 | 9 | relu(-5.35*min +6.40*max_prev) | 0.428 | 69.7% | 36.9% |
+| 5 | 10 | comparator: relu(2nd - x_t) | 0.917 | 82.2% | 50.7% |
+| 5 | 11 | relu(+3.27*max -4.96*min) | 0.386 | 54.9% | 50.6% |
+| 5 | 12 | relu(+5.90*max -3.24*min) | 0.181 | 46.7% | 54.9% |
+| 5 | 13 | filter: relu(+0.05*x_1 -0.09*x_2 +4.49*x_3 -0.00*x_4 -4.39*x_5) | 0.997 | 97.5% | 36.0% |
+| 5 | 14 | raw input: relu(+4.86*x_t -4.04*x_prev) | 0.982 | 95.4% | 40.6% |
+| 5 | 15 | filter: relu(-3.93*x_1 +0.21*x_2 +0.28*x_3 +0.15*x_4 +2.87*x_5) | 0.985 | 97.7% | 22.6% |
+| 6 | 0 | filter: relu(+2.47*x_1 +2.55*x_2 +2.26*x_3 -9.89*x_4 +3.58*x_5 +0.51*x_6) | 0.939 | 79.5% | 48.3% |
+| 6 | 1 | relu(+9.34*max -5.30*min) | 0.358 | 49.9% | 53.8% |
+| 6 | 2 | relu(+8.38*max -6.50*min) | 0.450 | 58.2% | 48.7% |
+| 6 | 3 | filter: relu(-0.15*x_1 -0.08*x_2 +4.37*x_3 -0.03*x_4 +0.03*x_5 -3.98*x_6) | 0.993 | 96.7% | 36.9% |
+| 6 | 4 | relu(-5.72*min +5.00*max_prev) | 0.353 | 48.9% | 54.9% |
+| 6 | 5 | relu(-6.70*min +12.06*max_prev) | 0.453 | 49.9% | 55.6% |
+| 6 | 6 | relu(-5.39*min +9.61*max_prev) | 0.461 | 53.8% | 52.1% |
+| 6 | 7 | filter: relu(-1.11*x_1 -1.13*x_2 -1.08*x_3 -0.79*x_4 -0.53*x_5 +5.62*x_6) | 0.970 | 89.6% | 43.7% |
+| 6 | 8 | filter: relu(+1.67*x_1 +1.84*x_2 +1.71*x_3 +1.56*x_4 -7.61*x_5 +0.08*x_6) | 0.957 | 92.3% | 32.3% |
+| 6 | 9 | relu(-5.95*min +7.71*max_prev) | 0.481 | 63.2% | 44.4% |
+| 6 | 10 | comparator: relu(2nd - x_t) | 0.932 | 85.8% | 44.6% |
+| 6 | 11 | relu(+4.36*max -5.82*min) | 0.431 | 60.9% | 45.2% |
+| 6 | 12 | relu(+5.97*max -3.62*min) | 0.155 | 48.3% | 53.1% |
+| 6 | 13 | filter: relu(-0.06*x_1 -0.09*x_2 -0.04*x_3 +4.46*x_4 +0.02*x_5 -4.38*x_6) | 0.995 | 95.7% | 41.1% |
+| 6 | 14 | raw input: relu(+4.81*x_t -4.16*x_prev) | 0.986 | 94.3% | 41.9% |
+| 6 | 15 | filter: relu(+0.37*x_1 -4.16*x_2 +0.29*x_3 +0.31*x_4 +0.19*x_5 +2.85*x_6) | 0.984 | 96.4% | 27.8% |
+| 7 | 0 | filter: relu(+2.56*x_1 +2.45*x_2 +2.34*x_3 +2.23*x_4 -9.88*x_5 +3.58*x_6 +0.65*x_7) | 0.906 | 74.7% | 47.2% |
+| 7 | 1 | relu(-6.24*min +9.36*max_prev) | 0.355 | 46.9% | 54.1% |
+| 7 | 2 | relu(+7.95*max -6.19*min) | 0.362 | 47.9% | 56.1% |
+| 7 | 3 | filter: relu(-0.25*x_1 -0.26*x_2 -0.03*x_3 +4.32*x_4 -0.04*x_5 +0.03*x_6 -3.96*x_7) | 0.988 | 94.7% | 30.7% |
+| 7 | 4 | relu(-6.10*min +6.36*max_prev) | 0.339 | 51.8% | 52.7% |
+| 7 | 5 | relu(-7.30*min +11.90*max_prev) | 0.426 | 46.7% | 58.8% |
+| 7 | 6 | relu(-6.28*min +10.15*max_prev) | 0.470 | 58.6% | 48.6% |
+| 7 | 7 | filter: relu(-1.03*x_1 -1.00*x_2 -0.97*x_3 -0.92*x_4 -0.82*x_5 -0.57*x_6 +5.51*x_7) | 0.962 | 84.5% | 52.3% |
+| 7 | 8 | filter: relu(+1.91*x_1 +1.52*x_2 +1.68*x_3 +1.60*x_4 +1.70*x_5 -7.73*x_6 +0.09*x_7) | 0.943 | 89.5% | 37.0% |
+| 7 | 9 | relu(-6.58*min +8.49*max_prev) | 0.470 | 51.8% | 53.7% |
+| 7 | 10 | comparator: relu(2nd - x_t) | 0.910 | 86.6% | 31.4% |
+| 7 | 11 | relu(+4.29*max -6.07*min) | 0.429 | 69.0% | 35.5% |
+| 7 | 12 | relu(+7.70*max -5.21*min) | 0.210 | 41.5% | 59.6% |
+| 7 | 13 | filter: relu(-0.12*x_1 -0.07*x_2 -0.09*x_3 -0.08*x_4 +4.54*x_5 +0.01*x_6 -4.42*x_7) | 0.992 | 95.5% | 36.4% |
+| 7 | 14 | raw input: relu(+4.80*x_t -4.19*x_prev) | 0.986 | 94.5% | 44.6% |
+| 7 | 15 | filter: relu(+0.35*x_1 +0.32*x_2 -4.25*x_3 +0.34*x_4 +0.33*x_5 +0.22*x_6 +2.90*x_7) | 0.983 | 94.5% | 29.4% |
+
+*Sufficiency: decisions kept when only this neuron-step is replaced by its unit formula. Importance: decisions lost when it is set to its mean. Both are on held-out inputs. Units are approximate in dense networks (UNITS_PROGRAM, first-sweep conclusion), so a high fit does not imply exact sufficiency.*
