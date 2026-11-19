@@ -224,7 +224,12 @@ raw/filter units; shuffled control in brackets):
       - (k) DONE (U10b): not supported as pre-registered (3.2× rather than 5×; joint substitution at most 78%).
         - The trend is in the predicted direction (Spearman 0.89).
         - Tolerance saturates near 2.5% as accuracy falls.
-      - (k2) NEXT: test "precision is the price of accuracy". Bigger networks (M16,5 / M32,5 trained the same way) should reach the same accuracy at a larger ε95. If they do, the trade-off is about capacity, and wider networks are more explainable at equal accuracy. Pre-register before running.
+      - (k2) DONE (U12, ARC's h = 8/16/32 at n = 5): mixed by the rule (ε95 2×).
+        - Accuracy, tolerance and joint substitution all rise with width (43% → 78%).
+        - The trade-off binds at low capacity.
+      - (k3) NEXT: is ARC's challenge network hard because it is capacity-starved? Compare 2nd argmax n = 10 at h = 16 (the U8 zoo seeds) vs h = 32 (ARC's 2nd_argmax_32_10, available).
+        - Measures: accuracy, ε95, joint substitution.
+        - Pre-register before running.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)

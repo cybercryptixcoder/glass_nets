@@ -126,8 +126,14 @@ accuracy for the standard ones):
 - But the pre-registered bars were not met: 3.2× rather than 5×, and 78% rather than 90%. So F3 stays
   correlational.
 - Tolerance saturates near 2.5%. Beyond that the networks lose accuracy instead.
-- My reading, still to test: for this task at this size, precision is the price of accuracy, so a good solver
-  cannot be described faithfully by approximate units.
+- My reading after U10b: for this task at this size, precision is the price of accuracy.
+
+**Capacity (U12, ARC's own 2nd-argmax networks at n = 5 with 8, 16 and 32 hidden units, 5 seeds each):**
+- Wider networks are more accurate (median 0.87 → 0.99 → 0.996) AND more tolerant (ε95 0.8% → 2.0% → 1.6%).
+- Approximate units also stand in for them much better (joint substitution 43% → 73% → 78%).
+- So the trade-off binds only at low capacity: a capacity-starved network must be fragile to be accurate.
+- Even at 32 units, these networks stay far more fragile than the modular nets, and under 90% joint substitution.
+- By the pre-registered rule this was "mixed" (2× more tolerant, against a 3× bar).
 
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained

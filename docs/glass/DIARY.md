@@ -868,3 +868,31 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Descriptive, within the intervention:** across the 12 nets, ε95 and joint substitution rise together (Spearman 0.89, p = 1e-4), and ε95 and accuracy move against each other (Spearman −0.70, p = 0.01). Tolerance saturates near 2–2.5%. Pushing harder (σ = 0.3) buys accuracy loss, not tolerance.
   - **Reading (an interpretation, to test):** for this task at this size, precision appears to be the price of accuracy. An 8-unit ReLU RNN that tolerates imprecision is a worse 2nd-argmax solver. If that holds, approximate unit accounts of GOOD solvers of such tasks cannot be faithful, by necessity rather than by accident.
 - **21:53 Error noted (hand-typed time, the third time):** the check-in I just scheduled (trig_01EouLH7BRh3PiE3jHtTRNny, fires ~22:19) says "as of 21:59 ET". I typed that by hand; the clock read 21:53. It only labels which NEXT item was current, so nothing depends on it, but it breaks the CLAUDE.md rule. From now on, scheduled-message text carries no times at all.
+- **22:20 Check-in (trig_01Eou…).** Doing (k2).
+- **22:20 U12 PRE-REGISTRATION ((k2): is precision the price of accuracy at a given capacity?).**
+  - **Change of plan, with the reason:** ARC publishes fully trained 2nd-argmax RNNs at n = 5 with hidden 16 and 32 (5 seeds each; checked HTTP 200). They are trained far longer than my 60,000-step runs and by ARC's own recipe, so they remove my training as a confound. I use them instead of training wider nets myself.
+  - **Networks:** 2nd argmax n = 5, hidden h ∈ {8, 16, 32}, seeds 0–4 (h = 8 = the U8 seed models). 15 networks.
+  - **Known answer:** the h = 8 numbers reproduce U8 (ε95 0.006–0.013).
+  - **Measures:** accuracy; ε95 (P3); unit map v3 coverage; joint substitution of all library-explained neuron-steps (U10's procedure).
+  - **Confound stated in advance:** wider nets have more noised coordinates. Independent noise can average out across redundant neurons, so ε95 may rise for that reason alone. Joint substitution (systematic unit errors, not independent noise) is therefore the decisive explainability measure.
+  - **Decision.**
+    - "Capacity buys tolerance" if the h = 32 median ε95 ≥ 3× the h = 8 median, with median accuracy ≥ h = 8's.
+    - "And wider is more explainable by approximate units" if, in addition, the h = 32 median joint substitution ≥ h = 8's + 20 points.
+    - ε95 rising < 1.5× → precision is not relaxed by capacity at this task.
+    - Otherwise mixed.
+- **22:22 U12 RESULT: MIXED by the pre-registered rule; capacity raises accuracy, tolerance and substitutability together** (`results/glass/units/u12_width_*.json`, read by hand).
+  - **Known answer:** h = 8 reproduces U8 exactly (ε95 0.0063, 0.0079, 0.0100, 0.0126, 0.0063).
+
+    | hidden h | accuracy (median) | ε95 (median, range) | joint substitution (median, range) |
+    |---|---|---|---|
+    | 8 | 0.865 | 0.0079 (0.006–0.013) | 43% (38–73%) |
+    | 16 | 0.991 | 0.0200 (0.010–0.025) | 73% (62–75%) |
+    | 32 | 0.996 | 0.0158 (0.013–0.020) | 78% (75–83%) |
+
+  - **Rule:** the h = 32 / h = 8 ε95 ratio is 2.0, between 1.5 and 3, so "mixed". The joint-substitution condition only counts if the first holds; descriptively it rose by 35 points.
+  - **Reading:**
+    - "Precision is the price of accuracy" holds only at low capacity.
+    - With more neurons, ARC's networks become more accurate (0.87 → 0.996), about 2× more tolerant, and much better described by approximate units (43% → 78% of decisions kept).
+    - They stay hypersensitive by the modular-net standard (ε95 1–2% vs 0.79), and below 90% joint substitution.
+    - The noise-averaging confound (more neurons) could explain part of the ε95 rise, but not the joint-substitution rise.
+  - **Next question this raises:** is ARC's challenge network (M16,10) hard partly because it is capacity-starved? ARC publishes 2nd argmax h = 32, n = 10.
