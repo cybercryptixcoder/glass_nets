@@ -1578,3 +1578,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **07:53 A28, first held-out network: zoo_2nd_argmax_16_5_s2 (99.2%) PASSES under v4 (primary).** The ladder found no rung precise enough on the training half (v3 0.942 / 0.987 / 0.980 vs bar 0.995), so the densest (1e-4) was used. Held out:
   - v4: mechanisms alone 1.000, rebuilt 0.995 vs 0.992, trusted 0.76, specificity 1,853×, off_recall 0.86. PASS.
   - v3 for the record: rebuilt 0.980, fails (ii).
+- **08:14 A28, second held-out network: zoo_2nd_argmax_16_8_s2 (95.7%) PASSES** (v4 and v3). The ladder stopped at its sparsest rung: 1e-3 was precise enough on the training half (v3 0.980 vs bar 0.963), so the 1e-4 run was stopped. Held out: alone 1.000, rebuilt 0.979 vs 0.957, trusted 0.57, specificity 142×, off_recall 0.86.
+- **08:14 A30 done** (certificate and playground lead with v4, the decision-checked gate, when present; v3 listed for the record). The 32-wide A28 runs are at 20–26k of 30k on Colab.
