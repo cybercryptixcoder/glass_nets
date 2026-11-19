@@ -1,38 +1,64 @@
-# What the units program found (consolidated, written Nov 18, 2026, 21:07 ET)
+# What the units program found (consolidated; first written Nov 18, 2026, 21:07 ET)
 
 This is a summary of every experiment in the units program, for Shreyas. Every number comes from a file in
 `results/glass/units/`. Every decision rule was written in `docs/glass/DIARY.md` before the run it judged. The plan
 and the literature review are in `UNITS_PROGRAM.md`.
 
-## The question
+## One-page summary (updated Nov 18, 2026, 22:57 ET)
 
-**Shreyas's hypothesis (Nov 18):**
-- Networks build their behaviour from basic units, the same at the level of function (not weights), possibly spread
-  over clusters of weights.
-- Because training is similar, the same units may recur across networks.
-- If so, "these units, wired like this" would be a readable account of a network, between one rule for everything
-  and a copy of every weight.
+**The question.** Shreyas's hypothesis: networks are built from basic units that are the same at the level of
+function (not weights), possibly spread over clusters of weights, and similar training makes networks converge on the
+same units. If so, "these units, wired like this" is a readable account of a network.
 
-**Tested on:**
-- 11 AlgZoo RNNs: 2nd argmax and argmedian, 10 to 432 parameters.
-- 4 AlgZoo longest-cycle transformers: 108 to 656 parameters.
-- Compiled Tracr transformers (known answers).
-- For comparison: the modular-arithmetic transformers, which the system already certifies.
+**What was tested.** About 90 networks:
+- ARC's AlgZoo RNNs for 2nd argmax and argmedian at several sizes, including all 5 of ARC's training runs per size;
+- AlgZoo longest-cycle transformers;
+- my own noise-trained RNNs;
+- compiled Tracr networks with known answers;
+- the modular-arithmetic transformers our system already explains.
 
-## The short answer
+23 experiments (U1–U15 with their variants, P2–P5). Every decision rule was written down before its run.
 
-1. **Units exist at the level of function, and they recur.** The same small comparator appears across network sizes
-   and across two different tasks.
-2. **But they are approximate.** In these networks no account built from approximate units stands in for the
-   network's parts: decisions collapse when units replace the neurons they describe.
-3. **The reason can be measured.** These networks need about 1%-precise accounts (ε95). The networks the system
-   CAN explain approximately tolerate about 80× more imprecision.
-4. **That gives two routes to an explanation.** Either find EXACT structure (that works at any tolerance), or the
-   network must tolerate imprecision. AlgZoo above 32 parameters offers neither, as far as 7 different routes
-   could find.
-5. **Transformers in AlgZoo show no textbook units.** Neither the attention patterns nor the layer-0 residual
-   decompose into a library of standard operations. Training does add partial relational structure, well above
-   shuffled controls.
+**What holds up:**
+1. **Function-level units exist and recur.** Single neurons computing "how far is this input below the running max"
+   or "above the 2nd max" appear across sizes, across two tasks, and in all 5 independent training runs at 8 neurons
+   (none in shuffled controls). This is the convergence Shreyas predicted, at small size. (F1, U8)
+2. **They are approximate, and in these networks approximate is not enough.** When units replace all the neurons they
+   describe, the network keeps only 23–82% of its decisions. A unit at R² 0.98 can cost a third of decisions by
+   itself. (F2)
+3. **The reason is measured: precision.** AlgZoo networks flip 5% of their decisions under noise of about 1% of a
+   neuron's spread (13 networks, plus 15 more training runs). The modular-arithmetic networks tolerate about 80× more.
+   About a factor of 2.5 comes from nearly tied inputs; the rest is the networks themselves. (F3, P5, U11)
+4. **Two routes to an explanation:** exact structure, which works even for fragile networks (ARC's M4,3), or
+   tolerance, which lets approximate accounts work (the modular nets). AlgZoo above 32 parameters offers neither: no
+   exact structure in 7 searches. (F3, F4)
+5. **Width matters for 2nd argmax.** With more neurons, ARC's networks become more accurate, about 2× more tolerant,
+   and better described by units. At ARC's challenge size (10 inputs), 32-neuron networks are about half single
+   recognisable units, against 2–22% at 16 neurons. This fits superposition theory: cramped networks blend their
+   units. (U12, U13)
+
+**What did not hold up:**
+- Units do not converge across training runs at 16 neurons (3–4 of 5). (U8)
+- Training with internal noise raised tolerance only about 3× (bar 5×), and accuracy fell beyond that. The causal
+  version of point 3 is not established. (U10b)
+- The width effect does not appear in argmedian, even with units found from data. (U14, U15)
+- Transformers: no textbook attention units, no content lookup, no clean residual units. Training adds partial
+  relational structure. (F6)
+- Most of each argmedian network remains unexplained. One clean "soft rank" neuron was found. (F5, U9)
+
+**What is new, as far as I found:**
+- The precision requirement (ε95) as a measured, replicated predictor of when approximate accounts can be faithful.
+- Unit maps with per-part confidence for argmedian networks never interpreted before.
+- The width-to-units effect on ARC's networks.
+- Function-level convergence across ARC's training runs.
+
+All need a careful prior-work check before any public claim. The rest replicates known work (comparators in M16,10:
+Keane, LessWrong; timing tables: LessWrong comments).
+
+**What it means for Glass Networks:**
+- Report ε95 with every certificate. A small ε95 means an approximate construction cannot be faithful.
+- For fragile networks, offer the unit map (now in the catalog) as the honest partial product.
+- Width and tolerance are levers: networks trained wider, or for tolerance, should be easier to explain.
 
 ## Findings, one by one
 

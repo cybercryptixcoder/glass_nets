@@ -954,3 +954,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Total explained (library plus search), medians:** n = 5 0.63 vs 0.64; n = 7 0.34 vs 0.32. No change with width.
   - **Decision:** "wider → more unit-like" does not hold on argmedian, even with units found from data (sparse, ≤ 3 terms). U14's negative is not just the library. So the U13 effect is task-specific so far (2nd argmax at n = 10).
   - **Descriptive:** argmedian at n = 5 is about two-thirds sparse units at both widths; at n = 7, about a third.
+- **22:58 (l) DONE:** one-page summary at the top of `docs/glass/UNITS_FINDINGS.md` covering U1–U15 and P2–P5 (holds up / did not hold up / new / meaning for Glass Networks). Next: (n) prior-work check of the four 'new' items; (o) replicate the width effect at n = 8.
