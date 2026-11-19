@@ -1729,3 +1729,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - The planted-transformer known answer still passes with the A38 term (`atlas_tf_test.py` on `spd_planted_transformer_original_30000_512_a38.pt`: ALL PASS). The test checks the copy mechanisms in W_E, V, O and U, not Q/K. Together with the planted RNN (7 W_h mechanisms instead of 5, a fail), A38 still changes one must-not-change verdict.
 - A38c (one matrix at a time) on modadd, step 2,000: query/key matrices keep mechanisms (H0: Q 11, K 16). Every run without it, or with A38, has none by that step. That's the first sign that the diagnosis is right. The planted known-answer checks for A38c are running locally (RNN at step 10,000: W_x 7, W_h 7, W_o 5, still settling).
 - s1/s2 at step 12,000 of 30,000.
+
+## Nov 19, 15:32 ET (clock): two more fresh adders trained (reserve for A38c's held-out test)
+
+- modadd_p113_s3 and _s4: trained 15:16–15:31 on the shared GPU (same recipe, seeds 3, 4); both 100% accurate. Key frequencies (meta rule): s3 {14, 13, 51, 19, 11}, s4 {37, 8, 43, 52, 34}. Reserved and untouched until a pre-registration names them.
+- A38c's planted RNN check: 5/5/5 alive at step 32,000 of 40,000 (A38 had 7 in W_h). The planted transformer check is at step ~18,000. The modadd development run is on the GPU.

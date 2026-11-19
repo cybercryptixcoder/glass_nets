@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 15:32 ET (clock): fresh adders s3/s4 trained and reserved (100% accurate). A38c's planted RNN shows 5/5/5 at step 32,000 (A38 gave 7 in W_h). GPU: s1/s2 about halfway.
 - Nov 19, 15:14 ET (clock): A38c's modadd run keeps query/key mechanisms at step 2,000 (all earlier runs had none); its planted checks are running. A38 keeps the planted transformer passing but still breaks the planted RNN.
 - Nov 19, 14:56 ET (clock): A38 (CI-masked term, all matrices at once) breaks the planted RNN known answer (7 W_h mechanisms vs 5): heading for a fail. A38c (one matrix at a time) is running on modadd (GPU) and on both planted known answers (local CPU).
 - Nov 19, 14:38 ET (clock): GPU busy with 7 runs (s1/s2 for A37, modmul for A40, the A38 development run). A38 is likely to fail its development test (Q/K still dead at step 4,000); a cheap CPU test bed (planted transformer, C = 160) is running to try other designs quickly.
