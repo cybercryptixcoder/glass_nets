@@ -1551,3 +1551,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   | M8,5 (0.879) | default | 0.998 | 0.915 | 0.74 | 0.86 | 22 |
 
   - The ladder does what it was built for: weak networks keep the sparse, readable default (20–39 mechanisms); accurate ones get the precision they need. These networks shaped the method, so this is a design check, not evidence. Evidence comes from the A28 test set, once the wide-network setting passes its design case.
+- **07:12 Reading the passing held-out certificate (zoo_2nd_argmax_16_5_s1) by hand.** The numbers are strong, but the explanations are shallow:
+  - Many task-level triggers are time gates ("ON when step t > 2.5", "ON once a 2nd largest exists").
+  - The main finding is that 25 mechanisms keep the network from returning the max.
+  - True and checked, but it says *when* mechanisms act and *what decision* they protect, not *what they compute*.
+  - **Next presentation step (A29 idea):** describe each mechanism's input and output directions with the unit-map labels of the neurons it mostly reads and writes, e.g. "reads neuron 4 [≈ relu(max − x_t)], writes neuron 9 [≈ …]". Unit maps exist for the development networks; `lab/unitmap.py` can make them for the others.
