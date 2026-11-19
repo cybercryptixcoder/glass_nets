@@ -13,12 +13,6 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 2. 18 of the 20 trusted triggers use a task variable (not only neuron states). Most used: step t (13), x_t (11), x_t minus the previous min (6), x_t minus the previous max (5), x_t minus the running median (3).
 4. Rebuilt from mechanisms switched by trusted triggers: 81.4% of decisions (task rule 70.5%).
 
-## In plain English
-
-The network splits into 39 mechanisms, of which 20 have trusted triggers and 10 are always needed; 18 trusted triggers use a task variable rather than only neuron states, most often step t, x_t, x_t minus the previous min, x_t minus the previous max, or x_t minus the running median. Rebuilt from mechanisms switched by trusted triggers, it matches 81.4% of decisions (task rule 70.5%). Several always-on mechanisms (W_x.0, W_x.1, W_x.3, W_x.4, W_x.5, W_x.7, W_x.14, W_x.15, W_x.18, W_x.19) are in use 100% of the time; removing any where needed flips decisions, mostly from rank 3 to rank 2 or rank 3 to rank 4. Other mechanisms switch on with x_t thresholds (W_x.2, W_x.13, W_x.17, W_x.10) or with step and neuron-state conditions (e.g. W_h.10, W_h.13, W_h.11, W_h.5, W_h.14, W_h.7, W_h.17, W_h.1, W_h.2, W_h.9, W_h.3, W_h.18, W_h.12, W_h.16, W_h.6, W_h.0). The facts do not explain how these mechanisms combine to produce the median position.
-
-*(written by the reader from the facts above; checked only for numbers and names)*
-
 ## W_x: 14 mechanisms (14 with a trusted trigger)
 
 Alive mechanisms reproduce W_x to a relative error of 0.004.

@@ -1290,3 +1290,18 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **A gate that keeps everything on would pass (ii) trivially,** so v2 must also do work. New criterion (vi): of the calls where a trusted mechanism is not needed (importance < 0.1), the gate switches off ≥ 50% (`off_recall`).
   - **A3 under v2:** same criteria (i)–(v), with (ii) using v2, plus (vi). Pass if (i)–(iv) and (vi) hold in ≥ 4 of the 7 networks and (v) holds in both controlled pairs. The v1 verdicts stay recorded as they are.
 - **04:50 Colab:** argmedian 8_7 SPD done (atlas building locally). 16_7 at 28k, M8,8 at 26k; A14 variants at 8k; shuffled M16,10, M16,10 s0, lc_6_5, lc_3_4 running on GPU. Local: planted transformer P = 4 (float32) at 22k of 30k with exactly 4 alive mechanisms in each of W_E, W_V, W_O, W_U, as planted; lc_4_5 at 26k.
+- **04:53 A15 DONE (gate v2), held-out results.** `atlas_gate_test.py` failed before (8 FAILs) and passes after: on the planted RNN v2 keeps fidelity 1.000 and still switches off 99% of not-needed calls; on M16,10 (design case) v2 gives 0.951 vs v1 0.700 (task rule 0.953) with off_recall 0.85. All v1 numbers unchanged.
+  - **Held-out networks, rebuilt with v2 (τ = 0.05 fixed before they were run):**
+
+    | network | v1 fidelity | v2 fidelity | task rule | v2 off_recall |
+    |---|---|---|---|---|
+    | argmedian 8_5 | 0.814 | 0.904 | 0.705 | 0.91 |
+    | argmedian 8_7 | 0.884 | 0.956 | 0.495 | 0.91 |
+    | argmedian 16_5 | 0.732 | 0.839 | 0.984 | 0.84 |
+
+  - **Reading:** in every network, switching off only when nearly sure recovers most lost decisions, while the triggers still switch off 84–91% of the calls where a mechanism is not needed. argmedian 16_5 stays below its bar: there the decomposition itself is the limit (importance-masked 0.744, residual 0.28), which A14 addresses.
+  - **A3 under v2 so far:** argmedian 8_5 PASS; argmedian 8_7 fails (i) residual 0.060 (bar 0.05) and (iii) trusted share 0.39; argmedian 16_5 fails (i) and (ii). Four networks still to build.
+- **04:55 A16 known answer: the first feature design FAILS, a variant passes.**
+  - v3 (neurons as values instead of on/off) on the planted RNN: triggers read "neuron 1 > 0.10" and rule-gated fidelity drops to 0.925 (bar 0.99). On/off plus values (v3b): the trees still prefer the value split, same 0.925.
+  - **Why:** SPD's importance labels a mechanism "not needed" when its neuron is only slightly active (below about 0.1), but removing it there still changes decisions. The on/off feature switches it on for any activity, which matches what the network needs. So a threshold learned on importance labels is not the right gate at small activations.
+  - **Decision:** intent (a) of A16 is withdrawn (recorded in CHANGES). v3c keeps neurons on/off and adds only the task features (3rd largest, gaps); it passes the planted known answer (fidelity 1.000, all triggers ≥ 0.95, same rules as before). Running on M16,10 (design case), then on the held-out networks.

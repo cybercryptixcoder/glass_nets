@@ -16,12 +16,6 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 4. Rebuilt from mechanisms switched by trusted triggers: 73.2% of decisions (task rule 98.4%).
 5. Shuffled-weights control: 16 mechanisms, 10 trusted triggers, 10 using a task variable (trained: 22, 10, 10); functional groups: 1 mechanisms (trained: 21).
 
-## In plain English
-
-The network splits into 22 mechanisms, and its decisions depend heavily on task variables like step t and x_t. Two mechanisms are always needed. Twelve mechanisms (W_x.0, W_x.12, W_h.2, W_h.3, W_h.9, W_h.11, W_h.13, W_h.16, W_o.0, W_o.9, W_o.17, W_o.19) prevent answering rank 2 instead of rank 3, and nine (W_x.8, W_x.13, W_x.17, W_h.0, W_h.1, W_h.5, W_h.14, W_h.15, W_o.12) prevent rank 4 instead of rank 3. Rebuilding from mechanisms switched by trusted triggers reproduces 73.2% of decisions against 98.4% for the task rule. Many triggers fire on x_t thresholds or step t, and several mechanisms (such as W_h.1, W_h.2, W_h.14, W_h.16) fire on combinations of neuron states. The facts do not explain how these mechanisms combine to locate the median.
-
-*(written by the reader from the facts above; checked only for numbers and names)*
-
 ## W_x: 5 mechanisms (5 with a trusted trigger)
 
 Alive mechanisms reproduce W_x to a relative error of 0.024.

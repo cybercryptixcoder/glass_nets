@@ -25,8 +25,11 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 import spd
 
 LAB = Path(__file__).resolve().parent
+FEATURES = "v2"   # A16: trigger feature set. 'v3' (experiment, behind --features v3): neuron values + the 3rd largest
 MATRICES = ("W_x", "W_h", "W_o")
 TRUSTED = 0.9      # a trigger is used to switch its mechanism only at held-out confidence >= 0.9 (the labelling bar used
+GATE_TAU = 0.05    # A15 gate v2: a trusted trigger switches its mechanism OFF only where its tree's P(needed) < GATE_TAU
+                   # (a wrong 'off' loses decisions; a wrong 'on' costs nothing, since all-alive is exact). Pre-registered.
                    # throughout the units program, U19(c) (iii)); below it the mechanism stays always on and is reported so
 
 
@@ -66,6 +69,12 @@ def _scalar_seq_features(x, t):
          "x_t minus the previous max": np.nan_to_num(cur - mx_p), "x_t minus the previous 2nd": np.nan_to_num(cur - s2_p),
          "x_t minus the previous min": np.nan_to_num(cur - mn_p),
          "steps since the max": t - 1 - amax, "steps since the 2nd": np.where(t > 1, t - 1 - a2, -1), "steps since the min": t - 1 - amin}
+    if FEATURES.startswith("v3"):                                # A16
+        srt = np.sort(upto, 1); nan = np.full(B, np.nan)
+        s3_p = np.sort(prev, 1)[:, -3] if t > 3 else nan; a3 = np.argsort(upto, 1)[:, -3] if t > 2 else np.zeros(B, int)
+        f.update({"x_t minus the previous 3rd": np.nan_to_num(cur - s3_p), "steps since the 3rd": np.where(t > 2, t - 1 - a3, -1),
+                  "gap between the max and the 2nd so far": srt[:, -1] - srt[:, -2] if t > 1 else np.zeros(B),
+                  "gap between the 2nd and the 3rd so far": srt[:, -2] - srt[:, -3] if t > 2 else np.zeros(B)})
     return list(f), np.stack(list(f.values()), 1).astype(float)
 
 
@@ -294,8 +303,13 @@ def _features(tgt, x, t, h, end=False):
     """Features for the matrices that act at step t (W_x reads x_t, W_h reads h = h_(t-1)); end=True: W_o reads h = h_N."""
     names, F = tgt.task_features(x, t)
     lab = "in the final state" if end else "in the state before this step"
+    if FEATURES == "v3":                                         # A16: neuron values (a split at 0 is 'active')
+        return list(names) + [f"neuron {j} {lab}" for j in range(tgt.H)], np.concatenate([F, h], 1)
     names = list(names) + [f"neuron {j} active {lab}" for j in range(tgt.H)]
-    return names, np.concatenate([F, (h > 1e-9).astype(float)], 1)
+    F = np.concatenate([F, (h > 1e-9).astype(float)], 1)
+    if FEATURES == "v3b":                                        # A16 variant: on/off AND values
+        return names + [f"neuron {j} {lab}" for j in range(tgt.H)], np.concatenate([F, h], 1)
+    return names, F
 
 
 def set_residuals(mods, alive):
@@ -464,6 +478,21 @@ def rule_text(tree, names):
 
 # ------------------------------------------------------------------ the atlas
 
+def _p_on(t, F):
+    """P(needed) from a trigger: a constant trigger gives 0 or 1; a tree gives its (class-balanced) leaf probability."""
+    if isinstance(t, bool):
+        return np.full(len(F), float(t))
+    cls = list(t.classes_)
+    return t.predict_proba(F)[:, cls.index(True)] if True in cls else np.zeros(len(F))
+
+
+def _trigger_on(t, F, tau=None):
+    """v1 (tau None): the tree's own decision (P(needed) >= 0.5). v2: on unless P(needed) < tau."""
+    if tau is None:
+        return np.full(len(F), float(t)) if isinstance(t, bool) else t.predict(F).astype(float)
+    return (_p_on(t, F) >= tau).astype(float)
+
+
 def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0):
     import judge
     mods = load_decomposition(tgt, spd_model) if spd_model else decompose(tgt, steps, batch, seed)
@@ -505,8 +534,9 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
 
     conf = {(k, int(x["id"].rsplit(".", 1)[1])): x["trigger"]["confidence"] for k in MATS for x in atlas["matrices"][k]["mechanisms"]}
 
-    def g_rules(only=None, trusted=None):
-        """trusted = a confidence bar: a mechanism whose trigger is below it is kept always on (its trigger is not used)."""
+    def g_rules(only=None, trusted=None, tau=None):
+        """trusted = a confidence bar: a mechanism whose trigger is below it is kept always on (its trigger is not used).
+        tau (A15 gate v2): switch off only where the trigger's P(needed) < tau."""
         def gate(k, names, F, a):
             m = np.zeros((len(F), C))
             if only is not None and k not in only:
@@ -516,7 +546,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                 if trusted is not None and conf[(k, c)] < trusted:
                     m[:, c] = 1.0
                 else:
-                    m[:, c] = float(t) if isinstance(t, bool) else t.predict(F)
+                    m[:, c] = _trigger_on(t, F, tau)
             return m
         return gate
 
@@ -532,9 +562,24 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     if "W_h" in MATS:
         variants.append(("rule_gated_W_h_only", g_rules({"W_h"})))
     variants.append(("rule_gated_trusted", g_rules(trusted=TRUSTED)))
+    variants.append(("rule_gated_trusted_v2", g_rules(trusted=TRUSTED, tau=GATE_TAU)))      # A15
     for label, gate in variants:
         fid[label] = float(judge.same(net, gated(mods, xte, gate)).mean())
     atlas["fidelity"] = fid
+    work = {}                                                    # A15: does the gate do work? (full network's held-out states)
+    for v, tau in (("v1", None), ("v2", GATE_TAU)):
+        off, offn, n_all, n_not = 0, 0, 0, 0
+        for k in MATS:
+            _, Fte, Gte = te[k]
+            for c in alive[k]:
+                if conf[(k, c)] < TRUSTED:
+                    continue
+                on = _trigger_on(trees[(k, c)], Fte, tau) > 0.5
+                not_needed = Gte[:, c] < 0.1
+                off += int((~on).sum()); n_all += len(on)
+                offn += int((~on & not_needed).sum()); n_not += int(not_needed.sum())
+        work[v] = {"off_share": off / n_all if n_all else 0.0, "off_recall": offn / n_not if n_not else 0.0}
+    atlas["gate"] = {"tau": GATE_TAU, **work}
     atlas["_trees"], atlas["_alive"], atlas["_conf"] = trees, alive, conf      # kept for the playground (A10); not in JSON
     eff = effects(tgt, mods, xte, te, alive)                     # A2
     for k in MATS:
@@ -792,7 +837,10 @@ if __name__ == "__main__":
     ap.add_argument("depth", nargs="?", type=int, default=4)
     ap.add_argument("--control-spd", help="SPD decomposition of the shuffled-weights network, for the control comparison")
     ap.add_argument("--narrate", action="store_true", help="add a guarded plain-English paragraph written by the reader model (A13)")
+    ap.add_argument("--features", default="v2", choices=["v2", "v3", "v3b", "v3c"], help="trigger feature set (A16 experiments; outputs get _f3/_f3b/_f3c)")
     a_ = ap.parse_args()
+    FEATURES = a_.features
+    SUF = "_f" + FEATURES[1:] if FEATURES != "v2" else ""
     tgt = make_target(a_.target)
     a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth)
     ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
@@ -802,13 +850,14 @@ if __name__ == "__main__":
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
-    (out / f"{a_.target}_d{a_.depth}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
+    (out / f"{a_.target}_d{a_.depth}{SUF}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
         "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "depth": a_.depth}))
     if ctrl is not None:
         for k in ("_trees", "_alive", "_conf"):
             ctrl.pop(k, None)
-    (out / f"{a_.target}_d{a_.depth}.json").write_text(json.dumps(a, indent=1))
-    (out / f"{a_.target}_d{a_.depth}.md").write_text(render(a, ctrl))
+    a["features"] = FEATURES
+    (out / f"{a_.target}_d{a_.depth}{SUF}.json").write_text(json.dumps(a, indent=1))
+    (out / f"{a_.target}_d{a_.depth}{SUF}.md").write_text(render(a, ctrl))
     if ctrl is not None:
-        (out / f"{a_.target}_shuffled_d{a_.depth}.json").write_text(json.dumps(ctrl, indent=1))
+        (out / f"{a_.target}_shuffled_d{a_.depth}{SUF}.json").write_text(json.dumps(ctrl, indent=1))
     print(summary(a)); print("\n".join(a["findings"]["statements"]))
