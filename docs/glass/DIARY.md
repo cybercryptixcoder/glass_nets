@@ -1279,3 +1279,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - But its findings are strong: 21 mechanisms in two functional groups, against 1 in the shuffled control (v holds). Twelve keep the answer from moving to rank 2, nine from moving to rank 4: they hold the median against both neighbours.
   - **Reading:** for an accurate (98.4%), fragile network, the decomposition itself is not precise enough at the decision level; the MSE loss and the minimality coefficient trade away what decisions need.
   - **Alternatives being tried (A14),** on Colab CPUs: KL reconstruction at minimality 3e-3; MSE at 1e-3; KL at 1e-3. Plus the planted RNN with KL as A14's known answer.
+- **04:46 A3: ARC's challenge network M16,10 FAILS (ii) and (iii)** (GPU float32 SPD, batch 2048; `results/glass/atlas/zoo_2nd_argmax_16_10_d4.{json,md}`; no control yet).
+  - (i) residual 0.037 ✓. (ii) rebuilt with trusted triggers 0.700 vs task rule 0.953 ✗. (iii) 37% of non-always mechanisms trusted ✗ (W_x 5/5, W_h 8/20, W_o 0/10). (iv) median specificity 26× ✓.
+  - All-alive fidelity 1.000, importance-masked 0.795.
+  - Findings: 35 mechanisms, 13 trusted. Functional groups: W_h.5, W_h.6, W_o.19 keep the answer from moving from the 2nd largest to the max (rank 2 → 1); W_h.3 from moving to rank 3.
+- **04:49 Why (ii) fails on M16,10: the gate switches mechanisms off too readily** (`scripts/glass/atlas_gate_sweep.py`, exploratory, design case only).
+  - A trusted trigger switches its mechanism off wherever its tree says P(needed) < 0.5. A wrong "off" loses decisions. A wrong "on" costs nothing, because all-alive is exact (A12). So the gate should switch off only when it is nearly sure.
+  - Moving only that bar: < 0.5 → 0.700; < 0.3 → 0.844; < 0.1 → 0.915; < 0.03 → 0.954; < 0.01 → 0.955 (task rule 0.953).
+  - **Pre-registration (A15, before any other network is evaluated this way):** gate v2 uses τ = 0.05, fixed now as a conventional "nearly certain" level, not one of the swept values. M16,10 is the design case and does not count as held out.
+  - **A gate that keeps everything on would pass (ii) trivially,** so v2 must also do work. New criterion (vi): of the calls where a trusted mechanism is not needed (importance < 0.1), the gate switches off ≥ 50% (`off_recall`).
+  - **A3 under v2:** same criteria (i)–(v), with (ii) using v2, plus (vi). Pass if (i)–(iv) and (vi) hold in ≥ 4 of the 7 networks and (v) holds in both controlled pairs. The v1 verdicts stay recorded as they are.
+- **04:50 Colab:** argmedian 8_7 SPD done (atlas building locally). 16_7 at 28k, M8,8 at 26k; A14 variants at 8k; shuffled M16,10, M16,10 s0, lc_6_5, lc_3_4 running on GPU. Local: planted transformer P = 4 (float32) at 22k of 30k with exactly 4 alive mechanisms in each of W_E, W_V, W_O, W_U, as planted; lc_4_5 at 26k.
