@@ -400,6 +400,8 @@ def rule_text(tree, names):
     def paths(i, conds):               # conds: list of (feature, op, value); op in {"<=", ">", "not", "is"}
         u = uniform(i)
         if u is not None:
+            if u:
+                nodes.append(i)
             return [conds] if u else []
         f, thr = names[t.feature[i]], t.threshold[i]
         binary = set(np.unique(tree._fit_values[:, t.feature[i]])) <= {0.0, 1.0} if hasattr(tree, "_fit_values") else False
@@ -421,13 +423,29 @@ def rule_text(tree, names):
             else:
                 out.append(f"{f} <= {up:.2f}")
         return " AND ".join(out)
+    nodes = []
     ps = paths(0, [])
     tree._features_used = sorted({f for p in ps for f, _, _ in p})        # A8
     if not ps:
         return "never"
     if ps == [[]]:
         return "always"
-    return "\n".join("ON when " + text(p) for p in ps)
+    tree._rule_full = "\n".join("ON when " + text(p) for p in ps)
+    if not hasattr(tree, "_fit_values"):
+        return tree._rule_full
+    # readability: list paths by how many training inputs they switch on; show those covering >= 80%, fold the rest
+    path_of = tree.decision_path(tree._fit_values)
+    cover = np.array([path_of[:, nd].sum() for nd in nodes], dtype=float); order = np.argsort(-cover); tot = cover.sum() or 1.0
+    shown, acc = [], 0.0
+    for j in order:
+        shown.append(j); acc += cover[j]
+        if acc / tot >= 0.8:
+            break
+    rest = [j for j in order if j not in shown]
+    lines = [f"ON when {text(ps[j])}" + (f" ({100 * cover[j] / tot:.0f}% of its ON cases)" if len(ps) > 1 else "") for j in shown]
+    if rest:
+        lines.append(f"+ {len(rest)} rarer case(s), {100 * cover[rest].sum() / tot:.0f}% of its ON cases")
+    return "\n".join(lines)
 
 
 # ------------------------------------------------------------------ the atlas
@@ -461,7 +479,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                 conf = 0.5 * (p[yte].mean() + (~p[~yte]).mean()) if yte.any() and (~yte).any() else float((p == yte).mean())
                 trees[(k, c)] = tree
                 trig = {"rule": rule_text(tree, names), "confidence": float(conf), "tree": export_text(tree, feature_names=names, decimals=2)}
-                trig["features_used"] = tree._features_used
+                trig["features_used"] = tree._features_used; trig["rule_full"] = getattr(tree, "_rule_full", trig["rule"])
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
