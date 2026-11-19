@@ -70,6 +70,7 @@ def _unit_map(tid):
             "cells": [{k: x.get(k) for k in ("t", "unit", "label", "fit", "sufficiency", "importance", "rel_error", "substitution_grade")}
                       for x in m["cells"]],
             "substitution_grade": sum(1 for x in m["cells"] if x.get("substitution_grade")),
+            "replaceable": m.get("replaceable"),
             "file": f"results/glass/units/maps/{tid}.md"}
 
 

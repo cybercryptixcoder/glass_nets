@@ -129,7 +129,17 @@ def unit_map(target, variant="original", n=8000, confidence=True):
     for c in cells:
         if e95 is not None and "rel_error" in c:
             c["substitution_grade"] = bool(c["rel_error"] <= e95)
-    return {"target": target, "variant": variant, "cells": cells, "per_unit": per_unit, "eps95": e95,
+    replaceable = None
+    if e95 is not None:     # v4 (CHANGES T6): replace every substitution-grade unit at once, on the held-out half
+        rep = {}
+        for c in cells:
+            if c.get("substitution_grade") and c["prims"]:
+                t, p_, w_ = c["t"], c["prims"], np.array(c["w"])
+                rep[(t, c["unit"])] = ((lambda X_, t=t, w=w_: np.maximum(X_[:, :t] @ w, 0)) if p_[0].startswith("x_") and p_[0][2:].isdigit()
+                                       else (lambda X_, t=t, p=p_, w=w_: np.maximum(np.stack([library(X_, t)[q] for q in p], 1) @ w, 0)))
+        replaceable = {"n": len(rep), "share_after_step1": sum(c["var"] for c in later if c.get("substitution_grade") and c["prims"]) / tot,
+                       "joint_fidelity": float(judge.same(ref, run(W, Xt, rep)).mean()), "task_rule": float(meta.get("test_acc", float("nan")))}
+    return {"target": target, "variant": variant, "cells": cells, "per_unit": per_unit, "eps95": e95, "replaceable": replaceable,
             "coverage_history": sum(c["var"] for c in hist) / tot, "coverage_raw": sum(c["var"] for c in raw) / tot}
 
 

@@ -1022,3 +1022,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Decision.**
     - Fidelity ≥ the task rule in ≥ 80% of networks → ε95 is a valid admission rule. Build step (CHANGES entry first): the catalog marks substitution-grade parts as "replaceable", and states the joint fidelity of replacing them all.
     - Otherwise per-unit admission by ε95 is not enough, because errors add up; record the gap.
+- **00:26 Check-in (trig_012aW…).** Running U18 exactly as pre-registered.
+  - Count correction: `results/glass/units/maps/` holds 10 v3 maps (6 2nd argmax, 4 argmedian), not 11. With the 10 n = 10 seed networks that makes 20; the 80% bar means ≥ 16 of 20.
+  - Clarification (no change to the rule): "all substitution-grade units" includes step 1, where they are exact raw-input units.
+- **00:28 U18 RESULT: PASSES by the rule (19 of 20), but the admitted parts are mostly trivial** (`results/glass/units/u18_*.json`, read by hand).
+  - Joint fidelity when every substitution-grade unit is replaced at once is ≥ the task rule in 19 of 20 networks.
+  - The one failure is M2,2: fidelity 0.974 against a bar of 1.000, since it is 100% accurate on these inputs and any error fails.
+  - **Honest reading:**
+    - Above M4,3, the admitted parts are almost all step-1 raw-input units, which are exact.
+    - After step 1 they cover 0% of the variance in 15 of 20 networks, and at most 6% (argmedian 16_5 5%, M32,10 seeds 1–6%).
+    - Only M2,2 (54%) and M4,3 (51%) admit substantial non-trivial parts.
+  - So ε95 is a SAFE admission rule (joint replacement stays above the task rule), but it admits little. This matches U17's cap of a few percent.
+  - My pre-registration did not exclude step 1, which made the test weaker than it looks. Noted, and I am not changing the rule after the fact.
+  - **Decision (per the rule):** build the catalog's "replaceable parts" line. It must show the share AFTER step 1, so it cannot overstate. CHANGES T6 first.
+- **00:32 T6 DONE: replaceable parts in the unit map (v4) and the catalog.**
+  - `t6_test.py` failed before (5 FAILs) and passes after; held-out networks match U18 exactly; all v3 fields are unchanged in the 10 regenerated maps; the T5 test still passes.
+  - Page text read by hand:
+    - argmedian 16_5: "5% of the network's activity after step 1 … keeps 99.6% of decisions; the task rule alone keeps 98.4%".
+    - M4,3: "51% … keeps 99.3%; task rule 98.1%".
+  - Next: (s), a synthesis step with no new runs.

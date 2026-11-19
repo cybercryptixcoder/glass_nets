@@ -240,7 +240,10 @@ raw/filter units; shuffled control in brackets):
         - Unit-likeness tracks hidden size relative to length.
       - (q) Replaced by U17, reader-free. The reader version was confounded by the task-rule bar and risked circling (DIARY).
         - U17: rules can replace at most 7% of a network before falling below the task rule, even where half of it is recognisable units.
-      - (r) NEXT: U18, pre-registered in DIARY. Is ε95 the right admission rule for "replaceable parts"? If yes → catalog build step.
+      - (r) DONE: U18 passes (19/20), but the admitted parts are mostly the trivial step-1 units.
+        - Built T6: unit map v4 records the replaceable parts (share after step 1, joint fidelity, task-rule bar), and the catalog states them in one line.
+      - (s) NEXT: the program's main questions are answered (UNITS_FINDINGS). Before more experiments, re-read UNITS_PROGRAM §1–§4 against the findings and write a short "where the units program leaves Glass Networks" section in UNITS_FINDINGS: what to build next, and which open decisions need Shreyas.
+        - No new runs in that step.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
