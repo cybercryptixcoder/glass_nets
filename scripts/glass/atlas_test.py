@@ -15,7 +15,7 @@ except Exception as e:  # noqa: BLE001
     check(False, f"lab/atlas.py imports ({type(e).__name__}: {e})")
     print(f"{len(fails)} FAILED"); sys.exit(1)
 tgt = atlas.planted_rnn()
-a = atlas.build_atlas(tgt, spd_model=ROOT / "results/glass/units/u19b_model_20_40000_3e-3_1.0_1.0_1e-3_512.pt", depth=3, n=16000)
+a = atlas.build_atlas(tgt, spd_model=Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "results/glass/units/u19b_model_20_40000_3e-3_1.0_1.0_1e-3_512.pt", depth=3, n=16000)
 for m in ("W_x", "W_h", "W_o"):
     mech = a["matrices"][m]["mechanisms"]
     check(len(mech) == 5, f"{m}: 5 mechanisms (got {len(mech)})")

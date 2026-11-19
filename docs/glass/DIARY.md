@@ -1734,3 +1734,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - modadd_p113_s3 and _s4: trained 15:16–15:31 on the shared GPU (same recipe, seeds 3, 4); both 100% accurate. Key frequencies (meta rule): s3 {14, 13, 51, 19, 11}, s4 {37, 8, 43, 52, 34}. Reserved and untouched until a pre-registration names them.
 - A38c's planted RNN check: 5/5/5 alive at step 32,000 of 40,000 (A38 had 7 in W_h). The planted transformer check is at step ~18,000. The modadd development run is on the GPU.
+
+## Nov 19, 15:51 ET (clock): a translation error found in A38/A38c, thanks to the planted transformer
+
+- A38c's planted checks:
+  - Planted RNN: ALL PASS (5/5/5; `atlas_test.py` now takes the decomposition file as an argument).
+  - Planted transformer: `atlas_tf_test.py` passes, but that test does not look at Q or at "mechanisms alone". Building its atlas shows Q with no alive mechanism and mechanisms alone at 0.497. The reference decomposition has 1 Q mechanism and 1.000; A38 gives 0.458.
+- So the small planted transformer shows the same Q failure as modadd. A cheap test bed was there all along.
+- Cause, reproduced: in the A38c decomposition, the CI-masked Q-only output matches the network (MSE 2.5e-7) even though every Q importance is ≤ 0. Two components have pre-activations of −554 and −774. The mask function is leaky below 0 (as in SPD's stochastic masks), so those components get masks of −5.5 and −7.7 and rebuild the query with negative masks. The atlas clamps importances to [0, 1], so it sees them as dead.
+- This is a translation error: the intent was "masks = the importances the atlas uses", which lie in [0, 1]. Fix (A38d): the CI-masked term uses clamp(z, 0, 1) as the mask value, keeping the leaky gradient (straight-through). Then the term can only be met by components the atlas will count as alive.
+- Plan: stop the A38 and A38c modadd runs (both measure the faulty version); rerun the planted transformer (the fast check) with A38d locally; if it keeps Q with mechanisms alone at 1.0 and the planted RNN still passes, run modadd.
