@@ -1826,3 +1826,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A40 (modmul) decompositions finished at 17:27; its atlas builds are running locally.
 
 ## Nov 19, 17:55 ET (clock): modmul atlas building (two bases, 449 features; slower), memorizer decomposing
+
+## Nov 19, 18:13 ET (clock): A40 FAILS its pre-registered test, but the failure points straight at A41
+
+- modmul_p113 with the two-basis vocabulary: 56% of trusted frequency triggers use a log-basis key frequency (bar 80%, chance 5%), so it fails. The basis is right where it matters: only 16% use those frequencies on the number line, and the MLP and unembedding matrices are led by log-basis key frequencies (4, 28, 30, 31, 41). The must-not-change check fails too: adding the log features drops s1's adder score from 84% to 70%. Twice the vocabulary gives the rule-fitter twice the chances to find a token ordering that lists the right tokens.
+- Post-hoc reading, development information only: count only the triggers that A41 labels "rule" (they carry over to unseen values):
+  - modmul, log basis: 35 of 39, 90%;
+  - s1 under 'both': 39 of 41, 95%;
+  - s1 and s2 under the A37 vocabulary: 98% and 95%.
+- So the off-key triggers are almost all lookups. The atlas's real structural claims are right about 90–98% of the time; the noise comes from memorized rules that A41 now flags.
+- Next: pre-register that as A42 (the frequency known answer counted over rule-labelled mechanisms, two-basis vocabulary, at least 20 such triggers per network) and judge it on networks never used. Fresh modmul seed 1 (to train now), and the reserved adders s3 and s4. A38's held-out test will need new seeds when it is ready; they're cheap.
