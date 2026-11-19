@@ -1846,3 +1846,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - modmul_p113_s1, trained just now. 100% accurate; log-order key frequencies {19, 14, 20, 56, 38}, share 0.96 (number line 0.10). Must reach ≥ 80% on log-basis keys.
   - The reserved adders s3 {14, 13, 51, 19, 11} and s4 {37, 8, 43, 52, 34}. Must reach ≥ 80% on number-line keys.
 - Decompositions (A35 pipeline) go on the GPU now: 6 runs.
+
+## Nov 19, 18:28 ET (clock): A42 decompositions running; A38e looks promising so far
+
+- s2 under the two-basis vocabulary: 81% (A37: 86%). So 'both' costs s2 a little and s1 a lot (84 → 70%).
+- A38e (one matrix at a time, on/off masks), at training-batch counts: planted RNN 5/5/5 at seed 0 (step 28,000) and seed 1 (step 26,000); A38d split W_h at both seeds. Planted transformer: Q keeps 2 alive at step 22,000. Atlas checks when they finish.
+- GPU: 6 A42 runs plus 2 memorizer runs. The memorizer is at step 12,000; it slowed when the A42 runs started.
+- ATLAS_RESULTS now has the 227k-parameter section.
