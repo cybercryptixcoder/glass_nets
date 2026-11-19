@@ -495,7 +495,27 @@ def _trigger_on(t, F, tau=None):
     return (_p_on(t, F) >= tau).astype(float)
 
 
-def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0):
+def absorb_residual(tgt, mods, alive, x):
+    """A26: refit each matrix's alive output directions by least squares on its real inputs (x: the training half), with
+    the input directions fixed, so importances and triggers are unchanged. Returns the on-data error before/after."""
+    rec, info = {}, {}
+    with torch.no_grad():
+        def _rec(name, a):
+            rec.setdefault(name, []).append(a.numpy()); return a @ mods[name].W.T
+        tgt.forward(torch.tensor(x), _rec)
+        for k, m in mods.items():
+            al = alive[k]
+            if not al:
+                continue
+            A = np.concatenate(rec[k]); Z = A @ m.V.numpy()[al].T; T = A @ m.W.numpy().T
+            before = float(np.linalg.norm(T - Z @ m.U.numpy()[al]) / (np.linalg.norm(T) + 1e-12))
+            Unew, *_ = np.linalg.lstsq(Z, T, rcond=None)
+            U = m.U.detach().clone(); U[al] = torch.tensor(Unew, dtype=U.dtype); m.U.copy_(U)
+            info[k] = {"on_data_error_before": before, "on_data_error_after": float(np.linalg.norm(T - Z @ Unew) / (np.linalg.norm(T) + 1e-12))}
+    return info
+
+
+def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0, absorb=False):
     import judge
     mods = load_decomposition(tgt, spd_model) if spd_model else decompose(tgt, steps, batch, seed)
     MATS = getattr(tgt, "matrices", MATRICES)
@@ -506,6 +526,8 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     C = mods[MATS[0]].U.shape[0]
     alive = {k: [c for c in range(C) if tr[k][2][:, c].mean() > 0.01] for k in MATS}
     atlas = {"target": tgt.meta, "kind": getattr(tgt, "kind", "rnn"), "task_rule": tgt.task_rule, "depth": depth, "matrices": {}}
+    if absorb:                                                   # A26
+        atlas["absorb"] = True; atlas["absorb_info"] = absorb_residual(tgt, mods, alive, xtr)
     trees = {}
     for k in MATS:
         names, Ftr, Gtr = tr[k]; _, Fte, Gte = te[k]; mechs = []
@@ -941,7 +963,10 @@ def _load_play(tid):
     if tid not in _PLAY:
         import pickle
         P = pickle.loads((LAB.parent / "results" / "glass" / "atlas" / f"{tid}_d4_model.pkl").read_bytes())
-        tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"]); set_residuals(mods, P["alive"])
+        tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"])
+        if P.get("absorb"):                                      # A26: the same absorption as at build time (training half)
+            X = tgt.X[:16000]; absorb_residual(tgt, mods, P["alive"], X[:len(X) // 2])
+        set_residuals(mods, P["alive"])
         C = mods[next(iter(mods))].U.shape[0]
         _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), C, tau=GATE_TAU if "conf_clear" in P else None), **P}
     return _PLAY[tid]
@@ -994,13 +1019,15 @@ if __name__ == "__main__":
     ap.add_argument("depth", nargs="?", type=int, default=4)
     ap.add_argument("--control-spd", help="SPD decomposition of the shuffled-weights network, for the control comparison")
     ap.add_argument("--narrate", action="store_true", help="add a guarded plain-English paragraph written by the reader model (A13)")
+    ap.add_argument("--absorb", action="store_true", help="A26: absorb the residual into the alive mechanisms (training half)")
+    ap.add_argument("--tag", default="", help="suffix for the output files (e.g. a variant name)")
     ap.add_argument("--features", default="v2", choices=["v2", "v3", "v3b", "v3c"], help="trigger feature set (A16 experiments; outputs get _f3/_f3b/_f3c)")
     a_ = ap.parse_args()
     FEATURES = a_.features
-    SUF = "_f" + FEATURES[1:] if FEATURES != "v2" else ""
+    SUF = ("_f" + FEATURES[1:] if FEATURES != "v2" else "") + (f"_{a_.tag}" if a_.tag else "")
     tgt = make_target(a_.target)
-    a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth)
-    ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
+    a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth, absorb=a_.absorb)
+    ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth, absorb=a_.absorb) if a_.control_spd else None
     a["findings"] = findings(a, ctrl)
     gloss(a)                                                     # A20
     if a_.narrate:
@@ -1009,7 +1036,7 @@ if __name__ == "__main__":
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
     (out / f"{a_.target}_d{a_.depth}{SUF}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
-        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "depth": a_.depth}))
+        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "depth": a_.depth, "absorb": bool(a_.absorb)}))
     if ctrl is not None:
         for k in ("_trees", "_alive", "_conf", "_conf_clear"):
             ctrl.pop(k, None)
