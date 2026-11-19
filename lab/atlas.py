@@ -760,6 +760,25 @@ def narrate(a):
     return {"text": text, "violations": viol, "note": "written by the reader from the facts above; checked only for numbers and names"}
 
 
+def gloss(a):
+    """A20: add `rule_glossed` to every trigger: the rule with each neuron's unit-map label (results/glass/units/maps/<t>.json,
+    per_unit) after its name, e.g. 'neuron 1 [≈ relu(max - x_t)] active'. Unexplained or unmapped neurons stay bare."""
+    import re
+    tid = (a.get("target") or {}).get("target"); var = (a.get("target") or {}).get("variant", "original")
+    f = LAB.parent / "results" / "glass" / "units" / "maps" / f"{tid}.json"
+    labels = {}
+    if tid and var == "original" and f.exists():
+        labels = {int(k): v.split(": ", 1)[-1] for k, v in json.loads(f.read_text())["map"]["per_unit"].items() if v != "unexplained"}
+
+    def sub(m):
+        j = int(m.group(1))
+        return f"neuron {j} [≈ {labels[j]}]" if j in labels else m.group(0)
+    for m in a["matrices"].values():
+        for x in m["mechanisms"]:
+            x["trigger"]["rule_glossed"] = re.sub(r"neuron (\d+)", sub, x["trigger"]["rule"])
+    return a
+
+
 def render(a, control=None):
     """The atlas certificate in markdown (CHANGES A4)."""
     f = a["fidelity"]; tr = a["task_rule"]
@@ -787,7 +806,7 @@ def render(a, control=None):
             if e and e.get("role_changes"):
                 eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
-            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {x['trigger']['rule'].replace(chr(10), '<br>')} | {x['trigger']['confidence']:.2f} | {eff} | {spec} |")
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {x['trigger'].get('rule_glossed', x['trigger']['rule']).replace(chr(10), '<br>')} | {x['trigger']['confidence']:.2f} | {eff} | {spec} |")
         L.append("")
     return "\n".join(L)
 
@@ -879,6 +898,7 @@ if __name__ == "__main__":
     a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth)
     ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
     a["findings"] = findings(a, ctrl)
+    gloss(a)                                                     # A20
     if a_.narrate:
         a["narrative"] = narrate(a)
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)

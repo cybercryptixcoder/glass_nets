@@ -1375,3 +1375,19 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **KL reconstruction fails:** W_h's mechanisms come out as large pieces that cancel each other, so the alive mechanisms alone keep only 58–65% of decisions. Dropped.
   - **A lower minimality coefficient helps** (0.900 → 0.953 for mechanisms alone; 22 → 31 mechanisms), but is not yet at 0.984.
   - **Next variants, on Colab CPU:** MSE at minimality 3e-4 and 1e-4 (30k steps), and 1e-3 at 60k steps.
+- **05:18 Reading the argmedian 16_7 certificate by hand.** The numbers pass, but the account is thin: most W_h triggers are stated in other neurons ("ON when neuron 7 active … AND neuron 12 active …"), and the findings name one functional mechanism. That is not yet a discovery a person can use. Two steps follow from this:
+  - **A20 (done, text only): glosses from the unit maps.** Each neuron in a trigger now carries its unit-map label, e.g. M16,10 W_h.0: "ON when neuron 1 [≈ relu(max − x_t)] active … AND neuron 13 [≈ relu(+4.11·x_prev)] active". `atlas_gloss_test.py` failed before and passes after; no number changes.
+  - **Task-level triggers (exploration, development set, clear-cut confidence ≥ 0.9 share):**
+
+    | network | task + neurons | task only | neurons only |
+    |---|---|---|---|
+    | argmedian 8_5 | 0.79 | 0.76 | 0.48 |
+    | argmedian 8_7 | 0.67 | 0.56 | 0.28 |
+    | argmedian 16_5 | 0.70 | 0.45 | 0.40 |
+    | argmedian 16_7 | 0.58 | 0.38 | 0.38 |
+    | M16,10 | 0.51 | 0.46 | 0.26 |
+    | M8,8 | 0.62 | 0.59 | 0.48 |
+    | M8,5 | 0.74 | 0.58 | 0.58 |
+
+    Triggers stated purely in task variables are often almost as good. Planned (A21): each mechanism also gets a task-only trigger, shown as its explanation whenever it is trusted. The gate is unchanged, so no fidelity changes. The certificate then reports how many mechanisms have a task-level explanation.
+- **05:16 Started:** M16,10 at minimality 1e-3 and lc_4_5 at 1e-3 (local CPU); argmedian 16_5 at 3e-4, 1e-4, and 1e-3 for 60k steps (Colab CPU).
