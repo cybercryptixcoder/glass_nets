@@ -93,7 +93,13 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
             def _cm(z):         # A38d: mask VALUE = the importance the atlas uses (clamped to [0, 1]); gradient = the leaky one
                 g = lower_leaky(z)
                 return z.clamp(0, 1) + g - g.detach()
-            if ci_mode == "layer":  # A38c (experiment): one matrix at a time (a random one per step), masks = g, the rest exact
+            def _hm2(z):        # on/off mask 1[z > 0.5], gradient = the leaky one (straight-through)
+                g = lower_leaky(z)
+                return (z > 0.5).to(z.dtype) + g - g.detach()
+            if ci_mode == "layer_hard":   # A38e (experiment): one matrix at a time, on/off masks, the rest exact
+                pick = list(mods)[int(torch.randint(len(mods), (1,)))]
+                rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: _hm2(gs[n][k]) if n == pick else None))
+            elif ci_mode == "layer":  # A38c (experiment): one matrix at a time (a random one per step), masks = g, the rest exact
                 pick = list(mods)[int(torch.randint(len(mods), (1,)))]
                 rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: _cm(gs[n][k]) if n == pick else None))
             elif ci_mode == "hard":   # A38b (experiment): on/off masks 1[g > 0.5], straight-through gradient to g
