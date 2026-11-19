@@ -1634,3 +1634,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **A34 (presentation):** always-on mechanisms are grouped into one row per matrix in certificates and the catalog. On 32_10_s2, 39 of 110 mechanisms never switch; W_x alone has 40 near-identical pieces. The catalog headline now reads v4. The catalog test was updated and passes.
   - **A31 first prototype failed** (`/tmp/a31_proto.py`, not kept). It regressed each mechanism's read on task quantities pooled over steps. The early-step quantities are degenerate (max = 2nd = min at step 1), and held-out R² came out negative or around 0.3. A useful "what it computes" needs per-step fits and a known-answer test first. Parked.
   - **lc_8_6 (held-out transformer):** at 6k of 30k on the GPU, roughly 40 minutes to go.
+- **10:52 Progress since 10:32.**
+  - **A31 done (revised design):** each mechanism's input and output directions are summarised by unit label, pooled over neurons with the same label. M16,10 W_h.0 reads relu(max − x_t) 29%, relu(16·max_prev) 14%, relu(2nd − x_t) 14%. On 32_10_s2 the mechanisms that stop the network returning the max mostly read the max − x_t and x_t − 2nd comparators, consistent with a 2nd-argmax algorithm; 20–50% of each profile sits on neurons the library cannot label.
+  - ATLAS_RESULTS updated.
+  - **Running:** lc_8_6 (held-out transformer) at 14k of 30k on the GPU. Zoo M16,10 seed 0 ladder rungs (1e-3 / 1e-4) at 18k of 30k locally, to complete the development table.
