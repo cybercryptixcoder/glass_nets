@@ -20,7 +20,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 
 Alive mechanisms reproduce W_x to a relative error of 0.009.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | W_x.19 | 92% | task-level: ON when x_t > 0.10 (50% of its ON cases)<br>ON when x_t <= -0.10 (50% of its ON cases) | 1.00 | changes the output by 0.78 and flips 37% of decisions; lowers class 5, raises class 1; flips go rank 4 → rank 3 (36%), rank 4 → rank 5 (33%) | 32x | reads +x_t 100% → writes +neuron 26 12% |
 | W_x.16 | 89% | task-level: ON when x_t > 0.14 (50% of its ON cases)<br>ON when x_t <= -0.15 (50% of its ON cases) | 1.00 | changes the output by 0.70 and flips 37% of decisions; lowers class 2, raises class 4; flips go rank 4 → rank 3 (40%), rank 4 → rank 5 (31%) | 23x | reads -x_t 100% → writes -neuron 5 8% |
@@ -29,7 +29,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.009.
 
 Alive mechanisms reproduce W_h to a relative error of 0.303.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | W_h.1 | 64% | ON when neuron 16 active in the state before this step AND not (neuron 4 active in the state before this step) (64% of its ON cases)<br>ON when neuron 16 active in the state before this step AND neuron 4 active in the state before this step AND not (neuron 10 active in the state before this step) (17% of its ON cases)<br>+ 5 rarer case(s), 18% of its ON cases | 0.93 | changes the output by 0.80 and flips 41% of decisions; lowers class 6, raises class 0; flips go rank 4 → rank 5 (37%), rank 4 → rank 3 (35%) | 51x | reads +neuron 21 11% → writes +neuron 24 10% |
 | W_h.15 | 45% | ON when neuron 5 active in the state before this step AND neuron 7 active in the state before this step (88% of its ON cases)<br>+ 4 rarer case(s), 12% of its ON cases | 0.95 | changes the output by 0.84 and flips 45% of decisions; lowers class 6, raises class 4; flips go rank 4 → rank 3 (44%), rank 4 → rank 5 (22%) | 41x | reads -neuron 12 20% → writes +neuron 8 13% |
@@ -55,7 +55,7 @@ Alive mechanisms reproduce W_h to a relative error of 0.303.
 
 Alive mechanisms reproduce W_o to a relative error of 0.170.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | W_o.5 | 89% | ON when steps since the max <= 3.50 AND steps since the min <= 3.50 (52% of its ON cases)<br>ON when steps since the max <= 3.50 AND steps since the min > 3.50 AND x_t minus the running median > 0.63 (19% of its ON cases)<br>ON when steps since the max <= 3.50 AND steps since the min > 3.50 AND x_t minus the running median <= 0.63 AND x_t minus the previous max <= -1.58 (15% of its ON cases)<br>+ 3 rarer case(s), 14% of its ON cases | 0.78 | changes the output by 1.30 and flips 46% of decisions; lowers class 2, raises class 4; flips go rank 4 → rank 3 (42%), rank 4 → rank 5 (36%) | 16x | reads -neuron 30 11% → writes +output position 5 23% |
 | W_o.8 | 81% | ON when steps since the max > 2.50 AND steps since the min > 2.50 (63% of its ON cases)<br>ON when steps since the max <= 2.50 AND x_t minus the previous min > 2.20 AND x_t minus the running median <= 1.25 (15% of its ON cases)<br>ON when steps since the max <= 2.50 AND x_t minus the previous min > 2.20 AND x_t minus the running median > 1.25 AND steps since the min > 1.50 (13% of its ON cases)<br>+ 1 rarer case(s), 9% of its ON cases | 0.64 | changes the output by 1.13 and flips 63% of decisions; lowers class 6, raises class 3; flips go rank 4 → rank 3 (33%), rank 4 → rank 5 (33%) | 15x | reads +neuron 3 10% → writes -output position 4 38% |

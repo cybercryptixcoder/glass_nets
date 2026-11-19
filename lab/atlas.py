@@ -911,6 +911,15 @@ def narrate(a):
     return {"text": text, "violations": viol, "note": "written by the reader from the facts above; checked only for numbers and names"}
 
 
+def profile(vec, labels):
+    """A31: a direction over neurons summarised by unit label: share of |weight| per label (same labels pooled; neurons
+    without a label count as 'unexplained'), sorted by share."""
+    v = np.abs(np.asarray(vec, float)); v = v / (v.sum() + 1e-12); out = {}
+    for j, w in enumerate(v):
+        lab = labels.get(j, "unexplained"); out[lab] = out.get(lab, 0.0) + float(w)
+    return {"all": sorted(out.items(), key=lambda kv: -kv[1])}
+
+
 def gloss(a):
     """A20: add `rule_glossed` to every trigger: the rule with each neuron's unit-map label (results/glass/units/maps/<t>.json,
     per_unit) after its name, e.g. 'neuron 1 [≈ relu(max - x_t)] active'. Unexplained or unmapped neurons stay bare."""
@@ -944,6 +953,15 @@ def gloss(a):
                 continue
             for x in m["mechanisms"]:
                 x["reads"], x["writes"] = top(x["V"], rk), top(x["U"], wk)
+                if labels:                                         # A31: profiles by unit label
+                    parts = []
+                    if rk == "neuron":
+                        x["read_profile"] = profile(x["V"], labels)
+                        parts.append("reads: " + ", ".join(f"{lab} {100 * sh:.0f}%" for lab, sh in x["read_profile"]["all"][:3]))
+                    if wk == "neuron":
+                        x["write_profile"] = profile(x["U"], labels)
+                        parts.append("writes: " + ", ".join(f"{lab} {100 * sh:.0f}%" for lab, sh in x["write_profile"]["all"][:3]))
+                    x["profile_text"] = "; ".join(parts)
                 fmt = lambda es: ", ".join(f"{e['sign']}{e['name']} {100 * e['share']:.0f}%" for e in es)     # noqa: E731
                 x["rw_text"] = f"reads {fmt(x['reads'])} → writes {fmt(x['writes'])}"
     return a
@@ -984,7 +1002,7 @@ def render(a, control=None):
         mech = m["mechanisms"]; confs = [_conf(x) for x in mech]
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
               f"Alive mechanisms reproduce {k} to a relative error of {m['alive_only_rel_error']:.3f}.", "",
-              "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |", "|---|---|---|---|---|---|---|"]
+              "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |", "|---|---|---|---|---|---|---|"]
         always = [x for x in mech if x["trigger"]["rule"] == "always"]                     # A34: one row for the always-on ones
         if always:
             fl = [100 * x["effect"]["decision_flip_rate_when_needed"] for x in always if x.get("effect")]
@@ -998,7 +1016,7 @@ def render(a, control=None):
             if e and e.get("role_changes"):
                 eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
-            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} | {x.get('rw_text', '')} |")
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} | {x.get('profile_text') or x.get('rw_text', '')} |")
         L.append("")
     return "\n".join(L)
 

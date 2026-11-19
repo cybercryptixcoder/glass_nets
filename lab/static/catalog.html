@@ -122,7 +122,7 @@ function atlasHTML(a) {
   for (const x of m.mechanisms.filter(x => x.trigger.rule !== "always").sort((p, q) => q.in_use - p.in_use)) {
     const e = x.effect || {};
     rows.push(`<tr><td class="mono">${esc(x.id)}</td><td>${pct(x.in_use)}</td><td class="mono small">${esc((x.trigger.task_level && x.trigger.task_level.confidence_clear >= 0.9 && x.trigger.rule !== 'always' && x.trigger.rule !== 'never') ? 'task-level: ' + x.trigger.task_level.rule : (x.trigger.rule_glossed || x.trigger.rule)).replace(/\n/g, "<br>")}</td><td>${(x.trigger.confidence_clear ?? x.trigger.confidence).toFixed(2)}</td>
-      <td class="small">${e.effect_when_needed == null ? "–" : `flips ${pct(e.decision_flip_rate_when_needed)} of decisions; lowers class ${e.most_lowered_class}, raises class ${e.most_raised_class}`}</td><td>${e.specificity == null ? "–" : e.specificity >= 1e5 ? "only where needed" : e.specificity.toFixed(0) + "×"}</td><td class="mono small">${esc(x.rw_text || "–")}</td></tr>`);
+      <td class="small">${e.effect_when_needed == null ? "–" : `flips ${pct(e.decision_flip_rate_when_needed)} of decisions; lowers class ${e.most_lowered_class}, raises class ${e.most_raised_class}`}</td><td>${e.specificity == null ? "–" : e.specificity >= 1e5 ? "only where needed" : e.specificity.toFixed(0) + "×"}</td><td class="mono small">${esc(x.profile_text || x.rw_text || "–")}</td></tr>`);
   }
   }
   return `<div id="atlas"><h3>Mechanism atlas</h3>
@@ -131,7 +131,7 @@ function atlasHTML(a) {
   <tr><th>Every trigger used / own importances / all mechanisms on</th><td>${pct(f.rule_gated)} / ${pct(f.importance_masked)} / ${pct(f.all_alive)}</td></tr></table>
   ${a.narrative ? `<h3>In plain English</h3><p>${esc(a.narrative.text)}</p><p class="small muted">(${esc(a.narrative.note)}${a.narrative.violations.length ? "; unresolved: " + esc(a.narrative.violations.join("; ")) : ""})</p>` : ""}
   ${a.findings ? `<h3>What the atlas finds</h3><ol class="small">${a.findings.statements.map(x => `<li>${esc(x.replace(/^\d+[a-z]?\. /, ""))}</li>`).join("")}</ol>` : ""}
-  <table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th><th>reads → writes</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+  <table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th><th>what it reads and writes</th></tr></thead><tbody>${rows.join("")}</tbody></table>
   <h3>Step through an input</h3>
   <p class="small">A random input goes through the network and through the network rebuilt from its mechanisms, each switched on by its trusted trigger. The table lists, at each step, which mechanisms the triggers switch on (and which the network's own importances say are needed).</p>
   <p><button class="btn sm teal" id="atlas-play">Random input</button></p><div id="atlas-out"></div>

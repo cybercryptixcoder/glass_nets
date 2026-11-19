@@ -21,7 +21,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 
 Alive mechanisms reproduce W_x to a relative error of 0.000.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | 14 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.5, W_x.6, W_x.7, W_x.8, W_x.9, W_x.10, W_x.12, W_x.13, W_x.14, W_x.15, W_x.16, W_x.17, W_x.18, W_x.19) | - | removing any one flips 1–3% of decisions | - | - |
 | W_x.0 | 86% | task-level: ON when x_t > 0.11 (53% of its ON cases)<br>ON when x_t <= -0.24 (47% of its ON cases) | 1.00 | changes the output by 0.07 and flips 3% of decisions; lowers class 0, raises class 9; flips go rank 2 → rank 3 (54%), rank 2 → rank 1 (44%) | only where needed | reads -x_t 100% → writes -neuron 22 18% |
@@ -35,7 +35,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.000.
 
 Alive mechanisms reproduce W_h to a relative error of 0.062.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | 17 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_h (W_h.0, W_h.1, W_h.2, W_h.3, W_h.4, W_h.5, W_h.6, W_h.8, W_h.10, W_h.11, W_h.12, W_h.13, W_h.14, W_h.15, W_h.16, W_h.17, W_h.19) | - | removing any one flips 16–44% of decisions | - | - |
 | W_h.18 | 90% | task-level: ON when step t > 1.50 | 1.00 | changes the output by 2.31 and flips 54% of decisions; lowers class 4, raises class 5; flips go rank 2 → rank 1 (22%), rank 2 → rank 3 (21%) | only where needed | reads -neuron 22 12% → writes +neuron 16 11% |
@@ -46,7 +46,7 @@ Alive mechanisms reproduce W_h to a relative error of 0.062.
 
 Alive mechanisms reproduce W_o to a relative error of 0.002.
 
-| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | what it reads and writes (unit labels where mapped) |
 |---|---|---|---|---|---|---|
 | W_o.16 | 100% | ON when steps since the max > 1.50 (92% of its ON cases)<br>+ 3 rarer case(s), 8% of its ON cases | 0.89 | changes the output by 0.84 and flips 22% of decisions; lowers class 9, raises class 7; flips go rank 2 → rank 1 (41%), rank 2 → rank 3 (33%) | only where needed | reads +neuron 22 12% → writes -output position 10 19% |
 | W_o.14 | 99% | task-level: ON when steps since the 2nd > 2.50 AND x_t minus the previous 2nd <= -0.22 (66% of its ON cases)<br>ON when steps since the 2nd <= 2.50 AND x_t minus the running median <= 0.02 (14% of its ON cases)<br>+ 4 rarer case(s), 20% of its ON cases (clear-cut confidence 0.93) | 0.93 | changes the output by 1.01 and flips 41% of decisions; lowers class 0, raises class 9; flips go rank 2 → rank 3 (32%), rank 2 → rank 1 (32%) | 9x | reads -neuron 22 17% → writes +output position 10 19% |
