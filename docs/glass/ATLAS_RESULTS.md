@@ -1,6 +1,6 @@
 # The mechanism atlas: what it is, what it does, and what it has shown
 
-*Draft started Nov 19, 05:52 ET (clock). Held-out verdicts are filled in as they land; until then the sections marked PENDING are open. Detailed record: `docs/glass/DIARY.md`; change ledger: `docs/glass/CHANGES.md`; plan and status: `docs/glass/ATLAS.md`.*
+*Started Nov 19, 05:52 ET; main result (A28) landed 08:34 ET (clock). Detailed record: `docs/glass/DIARY.md`; change ledger: `docs/glass/CHANGES.md`; plan and status: `docs/glass/ATLAS.md`.*
 
 ## What it is, in one paragraph
 
@@ -9,10 +9,11 @@ Give it a trained network. It splits every weight matrix exactly into small rank
 ## How to use it
 
 ```
-# decompose at a few sparsity settings (minutes to an hour each; tag each run)
-python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=3e-3 --tag=a TARGET
-python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-3 --tag=b TARGET
-python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-4 --tag=c TARGET
+# decompose at a few sparsity settings (minutes to an hour each); C = max(20, 1.25 x hidden width), e.g. 40 for 32-wide
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-3 --C=40 --tag=a TARGET
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=3e-4 --C=40 --tag=b TARGET
+python3 scripts/glass/atlas_spd_job.py OUT 30000 512 cpu --coef-min=1e-4 --C=40 --tag=c TARGET
+# (for a weak network, put the sparser default --coef-min=3e-3 first)
 # build the atlas from the sparsest one that is precise enough (training half), with absorption
 python3 lab/atlas.py TARGET x 4 --ladder OUT/..._a.pt,OUT/..._b.pt,OUT/..._c.pt [--control-spd SHUF_a.pt,SHUF_b.pt,SHUF_c.pt]
 python3 lab/server.py   # then open /catalog?t=TARGET
@@ -23,7 +24,7 @@ python3 lab/server.py   # then open /catalog?t=TARGET
 | claim | measured as | bar |
 |---|---|---|
 | (i') the mechanisms account for the network | decisions kept with all mechanisms on and nothing else | ≥ the task rule (how often "the task's own answer" matches the network) |
-| (ii) the triggers say when each mechanism is needed | decisions kept when each trusted trigger switches its mechanism | ≥ the task rule |
+| (ii) the triggers say when each mechanism is needed | decisions kept when each trusted trigger that also passed a decision check on training data switches its mechanism (the rest stay on) | ≥ the task rule |
 | (iii) most mechanisms have a trigger you can trust | share of switched mechanisms whose trigger is ≥ 90% right on held-out clear-cut cases | ≥ 50% |
 | (iv) mechanisms matter where they are said to | output change from removing a mechanism where needed vs where not (median) | ≥ 10× |
 | (v) the structure is learned, not an artefact | mechanisms in functional groups, trained vs shuffled-weights network | trained > shuffled |
@@ -31,24 +32,34 @@ python3 lab/server.py   # then open /catalog?t=TARGET
 
 All bars were fixed before the networks they judge were run. The task-rule bar means an account must predict the network at least as well as the one-line description of its task.
 
-## Evidence so far
+## The main result (A28, held out, pre-registered)
 
-**Known answers (networks built by hand, so the true mechanisms are known):**
-- A recurrent network with 5 planted features: all 15 planted mechanisms recovered, triggers ≥ 0.98, rebuilt network 100%.
-- A transformer that copies the previous token: all 16 planted "copy token v" mechanisms recovered across embedding, value, output and unembedding, triggers ≥ 0.997, rebuilt network 100%.
+Six well-trained networks that were never used to design anything: seed 2 of six AlgZoo architectures, 95–99.4% accurate, up to 1,376 parameters and 32 hidden units. Every setting was fixed beforehand on other networks. **5 of the 6 pass every criterion** (the bar was 4), and the shuffled-weights control shows no functional structure (17 functional mechanisms vs 0).
 
-**Development networks** (they shaped the method, so they don't count as tests):
-- Weak networks (task rules 46–71%) pass every criterion with the default settings.
-- Accurate networks fail with the default settings. The cause: SPD's "not needed" labels are wrong for small activity, and the mechanisms leave a decision-relevant residual.
-- **The fix (A26):** weaker sparsity pressure, then folding the residual into the mechanisms. It makes both accurate development networks pass every criterion:
-  - argmedian 16_5 (98.4% accurate): rebuilt 98.9%, triggers switch off 93% of not-needed calls, 25 task-level explanations;
-  - M16,10 (95.3%): rebuilt 96.8%.
+| network (accuracy, parameters) | rebuilt by rules vs task rule | rules switch off (of not-needed activity) | trusted rules | removal matters where needed | result |
+|---|---|---|---|---|---|
+| 2nd argmax 16_5 (99.2%, 352) | 99.5% vs 99.2% | 86% | 76% | 1,853× | pass |
+| 2nd argmax 16_8 (95.7%, 400) | 97.9% vs 95.7% | 86% | 57% | 142× | pass |
+| 2nd argmax 32_5 (99.4%, 1,216) | 99.8% vs 99.4% | 95% | 70% | 1,854× | pass |
+| argmedian 32_5 (99.3%, 1,216) | 99.1% vs 99.3% | 83% | 68% | 819× | fail (narrowly) |
+| 2nd argmax 32_10 (99.1%, 1,376) | 99.6% vs 99.1% | 95% | 62% | 1,171× | pass |
+| argmedian 32_7 (95.2%, 1,280) | 98.0% vs 95.2% | 98% | 53% | only where needed | pass |
 
-**Adaptive decomposition (A28, design check on the development set):** each network gets a short ladder of decompositions, sparsest first. The first one precise enough on the training half is used. All 7 development networks then pass every criterion: weak networks keep the sparse default (20–39 mechanisms), accurate ones get the denser settings (47–57 mechanisms). The wide-network setting is still being designed; then a fresh held-out set.
+**What made it work, in the order it was found:**
+1. **A better gate (A15).** Switch a mechanism off only where its rule is nearly sure it is not needed. A wrong "off" costs decisions; a wrong "on" costs nothing.
+2. **Scoring rules on clear-cut cases (A19).** Many mechanisms are only "half needed" at times.
+3. **Precision for accurate networks (A26).** Weaker sparsity pressure, then folding the small leftover weight into the mechanisms.
+4. **A decision check (A23).** A rule is used in the certificate only if switching by it keeps the decisions on the training data.
+5. **Adaptivity and width (A28).**
+   - Each network gets the sparsest decomposition that is precise enough on its training half, so weak networks keep few, readable mechanisms.
+   - Wider networks get proportionally more components.
 
-**Held-out test A18** (six well-trained networks, 93.9–99.6% accurate, up to 1,376 parameters, default settings): **fails, 0 of 6.** Triggers (64–91% trusted) and specificity (11–103×) pass everywhere. Precision fails everywhere: the mechanisms alone keep 45–95% of decisions against bars of 94–99.6%. So either the switched network loses decisions, or almost nothing can be switched safely.
+**The road there (all held out, all pre-registered):** default settings 0 of 6 (A18) → precise settings 2 of 6 (A27; 32-wide networks ran out of components, predicted before the verdict) → adaptive and width-scaled 5 of 6 (A28).
 
-**Held-out test A27** (six new well-trained networks, 97.3–99.5% accurate, with the A26 fix): **fails, 2 of 6 (bar 4), but with a clean split.** Both 16-wide networks pass every criterion. For example 2nd argmax 16_5_s1 (99.2%): rebuilt 99.4%, triggers switch off 94% of not-needed calls, specificity 948×. All four 32-wide networks fail: 20 components per matrix are too few for a 32-wide state (all alive, many always on), as predicted before the verdict. Next: components scaled to the width (A28).
+**Known answers** (networks built by hand, so the true mechanisms are known):
+- A recurrent network with 5 planted features: all 15 planted mechanisms recovered.
+- A transformer that copies the previous token: all 16 planted "copy token v" mechanisms recovered.
+- Both rebuild 100% of decisions.
 
 ## What the atlases find (examples)
 
@@ -62,7 +73,9 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
 
 ## Limits, stated plainly
 
-- Transformers: the known answer passes, but real AlgZoo transformers decompose poorly with the default settings (rebuilt 53–77% vs task rules 81–95%). The A26 settings have not been tried on them yet.
+- Transformers: the known answer passes, but real AlgZoo transformers decompose poorly with the default settings (rebuilt 53–77% vs task rules 81–95%). The adaptive settings have not been run on them yet. This is the next build step.
+- Only one network family so far (AlgZoo ReLU RNNs on 2nd-argmax and argmedian). 1,376 parameters is larger than anything certified before in this project, but small in absolute terms.
+- Explanations are often shallow: many trusted rules are time gates ("after step 2"). The certificate says when a mechanism acts and which decision it protects. What it computes is only partly told (reads/writes with unit labels, A29).
 - At the precise settings almost every component the decomposition offers is used (57 of 60 in argmedian 16_5), so mechanism counts partly reflect that budget.
 - With absorption, criterion (i') becomes close to automatic whenever the alive mechanisms' input directions span the matrix's inputs: least squares can then make their sum exact on the data. Under A26 the informative criteria are (ii), the triggers keeping the decisions, and (vi), the triggers switching off most not-needed activity. Absorption does not make those easier: at minimality 1e-3 it made (ii) worse (0.876 → 0.723 on argmedian 16_5).
 - Triggers for output-layer mechanisms are often not trusted: their importance is graded, not on/off.

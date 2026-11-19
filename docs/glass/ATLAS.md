@@ -78,31 +78,24 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
-- Nov 19, 07:26 ET (clock):
-  - **Built and tested:** A1–A29. Each has a CHANGES entry and a test that failed before and passes after. The latest:
-    - A26: precise decomposition, minimality 1e-4 plus residual absorption;
-    - A28: adaptive decomposition, a ladder of settings with the sparsest precise-enough one chosen on the training half;
-    - A29: what each mechanism reads and writes, glossed with unit-map labels.
-  - **Held-out verdicts so far:**
-    - A18 (default settings): 0 of 6.
-    - A27 (A26 settings): 2 of 6. Both 16-wide accurate networks pass every criterion; all 32-wide fail from component saturation.
-    - A25 (recurrence across M8,5 training runs): not confirmed. 1 of 4 seeds beats chance; it varies by run.
-  - **Development set with A28 (design check):** all 7 pass every criterion. Weak networks keep the sparse default; accurate ones get denser settings.
-  - **Running now: A28's held-out test** (pre-registered 07:23; s2 seeds of the six architectures).
-    - C = 20 for 16-wide and 40 for 32-wide; ladder 1e-3 / 3e-4 / 1e-4; certificate = decision-checked gate v4.
-    - 15 runs on Colab CPU (32-wide plus the control) and 6 locally (16-wide).
-  - **Transformers:** the known answer passes. The lc runs at 1e-4 were stopped to free Colab for A28 and need restarting.
-  - **Write-up:** `docs/glass/ATLAS_RESULTS.md` (kept current).
+- Nov 19, 08:34 ET (clock):
+  - **MAIN RESULT: A28 passes its pre-registered held-out test.** 5 of 6 accurate networks (95–99.4%, up to 1,376 parameters, three of them 32-wide) pass every criterion, and the shuffled control shows no functional structure (17 vs 0). The write-up for Shreyas is `docs/glass/ATLAS_RESULTS.md`.
+  - **The pipeline that passed:**
+    - decomposition: an adaptive ladder (minimality 1e-3 / 3e-4 / 1e-4), components C = max(20, ⌈1.25·H⌉), the sparsest rung precise enough on the training half (mechanisms alone and v3 ≥ task rule + 2 SE), with absorption;
+    - certificate: v4 (trusted rules that also pass a decision check on training data).
+  - **Built and tested:** A1–A30 (each has a CHANGES entry and a test that failed before and passes after; the full atlas test suite passes).
+  - **Held-out history:** A18 0/6 → A27 2/6 → A28 5/6. A25 (recurrence across training runs) is not confirmed.
+  - **Not yet done:**
+    - transformers with the adaptive pipeline (only the known answer passes so far);
+    - promoting the adaptive atlases to the catalog defaults;
+    - deeper "what it computes" explanations.
 
 ## 5. Next (in order)
 
-1. When A28's decompositions land, for each network:
-   `python3 lab/atlas.py T x 4 --ladder SPD_1e-3,SPD_3e-4,SPD_1e-4 [--control-spd SHUF_1e-3,SHUF_3e-4,SHUF_1e-4]`.
-   Then judge with `python3 scripts/glass/atlas_a3_eval.py --v4 <the six s2 ids>`.
-2. If A28 passes: make the adaptive ladder the default pipeline and promote the adaptive atlases to the catalog (`T_d4.json`).
-3. Transformers: rerun lc_4_5 / lc_6_5 at 1e-4 (C scaled to d_model), then build their atlases with absorption.
-4. Deepen explanations (A29 is a start): unit maps for networks that lack them, so reads/writes carry task meaning.
-5. Finish `ATLAS_RESULTS.md` for Shreyas.
+1. Make the adaptive pipeline the default: rebuild the development atlases with `--ladder` into `T_d4.json`, so the catalog and playground show the certified versions (A30 gate).
+2. Transformers: ladder runs for lc_3_4 / lc_4_5 / lc_6_5 (development), then lc_8_6 held out (pre-register first).
+3. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (Luminal; ask Shreyas about cost first).
+4. Scale further: the next AlgZoo sizes, or a different network family, as a new held-out test.
 
 ## 6. How to run what exists
 
