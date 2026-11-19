@@ -531,6 +531,14 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     set_residuals(mods, alive)                                   # A12
     with torch.no_grad():
         net = tgt.forward(torch.tensor(xte), lambda name, a: mods[name].apply(a)).numpy()
+        rec = {}                                                 # A17: each matrix's real inputs on the held-out half
+
+        def _rec(name, a):
+            rec.setdefault(name, []).append(a.numpy()); return a @ mods[name].W.T
+        tgt.forward(torch.tensor(xte), _rec)
+    for k in MATS:
+        A_ = np.concatenate(rec[k]); Wk = mods[k].W.numpy()
+        atlas["matrices"][k]["alive_only_rel_error_on_data"] = float(np.linalg.norm(A_ @ mods[k]._residual.T) / (np.linalg.norm(A_ @ Wk.T) + 1e-12))
 
     conf = {(k, int(x["id"].rsplit(".", 1)[1])): x["trigger"]["confidence"] for k in MATS for x in atlas["matrices"][k]["mechanisms"]}
 
@@ -565,6 +573,20 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     variants.append(("rule_gated_trusted_v2", g_rules(trusted=TRUSTED, tau=GATE_TAU)))      # A15
     for label, gate in variants:
         fid[label] = float(judge.same(net, gated(mods, xte, gate)).mean())
+    # A17: the mechanisms alone (every alive mechanism on, the residual removed), in all matrices and in one at a time
+    all_on = lambda k, n_, F, a: np.repeat(am[k][None], len(F), 0)          # noqa: E731
+    saved = {k: mods[k]._residual for k in MATS}
+
+    def _alone(only):
+        for k in MATS:
+            mods[k]._residual = np.zeros_like(saved[k]) if only in (None, k) else saved[k]
+        v = float(judge.same(net, gated(mods, xte, all_on)).mean())
+        for k in MATS:
+            mods[k]._residual = saved[k]
+        return v
+    fid["mechanisms_alone"] = _alone(None)
+    for k in MATS:
+        atlas["matrices"][k]["mechanisms_alone_fidelity"] = _alone(k)
     atlas["fidelity"] = fid
     work = {}                                                    # A15: does the gate do work? (full network's held-out states)
     for v, tau in (("v1", None), ("v2", GATE_TAU)):

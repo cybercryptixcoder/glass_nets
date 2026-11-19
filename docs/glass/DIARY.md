@@ -1312,3 +1312,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - W_V acts at every position, but only its value at the attended position (P − 2) reaches the output.
   - **New measure:** on the data, where the weights act: |correlation| between the mechanism's read (V_c · a) and "the copied token is v" (at the attended position, for W_V); for W_O, the cosine of its centred logit effect with token v. All 12 mechanisms: 1.000.
   - **Consequence for A3 criterion (i):** weight-space residuals overstate what is unaccounted for whenever inputs have such directions. Recurrent states can have them too (never-active neurons, fixed relations), so argmedian 16_5's W_h residual of 0.28 may be partly inert. Next: report the residual on the data, ‖(W − Σ alive) a‖ / ‖W a‖ over the matrix's real inputs, as a new named measure next to the old one (A3's recorded verdicts stay as they are).
+- **05:01 A17 DONE: the residual is judged by what it does.** The first design (residual on each matrix's real inputs) failed its own known answer: on the planted transformer it is still 1.20 (W_V) and 0.48 (W_O), because those matrices write outputs nothing reads. The adopted measure: decisions kept with every alive mechanism on and the residual removed ("mechanisms alone"). Planted transformer 1.000 (weight-space errors 0.49–1.16), planted RNN 0.997, and M8,5 reproduces A12's recorded "before" number (0.9805) exactly. A3 criterion (i') = mechanisms alone ≥ the task rule.
+- **05:03 A16 v3c: no gain on the design case, not adopted.** M16,10 trusted triggers stay 13/35; W_o stays 0/10. Exploratory (`/tmp/wo_feats.py`): per-position features for W_o (rank and value at each position, "position j holds rank r") also leave its triggers at 0.62–0.88, at depth 4 or 6.
+  - **Why W_o resists:** its importances are graded, not on/off. 38% of (input, W_o mechanism) importances in M16,10 sit between 0.1 and 0.9, against 12% for W_h (M8,5: 26% vs 11%). A trigger predicts a yes/no "needed" label, which is noisy where the importance itself is half-way.
+- **05:06 All A3 atlases rebuilt with A15 + A17** (two local queues; also lc_6_5 and lc_4_5). `python3 scripts/glass/atlas_a3_eval.py --v2`:
+
+  | network | (i') alone ≥ task rule | (ii) v2 vs task rule | (iii) trusted ≥ 0.5 | (iv) spec. | (v) control | (vi) off_recall | result |
+  |---|---|---|---|---|---|---|---|
+  | argmedian 8_5 | 0.963 ✓ | 0.904 vs 0.705 ✓ | 0.69 ✓ | 852× ✓ | - | 0.91 ✓ | PASS |
+  | argmedian 8_7 | 0.900 ✓ | 0.956 vs 0.495 ✓ | 0.39 ✗ | 56× ✓ | - | 0.91 ✓ | fail |
+  | argmedian 16_5 | 0.900 ✗ | 0.839 vs 0.984 ✗ | 0.50 ✓ | 60× ✓ | 21 vs 1 ✓ | 0.84 ✓ | fail |
+  | argmedian 16_7 | 0.871 ✓ | 0.824 vs 0.712 ✓ | 0.29 ✗ | 34× ✓ | - | 0.85 ✓ | fail |
+  | M16,10 (design case for A15) | 0.963 ✓ | 0.951 vs 0.953 ✗ | 0.37 ✗ | 26× ✓ | (control running) | 0.85 ✓ | fail |
+  | M8,8 | 0.861 ✓ | 0.850 vs 0.459 ✓ | 0.41 ✗ | 46× ✓ | - | 0.86 ✓ | fail |
+  | M16,10 seed 0 | (SPD running) | | | | | | |
+
+  - **Reading:** with gate v2, (ii) holds wherever the decomposition is good enough. The binding criterion is now (iii), the share of mechanisms whose trigger is trusted (0.29–0.41 in four networks).
+  - Transformers (reported, not judged in A3): lc_6_5: 83 mechanisms, 44 trusted; v2 0.775 vs task rule 0.947, mechanisms alone 0.806. lc_4_5: v2 0.748 vs 0.810, mechanisms alone 0.887. For both, the decomposition (mechanisms alone below the task rule) is the first limit.
+- **05:07 Fresh held-out set A18, fixed now, before any of it is decomposed:** zoo_2nd_argmax_16_5_s0, zoo_2nd_argmax_16_8_s0, zoo_2nd_argmax_32_5_s0, zoo_argmedian_32_5_s0 (Colab CPU), zoo_2nd_argmax_32_10_s0 (1,376 parameters, the largest RNN yet) with its shuffled control, and zoo_argmedian_32_7_s0 (GPU queue 4). From now on the A3 networks are the development set; design changes for (iii) are chosen on them and judged on A18 with A3's criteria (v2 form). (The earlier GPU-4 launch failed: the ids need the `_s0` suffix.)
+- **05:08 Exploring (iii) on the development set** (`scripts/glass/atlas_trigger_sweep.py`): tree depth 4/5/6; confidence on crisp labels only (importance > 0.9 vs < 0.1); trees trained on crisp labels.
