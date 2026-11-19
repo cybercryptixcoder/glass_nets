@@ -1,0 +1,57 @@
+# Mechanism atlas: zoo_2nd_argmax_8_5_s2 (original)
+
+The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mechanism has a readable trigger (when it is needed), scored on held-out inputs (its confidence), and an effect (what removing it changes).
+
+## Whole-network certificate
+
+- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= 0.9 on clear-cut cases; otherwise always on), and switched off only where the trigger gives it under a 5% chance of being needed: keeps **90.0%** of the network's decisions; the task rule alone keeps 80.8%.
+- The mechanisms alone (all on, the small leftover residual removed): 94.4%. Every trigger used (no confidence bar): 56.2%. Mechanisms switched by their own learned importances: 75.1%. Earlier gates, for the record: v1 87.6%, v2 90.6%.
+
+## Findings
+
+1. The weights split exactly into 19 mechanisms; 13 have a trusted trigger (held-out confidence >= 0.9 on clear-cut cases), 1 are always needed.
+1b. 12 of the 18 mechanisms that are not always on have a task-level explanation (a trigger in task variables only, confidence >= 0.9 on clear-cut cases).
+2. 13 of the 13 trusted triggers use a task variable (not only neuron states). Most used: x_t (7), step t (6), steps since the max (4), x_t minus the previous max (4), steps since the min (3).
+3. 3 mechanism(s) (W_h.4, W_h.11, W_h.12) keep the network from answering rank 1 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 1.
+3. 3 mechanism(s) (W_h.17, W_o.2, W_o.8) keep the network from answering rank 3 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 3.
+4. Rebuilt from mechanisms switched by trusted triggers: 90.0% of decisions (task rule 80.8%).
+
+## W_x: 3 mechanisms (3 with a trusted trigger)
+
+Alive mechanisms reproduce W_x to a relative error of 0.020.
+
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity |
+|---|---|---|---|---|---|
+| W_x.19 | 100% | always | 1.00 | changes the output by 0.65 and flips 34% of decisions; lowers class 3, raises class 2; flips go rank 2 → rank 3 (32%), rank 2 → rank 1 (29%) | only where needed |
+| W_x.4 | 86% | task-level: ON when x_t > 0.05 (56% of its ON cases)<br>ON when x_t <= -0.30 (44% of its ON cases) | 1.00 | changes the output by 0.49 and flips 28% of decisions; lowers class 3, raises class 2; flips go rank 2 → rank 3 (38%), rank 2 → rank 1 (27%) | only where needed |
+| W_x.1 | 60% | task-level: ON when x_t > 0.36 (60% of its ON cases)<br>ON when x_t <= -0.69 (40% of its ON cases) | 1.00 | changes the output by 0.30 and flips 17% of decisions; lowers class 3, raises class 4; flips go rank 2 → rank 3 (35%), rank 2 → rank 1 (25%) | 8x |
+
+## W_h: 9 mechanisms (8 with a trusted trigger)
+
+Alive mechanisms reproduce W_h to a relative error of 0.067.
+
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity |
+|---|---|---|---|---|---|
+| W_h.4 | 69% | ON when step t > 1.50 AND not (neuron 4 active in the state before this step) (65% of its ON cases)<br>ON when step t > 1.50 AND neuron 4 active in the state before this step AND x_t minus the previous max <= -0.51 (23% of its ON cases)<br>+ 1 rarer case(s), 12% of its ON cases | 0.89 | changes the output by 0.57 and flips 35% of decisions; lowers class 4, raises class 0; flips go rank 2 → rank 1 (41%), rank 2 → rank 3 (28%) | 112x |
+| W_h.2 | 61% | ON when step t > 2.50 AND not (neuron 1 active in the state before this step) (47% of its ON cases)<br>ON when step t > 3.50 AND neuron 1 active in the state before this step (30% of its ON cases)<br>ON when step t <= 2.50 AND neuron 4 active in the state before this step AND x_t minus the running median <= -0.24 (9% of its ON cases)<br>+ 2 rarer case(s), 13% of its ON cases | 0.96 | changes the output by 0.95 and flips 56% of decisions; lowers class 4, raises class 0; flips go rank 2 → rank 3 (32%), rank 2 → rank 1 (30%) | 107x |
+| W_h.12 | 53% | task-level: ON when step t > 2.50 (clear-cut confidence 0.96) | 0.97 | changes the output by 0.68 and flips 43% of decisions; lowers class 3, raises class 2; flips go rank 2 → rank 1 (45%), rank 2 → rank 3 (18%) | 104x |
+| W_h.13 | 50% | task-level: ON when steps since the max > 1.50 (65% of its ON cases)<br>ON when steps since the max <= 1.50 AND x_t minus the previous max > 0.00 AND steps since the 2nd > 1.50 (23% of its ON cases)<br>+ 2 rarer case(s), 12% of its ON cases (clear-cut confidence 0.91) | 0.97 | changes the output by 1.06 and flips 53% of decisions; lowers class 4, raises class 0; flips go rank 2 → rank 3 (31%), rank 2 → rank 4 (19%) | 161x |
+| W_h.7 | 41% | task-level: ON when step t > 2.50 AND steps since the max > 1.50 AND x_t > -0.23 (32% of its ON cases)<br>ON when step t > 2.50 AND steps since the max > 1.50 AND x_t <= -0.23 AND x_t minus the previous max <= -0.77 (32% of its ON cases)<br>ON when step t > 3.50 AND steps since the max <= 1.50 AND steps since the 2nd > 1.50 (31% of its ON cases)<br>+ 1 rarer case(s), 5% of its ON cases (clear-cut confidence 0.90) | 0.97 | changes the output by 0.61 and flips 36% of decisions; lowers class 4, raises class 3; flips go rank 2 → rank 3 (37%), rank 2 → rank 1 (32%) | 88x |
+| W_h.18 | 39% | task-level: ON when step t > 3.50 (85% of its ON cases)<br>+ 3 rarer case(s), 15% of its ON cases (clear-cut confidence 0.95) | 0.95 | changes the output by 0.46 and flips 31% of decisions; lowers class 1, raises class 0; flips go rank 2 → rank 3 (38%), rank 2 → rank 1 (30%) | 30x |
+| W_h.14 | 37% | task-level: ON when step t > 2.50 AND steps since the min > 1.50 (65% of its ON cases)<br>ON when step t > 2.50 AND steps since the min <= 1.50 AND steps since the max <= 2.50 AND distance of x_t's rank from the middle > 1.25 (18% of its ON cases)<br>+ 1 rarer case(s), 17% of its ON cases (clear-cut confidence 0.93) | 0.96 | changes the output by 0.47 and flips 28% of decisions; lowers class 3, raises class 2; flips go rank 2 → rank 3 (36%), rank 2 → rank 1 (26%) | 49x |
+| W_h.11 | 27% | task-level: ON when steps since the max <= 0.50 AND x_t minus the previous min > 0.01 AND steps since the 2nd <= 1.50 (40% of its ON cases)<br>ON when 0.50 < steps since the max <= 1.50 AND x_t <= -0.31 AND x_t minus the previous max <= -0.62 (31% of its ON cases)<br>ON when 0.50 < steps since the max <= 1.50 AND x_t > -0.31 (29% of its ON cases) (clear-cut confidence 0.91) | 0.99 | changes the output by 0.56 and flips 37% of decisions; lowers class 4, raises class 2; flips go rank 2 → rank 1 (40%), rank 2 → rank 3 (32%) | 170x |
+| W_h.17 | 11% | task-level: ON when step t > 4.50 (clear-cut confidence 0.97) | 0.97 | changes the output by 0.39 and flips 26% of decisions; lowers class 2, raises class 0; flips go rank 2 → rank 3 (46%), rank 2 → rank 1 (26%) | 23x |
+
+## W_o: 7 mechanisms (3 with a trusted trigger)
+
+Alive mechanisms reproduce W_o to a relative error of 0.014.
+
+| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity |
+|---|---|---|---|---|---|
+| W_o.0 | 67% | ON when neuron 3 active in the final state AND not (neuron 1 active in the final state) (92% of its ON cases)<br>+ 2 rarer case(s), 8% of its ON cases | 0.87 | changes the output by 1.35 and flips 54% of decisions; lowers class 3, raises class 2; flips go rank 2 → rank 3 (31%), rank 2 → rank 4 (21%) | 22x |
+| W_o.17 | 66% | ON when x_t minus the running median <= -0.90 (25% of its ON cases)<br>ON when x_t minus the running median > -0.90 AND x_t minus the previous 2nd <= 0.35 AND 2.50 < steps since the min <= 3.50 (20% of its ON cases)<br>ON when x_t minus the running median > -0.90 AND x_t minus the previous 2nd > 0.35 AND x_t minus the previous max <= 0.03 (19% of its ON cases)<br>ON when x_t minus the running median > -0.90 AND x_t minus the previous 2nd <= -0.86 AND steps since the min <= 2.50 (19% of its ON cases)<br>+ 1 rarer case(s), 17% of its ON cases | 0.85 | changes the output by 0.63 and flips 42% of decisions; lowers class 4, raises class 1; flips go rank 2 → rank 3 (37%), rank 2 → rank 1 (30%) | 11x |
+| W_o.6 | 65% | ON when 2.50 < steps since the min <= 3.50 (47% of its ON cases)<br>ON when steps since the min <= 2.50 AND x_t minus the previous max <= -2.28 AND steps since the max > 2.50 (16% of its ON cases)<br>ON when steps since the min > 3.50 AND x_t minus the previous min > 0.99 AND x_t <= 0.60 (15% of its ON cases)<br>ON when steps since the min <= 2.50 AND x_t minus the previous max > 0.40 AND x_t > 0.51 (13% of its ON cases)<br>+ 1 rarer case(s), 9% of its ON cases | 0.78 | changes the output by 0.74 and flips 59% of decisions; lowers class 0, raises class 1; flips go rank 2 → rank 3 (27%), rank 2 → rank 1 (24%) | 13x |
+| W_o.4 | 61% | task-level: ON when x_t minus the previous 2nd <= 0.44 AND steps since the max > 1.50 AND steps since the 2nd > 1.50 (47% of its ON cases)<br>ON when x_t minus the previous 2nd > 0.44 AND steps since the 2nd > 1.50 (23% of its ON cases)<br>ON when -0.00 < x_t minus the previous 2nd <= 0.44 AND steps since the max > 1.50 AND steps since the 2nd <= 1.50 (13% of its ON cases)<br>+ 3 rarer case(s), 17% of its ON cases (clear-cut confidence 0.92) | 0.92 | changes the output by 0.92 and flips 54% of decisions; lowers class 2, raises class 3; flips go rank 2 → rank 3 (32%), rank 2 → rank 4 (22%) | 18x |
+| W_o.9 | 54% | ON when steps since the min <= 3.50 AND x_t minus the previous max <= -1.61 AND neuron 6 active in the final state (42% of its ON cases)<br>ON when steps since the min > 3.50 AND x_t minus the previous min > 1.20 (27% of its ON cases)<br>ON when steps since the min > 3.50 AND x_t minus the previous min <= 1.20 AND x_t <= 0.32 (16% of its ON cases)<br>+ 2 rarer case(s), 15% of its ON cases | 0.84 | changes the output by 0.68 and flips 41% of decisions; lowers class 3, raises class 0; flips go rank 2 → rank 3 (33%), rank 2 → rank 1 (28%) | 11x |
+| W_o.2 | 26% | task-level: ON when steps since the max <= 1.50 AND x_t minus the previous max > 0.13 AND x_t > 0.16 (48% of its ON cases)<br>ON when steps since the max <= 1.50 AND x_t minus the previous max <= -1.37 (26% of its ON cases)<br>ON when steps since the max <= 1.50 AND -1.37 < x_t minus the previous max <= 0.13 AND x_t > -0.03 (25% of its ON cases) | 0.97 | changes the output by 0.91 and flips 28% of decisions; lowers class 3, raises class 4; flips go rank 2 → rank 3 (41%), rank 2 → rank 1 (28%) | 25x |
+| W_o.8 | 18% | task-level: ON when x_t minus the previous max > 0.11 AND x_t > 0.10 (93% of its ON cases)<br>+ 2 rarer case(s), 7% of its ON cases (clear-cut confidence 0.99) | 1.00 | changes the output by 1.32 and flips 48% of decisions; lowers class 1, raises class 4; flips go rank 2 → rank 3 (42%), rank 3 → rank 2 (18%) | 86x |
