@@ -4,18 +4,19 @@ Reads results/glass/atlas/<t>_d4.json.
 v1 (as pre-registered): (i) weight-space residual <= 0.05; (ii) rule_gated_trusted >= task rule; (iii) trusted share >= 0.5;
     (iv) median specificity >= 10; (v) functional groups vs shuffled control.
 v2 (A15 + A17): (i') mechanisms alone >= task rule; (ii) rule_gated_trusted_v2; (vi) v2 off_recall >= 0.5.
-v3 (A19): as v2, with (ii) rule_gated_trusted_v3, (iii) trusted = confidence on clear-cut calls >= 0.9, (vi) v3 off_recall."""
+v3 (A19): as v2, with (ii) rule_gated_trusted_v3, (iii) trusted = confidence on clear-cut calls >= 0.9, (vi) v3 off_recall.
+v4 (A23): as v3, with (ii) rule_gated_trusted_v4 (decision-checked gate) and (vi) v4 off_recall over all trusted mechanisms."""
 import json, sys
 from pathlib import Path
 import numpy as np
 ROOT = Path(__file__).resolve().parents[2]; A = ROOT / "results/glass/atlas"; sys.path.insert(0, str(ROOT / "lab"))
 A3 = ["zoo_argmedian_8_5", "zoo_argmedian_8_7", "zoo_argmedian_16_5", "zoo_argmedian_16_7", "zoo_2nd_argmax_16_10", "zoo_2nd_argmax_16_10_s0", "zoo_2nd_argmax_8_8"]
 A18 = ["zoo_2nd_argmax_16_5_s0", "zoo_2nd_argmax_16_8_s0", "zoo_2nd_argmax_32_5_s0", "zoo_argmedian_32_5_s0", "zoo_2nd_argmax_32_10_s0", "zoo_argmedian_32_7_s0"]
-V = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
+V = "v4" if "--v4" in sys.argv else "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
 args = [x for x in sys.argv[1:] if not x.startswith("--")]
 targets = args or (A18 if "--a18" in sys.argv else A3)
-FKEY = {"v1": "rule_gated_trusted", "v2": "rule_gated_trusted_v2", "v3": "rule_gated_trusted_v3"}[V]
-CKEY = "confidence_clear" if V == "v3" else "confidence"
+FKEY = {"v1": "rule_gated_trusted", "v2": "rule_gated_trusted_v2", "v3": "rule_gated_trusted_v3", "v4": "rule_gated_trusted_v4"}[V]
+CKEY = "confidence_clear" if V in ("v3", "v4") else "confidence"
 rows, n_ok = [], 0
 for t in targets:
     f = A / f"{t}_d4.json"

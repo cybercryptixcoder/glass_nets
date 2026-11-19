@@ -21,3 +21,4 @@ trusted = [(k, c) for k in alive for c in alive[k] if cc[(k, c)] >= 0.9 and not 
 full = judge.same(net, run(mods, xtr, gate_only(trusted))).mean()
 costs = sorted(((1 - judge.same(net, run(mods, xtr, gate_only([kc]))).mean(), kc) for kc in trusted), reverse=True)
 print(tid, f"training half: all trusted gated {full:.3f}; {len(trusted)} trusted; top single costs:", [(f"{k}.{c}", round(float(v), 4)) for v, (k, c) in costs[:8]], "sum", round(float(sum(v for v, _ in costs)), 3))
+print("   all single costs (%):", sorted(round(100 * float(v), 2) for v, _ in costs))

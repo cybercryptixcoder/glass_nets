@@ -610,11 +610,42 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
             mods[k]._residual = saved[k]
         return v
     fid["mechanisms_alone"] = _alone(None)
+    # A23 (v4): check each trusted trigger against decisions on the TRAINING half; switch in the certificate only those
+    # that, added in order of their single cost, keep the training-half fidelity >= task rule + 2 standard errors.
+    with torch.no_grad():
+        net_tr = tgt.forward(torch.tensor(xtr), lambda name, a: mods[name].apply(a)).numpy()
+    cand = [(k, c) for k in MATS for c in alive[k] if conf_clear[(k, c)] >= TRUSTED and not isinstance(trees[(k, c)], bool)]
+
+    def g_sel(sel):
+        sel = set(sel)
+
+        def gate(k, names, F, a):
+            m = np.repeat(am[k][None], len(F), 0)
+            for c in alive[k]:
+                if (k, c) in sel:
+                    m[:, c] = _trigger_on(trees[(k, c)], F, GATE_TAU)
+            return m
+        return gate
+    tr_rule = tgt.task_rule
+    bar = (tr_rule + 2 * math.sqrt(tr_rule * (1 - tr_rule) / len(xtr))) if tr_rule is not None else 0.99
+    cost = {kc: 1 - float(judge.same(net_tr, gated(mods, xtr, g_sel([kc]))).mean()) for kc in cand}
+    sel = []
+    for kc in sorted(cand, key=lambda kc: cost[kc]):
+        if float(judge.same(net_tr, gated(mods, xtr, g_sel(sel + [kc]))).mean()) >= bar:
+            sel.append(kc)
+    fid["rule_gated_trusted_v4"] = float(judge.same(net, gated(mods, xte, g_sel(sel))).mean())
+    atlas["gate_v4"] = {"bar_train": bar, "switched": [f"{k}.{c}" for k, c in sel], "n_trusted": len(cand)}
+    for k in MATS:
+        for x in atlas["matrices"][k]["mechanisms"]:
+            kc = (k, int(x["id"].rsplit(".", 1)[1]))
+            if kc in cost:
+                x["trigger"]["gating_cost_train"] = cost[kc]; x["trigger"]["switched_in_certificate"] = kc in sel
     for k in MATS:
         atlas["matrices"][k]["mechanisms_alone_fidelity"] = _alone(k)
     atlas["fidelity"] = fid
     work = {}                                                    # A15: does the gate do work? (full network's held-out states)
-    for v, tau, cf in (("v1", None, conf), ("v2", GATE_TAU, conf), ("v3", GATE_TAU, conf_clear)):
+    sel_set = set(sel)
+    for v, tau, cf in (("v1", None, conf), ("v2", GATE_TAU, conf), ("v3", GATE_TAU, conf_clear), ("v4", GATE_TAU, conf_clear)):
         off, offn, n_all, n_not = 0, 0, 0, 0
         for k in MATS:
             _, Fte, Gte = te[k]
@@ -622,6 +653,8 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                 if cf[(k, c)] < TRUSTED:
                     continue
                 on = _trigger_on(trees[(k, c)], Fte, tau) > 0.5
+                if v == "v4" and (k, c) not in sel_set and not isinstance(trees[(k, c)], bool):
+                    on = np.ones(len(Fte), bool)                 # trusted but not switched in the certificate: always on
                 not_needed = Gte[:, c] < 0.1
                 off += int((~on).sum()); n_all += len(on)
                 offn += int((~on & not_needed).sum()); n_not += int(not_needed.sum())
