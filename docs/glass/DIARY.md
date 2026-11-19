@@ -1601,3 +1601,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - finds mechanisms whose removal matters 142–1,854× more where they are said to be needed;
     - finds functional structure that a shuffled-weights network does not have.
   - Held-out history: A18 0/6 (default settings) → A27 2/6 (precise settings; only 16-wide networks passed, up to 400 parameters) → A28 5/6 (adaptive, width-scaled; three 32-wide passes, up to 1,376 parameters).
+- **08:46 Next steps started.**
+  - **(1) Make the adaptive pipeline the default for the development atlases.** Two of them need matched shuffled controls at their chosen rungs: argmedian 16_5 at 1e-4 and M16,10 at 1e-3, decomposing locally.
+  - **(2) Transformers, development:** ladder runs (1e-3 / 3e-4 / 1e-4, C = 20, which is ample for d_model 3–6) for lc_3_4, lc_4_5 and lc_6_5 on the Colab GPU (9 runs).
+  - **lc_8_6 is reserved as the held-out transformer.** It will not be run until the transformer settings are fixed on the three development networks.
