@@ -989,3 +989,36 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - At h = 16, coverage falls as n grows: n = 5 about 0.37, n = 8 0.18, n = 10 0.06.
     - At h = 32 it stays high: 0.40–0.60.
     - The most cramped networks (h = 8, n = 8) are almost fully blended (coverage ≈ 0) and inaccurate (0.43).
+- **23:57 Check-in (trig_01D2m…).** (q), the reader payoff test. I am **not running it as written**, for two reasons found while preparing the pre-registration.
+  1. **Confound in the criterion.** The strict criterion requires fidelity above the TASK RULE, i.e. above the network's own accuracy. ARC's wide M32,10 is 99.4% accurate, so an account must agree with it above about 99.5%. The cramped zoo M16,10 seed 0 needs only about 91%. A reader comparison between them measures the bar, not unit-likeness.
+  2. **Circling risk.** R8 showed that cheap-reader runs fall into the same two modes on every dense network (copies, or short accounts below the task rule). Two runs per network cannot tell the networks apart, and another reader batch is the circling CLAUDE.md warns against.
+  - **Replacement:** a reader-free test that asks the same question without either problem.
+- **23:57 U17 PRE-REGISTRATION (how much of a network can rules replace while still beating the task rule?).**
+  - **Replacement curve:**
+    - Take the network's library-explained neuron-steps (unit map v3, held-out R² ≥ 0.9, step ≥ 2).
+    - Replace them by their units one at a time, best fit first.
+    - After each, measure decision fidelity on the held-out half.
+    - **R\*** = the largest share of step-≥2 variance replaced while fidelity stays ≥ the network's accuracy (the task-rule bar).
+  - **Decisive pair (matched accuracy, same architecture and length):** ARC's challenge M16,10 (accuracy 0.953, history coverage 0.37) vs zoo M16,10 seed 2 (accuracy 0.949, coverage 0.10).
+  - **Group comparison** (bars differ, reported with that caveat): zoo n = 10 h = 16 vs h = 32, seeds 0–4.
+  - **Predictions:**
+    - (i) From unit-likeness: challenge R\* > seed-2 R\*.
+    - (ii) From F3: both R\* < 0.3, since ε95 is about 0.3–0.6%.
+  - **Decision.**
+    - (i) and (ii) → unit-richness lets more of a network be replaced by rules, but precision caps it.
+    - (i) fails → unit-richness does not translate into replaceability.
+    - (ii) fails (R\* ≥ 0.3) → F3 overstates the cap.
+- **23:59 U17 RESULT: both predictions hold, and the cap is severe** (`results/glass/units/u17_*.json`, read by hand).
+  - **Decisive pair:** ARC's challenge M16,10 R\* 0.05 vs zoo seed 2 R\* 0.00 → (i) holds, by a small margin. Both are < 0.3 → (ii) holds.
+  - **Group:** zoo n = 10 at h = 16, R\* 0.00–0.03; at h = 32, 0.02–0.07, even though h = 32 must clear a 99%+ bar.
+  - **Cap:**
+    - In every network, rules can replace at most 7% of the step-≥2 variance before the account falls below the task rule.
+    - That holds even where 50–70% of the variance IS recognisable units at R² ≥ 0.9.
+    - Replacing all of them drops fidelity to 23–73%.
+  - **Decision:** unit-richness helps a little; precision caps replacement at a few percent. A units-plus-wiring construction cannot meet the strict criterion on these networks. Only partial accounts with a small replaced share can.
+- **23:59 U18 PRE-REGISTRATION (for the next check-in): is ε95 the right admission rule for replaceable parts?**
+  - **Question:** if only SUBSTITUTION-GRADE units (relative error ≤ ε95, unit map v3) are replaced, all at once, does fidelity stay ≥ the task rule?
+  - **Networks:** all 11 v3 maps in `results/glass/units/maps/` plus the 10 n = 10 seed networks.
+  - **Decision.**
+    - Fidelity ≥ the task rule in ≥ 80% of networks → ε95 is a valid admission rule. Build step (CHANGES entry first): the catalog marks substitution-grade parts as "replaceable", and states the joint fidelity of replacing them all.
+    - Otherwise per-unit admission by ε95 is not enough, because errors add up; record the gap.

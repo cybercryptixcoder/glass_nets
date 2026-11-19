@@ -238,9 +238,9 @@ raw/filter units; shuffled control in brackets):
         - Seed convergence is downgraded to a known question with a new measurement.
       - (o) DONE (U16): the width effect generalizes to n = 8 (coverage ratio 2.6).
         - Unit-likeness tracks hidden size relative to length.
-      - (q) NEXT: the payoff test for Glass Networks. Does the reader produce a better certificate for a wide, unit-like network (ARC's 2nd argmax h = 32, n = 10, seed 0, 1,344 params) than for the cramped zoo h = 16, n = 10?
-        - Pre-register: the prediction, the number of runs (2 per network, same reader and judge as R7/R8) and the decision rule, before spending.
-        - API cost is small (DeepSeek Flash via Luminal, a few dollars). Shreyas approved API use on Nov 18.
+      - (q) Replaced by U17, reader-free. The reader version was confounded by the task-rule bar and risked circling (DIARY).
+        - U17: rules can replace at most 7% of a network before falling below the task rule, even where half of it is recognisable units.
+      - (r) NEXT: U18, pre-registered in DIARY. Is ε95 the right admission rule for "replaceable parts"? If yes → catalog build step.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
