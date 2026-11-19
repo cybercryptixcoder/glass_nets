@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 14:21 ET (clock): A39 (6.7× faster gated runs, numbers identical) done. A40 (modular multiplication: the atlas must pick the discrete-log basis; known answer {4, 41, 28, 31, 30} pre-registered) coded and tested. Waiting on GPU runs: s1/s2 for A37 (about 16:20), the A38 development run, then modmul.
 - Nov 19, 14:04 ET (clock):
   - A37 (angle vocabulary for modular arithmetic) is built and tested. Held out: two fresh modadd networks (s1, s2; 100% accurate; key frequencies {43, 30, 18, 19, 38} and {4, 44, 10, 28, 9}) are being decomposed on the GPU (about 3 hours).
   - A38 diagnosed: (i') fails on modadd because SPD leaves the attention Q/K with no mechanism (spread over many components; random partial masks never remove them all). A CI-masked reconstruction term is entered and coded, off by default; a development run is next.
@@ -108,7 +109,8 @@ nets), where the existing reader and judge already work.
 
 0. A38: development run of the CI-masked term on modadd_p113; then a held-out test on fresh seeds.
 1. (Built; verdict pending the s1/s2 decompositions) A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
-2. Faster atlas builds at this scale (the modadd build took about 33 min; the remaining time is in tree fitting and the gate cost search).
+2. (Done: A36 + A39, 33 → 4.7 min.) Faster atlas builds.
+2b. A40: decompose modmul_p113 (A35 pipeline) and score its pre-registered known answer.
 3. More MLP transformers (tracr compiled programs need multi-position outputs in the judge and an adapter with biases).
 4. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (ask Shreyas about cost first).
 
