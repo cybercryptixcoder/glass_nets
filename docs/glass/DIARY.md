@@ -1041,3 +1041,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - argmedian 16_5: "5% of the network's activity after step 1 … keeps 99.6% of decisions; the task rule alone keeps 98.4%".
     - M4,3: "51% … keeps 99.3%; task rule 98.1%".
   - Next: (s), a synthesis step with no new runs.
+- **01:00 Check-in (trig_01US4…). (s) DONE (synthesis, no runs):** added 'Where the units program leaves Glass Networks' to UNITS_FINDINGS. It sets the plan (§3–§4) against the outcomes, says what to build next (choose targets by ε95; exact-structure route via SPD; unit map as the partial product), and lists decisions D1–D5 for Shreyas. Numbers cited there were checked against U17, U8 and P5 results. Next: (t) SPD feasibility.

@@ -279,11 +279,50 @@ error is what led to the two-routes reading.
 3. **The unit map is the honest partial product** for such networks: which parts are explained, how well, and how
    much precision the network demands.
 
-## Open items
+## Where the units program leaves Glass Networks (written Nov 19, 2026, 01:00 ET)
 
-- Put the unit maps in the catalog as per-part-confidence entries (next build step).
-- A data-driven or SPD-style decomposition of the unexplained argmedian neurons.
-- Replicate F3 on more tasks and on more networks that are explained approximately (seeds: done in U8).
+### The plan against what happened
+
+| plan item (UNITS_PROGRAM §3–§4) | outcome |
+|---|---|
+| U1/U3: single units, causally verified | Units found at the level of function. Each is verified on its own (sufficiency, importance, relative error vs ε95). Joint substitution fails (F2) |
+| U2: distributed units | Linear task variables: no (U2). SPD-style weight decomposition: **not tried** |
+| U4: units plus wiring | Not reachable at the strict criterion. Rules can replace at most 7% of a network before it falls below the task rule (U17) |
+| U5: recurrence | Comparators recur across sizes, tasks, and ARC's training runs at 8 neurons. At 16 neurons only partly (U8) |
+| U6: dynamics | The rotation clock is not general. Linear modes are too many (F4) |
+| U7: transformers | No units in attention or the residual (F6) |
+| Build: unit finder with per-part confidence | **Built:** unit map v1–v4 (CHANGES T3, T4, T6). In the catalog with replaceable parts (T5, T6) |
+| Build: units-plus-wiring constructor | **Not built**, because the experiments show it cannot meet the criterion on these networks |
+
+### What to build next, in my judgement
+
+1. **Choose targets by ε95 before spending reader runs.**
+   - Approximate constructions only work on tolerant networks: the modular nets at 0.79 certify; AlgZoo at about 1% does not.
+   - Measuring ε95 costs seconds and needs no AI calls. The catalog grows fastest by spending reader effort where
+     ε95 says a faithful approximate account is possible.
+2. **For fragile networks, the only open route is exact structure.**
+   - The untried method is a parameter decomposition (APD/SPD, Apollo/Goodfire). It looks for mechanisms spread over
+     weights and needs no approximate fit.
+   - It is the one plan item never run. A first test on M8,5, with M4,3 as the known answer, is the natural next
+     experiment.
+3. **Keep the unit map as the honest partial product for fragile networks.** It says what is explained, how
+   precisely, and what can safely be replaced.
+
+### Decisions that are Shreyas's
+
+- **D1. Add ε95 to the intent-v2 certificate** as a reported feasibility line (no verdict).
+  - This changes the judge's report, so it needs a judge round and a CHANGES entry.
+  - Mentioning it in INTENT.md would need his approval.
+- **D2. Should a unit map with replaceable parts count as a catalog entry in its own right?** It currently shows as
+  "unit map only". This is the earlier open question about partial certificates.
+- **D3. The stale round-1 "complete" badges on the AlgZoo cards (J3, open).** Re-judge them with the current judge,
+  or relabel them as round-1 verdicts. Either is a judge-side decision.
+- **D4. Where research goes next:**
+  - (i) the exact-structure route (SPD) on AlgZoo;
+  - (ii) growing the catalog on tolerant networks;
+  - (iii) preparing the ε95 result for an outside write-up. That needs replication on more tasks first, and a
+    proper prior-work review.
+- **D5. A stronger reader model.** This needs an API key; it was open from before.
 
 ## Sources
 
