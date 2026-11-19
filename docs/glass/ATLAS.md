@@ -99,9 +99,20 @@ nets), where the existing reader and judge already work.
 
 ## 6. How to run what exists
 
-- **SPD on an AlgZoo RNN:**
-  `OMP_NUM_THREADS=1 python3 scripts/glass/units/u19c_m85.py <target> <original|shuffled> 30000 512`
-  takes about 25 minutes on CPU and saves `results/glass/units/u19c_model_<target>_<variant>_30000_512.pt`.
-- **Triggers:** `python3 scripts/glass/units/explain_triggers.py <target> original "" <depth>`.
-- **Rule-gated construction:** `python3 scripts/glass/units/rule_construction.py <target> original <depth>`.
-- **Planted known answer:** `python3 scripts/glass/units/u19b_rnn.py 20 40000 3e-3 1.0 1.0 1e-3 512`, about 35 min.
+- **Decompose (SPD):**
+  `OMP_NUM_THREADS=1 python3 scripts/glass/atlas_spd_job.py OUTDIR STEPS BATCH cpu|cuda target[:variant] ...`
+  - Targets: AlgZoo RNN ids, `lc_*` transformers, `planted_rnn`, `planted_transformer`.
+  - Writes `OUTDIR/spd_<target>_<variant>_<steps>_<batch>.pt`; float32 since A9.
+  - Locally about 25–90 min per network on one core. On Colab, use the CPU cores (one process each); the GPU only helps
+    for a single process.
+- **Atlas, with its shuffled control:**
+  `python3 lab/atlas.py TARGET SPD.pt 4 --control-spd SPD_shuffled.pt`
+  - Writes `results/glass/atlas/TARGET_d4.{json,md}` and `TARGET_shuffled_d4.json`, and prints the findings.
+  - The catalog picks up `TARGET_d4.json` automatically.
+- **Tests:** `scripts/glass/atlas_test.py` (A1, A2), `atlas_role_test.py` (A7), `atlas_findings_test.py` (A8),
+  `atlas_tf_test.py PLANTED_TF.pt` (A5), `atlas_catalog_test.py` (A4).
+- **Colab:** session `atlas` (`colab sessions`).
+  - Code: `/content/repo` (upload a tarball of `lab/` and `scripts/glass/`).
+  - Outputs: `/content/spd_out2`; logs: `/content/atlas_logs2`.
+  - Status: `colab exec -s atlas -f /tmp/colab_atlas_status2.py`. That script lists the logs and outputs; recreate
+    it if missing.

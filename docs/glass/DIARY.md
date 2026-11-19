@@ -1230,3 +1230,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
      - 3 mechanisms (W_h.0, W_h.4, W_h.18) whose removal flips it from rank 2 to the max (rank 1).
   4. Rebuilt with trusted triggers: 92.5% of decisions, against the task rule's 87.9%.
   - Control comparisons are added when the shuffled atlases exist (Colab batch).
+- **03:54 Atlas CLI with control:** `python3 lab/atlas.py TARGET SPD.pt 4 --control-spd SHUFFLED.pt`. Findings are now in the JSON, and the catalog section lists them.
+  - **M8,5 against its shuffled control:**
+    - Trained: 22 mechanisms, 12 trusted triggers (12 use task variables), 13 mechanisms in rank-based functional groups.
+    - Control: 20 mechanisms, 11 trusted (9 using task variables), **0** in functional groups.
+  - **Reading:** trigger vocabulary is not distinctive, since shuffled networks also gate on x_t and ranks. Functional roles in task terms are what separate a trained network from its control. Findings must lean on that.

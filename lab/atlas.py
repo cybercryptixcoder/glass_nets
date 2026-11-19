@@ -588,11 +588,30 @@ def render(a, control=None):
     return "\n".join(L)
 
 
+def make_target(tid, variant="original"):
+    if tid == "planted_rnn":
+        return planted_rnn()
+    if tid == "planted_transformer":
+        return planted_transformer()
+    if tid.startswith("lc_"):
+        return algzoo_transformer(tid, variant)
+    return algzoo_rnn(tid, variant)
+
+
 if __name__ == "__main__":
-    import sys
-    tid = sys.argv[1]; model = sys.argv[2] if len(sys.argv) > 2 else None; depth = int(sys.argv[3]) if len(sys.argv) > 3 else 5
-    a = build_atlas(planted_rnn() if tid == "planted_rnn" else algzoo_rnn(tid), spd_model=model, depth=depth)
+    import argparse
+    ap = argparse.ArgumentParser(description="Build a mechanism atlas (docs/glass/ATLAS.md).")
+    ap.add_argument("target"); ap.add_argument("spd", nargs="?", help="saved SPD decomposition (.pt); omitted = decompose now")
+    ap.add_argument("depth", nargs="?", type=int, default=4)
+    ap.add_argument("--control-spd", help="SPD decomposition of the shuffled-weights network, for the control comparison")
+    a_ = ap.parse_args()
+    tgt = make_target(a_.target)
+    a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth)
+    ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
+    a["findings"] = findings(a, ctrl)
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
-    (out / f"{tid}_d{depth}.json").write_text(json.dumps(a, indent=1))
-    (out / f"{tid}_d{depth}.md").write_text(render(a))
-    print(summary(a))
+    (out / f"{a_.target}_d{a_.depth}.json").write_text(json.dumps(a, indent=1))
+    (out / f"{a_.target}_d{a_.depth}.md").write_text(render(a, ctrl))
+    if ctrl is not None:
+        (out / f"{a_.target}_shuffled_d{a_.depth}.json").write_text(json.dumps(ctrl, indent=1))
+    print(summary(a)); print("\n".join(a["findings"]["statements"]))
