@@ -126,4 +126,13 @@ Every component gets an end-to-end test on a known case (M4,3: whose units are k
 ## 7. Status
 | Exp | Status | Result | Decision |
 |---|---|---|---|
-| U1 | starting 19:15 | | |
+| U1 | done | Single-ReLU comparators against a running statistic (relu(max−x_t), relu(x_t−2nd), relu(x_t−min)) recur across 2nd-argmax and argmedian networks. Coverage of variance after the first step: M16,10 0.42 (shuffled 0.00), M8,5 0.24 (0.07), others ≤ 0.10. M2,2 and M4,3 are raw-input units | mixed → U3 on the explained part |
+| U3 | done | FAIL: substituting all explained units keeps M16,10 23%, M8,5 76%, argmedian 16,5 82% (bar 95%); one unit at R² 0.98 can cost a third of decisions. Ablation shows the units matter (9–28% kept) | the units are real and used, but only approximate |
+| U1b | done | The rank-based family (current input + sorted history) doesn't capture the residual: joint substitution 19–36% | the residual is not rank structure; position/timing is involved |
+| U6a / U6a' | done | Clock (rotation ≈ k·360°/n): beyond chance only in M4,3, M8,5 and argmedian 8,5 (p ≤ 0.04); not general (3/9; Fisher p 1.2e-3 vs bar 1e-3) | dropped as a general unit |
+| U2 | next | Distributed units: decompose hidden states into directions and repeat U1/U3 on them | |
+
+**Working conclusion (20:45).**
+- Units exist at the level of function and recur across networks and tasks (comparators). That supports weak universality.
+- In dense RNNs they are approximate, and the network's decisions hinge on the detail they miss.
+- Candidate build (pending U2): a **unit map** per network. Every neuron or direction gets a verified unit label with per-part confidence (fit R², single-unit substitution fidelity, ablation importance) and total coverage, plus a cross-network unit library. This is the per-part-confidence certificate, and it doesn't need exact substitution.

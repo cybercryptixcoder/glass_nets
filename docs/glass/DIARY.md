@@ -487,3 +487,77 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - analysis tools: automatic decision-subspace discovery plus symbolic regression;
     - partial certificates in the catalog for dense networks.
 - **19:07** Started the UNITS PROGRAM (Shreyas 19:06): his hypothesis that networks are compositions of basic units, the same at the level of function and spread over clusters of weights. Research done (universality, component reuse, universal neurons, group-operation universality, Clock/Pizza, modularity, Platonic representations, APD/SPD, weight-sparse transformers, RNN dynamical motifs, RNN universality), experiment tree U1–U7 and conditional build intent are all in docs/glass/UNITS_PROGRAM.md. CLAUDE.md and CHECKLIST point to it.
+- **19:20 U1 PRE-REGISTRATION.** Question: do single hidden units of the AlgZoo RNNs compute simple functions of the input history?
+  - **Method.**
+    - Each hidden unit at each step is a neuron-step.
+    - For each one, fit relu(a·p + b·q) for every pair (and single) from a library of 7 base quantities: x_t, x_{t-1},
+      running max M, running 2nd max S, running min m, M_{t-1}, S_{t-1}. The fit is linear on the active set, then
+      R² is scored on all inputs.
+    - **Coverage** = the variance-weighted share of neuron-steps with R² ≥ 0.9.
+    - Control: the same network with shuffled weights.
+  - **Decision.**
+    - Network coverage ≥ 2× the control AND ≥ 50% → units exist at the neuron level → go to U3 (causal check).
+    - Within 1.25× the control → neuron-level units absent → go to U2 (distributed).
+    - Otherwise mixed → U3 on the explained part, U2 on the rest.
+  - Networks: 2nd argmax 2_2, 4_3, 4_4, 8_5, 8_8, 16_10; argmedian 8_5, 16_5.
+- **19:40 U1 RESULT** (`results/glass/units/u1.json`; cleaned: steps after the first, raw-input units separated).
+  - **History-unit coverage (vs shuffled):**
+    - M16,10: 0.42 (0.00); M8,5: 0.24 (0.07); argmedian 16,5: 0.10 (0.02); argmedian 8,5: 0.04 (0.00); M8,8: 0.00.
+    - M2,2 and M4,3 are fully raw-input units (relu of x_t and x_{t-1}).
+  - **One unit type recurs across networks and tasks: a single-ReLU comparator of the current input against a running statistic.**
+    - relu(max − x_t): 15× in M16,10, 3× in M8,5, 5× in M8,8 (scaled variants), 1× in argmedian 8,5.
+    - relu(x_t − 2nd): 7× in M16,10, 2× in M8,5.
+    - relu(x_t − min): argmedian 8,5.
+  - **Decision (per the pre-registration):** M16,10 and M8,5 are mixed → U3 on the explained neurons, U2 on the rest.
+- **19:42 U3 PRE-REGISTRATION.**
+  - **Method.** In M16,10, M8,5 and argmedian 16,5, take every neuron-step that U1 explains (R² ≥ 0.9, steps after the
+    first, any primitive). Replace those activations by their fitted formulas, computed from the true input history,
+    inside the running network.
+  - **Measures.**
+    - (a) Substitution fidelity (decision agreement).
+    - (b) The same neurons set to their mean (ablation).
+  - **Decision.** Units are verified if (a) ≥ 95% and (b) drops agreement by ≥ 10 points below (a). If (a) holds but
+    not (b), the units are real but unused. If (a) fails, the correlational fit doesn't capture what the network uses
+    (go to U2).
+- **20:00 U3 RESULT: FAILED the pre-registered bar.**
+  - **All explained neurons substituted at once:**
+    - M16,10: 62 neuron-steps → 23.2% of decisions kept (mean-ablation 9.2%);
+    - M8,5: 12 → 75.9% (28.4%);
+    - argmedian 16,5: 24 → 81.8% (26.5%).
+  - **Diagnostic, one unit at a time:**
+    - M16,10: median 97.6%, min 66.8%, 35% of units ≥ 99%. Late-step "x_t vs max" units fitted at R² 0.92–0.98 cost up to 33% of decisions alone.
+    - M8,5: median 93.8%.
+  - **Reading:** the comparator units are approximately right, but decisions depend on detail the 2-term formulas miss.
+- **20:02 U1b PRE-REGISTRATION.** Question: is the missing detail structured?
+  - **Method.** Richer unit family: relu(a·x_t + Σ_k c_k·x_(k)), where x_(k) is the k-th largest of x_1..x_t (at most
+    t+1 coefficients). Applied to every neuron-step after the first, in M16,10, M8,5 and argmedian 16,5.
+  - **Measures:** R², single-unit substitution and all-unit substitution.
+  - **Decision.**
+    - Joint substitution ≥ 95% → units are "rank-based comparators" (structured) → build the unit library around
+      this family → U4 (composition: which few coefficients matter).
+    - Otherwise → the residual is unstructured → U2 (distributed) and the explicit-remainder framing.
+- **20:15 U1b RESULT: NOT structured in the rank family** (`results/glass/units/u1b.json`; fitted on 4,000 inputs, tested on another 4,000).
+  - Median R² 0.71 / 0.81 / 0.59 for M16,10 / M8,5 / argmedian 16,5.
+  - Joint substitution 18.6% / 35.7% / 28.7%; single-unit median 91% / 82% / 84%.
+  - Reading: sorted values alone miss what units carry. These tasks output a POSITION, so units must also carry when things happened. Per the pre-registration, the residual is not explained by rank-based comparators. I am not adding more formula families: that would be circling.
+  - **Finding so far (U1+U3+U1b):**
+    - Comparator units recur at the function level across networks and tasks.
+    - But in dense RNNs the network's decisions depend on detail that approximate units miss: one unit at R² 0.98 can cost a third of decisions.
+    - Neuron-level units + wiring can't be exact here. A units account needs either a different level (dynamics) or an explicit remainder.
+- **20:17 U6a PRE-REGISTRATION (the clock hypothesis).** M4,3's reduced recurrence is a 120° rotation with n = 3 (360°/n), and the M8,5 reader described a "rotating clock".
+  - **Hypothesis:** 2nd-argmax and argmedian RNNs encode position with a rotation of about 360°/n.
+  - **Measures.** Eigenvalue angles of W_h, and of the effective linear map in the most common ReLU on/off pattern (the active-set restriction of W_h), for every network with n ≥ 3. Control: shuffled weights.
+  - **Decision.**
+    - Positive if, for ≥ 3 of the 4 2nd-argmax networks with n ≥ 3 (M4,3, M8,5, M8,8, M16,10), a complex eigenvalue pair with |λ| ≥ 0.5 has angle within 15% of 360°/n (or a small integer multiple), and the shuffled control shows this no more often than chance.
+    - Positive → the clock is a recurring dynamical unit → U6b (is it causal?).
+    - Negative → drop it.
+- **20:30 U6a RESULT: NOT SUPPORTED as pre-registered** (`results/glass/units/u6a.json`).
+  - The originals hit 4/4 2nd-argmax networks, but the shuffled controls hit 2/4 (6/9 overall): with many eigenvalues and multiples allowed within 15%, chance hits are common.
+  - The closest-angle errors of the originals are small (M4,3 0%, M4,4 5%, M8,5 1%, M8,8 6%, M16,10 11%, argmedian 8,5 0%, 8,7 11%, 16,5 0%, 16,7 2%), but reading that after the fact is cherry-picking.
+- **20:32 U6a' PRE-REGISTRATION (the clock with a proper null).**
+  - **Measure.** For each network: the minimum relative error between W_h's eigen-angles (|λ| ≥ 0.5) and k·360°/n. Null: the same statistic on 300 random shufflings of that network's weights.
+  - **p-value** = the share of shuffles with error ≤ the original's.
+  - **Decision.** The clock is supported if p ≤ 0.05 in ≥ 6 of 9 networks (Fisher-combined p ≤ 0.001). Otherwise drop it.
+- **20:45 U6a' RESULT: the clock is NOT a general unit** (`results/glass/units/u6a2.json`).
+  - p ≤ 0.05 in 3/9: M4,3 0.007, M8,5 0.040, argmedian 8,5 0.007. Fisher-combined p = 1.2e-3 (bar 1e-3). Dropped as a general unit.
+  - Recorded fact: in those three small networks, the recurrence holds a rotation within 1% of k·360°/n, beyond chance.
