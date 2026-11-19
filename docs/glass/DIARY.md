@@ -1763,3 +1763,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Planted RNN with A38d: W_h has 6 mechanisms (feature 2 split over two components: W_h.4 in use 12.9% of the time, W_h.7 6.8%). The A38c run had 5/5/5.
 - One run each, and SPD runs vary. So: is this the term, or chance? Running now: the planted RNN with seed 1, with and without A38d (`--seed` added to `atlas_spd_job.py`). If the reference also splits at seed 1, the RNN known answer is seed-sensitive in its own right; if only A38d splits, the term is the cause.
 - A38d's modadd development run continues on the GPU.
+
+## Nov 19, 16:42 ET (clock): full status update sent to Shreyas (he asked for one); work continues
+
+- Shreyas asked for a high-level update on everything since last night: where we are, what's achieved, what's left, what works and what doesn't. Sent as a message. Its substance matches ATLAS.md §4 and ATLAS_RESULTS.md.
+- GPU: s1/s2 at step 26,000 (A37 verdict about 17:05); modmul at 18,000; A38d modadd at 6,000 (H0 Q keeps 3 mechanisms). Local: seed-1 planted RNN runs, with and without A38d.
