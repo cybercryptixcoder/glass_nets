@@ -1817,3 +1817,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - Same decompositions with the old A35 vocabulary: s1 72% (would fail the 80% bar), s2 84% (would pass). With A37: 84% and 86%. The angle vocabulary is what carries s1 over the bar; on s2 it helps a little.
 - The s1/s2 atlases are being rebuilt with the A41 labels (the chosen rung, absorbed; numbers must match the main files) for A41's structured known answer K2. The memorizing network (K1) is decomposing on the GPU.
+
+## Nov 19, 17:48 ET (clock): A41's structured half passes; the memorizer's decomposition restarted
+
+- K2 (structured adders): s1 36 of 44 trusted MLP/unembedding mechanisms labelled rule (82%); s2 73 of 83 (88%). Bar 80%: pass, s1 narrowly. The rebuilt atlases' fidelities match the main files exactly.
+- What the labels say about these adders: the MLP and unembedding mechanisms are rules that carry over to unseen numbers. The embedding (s1 34 of 35, s2 48 of 56) and the attention values are mostly lookup: their trusted rules only describe the tokens seen. Whether that is the network or the decomposition is an open question. The rule is about the description, so it reports what it can and can't vouch for.
+- K1: modrand_p113's decomposition had failed at start (the target router sent 'modrand' to the RNN loader). Fixed and relaunched at 17:47; about 1.5 h.
+- A40 (modmul) decompositions finished at 17:27; its atlas builds are running locally.

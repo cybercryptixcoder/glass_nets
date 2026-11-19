@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 17:48 ET (clock): A41 K2 PASS (fresh adders' MLP/unembedding mechanisms 82% / 88% rule; embeddings mostly lookup). K1 (memorizer) decomposing, about 19:20. A40 (modmul) atlases building.
 - Nov 19, 17:23 ET (clock): **A37 PASS (held out):** on two fresh 227k-parameter adders, 84% and 86% of trusted frequency triggers use the network's key frequencies (bar 80%, chance 9%). Their certificates fail only (i') (attention Q/K, the known open problem), plus s2's (ii) by 0.05 points.
 - Nov 19, 17:17 ET (clock): A41 (rule vs lookup labels) built and tested; its memorizing known answer (modrand_p113: 100% train, chance on held-out) is being decomposed on the GPU (about 2 h). A37 builds running locally; modmul (A40) at step 24,000.
 - Nov 19, 16:58 ET (clock): A38, A38c and A38d all fail (A38d fixes the planted query but splits a planted RNN mechanism at two seeds). The attention Q/K problem stays open. s1/s2 at step 28,000 (A37 verdict about 17:10); modmul at 20,000.
