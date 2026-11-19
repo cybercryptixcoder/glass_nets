@@ -741,8 +741,13 @@ def findings(a, control=None):
 def _signature(x):
     e = x.get("effect") or {}; rc = e.get("role_changes") or []
     role = (rc[0]["from"], rc[0]["to"]) if rc and rc[0]["share_of_flips"] >= 0.4 and e.get("decision_flip_rate_when_needed", 0) >= 0.05 else None
-    vars_ = frozenset(f for f in x["trigger"].get("features_used", []) if not f.startswith("neuron ")) \
-        if _conf(x) >= TRUSTED else frozenset()
+    tl = x["trigger"].get("task_level") or {}
+    if tl.get("confidence_clear", 0) >= TRUSTED:                  # A24: the task-level trigger's variables when trusted
+        vars_ = frozenset(f for f in tl.get("features_used", []) if not f.startswith("neuron "))
+    elif _conf(x) >= TRUSTED:
+        vars_ = frozenset(f for f in x["trigger"].get("features_used", []) if not f.startswith("neuron "))
+    else:
+        vars_ = frozenset()
     return x["id"].rsplit(".", 1)[0], role, vars_
 
 
@@ -759,15 +764,19 @@ def compare_atlases(a, b, bar=0.5):
             return 0.0
         u = s[2] | t[2]
         return 1.0 if not u else len(s[2] & t[2]) / len(u)
+    sa, sb = dict(fa), dict(fb)
     cand = sorted(((sim(s, t), i, j) for i, s in fa for j, t in fb), reverse=True)
     used_a, used_b, pairs = set(), set(), []
     for sc, i, j in cand:
         if sc >= bar and i not in used_a and j not in used_b:
-            used_a.add(i); used_b.add(j); pairs.append({"a": i, "b": j, "similarity": sc})
+            basis = "role and trigger variables" if (sa[i][2] and sb[j][2]) else "role only"          # A24
+            used_a.add(i); used_b.add(j); pairs.append({"a": i, "b": j, "similarity": sc, "basis": basis,
+                                                         "variables": sorted(sa[i][2] & sb[j][2])})
     share_a = len(used_a) / len(fa) if fa else 0.0; share_b = len(used_b) / len(fb) if fb else 0.0
+    n_full = sum(p["basis"] != "role only" for p in pairs)
     return {"pairs": pairs, "functional_a": len(fa), "functional_b": len(fb), "share_a": share_a, "share_b": share_b,
-            "summary": f"{len(pairs)} recurring mechanisms: {100 * share_a:.0f}% of A's {len(fa)} functional mechanisms "
-                       f"and {100 * share_b:.0f}% of B's {len(fb)} have a counterpart with the same role and trigger variables."}
+            "summary": f"{len(pairs)} recurring mechanisms ({n_full} matched on role and trigger variables, {len(pairs) - n_full} on role only): "
+                       f"{100 * share_a:.0f}% of A's {len(fa)} functional mechanisms and {100 * share_b:.0f}% of B's {len(fb)} have a counterpart."}
 
 
 def fact_sheet(a):
