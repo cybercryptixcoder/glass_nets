@@ -4,8 +4,8 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 
 ## Whole-network certificate
 
-- Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= 0.9 (otherwise always on): keeps **92.5%** of the network's decisions; the task rule alone keeps 87.9%.
-- Every trigger used (no confidence bar): 74.6%. Mechanisms switched by their own learned importances: 88.3%. All alive mechanisms on: 98.0%.
+- Rebuilt from its mechanisms, each switched on by its trigger where the trigger's confidence is >= 0.9 (otherwise always on): keeps **92.3%** of the network's decisions; the task rule alone keeps 87.9%.
+- Every trigger used (no confidence bar): 73.7%. Mechanisms switched by their own learned importances: 87.5%. All alive mechanisms on: 100.0%.
 
 ## Findings
 
@@ -13,7 +13,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 2. 11 of the 11 trusted triggers use a task variable (not only neuron states). Most used: x_t (6), x_t minus the previous 2nd (6), step t (5), x_t minus the previous max (5), steps since the max (4).
 3. 10 mechanism(s) (W_x.2, W_x.12, W_h.8, W_h.9, W_h.15, W_h.16, W_o.0, W_o.2, W_o.14, W_o.16) keep the network from answering rank 3 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 3.
 3. 3 mechanism(s) (W_h.0, W_h.4, W_h.18) keep the network from answering rank 1 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 1.
-4. Rebuilt from mechanisms switched by trusted triggers: 92.5% of decisions (task rule 87.9%).
+4. Rebuilt from mechanisms switched by trusted triggers: 92.3% of decisions (task rule 87.9%).
 5. Shuffled-weights control: 20 mechanisms, 11 trusted triggers, 9 using a task variable (trained: 22, 11, 11); functional groups: 0 mechanisms (trained: 13).
 
 ## W_x: 4 mechanisms (4 with a trusted trigger)

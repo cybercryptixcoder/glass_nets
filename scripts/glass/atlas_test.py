@@ -29,5 +29,8 @@ for m in ("W_x", "W_h", "W_o"):          # A2: effects (planted mechanism j acts
         planted = int(np.argmax(np.abs(np.array(x["U"] if m != "W_o" else x["U"]))))   # the planted feature index
         check(e["most_lowered_class"] == (planted if m == "W_o" else int(np.argmax(np.abs(np.array(x["U"]))))), f"{x['id']}: removing it lowers its own feature's output (class {e['most_lowered_class']})")
         check(e["specificity"] >= 10, f"{x['id']}: specificity >= 10 (got {e['specificity']:.1f})")
+check(abs(a["fidelity"]["all_alive"] - 1.0) < 1e-12, f"A12: all mechanisms on (+ residual) is exactly the network ({a['fidelity']['all_alive']})")
+m85 = atlas.build_atlas(atlas.algzoo_rnn("zoo_2nd_argmax_8_5"), spd_model=ROOT / "results/glass/units/u19c_model_zoo_2nd_argmax_8_5_original_30000_512.pt", depth=4)
+check(abs(m85["fidelity"]["all_alive"] - 1.0) < 1e-12, f"A12: M8,5 all mechanisms on (+ residual) is exactly the network ({m85['fidelity']['all_alive']})")
 check(a["fidelity"]["rule_gated"] >= 0.99, f"rule-gated fidelity >= 0.99 (got {a['fidelity']['rule_gated']:.4f})")
 print("ALL PASS" if not fails else f"{len(fails)} FAILED"); sys.exit(1 if fails else 0)

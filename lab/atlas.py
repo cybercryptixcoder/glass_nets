@@ -177,7 +177,9 @@ class TransformerTarget:
         def mm(name, a):
             a = a.numpy(); n = self._rows(name); names, F = self._feats(x, name)
             m = self._bm(gate(name, names, F, self._pm(a, B, n)), B, n)
-            return torch.tensor(((a @ Vv[name].T) * m) @ U[name])
+            out = ((a @ Vv[name].T) * m) @ U[name]
+            R = getattr(mods[name], "_residual", None)
+            return torch.tensor(out + a @ R.T if R is not None else out)
         with torch.no_grad():
             return self.forward(torch.tensor(x), mm).numpy()
 
@@ -293,9 +295,18 @@ def _features(tgt, x, t, h, end=False):
     return names, np.concatenate([F, (h > 1e-9).astype(float)], 1)
 
 
+def set_residuals(mods, alive):
+    """A12: each matrix keeps an always-on residual R = W - sum over alive mechanisms (the dead subcomponents' weight)."""
+    with torch.no_grad():
+        for k, m in mods.items():
+            S = sum((torch.outer(m.U[c], m.V[c]) for c in alive[k]), torch.zeros_like(m.W))
+            m._residual = (m.W - S).numpy()
+
+
 def _apply(mods, name, a, mask):
     m = mods[name]
-    return ((a @ m.V.detach().numpy().T) * mask) @ m.U.detach().numpy()
+    out = ((a @ m.V.detach().numpy().T) * mask) @ m.U.detach().numpy()
+    return out + a @ m._residual.T if hasattr(m, "_residual") else out
 
 
 def run_gated(tgt, mods, x, gate):
@@ -485,6 +496,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
 
     am = {k: np.isin(np.arange(C), alive[k]).astype(float) for k in MATS}
+    set_residuals(mods, alive)                                   # A12
     with torch.no_grad():
         net = tgt.forward(torch.tensor(xte), lambda name, a: mods[name].apply(a)).numpy()
 
@@ -667,7 +679,7 @@ def _load_play(tid):
     if tid not in _PLAY:
         import pickle
         P = pickle.loads((LAB.parent / "results" / "glass" / "atlas" / f"{tid}_d4_model.pkl").read_bytes())
-        tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"])
+        tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"]); set_residuals(mods, P["alive"])
         C = mods[next(iter(mods))].U.shape[0]
         _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P["conf"], C), **P}
     return _PLAY[tid]
