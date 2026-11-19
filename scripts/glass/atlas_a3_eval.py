@@ -44,7 +44,7 @@ for t in targets:
         v = f"{g} vs {gc} → {'yes' if g > gc else 'no'}"
     ok = i_ and ii and iii and iv and vi; n_ok += ok
     mark = lambda b: "✓" if b else "✗"          # noqa: E731
-    rows.append(f"| {t} | {c1} {mark(i_)} | {fid:.3f} vs {task:.3f} {mark(ii)} | {tr:.2f} {mark(iii)} | {spec:.0f}× {mark(iv)} | {v} |"
+    rows.append(f"| {t} | {c1} {mark(i_)} | {fid:.3f} vs {task:.3f} {mark(ii)} | {tr:.2f} {mark(iii)} | {'only where needed' if spec >= 1e5 else f'{spec:.0f}×'} {mark(iv)} | {v} |"
                 + (f" {orc:.2f} {mark(vi)} |" if V != "v1" else "") + f" {'PASS' if ok else 'fail'} |")
 c1h = "(i) residual ≤ 0.05" if V == "v1" else "(i') mechanisms alone ≥ task rule"
 print(f"Version {V}")
