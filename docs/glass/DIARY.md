@@ -1754,3 +1754,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - A38d planted RNN at step 38,000 of 40,000: W_x 5, W_h 6, W_o 5 by the training-batch count (the atlas's own count decides). Planted transformer at ~16,000 with Q alive. A38d modadd (GPU) at step 4,000: H0 query keeps 7 mechanisms.
 - s1/s2 (A37) at step 22,000; done about 17:05. modmul (A40) at 16,000.
+
+## Nov 19, 16:34 ET (clock): A38d does what it was built for, with side effects on both planted known answers
+
+- Planted transformer with A38d:
+  - Q keeps its mechanism, mechanisms alone is 1.000, and every matrix alone is 1.000. The reference decomposition had Q alone at 0.919.
+  - But `atlas_tf_test.py` now fails one check: the value mechanism for token 2 aligns 0.863 with its token (bar 0.9; the reference gives 1.0).
+- Planted RNN with A38d: W_h has 6 mechanisms (feature 2 split over two components: W_h.4 in use 12.9% of the time, W_h.7 6.8%). The A38c run had 5/5/5.
+- One run each, and SPD runs vary. So: is this the term, or chance? Running now: the planted RNN with seed 1, with and without A38d (`--seed` added to `atlas_spd_job.py`). If the reference also splits at seed 1, the RNN known answer is seed-sensitive in its own right; if only A38d splits, the term is the cause.
+- A38d's modadd development run continues on the GPU.
