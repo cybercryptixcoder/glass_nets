@@ -178,6 +178,10 @@ accuracy for the standard ones):
 - The same holds with units found from data rather than from the library (U15: total explained 0.63 vs 0.64 at
   n = 5, 0.34 vs 0.32 at n = 7).
 - So the width effect is task-specific so far.
+- **Replicated at another length (U16):** for 2nd argmax with n = 8, history+raw coverage goes 0.02 → 0.18 → 0.46 at
+  8 → 16 → 32 units.
+- Across all 2nd-argmax configurations, unit-likeness tracks hidden size relative to sequence length. At 16 units,
+  coverage falls from about 0.37 (n = 5) to 0.18 (n = 8) to 0.06 (n = 10). At 32 units it stays at 0.40–0.60.
 
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained

@@ -970,3 +970,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
      - For the M16,10 recipe, a commenter on Josh Snider's LessWrong post says the representations "vary a lot depending on the seeds". That agrees with our 16-neuron result (3–4 of 5).
      - Snider's estimator counts neuron roles (comparator, max detector, write pointer) across about 8,000 trained models, but does not report how often each role appears.
      - What remains ours: the measured 5/5 convergence at 8 neurons, with controls.
+- **23:26 U16 PRE-REGISTRATION ((o): is U13's width effect general across lengths, or specific to n = 10?).**
+  - **Networks:** ARC's 2nd argmax n = 8 at h = 8, 16 and 32, seeds 0–4 (available).
+  - **Known answer:** h = 8 seed 0 reproduces our zoo_2nd_argmax_8_8 (ε95 0.0010, coverage about 0).
+  - **Measure:** history+raw coverage (the U14 measure), plus accuracy, ε95 and joint substitution as in U12.
+  - **Decision.** The width effect generalizes to n = 8 if the h = 32 median history+raw coverage ≥ 2× the h = 16 median. Otherwise it is specific to n = 10 so far.
+- **23:28 U16 RESULT: the width effect GENERALIZES to n = 8** (`results/glass/units/u12_width_*_n8.json`, read by hand).
+  - **Known answer:** h = 8 seed 0 reproduces zoo_2nd_argmax_8_8 (ε95 0.0010, coverage 0.00).
+
+    | n = 8, hidden | accuracy (median) | history+raw coverage (median) | ε95 (median) | joint substitution (median) |
+    |---|---|---|---|---|
+    | 8 | 0.43 | 0.02 | 0.0032 | 73% (on 0–4% of variance) |
+    | 16 | 0.96 | 0.18 | 0.0079 | 48% |
+    | 32 | 0.99 | 0.46 | 0.0100 | 73% |
+
+  - h = 32 / h = 16 coverage ratio 2.6 (bar 2) → generalizes.
+  - **Descriptive pattern across all 2nd-argmax configurations measured:** unit-likeness tracks hidden size relative to sequence length.
+    - At h = 16, coverage falls as n grows: n = 5 about 0.37, n = 8 0.18, n = 10 0.06.
+    - At h = 32 it stays high: 0.40–0.60.
+    - The most cramped networks (h = 8, n = 8) are almost fully blended (coverage ≈ 0) and inaccurate (0.43).

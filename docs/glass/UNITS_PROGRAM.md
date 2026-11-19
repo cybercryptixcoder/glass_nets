@@ -236,7 +236,11 @@ raw/filter units; shuffled control in brackets):
         - ε95 as a predictor stays a candidate; the argmedian maps stay.
         - Width → units is downgraded to a known mechanism (superposition; Kong et al. 2026).
         - Seed convergence is downgraded to a known question with a new measurement.
-      - (o) NEXT after (n): replicate the width-to-units effect (U13) at another 2nd-argmax length (n = 8; ARC has h = 32, n = 8). Is it about n = 10 specifically or general?
+      - (o) DONE (U16): the width effect generalizes to n = 8 (coverage ratio 2.6).
+        - Unit-likeness tracks hidden size relative to length.
+      - (q) NEXT: the payoff test for Glass Networks. Does the reader produce a better certificate for a wide, unit-like network (ARC's 2nd argmax h = 32, n = 10, seed 0, 1,344 params) than for the cramped zoo h = 16, n = 10?
+        - Pre-register: the prediction, the number of runs (2 per network, same reader and judge as R7/R8) and the decision rule, before spending.
+        - API cost is small (DeepSeek Flash via Luminal, a few dollars). Shreyas approved API use on Nov 18.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
