@@ -159,6 +159,15 @@ class TransformerTarget:
         return len(self.out_pos) if name == "W_U" else self.P
 
     def _feats(self, x, name):
+        """A36: cached per (input array, matrix kind)."""
+        if not hasattr(self, "_fcache") or self._fcache is None:
+            self._fcache = {}
+        key = (x.__array_interface__["data"][0], x.shape, name == "W_U")
+        if key not in self._fcache:
+            self._fcache[key] = (x, self._feats_uncached(x, name))
+        return self._fcache[key][1]
+
+    def _feats_uncached(self, x, name):
         names, F = self.features(x)                                  # [B, P, F]
         B = len(x)
         if name == "W_U":
@@ -216,7 +225,7 @@ class ModAddTarget:
 
     def __init__(self, name, weights, W_pos, X, task_rule, p, heads, meta):
         self.name, self.weights, self.W_pos, self.X, self.task_rule, self.p, self.heads, self.meta = name, weights, W_pos, X, task_rule, p, heads, meta
-        self.P, self.V = X.shape[1], X.shape[2]; self.out_scale = 1.0
+        self.P, self.V = X.shape[1], X.shape[2]; self.out_scale = 1.0; self._fcache = {}
         self.matrices = tuple(["W_E"] + [f"H{h}_W_{m}" for h in range(heads) for m in "QKVO"] + ["W_in", "W_out", "W_U"])
 
     def sample(self, k):
@@ -245,6 +254,15 @@ class ModAddTarget:
         return a.reshape(n, B, -1).transpose(1, 0, 2).reshape(B * n, -1)
 
     def _feats(self, x, name):
+        """A36: cached per (input array, number of rows): every matrix with the same call rows gets the same features."""
+        if not hasattr(self, "_fcache") or self._fcache is None:
+            self._fcache = {}
+        key = (x.__array_interface__["data"][0], x.shape, self._rows(name))
+        if key not in self._fcache:
+            self._fcache[key] = (x, self._feats_uncached(x, name))
+        return self._fcache[key][1]
+
+    def _feats_uncached(self, x, name):
         t = x.argmax(-1); B, P = t.shape; a, b = t[:, 0], t[:, 1]; s = (a + b) % self.p
         n = self._rows(name); pos = np.arange(P)[None].repeat(B, 0) if n == P else np.full((B, 1), P - 1)
         here = t if n == P else t[:, -1:]
