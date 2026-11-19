@@ -896,3 +896,29 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - They stay hypersensitive by the modular-net standard (ε95 1–2% vs 0.79), and below 90% joint substitution.
     - The noise-averaging confound (more neurons) could explain part of the ε95 rise, but not the joint-substitution rise.
   - **Next question this raises:** is ARC's challenge network (M16,10) hard partly because it is capacity-starved? ARC publishes 2nd argmax h = 32, n = 10.
+- **22:23 U13 PRE-REGISTRATION ((k3): is the n = 10 task's difficulty partly capacity?).**
+  - **Networks:** ARC's 2nd argmax n = 10, h = 16 (zoo seeds 0–4, the U8 models) vs h = 32 (seeds 0–4, available). ARC's challenge M16,10 is an h = 16, n = 10 network.
+  - **Known answer:** h = 16 ε95 reproduces U8 (0.003–0.005).
+  - **Measures:** as U12 (accuracy, ε95, unit-map coverage, joint substitution).
+  - **Decision.**
+    - "The n = 10 networks are capacity-starved in the U12 sense" if the h = 32 median joint substitution ≥ the h = 16 median + 20 points, with median accuracy ≥ h = 16's.
+    - Otherwise, width does not make the n = 10 task's networks more explainable.
+  - ε95 is reported descriptively, because of the noise-averaging confound.
+- **22:25 U13 RESULT: NOT MET by the pre-registered rule, but the structure changes sharply with width** (`results/glass/units/u12_width_{16,32}_n10.json`, read by hand).
+  - **Known answer:** h = 16 ε95 reproduces U8 (0.0032 ×4, 0.0050).
+
+    | n = 10, hidden | accuracy (median) | ε95 (median) | history-unit coverage (median) | joint substitution (median) | variance substituted (median) |
+    |---|---|---|---|---|---|
+    | 16 | 0.914 | 0.0032 | 0.06 | 37% | 7% |
+    | 32 | 0.993 | 0.0079 | 0.51 | 52% | 60% |
+
+  - **Rule:** +15 points of joint substitution against a +20 bar → not met.
+  - **Caveat:** the comparison favours h = 16, which substitutes almost nothing (2–29% of variance) and so keeps decisions cheaply. h = 32 substitutes 54–70% of its variance and still keeps more. My pre-registered rule did not adjust for that, and I am not changing it after the fact.
+  - **Descriptive, and striking:** at h = 32, about HALF of all neuron-step variance is single library units (0.49–0.67), against 0.02–0.22 at h = 16.
+    - The two h = 32 seeds I inspected both contain the comparators (max − x_t, x_t − 2nd, 2nd − x_t) plus running-max holders.
+    - The capacity-starved h = 16 networks blend their units; the wider ones dedicate neurons to them.
+  - **Prior work:** this matches superposition theory (Elhage et al., "Toy Models of Superposition", 2022): when a network needs more features than it has neurons, it blends them across neurons, and extra neurons reduce the blending. Here it shows up as units, in a recurrent algorithmic network.
+  - **Bearing on ARC's challenge:** M16,10 is in the capacity-starved regime. Its siblings with twice the width are about half single-neuron units.
+- **22:25 U14 PRE-REGISTRATION (replicate "wider → more unit-like" on a second task).** Argmedian n = 5 and n = 7 at h = 16 (seeds 0–4; n = 5 are the U8 models) vs h = 32 (ARC, seeds 0–4; available).
+  - **Measures:** as U12.
+  - **Decision:** "wider networks are more unit-like" replicates if the h = 32 median history+raw coverage ≥ 2× the h = 16 median at BOTH n = 5 and n = 7. Otherwise it does not replicate on argmedian.
