@@ -1215,3 +1215,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Locally: lc_4_5 and lc_8_6.
 - **03:45 A5 built (code; known-answer test pending its SPD run).** `TransformerTarget` (forward matches `nets.transformer` to 7e-13 on lc_6_5), functional-graph features, `planted_transformer` (copies the previous token; 100% correct by construction), and `build_atlas` made generic. RNN atlas test still passes.
   - **Translation fix before any lc result:** lc logits are large (spread 39 for lc_3_4), so the reconstruction loss started at 5e7. Transformers now divide logits by their spread, as RNNs already did; the two lc jobs were restarted.
+- **03:46 A7 DONE: task-relative effects** (CHANGES A7).
+  - Effects now say what a mechanism's removal does to the answer in task terms.
+  - **M8,5 examples:**
+    - W_h.4 (fires when neuron 7 was active and the max is at most 1 step old): removing it flips the answer from the 2nd largest to the max in 46% of flips, and to the 3rd in 34%.
+    - W_h.0: rank 2 → rank 1 in 41% of flips.
+  - So these mechanisms keep the network from answering the max: a readable functional role, tested by ablation.
+- **03:46 Standing process:** a 15-minute reminder (Shreyas's request) re-schedules itself. Each time: pull Colab outputs, add a dated diary entry, refresh ATLAS §4/§5, commit, push, send Shreyas a short update, then continue. It is not an interruption.

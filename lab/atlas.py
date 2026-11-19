@@ -67,6 +67,12 @@ def _scalar_seq_features(x, t):
     return list(f), np.stack(list(f.values()), 1).astype(float)
 
 
+def _scalar_class_role(x):
+    """Role of each output class (a sequence position) on each input: the rank of the value there (1 = largest)."""
+    v = x[:, :, 0]
+    return (v[:, None, :] > v[:, :, None]).sum(2) + 1
+
+
 def algzoo_rnn(target_id, variant="original", n=16000):
     import judge
     meta, W, X = judge.load_target(target_id, variant, 0)
@@ -80,10 +86,12 @@ def algzoo_rnn(target_id, variant="original", n=16000):
         for t in range(N):
             h = torch.relu(xt[:, t] @ Ws["W_x"].T + h @ Ws["W_h"].T)
         scale = float((h @ Ws["W_o"].T).std())
-    return RNNTarget(name=f"{target_id}|{variant}", N=N, H=H, d_in=1, weights=Ws,
-                     sample=lambda k: torch.randn(k, N, 1, dtype=torch.float64), X=Xn,
-                     task_rule=float(meta["test_acc"]) if variant == "original" else None,
-                     task_features=_scalar_seq_features, out_scale=scale, meta={"target": target_id, "variant": variant})
+    t = RNNTarget(name=f"{target_id}|{variant}", N=N, H=H, d_in=1, weights=Ws,
+                  sample=lambda k: torch.randn(k, N, 1, dtype=torch.float64), X=Xn,
+                  task_rule=float(meta["test_acc"]) if variant == "original" else None,
+                  task_features=_scalar_seq_features, out_scale=scale, meta={"target": target_id, "variant": variant})
+    t.class_role = _scalar_class_role; t.role_name = "rank of the value at that position (1 = largest)"
+    return t
 
 
 def planted_rnn(K=5, N=6, p_on=0.03, n=16000):
@@ -338,11 +346,13 @@ def effects(tgt, mods, x, calls, alive):
     import judge
     abl = tgt.ablated if hasattr(tgt, "ablated") else (lambda x_, *a: _net_ablated(tgt, x_, *a))
     base = abl(x); B = len(x); res = {}
+    roles = tgt.class_role(x) if getattr(tgt, "class_role", None) else None          # A7
+    base_dec = judge.decide(base)[:, 0] if roles is not None else None
     for k in getattr(tgt, "matrices", MATRICES):
         G = calls[k][2]; n_calls = len(G) // B
         for c in alive[k]:
             U = mods[k].U[c].detach().numpy(); V = mods[k].V[c].detach().numpy()
-            on_n, off_n, flips, d_on = [], [], [], np.zeros(base.shape[1])
+            on_n, off_n, flips, d_on = [], [], [], np.zeros(base.shape[1]); trans = {}
             for call in range(n_calls):
                 g = G[call * B:(call + 1) * B, c]
                 if not (g > 0.5).any() and not (g < 0.1).any():
@@ -350,7 +360,12 @@ def effects(tgt, mods, x, calls, alive):
                 out = abl(x, k, call, U, V); d = out - base; nrm = np.linalg.norm(d, axis=1)
                 on, off = g > 0.5, g < 0.1
                 on_n.append(nrm[on]); off_n.append(nrm[off]); d_on += d[on].sum(0)
-                flips.append(~judge.same(base[on], out[on]) if on.any() else np.zeros(0, bool))
+                fl = ~judge.same(base[on], out[on]) if on.any() else np.zeros(0, bool)
+                flips.append(fl)
+                if roles is not None and fl.any():
+                    idx = np.where(on)[0][fl]; new_dec = judge.decide(out[idx])[:, 0]
+                    for o, nw in zip(roles[idx, base_dec[idx]], roles[idx, new_dec]):
+                        trans[(int(o), int(nw))] = trans.get((int(o), int(nw)), 0) + 1
             on_all = np.concatenate(on_n) if on_n else np.zeros(0); off_all = np.concatenate(off_n) if off_n else np.zeros(0)
             e_on = float(on_all.mean()) if len(on_all) else 0.0; e_off = float(off_all.mean()) if len(off_all) else 0.0
             mean_d = d_on / max(len(on_all), 1)
@@ -359,6 +374,10 @@ def effects(tgt, mods, x, calls, alive):
                            "decision_flip_rate_when_needed": float(np.concatenate(flips).mean()) if flips and len(np.concatenate(flips)) else 0.0,
                            "mean_output_change_when_needed": mean_d.tolist(),
                            "most_lowered_class": int(mean_d.argmin()), "most_raised_class": int(mean_d.argmax())}
+            if roles is not None:
+                tot = sum(trans.values()) or 1
+                res[(k, c)]["role_changes"] = [{"from": o, "to": nw, "share_of_flips": n_ / tot}
+                                               for (o, nw), n_ in sorted(trans.items(), key=lambda kv: -kv[1])[:3]]
     return res
 
 
@@ -519,6 +538,8 @@ def render(a):
             e = x.get("effect", {})
             eff = (f"changes the output by {e['effect_when_needed']:.2f} and flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions; "
                    f"lowers class {e['most_lowered_class']}, raises class {e['most_raised_class']}") if e else "-"
+            if e and e.get("role_changes"):
+                eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
             L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {x['trigger']['rule'].replace(chr(10), '<br>')} | {x['trigger']['confidence']:.2f} | {eff} | {spec} |")
         L.append("")
