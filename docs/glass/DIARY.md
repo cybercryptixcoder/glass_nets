@@ -1645,3 +1645,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Held out: mechanisms alone 0.990; rebuilt (v4) 0.902 vs task rule 0.854; trusted 0.60; specificity 29×; off_recall 0.89.
   - 106 mechanisms, 64 with trusted task-level explanations, mostly in terms of token values and positions. Embedding mechanisms switch on by token value ("ON when token f(i) > 3.5", specificity 2,265×); others use position i, fixed points and f(f(i)).
   - **Scope, stated plainly:** one held-out transformer (lc_8_6 is the only AlgZoo longest-cycle network not used in design); development 2 of 3 (lc_3_4 fails off_recall).
+- **11:12 Next family: a transformer with an MLP, at real scale (A35).** modadd_p113: Nanda et al.'s grokked modular-addition network, 227k parameters, 100% accurate. Its mechanism is known: Fourier features at a few key frequencies, listed in its meta as 8, 23, 25, 11, 22.
+  - Plan: a target adapter (checked against the reference forward), then SPD on the GPU, then the atlas with a task vocabulary that includes cos/sin at every frequency 1–56. Every frequency is equally available to the trees.
+  - **Known answer, pre-registered now:** among trusted triggers that use a Fourier feature, ≥ 80% use a key frequency (chance ≈ 9%).
+  - The certificate criteria also apply, but the task rule is 100%, so (i') and (ii) need perfect agreement. A hard bar; reported either way.
