@@ -1749,3 +1749,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - A38d (clamped mask values) planted transformer, step 8,000 of 30,000: Q keeps 1 alive mechanism (A38c had none by then). Planted RNN at step 8,000 (still settling, as A38c did before reaching 5/5/5).
 - GPU: A38d modadd run started 15:53, replacing the faulty A38/A38c runs. s1/s2 (A37) at step ~20,000; modmul (A40) at ~12,000.
+
+## Nov 19, 16:25 ET (clock): waiting on the last stretch
+
+- A38d planted RNN at step 38,000 of 40,000: W_x 5, W_h 6, W_o 5 by the training-batch count (the atlas's own count decides). Planted transformer at ~16,000 with Q alive. A38d modadd (GPU) at step 4,000: H0 query keeps 7 mechanisms.
+- s1/s2 (A37) at step 22,000; done about 17:05. modmul (A40) at 16,000.
