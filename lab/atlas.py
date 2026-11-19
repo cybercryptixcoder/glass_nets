@@ -699,6 +699,23 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     return atlas
 
 
+def build_adaptive(tgt, spd_paths, depth=4, absorb=True):
+    """A28 part 2: spd_paths ordered from sparsest to densest decomposition. Builds each in turn and returns the first
+    whose TRAINING-half mechanisms-alone and v3 fidelities both reach task rule + 2 standard errors (a sampling margin);
+    if none does, the densest. The choice never looks at the held-out half."""
+    log = []
+    for p in spd_paths:
+        a = build_atlas(tgt, spd_model=p, depth=depth, absorb=absorb)
+        tr = tgt.task_rule
+        n = len(tgt.X[:16000]) // 2
+        bar = (tr + 2 * math.sqrt(tr * (1 - tr) / n)) if tr is not None else 0.99
+        ft = a["fidelity_train"]; ok = ft["mechanisms_alone"] >= bar and ft["rule_gated_trusted_v3"] >= bar
+        log.append({"spd": str(p), "train_alone": ft["mechanisms_alone"], "train_v3": ft["rule_gated_trusted_v3"], "bar": bar, "chosen": False})
+        if ok or p == spd_paths[-1]:
+            log[-1]["chosen"] = True; a["adaptive"] = {"ladder": log, "precise_enough": bool(ok)}
+            return a
+
+
 def summary(a):
     lines = [f"{a['target']}: task rule {a['task_rule']}, fidelity " + ", ".join(f"{k} {v:.3f}" for k, v in a["fidelity"].items())]
     for k, m in a["matrices"].items():
@@ -1027,6 +1044,7 @@ if __name__ == "__main__":
     ap.add_argument("depth", nargs="?", type=int, default=4)
     ap.add_argument("--control-spd", help="SPD decomposition of the shuffled-weights network, for the control comparison")
     ap.add_argument("--narrate", action="store_true", help="add a guarded plain-English paragraph written by the reader model (A13)")
+    ap.add_argument("--ladder", default="", help="A28: comma-separated SPD files, sparsest first; the first precise enough on the training half is used")
     ap.add_argument("--absorb", action="store_true", help="A26: absorb the residual into the alive mechanisms (training half)")
     ap.add_argument("--tag", default="", help="suffix for the output files (e.g. a variant name)")
     ap.add_argument("--features", default="v2", choices=["v2", "v3", "v3b", "v3c"], help="trigger feature set (A16 experiments; outputs get _f3/_f3b/_f3c)")
@@ -1034,7 +1052,13 @@ if __name__ == "__main__":
     FEATURES = a_.features
     SUF = ("_f" + FEATURES[1:] if FEATURES != "v2" else "") + (f"_{a_.tag}" if a_.tag else "")
     tgt = make_target(a_.target)
-    a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth, absorb=a_.absorb)
+    if a_.ladder:                                                # A28: spd is ignored; the ladder is sparsest first
+        a = build_adaptive(tgt, [Path(x) for x in a_.ladder.split(",")], depth=a_.depth, absorb=True)
+        a_.spd = a["adaptive"]["ladder"][-1]["spd"]; a_.absorb = True
+    else:
+        a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth, absorb=a_.absorb)
+    if a_.ladder and a_.control_spd and "," in a_.control_spd:   # A28: the control uses the same rung as the network
+        a_.control_spd = a_.control_spd.split(",")[len(a["adaptive"]["ladder"]) - 1]
     ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth, absorb=a_.absorb) if a_.control_spd else None
     a["findings"] = findings(a, ctrl)
     gloss(a)                                                     # A20
