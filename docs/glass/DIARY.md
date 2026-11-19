@@ -829,3 +829,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - Ratio ≥ 10 in ≥ 6 of 9 → ε95 is dominated by near-ties, and F3 is restated: the precision requirement is a property of the task's decision boundary on near-tie inputs, not internal fragility. The "two routes" reading must then be re-tested on clear inputs.
     - Ratio < 3 in ≥ 6 of 9 → internal fragility is real, and F3 stands.
     - Otherwise mixed; report.
+- **21:24 U11 RESULT: internal fragility is REAL; F3 stands, with a correction** (`results/glass/units/u11_ties.json`, read by hand).
+  - Translation fix before the run: M2,2 has only two inputs, so its margin is the single gap; the script first crashed on a third order statistic.
+  - **Ratio clear-half ε95 / overall ε95:** M2,2 3.2, M4,3 5.0, M4,4 1.3, M8,5 2.5, M8,8 1.0, M16,10 2.5, argmedian 8_5 2.0, 16_5 4.0, 16_7 2.0.
+  - Ratio < 3 in 6 of 9, and ≥ 10 in none → by the pre-registered rule, F3 stands.
+  - **Correction to F3:** near-tie inputs do contribute, by a factor of about 2.5 (median ratio).
+    - Clear-half ε95 is 0.001–0.08 (median 0.016), against 0.79 for the modular nets. That is still about 50× apart.
+    - Near-tie inputs are over-represented among flips in the small networks (58–66% of flips in the lowest-margin decile for M2,2 and M4,3; chance is 10%), but hardly in M4,4 and M8,8 (10–13%).
+  - **U10's failure is therefore not explained by ties.** Why 10% training noise did not raise ε95 stays open. The run was under-trained, so it is inconclusive, not negative.

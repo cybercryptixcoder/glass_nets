@@ -104,6 +104,17 @@ noise level at which 5% of decisions flip. A small ε95 means any account of tha
 size: M8,5 0.006–0.013, zoo M16,10 0.003–0.005, argmedian 16,5 0.008–0.010. So it is a property of the task and size,
 not of one training run.
 
+**Control for near-tie inputs (U11):**
+- 2nd argmax and argmedian have continuous inputs, so some inputs always sit next to a tie, where any perturbation
+  flips the decision. That could make ε95 small for reasons that have nothing to do with the network.
+- Measured on the clear half of the inputs (task margin above the median), ε95 rises by a factor of only 1.0–5.0
+  (median 2.5) to 0.001–0.08 (median 0.016).
+- That is still about 50× below the modular nets. Near-ties account for part of the effect, not most of it.
+
+**A failed intervention (U10):** I trained M8,5 with 10% hidden-state noise to make it tolerant. It did not become
+more tolerant (ε95 unchanged). The runs were under-trained (standard accuracy 0.73–0.79), so this is inconclusive. The
+causal version of F3 is still untested.
+
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained
   exactly by ARC) and Tracr count_greater (0.05). Or the network tolerates imprecision, as with the modular networks

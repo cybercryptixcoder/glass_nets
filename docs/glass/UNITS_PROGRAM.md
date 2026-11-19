@@ -220,7 +220,9 @@ raw/filter units; shuffled control in brackets):
       - (i) DONE, NEGATIVE (U9).
         - A sparse search over pairwise comparisons explains only 2–3% of the unexplained argmedian variance (33% in 16_5), against a bar of 50%.
         - One clean soft-rank unit was found in 16_5.
-      - (j) A pre-registered prediction test of ε95 on networks not yet measured.
+      - (j) DONE as U10 (tolerance intervention, inconclusive: under-trained, ε95 unchanged) and U11 (near-tie control: F3 stands, with ties a factor of about 2.5).
+      - (k) NEXT: retry U10 properly with longer training (accuracy ≥ 0.75 first) and a range of training-noise levels (0.03, 0.1, 0.3). This is the causal test of F3.
+      - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
