@@ -1207,3 +1207,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **So a sparse exact decomposition is NOT by itself evidence of learned structure.**
   - Consequence for the atlas: every atlas of a trained network must be compared with the atlas of its shuffled control. The discovery-grade claims are the triggers and effects that are task-related in the trained network and not in the control.
   - The GPU batch includes shuffled controls for argmedian 16_5 and M16,10 for this comparison. ATLAS.md §2 gains this as a requirement.
+- **03:45 A6 finding: the GPU is the wrong tool for these tiny networks.**
+  - Eight SPD processes sharing one L4 reached only 2–4k of 40k steps in 25 min, because the GPU saturates on kernel overhead.
+  - One process alone does about 28 steps/s, but eight together manage about 13 steps/s in total.
+  - Switched to CPU on the same Colab VM (12 cores): 12 single-thread processes at 30k steps, batch 512, the configuration of the M8,5 atlas.
+  - Targets on Colab: argmedian 8_5, 8_7, 16_5, 16_7; ARC's M16,10; zoo M16,10 seed 0; M8,8; shuffled argmedian 16_5 and M16,10; planted_transformer; lc_3_4; lc_6_5.
+  - Locally: lc_4_5 and lc_8_6.
+- **03:45 A5 built (code; known-answer test pending its SPD run).** `TransformerTarget` (forward matches `nets.transformer` to 7e-13 on lc_6_5), functional-graph features, `planted_transformer` (copies the previous token; 100% correct by construction), and `build_atlas` made generic. RNN atlas test still passes.
+  - **Translation fix before any lc result:** lc logits are large (spread 39 for lc_3_4), so the reconstruction loss started at 5e7. Transformers now divide logits by their spread, as RNNs already did; the two lc jobs were restarted.

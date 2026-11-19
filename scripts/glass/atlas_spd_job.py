@@ -8,7 +8,8 @@ out, steps, batch, device = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]
 out.mkdir(parents=True, exist_ok=True)
 for spec in sys.argv[5:]:
     tid, _, var = spec.partition(":"); var = var or "original"
-    tgt = atlas.planted_rnn() if tid == "planted_rnn" else atlas.algzoo_rnn(tid, var)
+    tgt = (atlas.planted_rnn() if tid == "planted_rnn" else atlas.planted_transformer() if tid == "planted_transformer"
+           else atlas.algzoo_transformer(tid, var) if tid.startswith("lc_") else atlas.algzoo_rnn(tid, var))
     t0 = time.time(); mods = atlas.decompose(tgt, steps=steps, batch=batch, device=device, log=2000)
     torch.save({"mods": mods.state_dict(), "SD": tgt.out_scale, "steps": steps, "batch": batch, "device": device},
                out / f"spd_{tid}_{var}_{steps}_{batch}.pt")

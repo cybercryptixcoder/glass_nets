@@ -13,6 +13,7 @@ Transformers come in a later version (ATLAS.md, A5).
     a = build_atlas(algzoo_rnn("zoo_2nd_argmax_8_5"), spd_model=PATH or None, depth=5)
 """
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -101,6 +102,162 @@ def planted_rnn(K=5, N=6, p_on=0.03, n=16000):
                      task_rule=None, task_features=feats, meta={"target": "planted_rnn"})
 
 
+# ------------------------------------------------------------------ transformer targets (A5)
+
+class TransformerTarget:
+    """Attention-only transformer, one head per layer, no LayerNorm (the AlgZoo longest-cycle family; the planted
+    known answer). Matrices (names without dots, for torch): W_E [d, V] (on one-hot tokens), L<l>_W_Q/K/V [k, d],
+    L<l>_W_O [d, k], W_U [classes, d]. W_pos is a fixed additive term (not decomposed). Rows of every matrix call are
+    (sample, position) pairs; for importances, features and ablations they are ordered position-major (row = p*B + b)
+    so that a 'call' is one position. Inputs X: one-hot [n, P, V]."""
+    kind = "transformer"
+
+    def __init__(self, name, weights, W_pos, layers, out_pos, X, sample, task_rule, features, meta):
+        self.name, self.weights, self.W_pos, self.layers, self.out_pos = name, weights, W_pos, layers, list(out_pos)
+        self.X, self.sample, self.task_rule, self.features, self.meta = X, sample, task_rule, features, meta
+        self.P, self.V = X.shape[1], X.shape[2]; self.d = W_pos.shape[1]; self.out_scale = 1.0
+        self.matrices = tuple(["W_E"] + [f"L{l}_W_{m}" for l in range(layers) for m in "QKVO"] + ["W_U"])
+
+    def forward(self, x, mm):
+        B, P, V = x.shape
+        Wp = torch.as_tensor(self.W_pos[:P], dtype=x.dtype, device=x.device)
+        e = mm("W_E", x.reshape(B * P, V)).reshape(B, P, -1) + Wp
+        for l in range(self.layers):
+            a = e.reshape(B * P, -1)
+            q = mm(f"L{l}_W_Q", a).reshape(B, P, -1); kk = mm(f"L{l}_W_K", a).reshape(B, P, -1); v = mm(f"L{l}_W_V", a).reshape(B, P, -1)
+            att = torch.softmax(q @ kk.transpose(1, 2) / math.sqrt(q.shape[-1]), -1)
+            e = e + mm(f"L{l}_W_O", (att @ v).reshape(B * P, -1)).reshape(B, P, -1)
+        return mm("W_U", e[:, self.out_pos].reshape(B * len(self.out_pos), -1)).reshape(B, -1) / self.out_scale
+
+    # rows: the forward's own order is sample-major (b*P + p); the atlas works position-major (p*B + b)
+    def _pm(self, a, B, n):
+        return a.reshape(B, n, -1).transpose(1, 0, 2).reshape(B * n, -1)
+
+    def _bm(self, a, B, n):
+        return a.reshape(n, B, -1).transpose(1, 0, 2).reshape(B * n, -1)
+
+    def _rows(self, name):
+        return len(self.out_pos) if name == "W_U" else self.P
+
+    def _feats(self, x, name):
+        names, F = self.features(x)                                  # [B, P, F]
+        B = len(x)
+        if name == "W_U":
+            F = F[:, self.out_pos]
+        return names, self._pm(F.reshape(B * self._rows(name), -1), B, self._rows(name))
+
+    def network_calls(self, mods, x):
+        B = len(x); rec = {}
+
+        def mm(name, a):
+            rec[name] = a
+            return mods[name].apply(a)
+        with torch.no_grad():
+            self.forward(torch.tensor(x), mm)
+            out = {}
+            for k in self.matrices:
+                n = self._rows(k); names, F = self._feats(x, k)
+                G = mods[k].ci_pre(rec[k]).clamp(0, 1).numpy()
+                out[k] = (names, F, self._pm(G, B, n))
+        return out
+
+    def run_gated(self, mods, x, gate):
+        B = len(x); U = {k: mods[k].U.detach().numpy() for k in self.matrices}; Vv = {k: mods[k].V.detach().numpy() for k in self.matrices}
+
+        def mm(name, a):
+            a = a.numpy(); n = self._rows(name); names, F = self._feats(x, name)
+            m = self._bm(gate(name, names, F, self._pm(a, B, n)), B, n)
+            return torch.tensor(((a @ Vv[name].T) * m) @ U[name])
+        with torch.no_grad():
+            return self.forward(torch.tensor(x), mm).numpy()
+
+    def ablated(self, x, name=None, call=None, U=None, V=None):
+        B = len(x)
+
+        def mm(k, a):
+            y = a @ self.weights[k].T
+            if k == name:
+                n = self._rows(k); rows = np.arange(B * n) % n == call          # sample-major rows at position `call`
+                cut = (a.numpy() @ V)[:, None] * U[None]
+                y = y - torch.tensor(cut * rows[:, None])
+            return y
+        with torch.no_grad():
+            return self.forward(torch.tensor(x), mm).numpy()
+
+
+def _lc_features(x):
+    """Per (sample, position) features of a functional graph given as one-hot tokens: x_i = f(i)."""
+    t = x.argmax(-1); B, P = t.shape; idx = np.arange(P)
+    f = {"position i": np.broadcast_to(idx, (B, P)), "token f(i)": t, "f(i) = i (fixed point)": t == idx[None],
+         "f(f(i))": np.take_along_axis(t, t, 1)}
+    f["f(f(i)) = i (2-cycle)"] = f["f(f(i))"] == idx[None]
+    f["number of j with f(j) = i"] = (t[:, :, None] == idx[None, None, :]).sum(1)
+    f["number of j with f(j) = f(i)"] = (t[:, :, None] == t[:, None, :]).sum(2)
+    cyc = np.zeros((B, P)); cur = t.copy()            # length of the cycle through i (0 if i is not on a cycle)
+    for L in range(1, P + 1):
+        hit = (cur == idx[None]) & (cyc == 0); cyc[hit] = L; cur = np.take_along_axis(t, cur, 1)
+    f["length of the cycle through i (0 = not on one)"] = cyc
+    f["longest cycle length (the task's answer + 1)"] = np.broadcast_to(cyc.max(1)[:, None], (B, P))
+    names = list(f)
+    return names, np.stack([np.asarray(v, float) for v in f.values()], -1)
+
+
+def algzoo_transformer(target_id, variant="original", n=16000):
+    import judge
+    meta, W, X = judge.load_target(target_id, variant, 0)
+    assert all(W[f"L{l}.W_Q"].shape[0] == 1 for l in range(2)), "one head per layer"
+    L = sum(1 for k in W if k.endswith(".W_Q"))
+    Ws = {"W_E": torch.tensor(W["W_E"].T.copy(), dtype=torch.float64), "W_U": torch.tensor(W["W_U"].T.copy(), dtype=torch.float64)}
+    for l in range(L):
+        for m in "QKV":
+            Ws[f"L{l}_W_{m}"] = torch.tensor(W[f"L{l}.W_{m}"][0].T.copy(), dtype=torch.float64)      # [k, d]
+        Ws[f"L{l}_W_O"] = torch.tensor(W[f"L{l}.W_O"][0].T.copy(), dtype=torch.float64)                # [d, k]
+    toks = np.asarray(X, dtype=int)[:n]; V = W["W_E"].shape[0]; P = toks.shape[1]
+    Xo = np.eye(V)[toks]
+
+    def sample(k):
+        return torch.nn.functional.one_hot(torch.randint(0, V, (k, P)), V).double()
+    t = TransformerTarget(f"{target_id}|{variant}", Ws, np.asarray(W["W_pos"], dtype=np.float64), L,
+                          np.asarray(W["out_positions"]).astype(int), Xo, sample,
+                          float(meta["test_acc"]) if variant == "original" else None, _lc_features,
+                          {"target": target_id, "variant": variant})
+    with torch.no_grad():       # the reconstruction loss is relative: logits are divided by their spread (as for RNNs)
+        t.out_scale = float(t.forward(torch.tensor(Xo[:4000]), lambda n_, a: a @ Ws[n_].T).std())
+    return t
+
+
+def planted_transformer(P=5, V=4, s=4.0, n=16000):
+    """Known answer: one attention layer copies the PREVIOUS token to the last position, which the readout reads.
+    Embedding: token one-hot (dims 0..V-1), position one-hot (V..V+P-1), an empty 'previous token' slot (V+P..V+P+V-1).
+    Q/K select position i-1; V/O copy token v into the slot; W_U reads the slot. Planted mechanisms: one per token in
+    W_E, W_V, W_O and W_U ('copy token v')."""
+    d = V + P + V; k = max(P, V)
+    WE = torch.zeros(d, V, dtype=torch.float64); WE[:V, :V] = torch.eye(V, dtype=torch.float64)
+    Wpos = np.zeros((P, d)); Wpos[np.arange(P), V + np.arange(P)] = 1.0
+    WQ = torch.zeros(k, d, dtype=torch.float64); WK = torch.zeros(k, d, dtype=torch.float64)
+    for i in range(P):
+        WQ[i, V + i] = s
+        if i + 1 < P:
+            WK[i + 1, V + i] = s
+    WV = torch.zeros(k, d, dtype=torch.float64); WV[:V, :V] = torch.eye(V, dtype=torch.float64)
+    WO = torch.zeros(d, k, dtype=torch.float64); WO[V + P:, :V] = torch.eye(V, dtype=torch.float64)
+    WU = torch.zeros(V, d, dtype=torch.float64); WU[:, V + P:] = torch.eye(V, dtype=torch.float64)
+    Ws = {"W_E": WE, "L0_W_Q": WQ, "L0_W_K": WK, "L0_W_V": WV, "L0_W_O": WO, "W_U": WU}
+    g = torch.Generator().manual_seed(7)
+    X = torch.nn.functional.one_hot(torch.randint(0, V, (n, P), generator=g), V).double().numpy()
+
+    def sample(m):
+        return torch.nn.functional.one_hot(torch.randint(0, V, (m, P)), V).double()
+
+    def feats(x):
+        t = x.argmax(-1); B = len(t)
+        f = {"position i": np.broadcast_to(np.arange(P), (B, P))}
+        for v in range(V):
+            f[f"token at i is {v}"] = t == v
+        return list(f), np.stack([np.asarray(a, float) for a in f.values()], -1)
+    return TransformerTarget("planted_transformer", Ws, Wpos, 1, [P - 1], X, sample, None, feats, {"target": "planted_transformer"})
+
+
 # ------------------------------------------------------------------ decomposition
 
 def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu"):
@@ -177,10 +334,11 @@ def _net_ablated(tgt, x, name=None, call=None, U=None, V=None):
 
 def effects(tgt, mods, x, calls, alive):
     """Per alive mechanism: remove it at one call at a time; compare the output change where it is needed
-    (importance > 0.5) with where it is not (< 0.1)."""
+    (importance > 0.5) with where it is not (< 0.1). For transformers a 'call' is one position."""
     import judge
-    base = _net_ablated(tgt, x); B = len(x); res = {}
-    for k in MATRICES:
+    abl = tgt.ablated if hasattr(tgt, "ablated") else (lambda x_, *a: _net_ablated(tgt, x_, *a))
+    base = abl(x); B = len(x); res = {}
+    for k in getattr(tgt, "matrices", MATRICES):
         G = calls[k][2]; n_calls = len(G) // B
         for c in alive[k]:
             U = mods[k].U[c].detach().numpy(); V = mods[k].V[c].detach().numpy()
@@ -189,7 +347,7 @@ def effects(tgt, mods, x, calls, alive):
                 g = G[call * B:(call + 1) * B, c]
                 if not (g > 0.5).any() and not (g < 0.1).any():
                     continue
-                out = _net_ablated(tgt, x, k, call, U, V); d = out - base; nrm = np.linalg.norm(d, axis=1)
+                out = abl(x, k, call, U, V); d = out - base; nrm = np.linalg.norm(d, axis=1)
                 on, off = g > 0.5, g < 0.1
                 on_n.append(nrm[on]); off_n.append(nrm[off]); d_on += d[on].sum(0)
                 flips.append(~judge.same(base[on], out[on]) if on.any() else np.zeros(0, bool))
@@ -255,13 +413,16 @@ def rule_text(tree, names):
 def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0):
     import judge
     mods = load_decomposition(tgt, spd_model) if spd_model else decompose(tgt, steps, batch, seed)
+    MATS = getattr(tgt, "matrices", MATRICES)
+    calls = tgt.network_calls if hasattr(tgt, "network_calls") else (lambda m_, x_: _network_calls(tgt, m_, x_))
+    gated = tgt.run_gated if hasattr(tgt, "run_gated") else (lambda m_, x_, g_: run_gated(tgt, m_, x_, g_))
     X = tgt.X[:n]; half = len(X) // 2; xtr, xte = X[:half], X[half:]
-    tr, te = _network_calls(tgt, mods, xtr), _network_calls(tgt, mods, xte)
-    C = mods["W_h"].U.shape[0]
-    alive = {k: [c for c in range(C) if tr[k][2][:, c].mean() > 0.01] for k in MATRICES}
-    atlas = {"target": tgt.meta, "N": tgt.N, "H": tgt.H, "task_rule": tgt.task_rule, "depth": depth, "matrices": {}}
+    tr, te = calls(mods, xtr), calls(mods, xte)
+    C = mods[MATS[0]].U.shape[0]
+    alive = {k: [c for c in range(C) if tr[k][2][:, c].mean() > 0.01] for k in MATS}
+    atlas = {"target": tgt.meta, "kind": getattr(tgt, "kind", "rnn"), "task_rule": tgt.task_rule, "depth": depth, "matrices": {}}
     trees = {}
-    for k in MATRICES:
+    for k in MATS:
         names, Ftr, Gtr = tr[k]; _, Fte, Gte = te[k]; mechs = []
         with torch.no_grad():
             faith = float((mods[k].W - mods[k].weight()).norm() / mods[k].W.norm())
@@ -282,11 +443,11 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
 
-    am = {k: np.isin(np.arange(C), alive[k]).astype(float) for k in MATRICES}
+    am = {k: np.isin(np.arange(C), alive[k]).astype(float) for k in MATS}
     with torch.no_grad():
         net = tgt.forward(torch.tensor(xte), lambda name, a: mods[name].apply(a)).numpy()
 
-    conf = {(k, int(x["id"].split(".")[1])): x["trigger"]["confidence"] for k in MATRICES for x in atlas["matrices"][k]["mechanisms"]}
+    conf = {(k, int(x["id"].rsplit(".", 1)[1])): x["trigger"]["confidence"] for k in MATS for x in atlas["matrices"][k]["mechanisms"]}
 
     def g_rules(only=None, trusted=None):
         """trusted = a confidence bar: a mechanism whose trigger is below it is kept always on (its trigger is not used)."""
@@ -310,15 +471,18 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
             return ((z > 0.5).astype(float) if binary else z) * am[k]
         return gate
     fid = {}
-    for label, gate in (("all_alive", lambda k, n_, F, a: np.repeat(am[k][None], len(F), 0)), ("importance_masked", g_ci(False)),
-                        ("importance_binary", g_ci(True)), ("rule_gated", g_rules()), ("rule_gated_W_h_only", g_rules({"W_h"})),
-                        ("rule_gated_trusted", g_rules(trusted=TRUSTED))):
-        fid[label] = float(judge.same(net, run_gated(tgt, mods, xte, gate)).mean())
+    variants = [("all_alive", lambda k, n_, F, a: np.repeat(am[k][None], len(F), 0)), ("importance_masked", g_ci(False)),
+                ("importance_binary", g_ci(True)), ("rule_gated", g_rules())]
+    if "W_h" in MATS:
+        variants.append(("rule_gated_W_h_only", g_rules({"W_h"})))
+    variants.append(("rule_gated_trusted", g_rules(trusted=TRUSTED)))
+    for label, gate in variants:
+        fid[label] = float(judge.same(net, gated(mods, xte, gate)).mean())
     atlas["fidelity"] = fid
     eff = effects(tgt, mods, xte, te, alive)                     # A2
-    for k in MATRICES:
+    for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
-            x["effect"] = eff[(k, int(x["id"].split(".")[1]))]
+            x["effect"] = eff[(k, int(x["id"].rsplit(".", 1)[1]))]
     return atlas
 
 

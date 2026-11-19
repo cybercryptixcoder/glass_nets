@@ -66,7 +66,7 @@ nets), where the existing reader and judge already work.
 | 3 | Rule-gated construction + fidelity (trusted policy: a trigger switches its mechanism only at confidence ≥ 0.9, otherwise always on) | `lab/atlas.py` (A1) | Planted RNN: PASS (0.997) | built; M8,5 (design case) depth 4: 0.924 vs task rule 0.879 |
 | 4 | Effect + causal specificity per mechanism (remove it at one call; output change where needed vs not; flip rate; which output it lowers/raises) | `lab/atlas.py` (A2) | Planted RNN: PASS | built; M8,5: W_h specificity median ×75 (min ×16) |
 | 5 | Atlas certificate (JSON + markdown) + catalog card | `lab/atlas.py` render, `lab/catalog.py`, `catalog.html` (A4) | `scripts/glass/atlas_catalog_test.py` (headless Chrome): PASS | built |
-| 6 | Transformer support (attention QK/OV matrices as decomposed weights) | to build | Tracr compiled networks (known mechanisms) | not started |
+| 6 | Transformer support (W_E, per-layer Q/K/V/O, W_U; rows = (sample, position)) | `lab/atlas.py` `TransformerTarget` (A5) | Planted transformer that copies the previous token (`scripts/glass/atlas_tf_test.py`) | built; known-answer run in progress |
 
 **Rules for building:**
 - `CLAUDE.md` applies: a CHANGES.md entry before code in `lab/`, a test that fails before and passes after,
