@@ -1519,3 +1519,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **What held out:** A26 works on held-out 16-wide accurate networks (97.7–99.2%). Every criterion passes, where the default decomposition failed every 16-wide A18 network.
   - **What did not:** every 32-wide network fails (i'). With 20 components per matrix the decomposition is saturated: all components alive, many always on, few trusted triggers. This was predicted at 06:04, before the verdict.
   - **Next (A28):** components scaled to the width, designed on zoo_2nd_argmax_32_8_s0 (outside every test set), then tested on a fresh held-out set.
+- **06:44 A28 design case, zoo_2nd_argmax_32_8_s0 (99.3%, outside every test set), minimality 1e-4 + absorption:**
+  - **C = 20:** alone 0.974 ✗, v3 0.998, trusted 0.46 ✗, off_recall 0.97. The same failure as A27's 32-wide networks.
+  - **C = 40:** alone 1.000 ✓, v3 0.975 ✗ (v4 0.997 ✓, off_recall 0.85), trusted 0.54 ✓. But all 120 components are alive again, so it is still saturated.
+  - Reading: more components fix (i') and (iii); at 1e-4 the decomposition fills whatever room it gets. Next on the design case: C = 40 and 64 at minimality 1e-3 and 3e-4. M16,10 at 3e-4 completes its ladder.
+- **06:58 Colab incident:** several `colab exec` launches hung, the CLI pruned and reattached the session, and every running job was killed, including lc_4_5/lc_6_5 at 1e-4 (12k and 8k of 30k). Nothing finished was lost (outputs are files). Everything was relaunched: the design-case ladder (four runs), M16,10 at 3e-4, and lc_4_5/lc_6_5 at 1e-4 on the GPU.
