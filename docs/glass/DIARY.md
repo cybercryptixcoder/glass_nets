@@ -1465,3 +1465,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   | minimality 3e-3 (GPU, batch 2048) | 0.963 | 0.939 | 0.963 | 0.51 | 26× | 0.75 / 0.71 | 35 |
   | minimality 1e-3 | 0.984 | 0.935 | 0.956 | 0.62 | 109× | 0.81 / 0.68 | 47 |
   | minimality 1e-3, absorbed | **0.997** | **0.968** | **0.968** | 0.62 | 113× | **0.81 / 0.81** | 47 |
+- **05:51 A18 fourth network, zoo_2nd_argmax_16_8_s0 (97.6%): fails like the others** (default decomposition). Mechanisms alone 0.821; v3 0.636; v4 0.984 ✓ but off_recall 0.06 ✗; trusted 0.64 ✓; specificity 18× ✓. Six mechanisms stop the network from returning the max.
+- **05:51 Minimality sweep on argmedian 16_5, completed (with absorption):** 3e-3 → v3 0.896; 1e-3 → 0.723; 3e-4 → 0.953; 1e-4 → 0.989 (bar 0.984). Mechanisms alone with absorption: 0.916 / 0.991 / 0.995 / 1.000. The 1e-3 dip in v3 aside, lower is better, and 1e-4 (A26's setting) is the first to clear the bar.
