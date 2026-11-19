@@ -40,7 +40,7 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
   - argmedian 16_5 (98.4% accurate): rebuilt 98.9%, triggers switch off 93% of not-needed calls, 25 task-level explanations;
   - M16,10 (95.3%): rebuilt 96.8%.
 
-**Held-out test A18** (six well-trained networks, default settings): 4 of 6 in, all fail on precision. PENDING: the last two.
+**Held-out test A18** (six well-trained networks, 93.9–99.6% accurate, up to 1,376 parameters, default settings): **fails, 0 of 6.** Triggers (64–91% trusted) and specificity (11–103×) pass everywhere. Precision fails everywhere: the mechanisms alone keep 45–95% of decisions against bars of 94–99.6%. So either the switched network loses decisions, or almost nothing can be switched safely.
 
 **Held-out test A27** (six new well-trained networks, up to 1,376 parameters, with the A26 fix): PENDING. This is the test of whether the method works on accurate networks.
 

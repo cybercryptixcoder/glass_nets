@@ -1472,3 +1472,16 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **06:03 A25 (recurrence across training runs of M8,5) FAILS its confirmatory test.** Seeds 1 and 2 have 3 role-and-variable matches each with ARC's M8,5. The chance control (n = 300) gives mean 1.73 / 1.87, 95th percentile 3, P = 0.20 / 0.24. Neither beats the 95th percentile, so at most 2 of 4 seeds can; the bar was ≥ 3. **Seed 0's p = 0.003 is treated as chance, as pre-registered.** For the record, all three seeds sit above the null mean (5, 3, 3 vs about 1.8–2.0): a weak trend, not a finding. Seeds 3 and 4 will be added for completeness.
 - **06:03 A18, fifth network: zoo_2nd_argmax_32_10_s0 (99.4%, 1,376 parameters; GPU, default settings) fails.** Only 32 mechanisms; mechanisms alone 0.453; v3 0.332; v4 0.998 with off_recall 0.01; trusted 0.91; specificity 11×. 17 mechanisms in functional groups (12 stop it returning the max). Its control is still decomposing.
 - **06:04 A concern for A27, recorded before its verdict:** at minimality 1e-4 every one of the 20 components per matrix stays alive. In a 32-hidden network, 20 input directions cannot span a 32-dimensional state, so absorption cannot make W_h exact and (i') may fail for the 32-hidden A27 networks for that reason alone. A27 stays as pre-registered (C = 20). Design case for the number of components, outside every test set: zoo_2nd_argmax_32_8_s0 at 1e-4 with C = 20 and C = 40 (Colab GPU). Locally: the development networks at 1e-4 (M16,10 and M8,5 running; argmedian 16_7 and M8,8 queued) so that A26 can become the default if A27 passes.
+- **06:07 A18 VERDICT (pre-registered 05:07/05:09/05:34): FAIL, 0 of 6 under v3 and 0 of 6 under v4.** Sixth network: argmedian 32_7_s0 (93.9%): mechanisms alone 0.844, v3 0.789, v4 0.952 (off_recall 0.17).
+
+  | network | (i') alone | (ii) v3 | (ii) v4 | (iii) | (iv) | (vi) v3 | (vi) v4 |
+  |---|---|---|---|---|---|---|---|
+  | 2nd argmax 16_5_s0 | 0.935 ✗ | 0.872 ✗ | 0.997 ✓ | 0.77 ✓ | 22× ✓ | 0.88 ✓ | 0.17 ✗ |
+  | 2nd argmax 16_8_s0 | 0.821 ✗ | 0.636 ✗ | 0.984 ✓ | 0.64 ✓ | 18× ✓ | 0.88 ✓ | 0.06 ✗ |
+  | 2nd argmax 32_5_s0 | 0.944 ✗ | 0.920 ✗ | 0.999 ✓ | 0.84 ✓ | 47× ✓ | 0.85 ✓ | 0.23 ✗ |
+  | argmedian 32_5_s0 | 0.949 ✗ | 0.893 ✗ | 0.996 ✓ | 0.82 ✓ | 103× ✓ | 0.84 ✓ | 0.17 ✗ |
+  | 2nd argmax 32_10_s0 | 0.453 ✗ | 0.332 ✗ | 0.998 ✓ | 0.91 ✓ | 11× ✓ | 0.73 ✓ | 0.01 ✗ |
+  | argmedian 32_7_s0 | 0.844 ✗ | 0.789 ✗ | 0.952 ✓ | 0.64 ✓ | 25× ✓ | 0.77 ✓ | 0.17 ✗ |
+
+  - **Diagnosis, consistent across all six:** triggers and specificity are fine everywhere. The default decomposition is not precise enough for accurate networks, so either the switched network loses decisions (v3) or almost nothing can be switched safely (v4).
+  - This is exactly what A26 targets; its held-out test is A27 (running).
