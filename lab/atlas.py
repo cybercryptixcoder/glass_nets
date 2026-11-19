@@ -656,6 +656,14 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
         if float(judge.same(net_tr, gated(mods, xtr, g_sel(sel + [kc]))).mean()) >= bar:
             sel.append(kc)
     fid["rule_gated_trusted_v4"] = float(judge.same(net, gated(mods, xte, g_sel(sel))).mean())
+    # A28: the same two numbers on the TRAINING half, for choosing a decomposition without touching the held-out half
+    for k in MATS:
+        mods[k]._residual = np.zeros_like(saved[k])
+    alone_tr = float(judge.same(net_tr, gated(mods, xtr, all_on)).mean())
+    for k in MATS:
+        mods[k]._residual = saved[k]
+    atlas["fidelity_train"] = {"mechanisms_alone": alone_tr,
+                               "rule_gated_trusted_v3": float(judge.same(net_tr, gated(mods, xtr, g_rules(trusted=TRUSTED, tau=GATE_TAU, cf=conf_clear))).mean())}
     atlas["gate_v4"] = {"bar_train": bar, "switched": [f"{k}.{c}" for k, c in sel], "n_trusted": len(cand)}
     for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
