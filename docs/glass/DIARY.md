@@ -1575,3 +1575,6 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - **Certificate (primary): v4.** (i') alone ≥ task rule; (ii) v4 ≥ task rule; (iii) clear-cut trusted ≥ 0.5; (iv) median specificity ≥ 10; (vi) v4 off_recall ≥ 0.5; (v) for 32_10_s2 the control, on the same rung, has fewer functional mechanisms. v3 reported alongside.
     - **Pass: (i')–(iv) and (vi) in ≥ 4 of 6, and (v).**
 - **07:32 A28 protocol amendment (compute only; no A28 result had been seen).** Fifteen 32-wide CPU runs on 12 Colab cores would take about 3 hours (2k steps in 7 min; the 10-step networks had not started). So zoo_2nd_argmax_32_10_s2 (+ control) and zoo_argmedian_32_7_s2 moved to the GPU at batch 2048, the setting under which the design case passed. The two 32_5 networks stay on Colab CPU at batch 512; the 16-wide networks run locally at batch 512. Each network's ladder and its control use one device throughout.
+- **07:53 A28, first held-out network: zoo_2nd_argmax_16_5_s2 (99.2%) PASSES under v4 (primary).** The ladder found no rung precise enough on the training half (v3 0.942 / 0.987 / 0.980 vs bar 0.995), so the densest (1e-4) was used. Held out:
+  - v4: mechanisms alone 1.000, rebuilt 0.995 vs 0.992, trusted 0.76, specificity 1,853×, off_recall 0.86. PASS.
+  - v3 for the record: rebuilt 0.980, fails (ii).
