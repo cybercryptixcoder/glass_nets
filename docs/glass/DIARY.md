@@ -1485,3 +1485,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
   - **Diagnosis, consistent across all six:** triggers and specificity are fine everywhere. The default decomposition is not precise enough for accurate networks, so either the switched network loses decisions (v3) or almost nothing can be switched safely (v4).
   - This is exactly what A26 targets; its held-out test is A27 (running).
+- **06:21 A25 complete: 1 of 4 seeds beats chance (bar ≥ 3). Recurrence claim not made.**
+
+  | seed | matches on role and trigger variables | chance mean / 95th pct | P |
+  |---|---|---|---|
+  | 0 (exploratory) | 5 | 1.97 / 4 | 0.003 |
+  | 1 | 3 | 1.73 / 3 | 0.200 |
+  | 2 | 3 | 1.87 / 3 | 0.237 |
+  | 3 | 7 | 2.63 / 5 | 0.000 |
+  | 4 | 0 | 0.57 / 2 | 1.000 |
+
+  - **Reading (descriptive, not a claim):** recurrence varies by training run. Two of five seeds share several mechanisms with ARC's M8,5 well beyond chance, two are at chance, and one shares nothing. A natural next question: do the seeds that recur also behave alike in other ways? Not pursued now.
+  - Side result: every M8,5 seed's atlas beats its task rule with the default settings (rebuilt 89–96% vs 81–88%). At roughly 85% accuracy the default decomposition is precise enough.

@@ -49,7 +49,10 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
 - **ARC's M16,10** (the 2nd-argmax challenge network): 35 mechanisms with the default settings; 4 in functional groups, against 0 in the shuffled control. W_h.6 switches on when the max arrived in the last step and the current value is well below it; removing it makes the network return the max instead of the 2nd largest.
 - **argmedian 16_5**: the mechanisms hold the median against both neighbours. With the default settings, 12 stop the answer moving to the next-larger value and 9 to the next-smaller; the shuffled control has 1. With the precise settings: 25 vs 12.
 - **argmedian 8_7** (49.5% accurate): most recurrent mechanisms switch on by time step ("after step 3"). The network stages its computation over time, not by data content.
-- **Recurrence across training runs: not confirmed.** ARC's M8,5 and zoo seed 0 shared 5 mechanisms with the same role and trigger variables, against 2 by chance (p = 0.003). That was exploratory. The pre-registered confirmation needed 3 of 4 more seeds to beat the chance control's 95th percentile. Seeds 1 and 2 have 3 matches each (null mean about 1.8, 95th percentile 3, P = 0.20 and 0.24), so it fails. There is a weak trend: every seed sits above the chance mean.
+- **Recurrence across training runs: not confirmed.** ARC's M8,5 against five independently trained M8,5s:
+  - Seeds 0 and 3 share 5 and 7 mechanisms with it on role and trigger variables, against 2.0 and 2.6 by chance (p ≤ 0.003).
+  - Seeds 1 and 2 are at chance, and seed 4 shares none.
+  - The pre-registered confirmation needed 3 of seeds 1–4 to beat chance; 1 did. So recurrence depends on the training run, and no general claim is made.
 
 ## Limits, stated plainly
 
