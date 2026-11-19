@@ -78,6 +78,11 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 13:48 ET (clock). Since 11:59:
+  - **A35 known answer FAILS narrowly** on modadd_p113 (227k parameters, about 10× the largest network certified before). 71% of trusted Fourier triggers use the network's key frequencies {8, 11, 22, 23, 25}; the pre-registered bar was 80%, chance 9%. By matrix: MLP output 100%, unembedding 93%, embedding 78%, attention values 36–60%.
+  - Its certificate passes (ii) v4 1.000, (iii) 0.60, (iv) 33×, (vi) 0.88, and fails (i') mechanisms alone 0.597. 232 mechanisms; the attention Q/K matrices keep none alive.
+  - Likely cause, seen after the verdict: the trigger vocabulary has no Fourier features of a and b separately (what the MLP input needs). A fix is a new version judged on a fresh network.
+  - A36: feature cache (1.8× faster atlas builds). Model files no longer store the trees' training features (293 MB → 0.5 MB).
 - Nov 19, 11:59 ET (clock). Since 09:47:
   - A33 PASS: held-out transformer lc_8_6 passes every criterion with the unchanged pipeline (after the A32 data-split fix).
   - ARC's M16,10 passes with its matched control; the development table under the final pipeline is 6/7.
@@ -98,10 +103,10 @@ nets), where the existing reader and judge already work.
 
 ## 5. Next (in order)
 
-1. (Mostly done) Development atlases rebuilt with `--ladder` into `T_d4.json`; M16,10 waits for its matched control (1e-3, running locally).
-2. (Done: A33 passes.) Next scale: modadd_p113 known answer (A35, running); then more MLP transformers (tracr compiled programs need multi-position outputs in the judge).
-3. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (Luminal; ask Shreyas about cost first).
-4. Scale further: the next AlgZoo sizes, or a different network family, as a new held-out test.
+1. A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
+2. Faster atlas builds at this scale (the modadd build took about 33 min; the remaining time is in tree fitting and the gate cost search).
+3. More MLP transformers (tracr compiled programs need multi-position outputs in the judge and an adapter with biases).
+4. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (ask Shreyas about cost first).
 
 ## 6. How to run what exists
 
