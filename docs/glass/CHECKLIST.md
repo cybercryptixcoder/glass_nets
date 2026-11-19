@@ -43,7 +43,7 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## NOW (Nov 18, 21:50 ET): THE UNITS PROGRAM. Unit map built and tested; next P1–P4 in UNITS_PROGRAM §8. Earlier header: THE UNITS PROGRAM, under Shreyas's go-ahead (19:06). Read `docs/glass/UNITS_PROGRAM.md` first; its status table is current.
+## NOW (Nov 18, 19:23 ET): THE UNITS PROGRAM. Unit map built and tested; next P1–P4 in UNITS_PROGRAM §8. Earlier header: THE UNITS PROGRAM, under Shreyas's go-ahead (19:06). Read `docs/glass/UNITS_PROGRAM.md` first; its status table is current.
 
 ## EARLIER (Nov 18, ~13:00 ET): SCALING WORK under Shreyas's go-ahead (11:43). Plan and criterion: `docs/glass/PLAN_SCALING.md`.
 - Micro experiments run LOCALLY (`lab/replacer.py`; the API works from the workspace). Logs: `results/glass/scaling/logs/`; runs are `lab/constructions/<target>/<id>-r2-*` / `-r5-*`.

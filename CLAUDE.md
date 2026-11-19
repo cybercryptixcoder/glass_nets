@@ -45,6 +45,7 @@ showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_R
 - **Ask Shreyas** before spending money, starting a round, or changing `INTENT.md`.
 
 ## Standing rules
+- **Times in docs and messages come only from the system clock** (`TZ=America/New_York date`). Never type a time by hand: this error has happened twice (E8, and Nov 18 19:35).
 - Plain English and plain markdown in docs and messages. No artifacts or widgets.
 - Document every step, decision and failure (`docs/glass/DIARY.md`), and keep the checklist current.
 - Keys live only in the gitignored `lab/.env`. The repo is public: never commit, push or print them.

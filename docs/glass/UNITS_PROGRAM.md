@@ -134,14 +134,14 @@ Every component gets an end-to-end test on a known case (M4,3: whose units are k
 | UNIT MAP | built | v2 passes K1–K3; maps for 11 networks; see §8 | → P1–P4 |
 | U6b | done | Modes (ReLU on/off patterns) covering 90%: up to 18 (M8,5), 74 (M16,10), 114 (argmedian 16,5); compact only in small networks | exact mode decomposition not viable |
 
-**First-sweep conclusion (21:16): "approximate universality, exact individuality".** Function-level units recur and matter, but dense networks' decisions hinge on detail that the units miss. No exact compact route was found (5 tried).
+**First-sweep conclusion (≈19:13): "approximate universality, exact individuality".** Function-level units recur and matter, but dense networks' decisions hinge on detail that the units miss. No exact compact route was found (5 tried).
 
-**Working conclusion (20:45).**
+**Working conclusion (≈19:12).**
 - Units exist at the level of function and recur across networks and tasks (comparators). That supports weak universality.
 - In dense RNNs they are approximate, and the network's decisions hinge on the detail they miss.
 - Candidate build (pending U2): a **unit map** per network. Every neuron or direction gets a verified unit label with per-part confidence (fit R², single-unit substitution fidelity, ablation importance) and total coverage, plus a cross-network unit library. This is the per-part-confidence certificate, and it doesn't need exact substitution.
 
-## 4b. Build decided from the evidence (21:17): the UNIT MAP
+## 4b. Build decided from the evidence (≈19:13): the UNIT MAP
 
 **Intent.** For any RNN target, produce a map that labels each neuron at each step with the best unit from a fixed
 library, plus three per-part confidence numbers:
@@ -165,7 +165,7 @@ these levels for dense RNNs, while the units are real and matter (U1, U3 ablatio
 **Then run it on networks never interpreted before** (argmedian 8_5, 8_7, 16_5, 16_7) and publish the unit maps,
 plus the cross-network library, as the first discovery of type (a) and (b).
 
-## 8. Results of the unit-map build (21:50) and the next steps
+## 8. Results of the unit-map build (≈19:23) and the next steps
 
 **Unit maps** (`results/glass/units/maps/*.md`; v2 passes K1–K3). Coverage after the first step (history units +
 raw/filter units; shuffled control in brackets):
