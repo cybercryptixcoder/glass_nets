@@ -590,3 +590,31 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **19:23** Unit maps for 7 more networks. Argmedian (never interpreted): history coverage 0.01–0.16, raw/filter 0.11–0.28; comparators recur across tasks but most argmedian neurons are outside the library. M4,4 and M8,8: almost nothing. Findings and next steps P1–P4 are in UNITS_PROGRAM §8.
 
 - **19:35 CORRECTION (times).** The units-program entries from "19:20" to "21:50" carried HAND-TYPED times that were wrong (the same error as E8). The real times, from commits and the system clock, are 19:07–19:34 ET. Corrected above with ≈ marks; the updates sent to Shreyas at "20:45" and "21:50" were really sent at about 19:12 and 19:24. Rule added to CLAUDE.md: times come only from `date`.
+- **19:35 P1 PRIOR-WORK CHECK.**
+  - **Comparator units in M16,10 are KNOWN.** Martin Keane (LessWrong) sorts its neurons into comparators, wave neurons, bridge neurons and special cases.
+  - **A related tool EXISTS:** candle-mi "stoicheia" (Rust) classifies AlgZoo ReLU-RNN neurons by correlating them with reference signals such as cummax. That is the core of our labelling step.
+  - **The residual we missed is modelled:** a LessWrong commenter fits M16,10's {N1,N6,N7,N8} as a(δ)·M_t + b(δ)·max(S_t,0), with δ = steps since the max, at R² 0.992.
+  - **Argmedian above 32 params:** no public explanation found (xabier.me, Nov 2026, explains argmedian M4,3 and says argmedian hadn't been explained before).
+  - **What remains ours:** causal per-unit confidence with controls and known-answer tests; unit maps of the argmedian networks above 32 params; the sufficiency finding (U3).
+  - Claims are downgraded accordingly: "comparators in M16,10" is a replication, not a discovery.
+- **19:35 P2' PRE-REGISTRATION (timing-aware units, from prior work).**
+  - **Units:** h = relu(a(δ)·M + b(δ)·S + c(δ)·x_t), with coefficients fitted per δ = steps since the running max (and, as a variant, δ2 = steps since the running 2nd max).
+  - **Known-answer check:** replicate R² ≥ 0.98 on M16,10 units {1,6,7,8}.
+  - **Then:** joint substitution of ALL neuron-steps by their best timing-aware unit (held-out), on M16,10, M8,5, argmedian 8_5 and 16_5.
+  - **Decision.**
+    - Joint substitution ≥ 95% on a network → its units are exact enough → the build extends the unit map with timing tables, and that network gets a units-plus-timing construction.
+    - < 95% → timing helps but isn't enough; record it.
+- **19:35 P2' RESULT** (`results/glass/units/p2_timing.json`).
+  - **Known answer replicated:** M16,10 units {1,6,7,8} reach R² 0.97–0.999 per step with δ-tables (LessWrong reported 0.992).
+  - **Joint substitution still collapses:** M16,10 25.8%, M8,5 32.9%, argmedian 8_5 31.9%, 16_5 26.5% (median unit R² 0.93 / 0.96 / 0.72 / 0.82).
+  - Per the pre-registration: timing helps but isn't enough.
+- **19:35 P3 PRE-REGISTRATION (precision requirement).** Question: how precise must any account of each network's hidden state be?
+  - **Measure ε95:** the relative noise level (Gaussian, std = ε × each neuron's activation std, added to every neuron at every step) at which decision agreement falls to 95%. Search ε over a log grid; 2,000 inputs.
+  - **Hypothesis:** ε95 is small (< 0.05) for the networks where units failed (M16,10, M8,5, argmedian 8_5 and 16_5) and large (> 0.2) for M2,2 / M4,3, which ARC explains.
+  - **Decision.** If confirmed, the certificate and the unit map report ε95 as the network's "precision requirement", and each unit's error relative to it. That turns "approximate units fail" into a predicted, measured quantity (a candidate general finding). Otherwise, record it.
+- **19:36 P3 RESULT** (`results/glass/units/p3_precision.json`). ε95 (the relative noise at which 5% of decisions flip):
+  - M2,2 0.16; M4,3 0.016; M4,4 0.005; M8,5 0.013; M8,8 0.001; M16,10 0.006; argmedian 8_5 0.004, 16_5 0.010, 16_7 0.005.
+  - **The hypothesis is partly REFUTED:** M4,3 is NOT robust (predicted > 0.2, measured 0.016).
+  - **Reading:** all but the tiniest network are hypersensitive, at about 0.1–1.6% of a neuron's spread. M4,3 is explainable because its account is EXACT (the symmetry reduction is a rewrite of the weights), not because it tolerates error.
+  - **Consequence for the units program:** in these networks, units explain only when they capture EXACT structure. Approximate units (even at R² 0.99) cannot substitute. This accounts for U3, U1b and P2' in one measured quantity.
+  - Candidate general finding (b): "AlgZoo RNNs require ≈1%-precise accounts". Prior-work check pending (robustness, Lipschitz, ARC's noise framing).

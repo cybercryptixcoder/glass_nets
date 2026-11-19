@@ -131,6 +131,7 @@ Every component gets an end-to-end test on a known case (M4,3: whose units are k
 | U1b | done | The rank-based family (current input + sorted history) doesn't capture the residual: joint substitution 19–36% | the residual is not rank structure; position/timing is involved |
 | U6a / U6a' | done | Clock (rotation ≈ k·360°/n): beyond chance only in M4,3, M8,5 and argmedian 8,5 (p ≤ 0.04); not general (3/9; Fisher p 1.2e-3 vs bar 1e-3) | dropped as a general unit |
 | U2 | done | Task quantities are NOT linear directions. Argmedian networks hold the median value at 0.02–0.09 vs 0.60 in shuffled ones; M16,10 holds max 0.99 and 2nd 0.85, not positions | → U6b |
+| P1 / P2' / P3 | done | prior work found (comparators known; a classifier tool exists); δ-units replicate R² 0.99 but don't substitute; ε95 = 0.1–1.6% for all but M2,2 | units must be exact to substitute → P4 exact-structure search |
 | UNIT MAP | built | v2 passes K1–K3; maps for 11 networks; see §8 | → P1–P4 |
 | U6b | done | Modes (ReLU on/off patterns) covering 90%: up to 18 (M8,5), 74 (M16,10), 114 (argmedian 16,5); compact only in small networks | exact mode decomposition not viable |
 
@@ -187,7 +188,14 @@ raw/filter units; shuffled control in brackets):
    compute something else for most neurons.
 
 **Next (in order; each a micro experiment with a pre-registered decision):**
-- **P1.** Prior-work check on (1) and (2) before any claim.
+- **P1. DONE:** comparators in M16,10 are known (Keane; a LessWrong commenter fits them with δ-dependent coefficients at R² 0.992); a correlation-based AlgZoo neuron classifier exists (candle-mi stoicheia). Argmedian above 32 params is unexplained publicly. Finding (1) for M16,10 is a replication; finding (2) and the argmedian maps remain open.
+- **P2'. DONE:** δ-tables replicate LessWrong's fit (M16,10 units 1/6/7/8 at R² 0.97–0.999), but joint substitution still collapses (26–33%).
+- **P3. DONE: precision requirement ε95.** Every network except M2,2 flips 5% of decisions under hidden-state noise of only 0.1–1.6% of each neuron's spread, including M4,3 (0.016), which is explainable because its account is EXACT. **Units help explain these networks only when they capture exact structure; approximate units can't be swapped in.**
+- **NEXT (check-in plan):**
+  - **(a) Build:** add ε95 and each unit's error relative to it to the unit map. A CHANGES entry first; it must reproduce the P3 numbers.
+  - **(b) P4:** search for EXACT structure in bigger networks: exact linear invariants or reductions, like M4,3's symmetry, holding on subsets of neurons (local pairings, exact low-rank subspaces, neurons that are exact linear functions of others). Exact pieces are the only units that can be substituted.
+  - **(c) U7:** the same program on the longest-cycle transformers.
+  - **(d)** Prior-work check on the ε95 finding.
 - **P2.** What do the unexplained argmedian neurons compute? A data-driven search, not a guessed library: fit each
   one with a sparse combination of pairwise comparisons relu(x_i − x_j) and the order statistics; then test
   sufficiency.
