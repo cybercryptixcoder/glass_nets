@@ -1245,3 +1245,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - (iv) median specificity ≥ 10;
     - (v) where a control exists: more mechanisms in functional groups than the control.
   - **Decision:** "the atlas works on networks it was not designed on" if (i)–(iv) hold in ≥ 4 of the 7, and (v) holds in both controlled pairs. If not, the failing criterion says which component to improve next, and I try alternatives there.
+- **04:00 A10 DONE: atlas playground** (CHANGES A10). In the catalog, "Random input" runs one input through the network and through its rebuilt-from-mechanisms version. A per-step table shows which mechanisms the triggers switch on, next to which the network's importances say are needed, plus both answers. Screenshot checked by eye.
+  - **Noted for improvement:** depth-4 triggers with many paths are long to read (e.g. W_h.0 has 6 paths). Next readability step: show the main path, the one covering most ON cases, with "+ N rarer cases" folded away.

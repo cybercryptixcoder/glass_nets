@@ -502,6 +502,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     for label, gate in variants:
         fid[label] = float(judge.same(net, gated(mods, xte, gate)).mean())
     atlas["fidelity"] = fid
+    atlas["_trees"], atlas["_alive"], atlas["_conf"] = trees, alive, conf      # kept for the playground (A10); not in JSON
     eff = effects(tgt, mods, xte, te, alive)                     # A2
     for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
@@ -590,6 +591,68 @@ def render(a, control=None):
     return "\n".join(L)
 
 
+# ------------------------------------------------------------------ playground (A10)
+
+_PLAY = {}
+
+
+def judge_decide(out):
+    import judge
+    return judge.decide(out)[:, 0]
+
+
+def trusted_gate(trees, alive, conf, C):
+    am = {k: np.isin(np.arange(C), v).astype(float) for k, v in alive.items()}
+
+    def gate(k, names, F, a):
+        m = np.zeros((len(F), C))
+        for c in alive[k]:
+            t = trees[(k, c)]
+            m[:, c] = 1.0 if conf[(k, c)] < TRUSTED else (float(t) if isinstance(t, bool) else t.predict(F))
+        return m * am[k]
+    return gate
+
+
+def _load_play(tid):
+    if tid not in _PLAY:
+        import pickle
+        P = pickle.loads((LAB.parent / "results" / "glass" / "atlas" / f"{tid}_d4_model.pkl").read_bytes())
+        tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"])
+        C = mods[next(iter(mods))].U.shape[0]
+        _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P["conf"], C), **P}
+    return _PLAY[tid]
+
+
+def play(tid, x=None, seed=None):
+    """One input through the network and through the network rebuilt from trusted-trigger-switched mechanisms.
+    Returns, per matrix call, the mechanisms switched ON by their triggers and those the importances say are needed."""
+    P = _load_play(tid); tgt, mods, gate = P["tgt"], P["mods"], P["gate"]
+    if x is None:
+        xi = tgt.X[np.random.default_rng(seed).integers(len(tgt.X))][None]
+    elif getattr(tgt, "kind", "rnn") == "transformer":
+        xi = np.eye(tgt.V)[np.asarray(x, dtype=int)][None]
+    else:
+        xi = np.asarray(x, dtype=np.float64).reshape(1, tgt.N, tgt.d_in)
+    calls, count = [], {}
+
+    def rec(k, names, F, a):
+        m = gate(k, names, F, a)
+        with torch.no_grad():
+            g = mods[k].ci_pre(torch.tensor(a)).clamp(0, 1).numpy()
+        for r in range(len(F)):
+            i = count.get(k, 0); count[k] = i + 1
+            label = (f"position {i}" if getattr(tgt, "kind", "rnn") == "transformer" else
+                     ("end" if k == "W_o" else f"step {i + 1}"))
+            calls.append({"matrix": k, "at": label, "on_by_trigger": [f"{k}.{c}" for c in np.where(m[r] > 0.5)[0]],
+                          "on_by_importance": [f"{k}.{c}" for c in np.where(g[r] > 0.5)[0] if c in P["alive"][k]]})
+        return m
+    with torch.no_grad():
+        net = tgt.forward(torch.tensor(xi), lambda name, a: mods[name].apply(a)).numpy()
+    rebuilt = tgt.run_gated(mods, xi, rec) if hasattr(tgt, "run_gated") else run_gated(tgt, mods, xi, rec)
+    shown = xi.argmax(-1)[0].tolist() if getattr(tgt, "kind", "rnn") == "transformer" else np.round(xi[0, :, 0] if tgt.d_in == 1 else xi[0], 4).tolist()
+    return {"x": shown, "network_decision": int(judge_decide(net)[0]), "rebuilt_decision": int(judge_decide(rebuilt)[0]), "calls": calls}
+
+
 def make_target(tid, variant="original"):
     if tid == "planted_rnn":
         return planted_rnn()
@@ -612,6 +675,13 @@ if __name__ == "__main__":
     ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
     a["findings"] = findings(a, ctrl)
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
+    import pickle
+    spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
+    (out / f"{a_.target}_d{a_.depth}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
+        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "depth": a_.depth}))
+    if ctrl is not None:
+        for k in ("_trees", "_alive", "_conf"):
+            ctrl.pop(k, None)
     (out / f"{a_.target}_d{a_.depth}.json").write_text(json.dumps(a, indent=1))
     (out / f"{a_.target}_d{a_.depth}.md").write_text(render(a, ctrl))
     if ctrl is not None:

@@ -476,6 +476,14 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ask.ask(m.group(1), m.group(2), self.body().get("question", "").strip()))
             if p == "/api/launch":
                 return self.send(200, launch(self.body()))
+            m = re.match(r"^/api/catalog/([\w-]+)/atlas_play$", p)
+            if m:       # the atlas playground (lab/atlas.py play; CHANGES A10)
+                import atlas
+                try:
+                    b = self.body()
+                    return self.send(200, atlas.play(m.group(1), b.get("x"), b.get("seed")))
+                except (ValueError, KeyError, FileNotFoundError) as e:
+                    return self.send(400, {"error": str(e)})
             m = re.match(r"^/api/catalog/([\w-]+)/([\w-]+)/play$", p)
             if m:       # the catalog's playground: one input through the network and the construction (lab/catalog.py)
                 import catalog

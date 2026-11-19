@@ -97,7 +97,17 @@ function show(i) {
     <details><summary>The construction (Python)</summary><pre>${esc(cur.source)}</pre></details>
     <details><summary>The judge's full report</summary><pre>${esc(cur.report)}</pre></details>
   </div>`;
+  if (cur.atlas && $("#atlas-play")) $("#atlas-play").onclick = atlasPlay;
   if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+}
+
+async function atlasPlay() {
+  const r = await (await fetch(`/api/catalog/${cur.target}/atlas_play`, {method: "POST", body: JSON.stringify({seed: Math.floor(Math.random() * 1e9)})})).json();
+  if (r.error) { $("#atlas-out").innerHTML = `<p class="muted">${esc(r.error)}</p>`; return; }
+  const rows = r.calls.map(c => `<tr><td>${esc(c.at)}</td><td class="mono">${esc(c.matrix)}</td><td class="mono small">${esc(c.on_by_trigger.join(", ") || "–")}</td><td class="mono small">${esc(c.on_by_importance.join(", ") || "–")}</td></tr>`).join("");
+  $("#atlas-out").innerHTML = `<p class="mono small">input: ${esc(JSON.stringify(r.x))}</p>
+    <p>Network's answer: <b>${r.network_decision}</b> · rebuilt from mechanisms: <b>${r.rebuilt_decision}</b> ${r.network_decision === r.rebuilt_decision ? "(agree)" : "(differ)"}</p>
+    <table><thead><tr><th>where</th><th>matrix</th><th>switched on by triggers</th><th>needed by importance</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function atlasHTML(a) {
@@ -114,6 +124,9 @@ function atlasHTML(a) {
   <tr><th>Every trigger used / own importances / all mechanisms on</th><td>${pct(f.rule_gated)} / ${pct(f.importance_masked)} / ${pct(f.all_alive)}</td></tr></table>
   ${a.findings ? `<h3>What the atlas finds</h3><ol class="small">${a.findings.statements.map(x => `<li>${esc(x.replace(/^\d+\. /, ""))}</li>`).join("")}</ol>` : ""}
   <table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+  <h3>Step through an input</h3>
+  <p class="small">A random input goes through the network and through the network rebuilt from its mechanisms, each switched on by its trusted trigger. The table lists, at each step, which mechanisms the triggers switch on (and which the network's own importances say are needed).</p>
+  <p><button class="btn sm teal" id="atlas-play">Random input</button></p><div id="atlas-out"></div>
   <p class="small muted">Source: <span class="mono">${esc(a.file)}</span> (lab/atlas.py).</p></div>`;
 }
 
