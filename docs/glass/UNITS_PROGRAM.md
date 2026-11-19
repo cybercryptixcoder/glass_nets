@@ -192,8 +192,8 @@ raw/filter units; shuffled control in brackets):
 - **P2'. DONE:** δ-tables replicate LessWrong's fit (M16,10 units 1/6/7/8 at R² 0.97–0.999), but joint substitution still collapses (26–33%).
 - **P3. DONE: precision requirement ε95.** Every network except M2,2 flips 5% of decisions under hidden-state noise of only 0.1–1.6% of each neuron's spread, including M4,3 (0.016), which is explainable because its account is EXACT. **Units help explain these networks only when they capture exact structure; approximate units can't be swapped in.**
 - **NEXT (check-in plan):**
-  - **(a) Build:** add ε95 and each unit's error relative to it to the unit map. A CHANGES entry first; it must reproduce the P3 numbers.
-  - **(b) P4:** search for EXACT structure in bigger networks: exact linear invariants or reductions, like M4,3's symmetry, holding on subsets of neurons (local pairings, exact low-rank subspaces, neurons that are exact linear functions of others). Exact pieces are the only units that can be substituted.
+  - **(a) DONE (T4, unit map v3):** reproduces P3; M16,10 has 16/160 substitution-grade neuron-steps, M4,3 8/12.
+  - **(b) P4 DONE, NEGATIVE:** exact signed pairs M4,3 50% vs 2–19% in the bigger networks; no exact redundancy. M4,3's exactness does not scale. (Original plan:) search for EXACT structure in bigger networks: exact linear invariants or reductions, like M4,3's symmetry, holding on subsets of neurons (local pairings, exact low-rank subspaces, neurons that are exact linear functions of others). Exact pieces are the only units that can be substituted.
   - **(c) U7:** the same program on the longest-cycle transformers.
   - **(d)** Prior-work check on the ε95 finding.
 - **P2.** What do the unexplained argmedian neurons compute? A data-driven search, not a guessed library: fit each

@@ -618,3 +618,20 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Reading:** all but the tiniest network are hypersensitive, at about 0.1–1.6% of a neuron's spread. M4,3 is explainable because its account is EXACT (the symmetry reduction is a rewrite of the weights), not because it tolerates error.
   - **Consequence for the units program:** in these networks, units explain only when they capture EXACT structure. Approximate units (even at R² 0.99) cannot substitute. This accounts for U3, U1b and P2' in one measured quantity.
   - Candidate general finding (b): "AlgZoo RNNs require ≈1%-precise accounts". Prior-work check pending (robustness, Lipschitz, ARC's noise framing).
+- **20:03 T4 built** (unit map v3: ε95 and per-unit relative error). It reproduces P3 exactly; K1–K3 unchanged. Substitution-grade neuron-steps: M4,3 8/12, M16,10 16/160.
+- **20:03 P4 PRE-REGISTRATION (exact structure).**
+  - **Signature 1 (signed pairs, as in M4,3):** for a pair (i,j) at step t, h_i − c·h_j is LINEAR in x_1..x_t with relative error ≤ ε95 (c fitted).
+  - **Signature 2 (exact redundancy):** the numerical rank of the hidden state at tolerance ε95 × the spread is below the number of active neurons.
+  - **Decision.**
+    - If either covers ≥ 25% of neurons (steps after the first) in a network bigger than M4,3 → build an "exact reduction" stage (reduce, then map units on the reduced network).
+    - Otherwise record: M4,3's exact structure does not scale.
+- **20:04 P4 RESULT: exact structure does NOT scale** (`results/glass/units/p4_exact.json`).
+  - Neuron-steps in exact signed pairs (at the ε95 tolerance): M4,3 50% (known-answer check: its signed channels), M8,5 12%, M16,10 2%, argmedian 8_5 6%, 16_5 19%.
+  - Exact rank deficiency only at step 2, which is trivial (two inputs).
+  - Per the pre-registration: below 25% everywhere bigger than M4,3 → no exact-reduction stage. M4,3's exact structure does not scale.
+- **20:04 STATE OF THE UNITS PROGRAM.**
+  - Recurring units exist at the level of function (comparators; replicated on M16,10 against prior work; present in the argmedian networks).
+  - The networks are hypersensitive (ε95 0.1–1.6%).
+  - No exact compact structure was found beyond M4,3 (7 routes).
+  - The unit map v3 reports all of this honestly per unit.
+  - Remaining in the plan: U7 (transformers) and the ε95 prior-work check.

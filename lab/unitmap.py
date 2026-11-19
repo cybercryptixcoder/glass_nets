@@ -112,6 +112,10 @@ def unit_map(target, variant="original", n=8000, confidence=True):
                 mu = float(Hf[:, j].mean())
                 cell["sufficiency"] = float(judge.same(ref, run(W, Xt, {(t, j): fn})).mean())
                 cell["importance"] = float(1 - judge.same(ref, run(W, Xt, {(t, j): (lambda X_, mu=mu: np.full(len(X_), mu))})).mean())
+            if prims:
+                pr = (np.maximum(Xt[:, :t] @ np.array(w), 0) if prims[0].startswith("x_") and prims[0][2:].isdigit()
+                      else np.maximum(np.stack([Lt[c] for c in prims], 1) @ np.array(w), 0))
+                cell["rel_error"] = float(np.sqrt(((Ht[:, j] - pr) ** 2).mean()) / (Ht[:, j].std() + 1e-12))
             cells.append(cell)
     later = [c for c in cells if c["t"] > 1]; tot = sum(c["var"] for c in later) or 1.0
     is_raw = lambda c: set(c["prims"]) <= RAW or c["label"].startswith("filter")  # noqa: E731
@@ -121,8 +125,30 @@ def unit_map(target, variant="original", n=8000, confidence=True):
     for j in sorted({c["unit"] for c in cells}):
         good = [c for c in cells if c["unit"] == j and c["t"] > 1 and c["fit"] >= 0.9]
         per_unit[j] = Counter(c["label"] for c in good).most_common(1)[0][0] if good else "unexplained"
-    return {"target": target, "variant": variant, "cells": cells, "per_unit": per_unit,
+    e95 = eps95(W, X) if confidence else None
+    for c in cells:
+        if e95 is not None and "rel_error" in c:
+            c["substitution_grade"] = bool(c["rel_error"] <= e95)
+    return {"target": target, "variant": variant, "cells": cells, "per_unit": per_unit, "eps95": e95,
             "coverage_history": sum(c["var"] for c in hist) / tot, "coverage_raw": sum(c["var"] for c in raw) / tot}
+
+
+def eps95(W, X, n=2000):
+    """Precision requirement (UNITS_PROGRAM P3): relative hidden-state noise at which decision agreement falls to 95%."""
+    X = X[:n]; acts = {}; nets.forward("rnn_relu", W, X, acts=acts)
+    sd = {t: np.asarray(acts[f"h{t}"]).reshape(len(X), -1).std(0) for t in range(1, X.shape[1] + 1)}
+    def noisy(eps, rng):
+        s = np.zeros((len(X), W["W_h"].shape[0]))
+        for t in range(1, X.shape[1] + 1):
+            s = np.maximum(X[:, t - 1:t] * W["W_x"] + s @ W["W_h"], 0)
+            if eps > 0:
+                s = s + rng.normal(size=s.shape) * eps * sd[t]
+        return s @ W["W_o"]
+    ref = noisy(0, None)
+    for e in np.geomspace(0.001, 1.0, 31):
+        if np.mean([judge.same(ref, noisy(e, np.random.default_rng(k))).mean() for k in range(3)]) < 0.95:
+            return float(e)
+    return 1.0
 
 
 def render(m, ctrl):
@@ -130,11 +156,13 @@ def render(m, ctrl):
          f"Coverage after the first step (variance-weighted share of neuron-steps fitted at R² ≥ 0.9 on held-out inputs): "
          f"history units {m['coverage_history']:.2f}, raw-input units {m['coverage_raw']:.2f}. "
          f"Shuffled-weights control: history {ctrl['coverage_history']:.2f}, raw {ctrl['coverage_raw']:.2f}.", "",
+         f"Precision requirement ε95 = {m.get('eps95')}: hidden-state noise (as a share of each neuron's spread) at which 5% of decisions flip. "
+         f"Substitution-grade units (relative error ≤ ε95): {sum(1 for c in m['cells'] if c.get('substitution_grade'))} of {len(m['cells'])} neuron-steps.", "",
          "## Per neuron (most common label over its explained steps)", "", "| neuron | label |", "|---|---|"]
     L += [f"| {j} | {lab} |" for j, lab in m["per_unit"].items()]
-    L += ["", "## Every neuron-step", "", "| step | neuron | unit | fit (held-out R²) | sufficiency | importance |", "|---|---|---|---|---|---|"]
+    L += ["", "## Every neuron-step", "", "| step | neuron | unit | fit (held-out R²) | relative error | sufficiency | importance |", "|---|---|---|---|---|---|---|"]
     for c in m["cells"]:
-        L.append(f"| {c['t']} | {c['unit']} | {c['label']} | {c['fit']:.3f} | {100 * c.get('sufficiency', float('nan')):.1f}% | {100 * c.get('importance', float('nan')):.1f}% |")
+        L.append(f"| {c['t']} | {c['unit']} | {c['label']} | {c['fit']:.3f} | {c.get('rel_error', float('nan')):.3f} | {100 * c.get('sufficiency', float('nan')):.1f}% | {100 * c.get('importance', float('nan')):.1f}% |")
     L += ["", "*Sufficiency: decisions kept when only this neuron-step is replaced by its unit formula. Importance: decisions lost when it is set to its mean. "
           "Both are on held-out inputs. Units are approximate in dense networks (UNITS_PROGRAM, first-sweep conclusion), so a high fit does not imply exact sufficiency.*"]
     return "\n".join(L) + "\n"
@@ -146,5 +174,5 @@ if __name__ == "__main__":
         m = unit_map(tgt); c = unit_map(tgt, "shuffled", confidence=False)
         (OUT / f"{tgt}.json").write_text(json.dumps({"map": m, "control": {k: c[k] for k in ("coverage_history", "coverage_raw", "per_unit")}}, indent=0))
         (OUT / f"{tgt}.md").write_text(render(m, c))
-        print(f"{tgt}: history coverage {m['coverage_history']:.2f} (control {c['coverage_history']:.2f}), raw {m['coverage_raw']:.2f} | per neuron: "
+        print(f"{tgt}: eps95 {m['eps95']:.4f} | substitution-grade {sum(1 for x in m['cells'] if x.get('substitution_grade'))}/{len(m['cells'])} | history coverage {m['coverage_history']:.2f} (control {c['coverage_history']:.2f}), raw {m['coverage_raw']:.2f} | per neuron: "
               + "; ".join(f"{j}:{lab.split('(')[0].strip()}{'(' + lab.split('(')[1] if lab.startswith('comparator') else ''}" for j, lab in m["per_unit"].items()), flush=True)
