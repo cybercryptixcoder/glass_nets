@@ -165,7 +165,7 @@ class TransformerTarget:
             self._fcache = {}
         key = (x.__array_interface__["data"][0], x.shape, name == "W_U")
         if key not in self._fcache:
-            self._fcache[key] = (x, self._feats_uncached(x, name))
+            self._fcache[key] = (x, self._feats_uncached(x, name)); _STABLE_F[id(self._fcache[key][1][1])] = self._fcache[key][1][1]
         return self._fcache[key][1]
 
     def _feats_uncached(self, x, name):
@@ -196,9 +196,9 @@ class TransformerTarget:
         def mm(name, a):
             a = a.numpy(); n = self._rows(name); names, F = self._feats(x, name)
             m = self._bm(gate(name, names, F, self._pm(a, B, n)), B, n)
-            out = ((a @ Vv[name].T) * m) @ U[name]
+            out = _masked_product(a, Vv[name], m, U[name])                       # A39
             R = getattr(mods[name], "_residual", None)
-            return torch.tensor(out + a @ R.T if R is not None else out)
+            return torch.tensor(out + a @ R.T if R is not None and R.any() else out)
         with torch.no_grad():
             return self.forward(torch.tensor(x), mm).numpy()
 
@@ -263,7 +263,7 @@ class ModAddTarget:
             self._fcache = {}
         key = (x.__array_interface__["data"][0], x.shape, self._rows(name))
         if key not in self._fcache:
-            self._fcache[key] = (x, self._feats_uncached(x, name))
+            self._fcache[key] = (x, self._feats_uncached(x, name)); _STABLE_F[id(self._fcache[key][1][1])] = self._fcache[key][1][1]
         return self._fcache[key][1]
 
     def _feats_uncached(self, x, name):
@@ -308,9 +308,9 @@ class ModAddTarget:
         def mm(name, a):
             a = a.numpy(); n = self._rows(name); names, F = self._feats(x, name)
             m = self._bm(gate(name, names, F, self._pm(a, B, n)), B, n)
-            out = ((a @ Vv[name].T) * m) @ U[name]
+            out = _masked_product(a, Vv[name], m, U[name])                       # A39
             R = getattr(mods[name], "_residual", None)
-            return torch.tensor(out + a @ R.T if R is not None else out)
+            return torch.tensor(out + a @ R.T if R is not None and R.any() else out)
         with torch.no_grad():
             return self.forward(torch.tensor(x), mm).numpy()
 
@@ -622,12 +622,33 @@ def rule_text(tree, names):
 
 # ------------------------------------------------------------------ the atlas
 
+_STABLE_F = {}          # A39: feature arrays held in a target's feature cache (they never change), by id
+_PCACHE = {}            # A39: P(needed) per (tree, stable feature array)
+
+
 def _p_on(t, F):
-    """P(needed) from a trigger: a constant trigger gives 0 or 1; a tree gives its (class-balanced) leaf probability."""
+    """P(needed) from a trigger: a constant trigger gives 0 or 1; a tree gives its (class-balanced) leaf probability.
+    A39: for a feature array held in a target's feature cache, computed once per (tree, array) and reused."""
     if isinstance(t, bool):
         return np.full(len(F), float(t))
+    key = (id(t), id(F))
+    if _STABLE_F.get(id(F)) is F:
+        hit = _PCACHE.get(key)
+        if hit is not None and hit[0] is t and hit[1] is F:
+            return hit[2]
     cls = list(t.classes_)
-    return t.predict_proba(F)[:, cls.index(True)] if True in cls else np.zeros(len(F))
+    p = t.predict_proba(F)[:, cls.index(True)] if True in cls else np.zeros(len(F))
+    if _STABLE_F.get(id(F)) is F:
+        _PCACHE[key] = (t, F, p)
+    return p
+
+
+def _masked_product(a, V, m, U):
+    """A39: ((a V^T) * m) U over only the components whose mask is not 0 everywhere (the others add exact zeros)."""
+    cols = np.flatnonzero(np.any(m != 0, axis=0))
+    if len(cols) == 0:
+        return np.zeros((a.shape[0], U.shape[1]))
+    return ((a @ V[cols].T) * m[:, cols]) @ U[cols]
 
 
 def _trigger_on(t, F, tau=None):
@@ -659,6 +680,7 @@ def absorb_residual(tgt, mods, alive, x):
 
 def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, seed=0, absorb=False):
     import judge
+    _PCACHE.clear()                                              # A39: trigger outputs belong to one build
     mods = load_decomposition(tgt, spd_model) if spd_model else decompose(tgt, steps, batch, seed)
     MATS = getattr(tgt, "matrices", MATRICES)
     calls = tgt.network_calls if hasattr(tgt, "network_calls") else (lambda m_, x_: _network_calls(tgt, m_, x_))
