@@ -12,7 +12,7 @@ for spec in args[4:]:
     tid, _, var = spec.partition(":"); var = var or "original"
     tgt = atlas.make_target(tid, var)
     t0 = time.time()
-    mods = atlas.decompose(tgt, steps=steps, batch=batch, device=device, log=2000, coef_min=float(opts.get("coef-min", 3e-3)), recon=opts.get("recon", "mse"), C=int(opts.get("C", 20)), coef_ci=float(opts.get("ci-recon", 0)))
+    mods = atlas.decompose(tgt, steps=steps, batch=batch, device=device, log=2000, coef_min=float(opts.get("coef-min", 3e-3)), recon=opts.get("recon", "mse"), C=int(opts.get("C", 20)), coef_ci=float(opts.get("ci-recon", 0)), ci_mode=opts.get("ci-mode", "soft"))
     tag = ("_" + opts["tag"]) if "tag" in opts else ""
     torch.save({"mods": mods.state_dict(), "SD": tgt.out_scale, "steps": steps, "batch": batch, "device": device, "opts": opts},
                out / f"spd_{tid}_{var}_{steps}_{batch}{tag}.pt")

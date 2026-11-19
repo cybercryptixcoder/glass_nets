@@ -452,10 +452,10 @@ def planted_transformer(P=4, V=4, s=4.0, n=16000):
 
 # ------------------------------------------------------------------ decomposition
 
-def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu", dtype=torch.float32, coef_min=3e-3, recon="mse", coef_ci=0.0):
+def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu", dtype=torch.float32, coef_min=3e-3, recon="mse", coef_ci=0.0, ci_mode="soft"):
     mods = spd.decompose(tgt.forward, tgt.weights, tgt.sample, C=C, steps=steps, coef_min=coef_min, p=1.0,
                          coef_faith=1.0, lr=1e-3, batch=batch, seed=seed, log=log, device=device, dtype=dtype,
-                         recon=recon, kl_scale=getattr(tgt, "out_scale", 1.0), coef_ci=coef_ci)
+                         recon=recon, kl_scale=getattr(tgt, "out_scale", 1.0), coef_ci=coef_ci, ci_mode=ci_mode)
     return mods.cpu().double()
 
 
