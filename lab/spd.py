@@ -65,7 +65,7 @@ def _run(forward, x, mods, mask_for, record=None):
 
 
 def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, coef_faith=1e3, coef_rec=1.0,
-              coef_min=3e-3, p=1.0, seed=0, log=500, device="cpu", dtype=torch.float64, recon="mse", kl_scale=1.0):
+              coef_min=3e-3, p=1.0, seed=0, log=500, device="cpu", dtype=torch.float64, recon="mse", kl_scale=1.0, coef_ci=0.0):
     """forward(x, mm) -> output, where mm(name, a) applies matrix `name` to a; weights: {name: tensor [d_out, d_in]};
     sample(n) -> a batch of inputs. Returns the trained {name: Decomposed}."""
     torch.manual_seed(seed)
@@ -88,6 +88,9 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
         rec = loss_fn(_run(forward, x, mods, lambda n, k: masks[n][k]))
         for name in mods:   # one matrix at a time
             rec = rec + loss_fn(_run(forward, x, mods, lambda n, k, name=name: masks[n][k] if n == name else None)) / len(mods)
+        if coef_ci:         # A38: CI-masked reconstruction (masks = importances, r = 0): every unimportant component off at once
+            rec_ci = loss_fn(_run(forward, x, mods, lambda n, k: lower_leaky(gs[n][k])))
+            rec = rec + coef_ci * rec_ci
         faith = sum(((m.W - m.weight()) ** 2).mean() for m in mods.values())
         mini = sum((upper_leaky(torch.stack(zs)) ** p).sum(-1).mean() for zs in gs.values())
         loss = coef_faith * faith + coef_rec * rec + coef_min * mini

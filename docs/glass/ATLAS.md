@@ -78,6 +78,9 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 14:04 ET (clock):
+  - A37 (angle vocabulary for modular arithmetic) is built and tested. Held out: two fresh modadd networks (s1, s2; 100% accurate; key frequencies {43, 30, 18, 19, 38} and {4, 44, 10, 28, 9}) are being decomposed on the GPU (about 3 hours).
+  - A38 diagnosed: (i') fails on modadd because SPD leaves the attention Q/K with no mechanism (spread over many components; random partial masks never remove them all). A CI-masked reconstruction term is entered and coded, off by default; a development run is next.
 - Nov 19, 13:48 ET (clock). Since 11:59:
   - **A35 known answer FAILS narrowly** on modadd_p113 (227k parameters, about 10× the largest network certified before). 71% of trusted Fourier triggers use the network's key frequencies {8, 11, 22, 23, 25}; the pre-registered bar was 80%, chance 9%. By matrix: MLP output 100%, unembedding 93%, embedding 78%, attention values 36–60%.
   - Its certificate passes (ii) v4 1.000, (iii) 0.60, (iv) 33×, (vi) 0.88, and fails (i') mechanisms alone 0.597. 232 mechanisms; the attention Q/K matrices keep none alive.
@@ -103,7 +106,8 @@ nets), where the existing reader and judge already work.
 
 ## 5. Next (in order)
 
-1. A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
+0. A38: development run of the CI-masked term on modadd_p113; then a held-out test on fresh seeds.
+1. (Built; verdict pending the s1/s2 decompositions) A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
 2. Faster atlas builds at this scale (the modadd build took about 33 min; the remaining time is in tree fitting and the gate cost search).
 3. More MLP transformers (tracr compiled programs need multi-position outputs in the judge and an adapter with biases).
 4. Explanations: unit maps for the A28 networks, so reads/writes (A29) carry task meaning; consider a narrative (A13) for one certified network (ask Shreyas about cost first).
