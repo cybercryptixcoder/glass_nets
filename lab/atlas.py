@@ -624,6 +624,60 @@ def compare_atlases(a, b, bar=0.5):
                        f"and {100 * share_b:.0f}% of B's {len(fb)} have a counterpart with the same role and trigger variables."}
 
 
+def fact_sheet(a):
+    """The facts a narrative may use (A13)."""
+    meta = a["target"]; L = [f"Network: {meta.get('target')} ({a.get('kind', 'rnn')})."]
+    try:
+        import judge  # noqa: F401
+        m = json.loads((LAB / "models" / meta["target"] / "meta.json").read_text()); L.append(f"Task: {m['answer']['short']}.")
+    except Exception:  # noqa: BLE001
+        pass
+    L += (a.get("findings") or findings(a))["statements"]
+    for k, mm in a["matrices"].items():
+        for x in sorted(mm["mechanisms"], key=lambda x: -x["in_use"]):
+            if x["trigger"]["confidence"] < TRUSTED:
+                continue
+            main = x["trigger"]["rule"].split("\n")[0]
+            e = x.get("effect") or {}; rc = e.get("role_changes") or []
+            eff = (f"; removing it where needed flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions"
+                   + (f", mostly from rank {rc[0]['from']} to rank {rc[0]['to']}" if rc else "")) if e else ""
+            L.append(f"Mechanism {x['id']} (in use {100 * x['in_use']:.0f}% of the time, trigger confidence {x['trigger']['confidence']:.2f}): {main}{eff}.")
+    return "\n".join(L)
+
+
+def narrative_violations(text, facts):
+    import re
+    nums = set(re.findall(r"\d+(?:\.\d+)?", facts)); ids = set(re.findall(r"\b(?:W_[a-zA-Z]+|L\d_W_[A-Z]|W_[EU])\.\d+\b", facts))
+    v = [f"number {n} not in the facts" for n in re.findall(r"\d+(?:\.\d+)?", text) if n not in nums]
+    v += [f"mechanism {i} not in the facts" for i in re.findall(r"\b(?:W_[a-zA-Z]+|L\d_W_[A-Z]|W_[EU])\.\d+\b", text) if i not in ids]
+    return v
+
+
+def narrate(a):
+    """One plain-English paragraph from the fact sheet, by the reader model, guarded for numbers and mechanism ids."""
+    import os
+    env = LAB / ".env"
+    if env.exists():
+        for line in env.read_text().splitlines():
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.split("=", 1); os.environ.setdefault(k.strip(), v.strip().strip('"'))
+    import luminal
+    facts = fact_sheet(a)
+    prompt = ("Write ONE plain-English paragraph of at most 150 words that explains how this neural network solves its task, "
+              "for a reader who knows the task but not the network. Use ONLY the facts below: do not add any number, mechanism "
+              "id or claim that is not stated there. Refer to mechanisms by their ids. Where the facts leave something "
+              "unexplained, say so.\n\nFACTS:\n" + facts)
+    text, viol = "", ["not run"]
+    for _ in range(2):
+        r = luminal.complete({"model": luminal.model(), "messages": [{"role": "user", "content": prompt}], "max_tokens": 900})
+        text = (r["choices"][0]["message"].get("content") or "").strip()
+        viol = narrative_violations(text, facts)
+        if not viol:
+            break
+        prompt += "\n\nYour previous paragraph broke the rule (" + "; ".join(viol[:5]) + "). Write it again using only the facts."
+    return {"text": text, "violations": viol, "note": "written by the reader from the facts above; checked only for numbers and names"}
+
+
 def render(a, control=None):
     """The atlas certificate in markdown (CHANGES A4)."""
     f = a["fidelity"]; tr = a["task_rule"]
@@ -635,7 +689,10 @@ def render(a, control=None):
          f"(otherwise always on): keeps **{100 * f['rule_gated_trusted']:.1f}%** of the network's decisions"
          + (f"; the task rule alone keeps {100 * tr:.1f}%." if tr is not None else "."),
          f"- Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. All alive mechanisms on: {100 * f['all_alive']:.1f}%.", "",
-         "## Findings", ""] + findings(a, control)["statements"] + [""]
+         "## Findings", ""] + findings(a, control)["statements"] + [""] + (
+         ["## In plain English", "", a["narrative"]["text"], "", f"*({a['narrative']['note']}"
+          + (f"; unresolved: {'; '.join(a['narrative']['violations'])}" if a["narrative"]["violations"] else "") + ")*", ""]
+         if a.get("narrative") else [])
     for k, m in a["matrices"].items():
         mech = m["mechanisms"]; confs = [x["trigger"]["confidence"] for x in mech]
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
@@ -731,11 +788,14 @@ if __name__ == "__main__":
     ap.add_argument("target"); ap.add_argument("spd", nargs="?", help="saved SPD decomposition (.pt); omitted = decompose now")
     ap.add_argument("depth", nargs="?", type=int, default=4)
     ap.add_argument("--control-spd", help="SPD decomposition of the shuffled-weights network, for the control comparison")
+    ap.add_argument("--narrate", action="store_true", help="add a guarded plain-English paragraph written by the reader model (A13)")
     a_ = ap.parse_args()
     tgt = make_target(a_.target)
     a = build_atlas(tgt, spd_model=a_.spd, depth=a_.depth)
     ctrl = build_atlas(make_target(a_.target, "shuffled"), spd_model=a_.control_spd, depth=a_.depth) if a_.control_spd else None
     a["findings"] = findings(a, ctrl)
+    if a_.narrate:
+        a["narrative"] = narrate(a)
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
