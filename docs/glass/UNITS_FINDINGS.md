@@ -46,14 +46,19 @@ same units. If so, "these units, wired like this" is a readable account of a net
   relational structure. (F6)
 - Most of each argmedian network remains unexplained. One clean "soft rank" neuron was found. (F5, U9)
 
-**What is new, as far as I found:**
-- The precision requirement (ε95) as a measured, replicated predictor of when approximate accounts can be faithful.
-- Unit maps with per-part confidence for argmedian networks never interpreted before.
-- The width-to-units effect on ARC's networks.
-- Function-level convergence across ARC's training runs.
+**What is new, after a prior-work check:**
+- **Still a candidate, with no prior measurement found:** the precision requirement (ε95) as a measured, replicated
+  predictor of when approximate accounts can be faithful. Nearest work: Arora et al. 2018, noise stability and
+  compression.
+- **Still new:** unit maps with per-part confidence for argmedian networks above 32 parameters. No public
+  interpretation was found.
+- **A known mechanism, newly observed here:** wider networks give units their own neurons. Superposition theory
+  (Elhage et al. 2022) predicts it, and Kong et al., "Expand Neurons, Not Parameters" (ICML 2026), shows it.
+- **A known question, with a new measurement:** units converging across training runs. Gurnee et al. 2024 found 1–5%
+  of GPT-2 neurons universal. For ARC's 16-neuron recipe, a LessWrong commenter notes representations vary a lot by
+  seed, which matches our 3–4 of 5. What we add is the 5-of-5 convergence at 8 neurons, with controls.
 
-All need a careful prior-work check before any public claim. The rest replicates known work (comparators in M16,10:
-Keane, LessWrong; timing tables: LessWrong comments).
+The rest replicates known work (comparators in M16,10: Keane, LessWrong; timing tables: LessWrong comments).
 
 **What it means for Glass Networks:**
 - Report ε95 with every certificate. A small ε95 means an approximate construction cannot be faithful.

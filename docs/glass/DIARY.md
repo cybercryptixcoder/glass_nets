@@ -955,3 +955,18 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Decision:** "wider → more unit-like" does not hold on argmedian, even with units found from data (sparse, ≤ 3 terms). U14's negative is not just the library. So the U13 effect is task-specific so far (2nd argmax at n = 10).
   - **Descriptive:** argmedian at n = 5 is about two-thirds sparse units at both widths; at n = 7, about a third.
 - **22:58 (l) DONE:** one-page summary at the top of `docs/glass/UNITS_FINDINGS.md` covering U1–U15 and P2–P5 (holds up / did not hold up / new / meaning for Glass Networks). Next: (n) prior-work check of the four 'new' items; (o) replicate the width effect at n = 8.
+- **23:26 Check-in (trig_01RbF…).** (n) prior-work check of the four "possibly new" items. Searches: AlgZoo argmedian; width and monosemanticity; noise tolerance as a predictor of interpretability; universality across seeds and AlgZoo seeds.
+  1. **ε95 as a predictor of when approximate accounts can be faithful.**
+     - Nothing found that measures this.
+     - Nearest: Arora et al. 2018 (noise stability makes nets compressible); Ghorbani et al. 2017 (fragility of saliency explanations, a different notion); Ladner and Althoff 2026 (formal faithfulness of replacement networks under input perturbations, a different question).
+     - **Stays a candidate.**
+  2. **Argmedian unit maps above 32 parameters.** No public interpretation found. xabier.me covers a 32-parameter network and notes most work focuses on 2nd argmax. **Stays.**
+  3. **Width → more single-neuron units.** **DOWNGRADED:** the mechanism is known.
+     - Superposition theory (Elhage et al. 2022) predicts it.
+     - "Expand Neurons, Not Parameters" (Kong et al., ICML 2026) shows that more neurons at a fixed parameter count reduce polysemanticity and interference.
+     - Ours is a new observation of a known mechanism, on ARC's networks.
+  4. **Convergence of units across training runs.** **DOWNGRADED:** the question is established.
+     - Gurnee et al. 2024: 1–5% of GPT-2 neurons are universal across seeds.
+     - For the M16,10 recipe, a commenter on Josh Snider's LessWrong post says the representations "vary a lot depending on the seeds". That agrees with our 16-neuron result (3–4 of 5).
+     - Snider's estimator counts neuron roles (comparator, max detector, write pointer) across about 8,000 trained models, but does not report how often each role appears.
+     - What remains ours: the measured 5/5 convergence at 8 neurons, with controls.

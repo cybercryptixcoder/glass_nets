@@ -232,7 +232,10 @@ raw/filter units; shuffled control in brackets):
       - (k4) DONE (U14): not replicated on argmedian with this library.
       - (m) DONE (U15): negative. Wider argmedian networks are not more unit-like even with data-found units, so the width effect is task-specific so far.
       - (l) DONE: one-page summary at the top of UNITS_FINDINGS.
-      - (n) NEXT: careful prior-work check of the four "new" items in the summary: ε95 as a predictor; argmedian unit maps; the width-to-units effect; convergence across ARC's seeds. Search the literature and LessWrong/AF for each, and downgrade any that is known.
+      - (n) DONE: prior-work check.
+        - ε95 as a predictor stays a candidate; the argmedian maps stay.
+        - Width → units is downgraded to a known mechanism (superposition; Kong et al. 2026).
+        - Seed convergence is downgraded to a known question with a new measurement.
       - (o) NEXT after (n): replicate the width-to-units effect (U13) at another 2nd-argmax length (n = 8; ARC has h = 32, n = 8). Is it about n = 10 specifically or general?
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
