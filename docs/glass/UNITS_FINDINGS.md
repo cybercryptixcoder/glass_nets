@@ -111,9 +111,23 @@ not of one training run.
   (median 2.5) to 0.001–0.08 (median 0.016).
 - That is still about 50× below the modular nets. Near-ties account for part of the effect, not most of it.
 
-**A failed intervention (U10):** I trained M8,5 with 10% hidden-state noise to make it tolerant. It did not become
-more tolerant (ε95 unchanged). The runs were under-trained (standard accuracy 0.73–0.79), so this is inconclusive. The
-causal version of F3 is still untested.
+**The intervention (U10, U10b):** I trained M8,5 networks with hidden-state noise during training, to make them
+tolerant. The first attempt (U10) was under-trained and inconclusive. The proper run (U10b, 12 networks, AlgZoo-level
+accuracy for the standard ones):
+
+| training noise σ | accuracy | ε95 | joint substitution |
+|---|---|---|---|
+| 0 | 0.76–0.88 | 0.006–0.008 | 42–51% |
+| 0.03 | 0.80–0.88 | 0.016–0.020 | 68–73% |
+| 0.1 | 0.73–0.74 | 0.020 | 69–73% |
+| 0.3 | 0.55–0.62 | 0.020–0.025 | 75–78% |
+
+- Tolerance and the faithfulness of approximate units rise together (Spearman 0.89), in the predicted direction.
+- But the pre-registered bars were not met: 3.2× rather than 5×, and 78% rather than 90%. So F3 stays
+  correlational.
+- Tolerance saturates near 2.5%. Beyond that the networks lose accuracy instead.
+- My reading, still to test: for this task at this size, precision is the price of accuracy, so a good solver
+  cannot be described faithfully by approximate units.
 
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained

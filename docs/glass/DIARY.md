@@ -837,3 +837,33 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - Clear-half ε95 is 0.001–0.08 (median 0.016), against 0.79 for the modular nets. That is still about 50× apart.
     - Near-tie inputs are over-represented among flips in the small networks (58–66% of flips in the lowest-margin decile for M2,2 and M4,3; chance is 10%), but hardly in M4,4 and M8,8 (10–13%).
   - **U10's failure is therefore not explained by ties.** Why 10% training noise did not raise ε95 stays open. The run was under-trained, so it is inconclusive, not negative.
+- **21:26 Check-in (the OLD duplicate, trig_011J…, text lists e–g, all done).** Per the 21:16 rule, I do §8 NEXT (k) and do not schedule a successor. The new chain (trig_01CB…, ~21:42) continues.
+- **21:28 Pipeline check for (k):** with 60,000 steps (cosine schedule, 65 s) a standard M8,5 reaches accuracy 0.870, inside ARC's range for its seeds (0.81–0.88). The training pipeline is now AlgZoo-like. A σ = 0.1 net is training for an accuracy check only (no ε95 or substitution looked at).
+- **21:28 U10b PRE-REGISTRATION (the causal test of F3, done properly).**
+  - **Design:** M8,5 2nd argmax, 60,000 steps, seeds 0–2, training noise σ ∈ {0, 0.03, 0.1, 0.3} (× each unit's batch std, hidden state, every step, training only). 12 networks, ids `u10b_m85_sig<σ>_s<seed>`. Measures as in U10.
+  - **Known answer:** σ = 0 nets have accuracy ≥ 0.75 and ε95 ≤ 0.03.
+  - **Predictions** (σ* = the largest σ whose 3 nets all keep accuracy ≥ 0.70):
+    - (a) Median ε95 at σ* ≥ 5× the σ = 0 median.
+    - (b) Joint substitution ≥ 90% in ≥ 2 of 3 nets at σ* (counting a net only if the substituted neuron-steps hold ≥ 25% of the step-≥2 variance), and < 90% in ≥ 2 of 3 σ = 0 nets.
+  - **Decision.**
+    - (a) and (b) → interventional support for F3 (tolerance makes approximate unit accounts faithful) and a design lever.
+    - (a) without (b) → tolerance is not sufficient.
+    - Not (a) → noise training does not produce tolerance at these levels; F3 stays correlational.
+- **21:53 Check-in (new chain, trig_01CB…).** Continuing (k). This chain schedules the next check-in.
+  - Process note: the first parallel launch of U10b thrashed (two processes × two torch threads on two cores; 6 CPU-minutes without finishing a net). I killed it and relaunched with one thread each. No results were read from the killed runs.
+- **21:53 U10b RESULT: NOT SUPPORTED as pre-registered, but the trend is in the predicted direction** (`results/glass/units/u10b_m85_60000_*.json`, read by hand).
+  - **Known answer passes:** σ = 0 accuracy 0.867 / 0.884 / 0.757, ε95 0.0063 / 0.0079 / 0.0063 (AlgZoo-like).
+  - σ* = 0.1: σ = 0.3 nets fall to accuracy 0.55–0.62, below the 0.70 bar.
+
+    | training noise σ | accuracy | ε95 | joint substitution |
+    |---|---|---|---|
+    | 0 | 0.76–0.88 | 0.006–0.008 | 42–51% |
+    | 0.03 | 0.80–0.88 | 0.016–0.020 | 68–73% |
+    | 0.1 | 0.73–0.74 | 0.020 | 69–73% |
+    | 0.3 | 0.55–0.62 | 0.020–0.025 | 75–78% |
+
+  - **(a) fails:** median ε95 at σ* is 3.2× the σ = 0 median (bar 5×).
+  - **(b) fails:** no net reaches 90% joint substitution.
+  - Decision per the rule: noise training does not produce enough tolerance at these levels, so F3 stays correlational.
+  - **Descriptive, within the intervention:** across the 12 nets, ε95 and joint substitution rise together (Spearman 0.89, p = 1e-4), and ε95 and accuracy move against each other (Spearman −0.70, p = 0.01). Tolerance saturates near 2–2.5%. Pushing harder (σ = 0.3) buys accuracy loss, not tolerance.
+  - **Reading (an interpretation, to test):** for this task at this size, precision appears to be the price of accuracy. An 8-unit ReLU RNN that tolerates imprecision is a worse 2nd-argmax solver. If that holds, approximate unit accounts of GOOD solvers of such tasks cannot be faithful, by necessity rather than by accident.

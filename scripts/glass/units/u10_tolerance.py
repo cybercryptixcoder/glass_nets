@@ -47,13 +47,16 @@ def joint(tid, m):
     return float(judge.same(ref, unitmap.run(W, Xt, rep)).mean()), used / tot, len(rep)
 
 if __name__ == "__main__":
+    # U10: argv = [steps]; U10b: argv = [steps, comma-separated sigmas, id prefix]
     out = {}
+    levels = [("std", 0.0), ("noise", SIGMA)] if len(sys.argv) < 3 else [(f"sig{v}", float(v)) for v in sys.argv[2].split(",")]
+    prefix = "u10_m85" if len(sys.argv) < 4 else sys.argv[3]
     for seed in range(3):
-        for kind, sigma in (("std", 0.0), ("noise", SIGMA)):
-            tid = f"u10_m85_{kind}_s{seed}"; acc = save_target(tid, train(seed, sigma))
+        for kind, sigma in levels:
+            tid = f"{prefix}_{kind}_s{seed}"; acc = save_target(tid, train(seed, sigma))
             m = unitmap.unit_map(tid); js, share, k = joint(tid, m)
             out[tid] = {"acc": acc, "eps95": m["eps95"], "coverage_history": m["coverage_history"], "coverage_raw": m["coverage_raw"],
                         "joint_substitution": js, "substituted_var_share": share, "n_substituted": k, "per_unit": m["per_unit"]}
             print(f"{tid}: acc {acc:.3f} eps95 {m['eps95']:.4f} cov hist {m['coverage_history']:.2f} raw {m['coverage_raw']:.2f} | joint substitution {100*js:.1f}% "
                   f"({k} neuron-steps, {100*share:.0f}% of variance)", flush=True)
-    (ROOT / f"results/glass/units/u10_{STEPS}.json").write_text(json.dumps(out, indent=1))
+    (ROOT / f"results/glass/units/{prefix}_{STEPS}{'_' + sys.argv[2].replace(',', '-') if len(sys.argv) > 2 else ''}.json").write_text(json.dumps(out, indent=1))
