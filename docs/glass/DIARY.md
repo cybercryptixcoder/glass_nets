@@ -1792,3 +1792,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - K2, structure: the s1/s2 adders must have ≥ 80% of theirs labelled rule.
   - The embedding is reported, not judged, because the development probe already showed its rules mostly don't carry over in the original adder.
 - Next: train modrand_p113 on the GPU (random labels; needs 100% training accuracy), start its decomposition, write the test, build the label.
+
+## Nov 19, 17:17 ET (clock): A41 built; the memorizing network trained; A37 builds running
+
+- A41 code done; its test failed before and passes after. A half-circle mechanism is labelled rule (0.916 on unseen values, a thin margin: the arc's ends are placed from half the values). A random set of 8 tokens is trusted on held-out inputs (0.980) but labelled lookup (0.495 on unseen values).
+- modrand_p113 (the memorization known answer): the adders' architecture and recipe on fixed random labels. 100% training accuracy, 0.77% held-out (chance 0.88%), so it memorized. Its decomposition (A35 pipeline) started on the GPU at 17:15.
+- A37: the s1/s2 atlases (main vocabulary) are building locally. They started before A41, so for K2 they will be rebuilt with A41 labels once the A37 verdict is scored (numbers unchanged; labels added).

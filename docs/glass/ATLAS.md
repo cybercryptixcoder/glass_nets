@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 17:17 ET (clock): A41 (rule vs lookup labels) built and tested; its memorizing known answer (modrand_p113: 100% train, chance on held-out) is being decomposed on the GPU (about 2 h). A37 builds running locally; modmul (A40) at step 24,000.
 - Nov 19, 16:58 ET (clock): A38, A38c and A38d all fail (A38d fixes the planted query but splits a planted RNN mechanism at two seeds). The attention Q/K problem stays open. s1/s2 at step 28,000 (A37 verdict about 17:10); modmul at 20,000.
 - Nov 19, 16:08 ET (clock): A38d planted transformer keeps its Q mechanism at step 8,000 (A38c lost it). Waiting on the planted results (about 17:00), then the s1/s2 verdict for A37 (about 17:00), modmul (A40, about 18:00) and the A38d modadd run.
 - Nov 19, 15:51 ET (clock): A38/A38c had a translation error (leaky negative masks let dead components rebuild Q; found with the planted transformer, which shows the same Q failure as modadd). Fix A38d: mask value = clamped importance, leaky gradient only. The planted transformer is now the fast test bed (about 50 min on CPU).
