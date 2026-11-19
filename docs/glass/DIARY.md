@@ -1705,3 +1705,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Key-frequency triggers generalise to unseen tokens far more often than the others: 55% vs 25% reach 0.9.
   - By matrix: MLP input 35/39 key triggers generalise; MLP output 10/11; unembedding 13/13. The embedding generalises in only 3/35, and the value matrices are mostly memorised.
 - Reading: the MLP and unembedding rules capture structure; the embedding and value rules mostly describe token lists. Not acted on yet. If A37 fails on s1/s2, a value-held-out trust test (A41) is the principled next candidate, judged on fresh seeds.
+
+## Nov 19, 14:38 ET (clock): GPU queue; A38 looks likely to fail its own development test
+
+- GPU (7 runs; about 2,000 steps per 10 min): s1/s2 at step 6,000 of 30,000; modmul (A40) started 14:27; A38's development run is at step 4,000.
+- A38 early sign: with the CI-masked term, the Q/K matrices are still dead at step 4,000, while the value/output matrices keep more mechanisms than without it (20–42 vs 12–18). My reading: fractional masks let the value path partly make up for flat attention, so "masks = importances" can be satisfied without Q/K. "Mechanisms alone" uses on/off masks, so that would not carry over. I'll let the run finish and judge it by its test, but I expect a fail.
+- Meanwhile: a cheap test bed, so each design attempt doesn't cost a 2.5-hour GPU run. Hypothesis: Q/K die when their weight is spread over many components, because the sum of many independent random masks hardly varies. Test: the planted transformer with C = 160 instead of 20, with and without the A38 term, on the local CPU.

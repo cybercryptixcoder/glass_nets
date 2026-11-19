@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 14:38 ET (clock): GPU busy with 7 runs (s1/s2 for A37, modmul for A40, the A38 development run). A38 is likely to fail its development test (Q/K still dead at step 4,000); a cheap CPU test bed (planted transformer, C = 160) is running to try other designs quickly.
 - Nov 19, 14:21 ET (clock): A39 (6.7× faster gated runs, numbers identical) done. A40 (modular multiplication: the atlas must pick the discrete-log basis; known answer {4, 41, 28, 31, 30} pre-registered) coded and tested. Waiting on GPU runs: s1/s2 for A37 (about 16:20), the A38 development run, then modmul.
 - Nov 19, 14:04 ET (clock):
   - A37 (angle vocabulary for modular arithmetic) is built and tested. Held out: two fresh modadd networks (s1, s2; 100% accurate; key frequencies {43, 30, 18, 19, 38} and {4, 44, 10, 28, 9}) are being decomposed on the GPU (about 3 hours).
