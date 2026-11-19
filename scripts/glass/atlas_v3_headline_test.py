@@ -8,7 +8,7 @@ fails = []
 def check(ok, what):
     print(("PASS " if ok else "FAIL ") + what); ok or fails.append(what)
 a = json.loads((ROOT / "results/glass/atlas/zoo_2nd_argmax_16_10_d4.json").read_text())
-v3 = a["fidelity"]["rule_gated_trusted_v3"]
+v3 = atlas._fid(a)                     # A30: the headline is v4 when the atlas has it
 md = atlas.render(a)
 head = [l for l in md.splitlines() if "of the network's decisions" in l][0]
 check(f"**{100 * v3:.1f}%**" in head, f"certificate leads with v3 {100 * v3:.1f}% ({head[:140]})")
@@ -19,7 +19,8 @@ P = atlas._load_play("zoo_2nd_argmax_16_10"); tgt = P["tgt"]
 x = tgt.X[-200:]
 batch = atlas.judge_decide(tgt.run_gated(P["mods"], x, P["gate"]) if hasattr(tgt, "run_gated") else atlas.run_gated(tgt, P["mods"], x, P["gate"]))
 import atlas as A
-gv3 = A.trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), P["mods"][next(iter(P["mods"]))].U.shape[0], tau=A.GATE_TAU) if "tau" in A.trusted_gate.__code__.co_varnames else None
+gv3 = A.trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), P["mods"][next(iter(P["mods"]))].U.shape[0], tau=A.GATE_TAU,
+                     only=set(map(tuple, P["sel"])) if P.get("sel") is not None else None) if "tau" in A.trusted_gate.__code__.co_varnames else None
 check(gv3 is not None, "trusted_gate takes tau")
 if gv3 is not None:
     ref = atlas.judge_decide(atlas.run_gated(tgt, P["mods"], x, gv3))

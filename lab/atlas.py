@@ -673,6 +673,7 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                                "rule_gated_trusted_v3": float(judge.same(net_tr, gated(mods, xtr, g_rules(trusted=TRUSTED, tau=GATE_TAU, cf=conf_clear))).mean()),
                                "v4_off_recall": offn_tr / n_not_tr if n_not_tr else 0.0}
     atlas["gate_v4"] = {"bar_train": bar, "switched": [f"{k}.{c}" for k, c in sel], "n_trusted": len(cand)}
+    atlas["_sel"] = [list(kc) for kc in sel]                       # A30: for the playground
     for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
             kc = (k, int(x["id"].rsplit(".", 1)[1]))
@@ -747,7 +748,7 @@ def _conf(x):
 def _fid(a):
     """A22: the certificate's rebuilt-network fidelity: v3 (A15 gate, A19 trust), or older versions if absent."""
     f = a["fidelity"]
-    return f.get("rule_gated_trusted_v3", f.get("rule_gated_trusted_v2", f["rule_gated_trusted"]))
+    return f.get("rule_gated_trusted_v4", f.get("rule_gated_trusted_v3", f.get("rule_gated_trusted_v2", f["rule_gated_trusted"])))
 
 
 def findings(a, control=None):
@@ -962,14 +963,18 @@ def render(a, control=None):
          "The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mechanism has a readable trigger "
          "(when it is needed), scored on held-out inputs (its confidence), and an effect (what removing it changes).", "",
          "## Whole-network certificate", "",
-         f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= {TRUSTED} on clear-cut cases; "
-         f"otherwise always on), and switched off only where the trigger gives it under a {100 * GATE_TAU:.0f}% chance of being needed: "
+         (f"- Rebuilt from its mechanisms, each switched by its trigger where that trigger is trusted (confidence >= {TRUSTED} on clear-cut cases) "
+          f"AND passed a decision check on the training half ({len(a['gate_v4']['switched'])} of {a['gate_v4']['n_trusted']} trusted triggers); every other mechanism stays on; "
+          if "rule_gated_trusted_v4" in f else
+          f"- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= {TRUSTED} on clear-cut cases; otherwise always on), ")
+         + f"switched off only where the trigger gives it under a {100 * GATE_TAU:.0f}% chance of being needed: "
          f"keeps **{100 * _fid(a):.1f}%** of the network's decisions"
          + (f"; the task rule alone keeps {100 * tr:.1f}%." if tr is not None else "."),
          (f"- The mechanisms alone (all on, the small leftover residual removed): {100 * f['mechanisms_alone']:.1f}%. " if "mechanisms_alone" in f else "- ")
          + f"Every trigger used (no confidence bar): {100 * f['rule_gated']:.1f}%. Mechanisms switched by their own learned importances: {100 * f['importance_masked']:.1f}%. "
-         f"Earlier gates, for the record: v1 {100 * f['rule_gated_trusted']:.1f}%"
-         + (f", v2 {100 * f['rule_gated_trusted_v2']:.1f}%." if "rule_gated_trusted_v2" in f else "."), "",
+         f"Other gates, for the record: v1 {100 * f['rule_gated_trusted']:.1f}%"
+         + (f", v2 {100 * f['rule_gated_trusted_v2']:.1f}%" if "rule_gated_trusted_v2" in f else "")
+         + (f", v3 (every trusted trigger, no decision check) {100 * f['rule_gated_trusted_v3']:.1f}%" if "rule_gated_trusted_v3" in f else "") + ".", "",
          "## Findings", ""] + findings(a, control)["statements"] + [""] + (
          ["## In plain English", "", a["narrative"]["text"], "", f"*({a['narrative']['note']}"
           + (f"; unresolved: {'; '.join(a['narrative']['violations'])}" if a["narrative"]["violations"] else "") + ")*", ""]
@@ -1001,14 +1006,15 @@ def judge_decide(out):
     return judge.decide(out)[:, 0]
 
 
-def trusted_gate(trees, alive, conf, C, tau=None):
-    """The certificate's gate (A22: pass conf = clear-cut confidences and tau = GATE_TAU for v3)."""
+def trusted_gate(trees, alive, conf, C, tau=None, only=None):
+    """The certificate's gate (A22: conf = clear-cut confidences, tau = GATE_TAU for v3; A30: only = v4's switched set)."""
     am = {k: np.isin(np.arange(C), v).astype(float) for k, v in alive.items()}
 
     def gate(k, names, F, a):
         m = np.zeros((len(F), C))
         for c in alive[k]:
-            m[:, c] = 1.0 if conf[(k, c)] < TRUSTED else _trigger_on(trees[(k, c)], F, tau)
+            use = conf[(k, c)] >= TRUSTED and (only is None or (k, c) in only)
+            m[:, c] = _trigger_on(trees[(k, c)], F, tau) if use else 1.0
         return m * am[k]
     return gate
 
@@ -1022,7 +1028,9 @@ def _load_play(tid):
             X = tgt.X[:16000]; absorb_residual(tgt, mods, P["alive"], X[:len(X) // 2])
         set_residuals(mods, P["alive"])
         C = mods[next(iter(mods))].U.shape[0]
-        _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), C, tau=GATE_TAU if "conf_clear" in P else None), **P}
+        only = set(map(tuple, P["sel"])) if P.get("sel") is not None else None          # A30: v4's switched set
+        _PLAY[tid] = {"tgt": tgt, "mods": mods, "gate": trusted_gate(P["trees"], P["alive"], P.get("conf_clear", P["conf"]), C,
+                                                                     tau=GATE_TAU if "conf_clear" in P else None, only=only), **P}
     return _PLAY[tid]
 
 
@@ -1097,9 +1105,9 @@ if __name__ == "__main__":
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
     (out / f"{a_.target}_d{a_.depth}{SUF}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
-        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "depth": a_.depth, "absorb": bool(a_.absorb)}))
+        "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "sel": a.pop("_sel"), "depth": a_.depth, "absorb": bool(a_.absorb)}))
     if ctrl is not None:
-        for k in ("_trees", "_alive", "_conf", "_conf_clear"):
+        for k in ("_trees", "_alive", "_conf", "_conf_clear", "_sel"):
             ctrl.pop(k, None)
     a["features"] = FEATURES
     (out / f"{a_.target}_d{a_.depth}{SUF}.json").write_text(json.dumps(a, indent=1))
