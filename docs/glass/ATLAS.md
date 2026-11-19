@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 14:56 ET (clock): A38 (CI-masked term, all matrices at once) breaks the planted RNN known answer (7 W_h mechanisms vs 5): heading for a fail. A38c (one matrix at a time) is running on modadd (GPU) and on both planted known answers (local CPU).
 - Nov 19, 14:38 ET (clock): GPU busy with 7 runs (s1/s2 for A37, modmul for A40, the A38 development run). A38 is likely to fail its development test (Q/K still dead at step 4,000); a cheap CPU test bed (planted transformer, C = 160) is running to try other designs quickly.
 - Nov 19, 14:21 ET (clock): A39 (6.7× faster gated runs, numbers identical) done. A40 (modular multiplication: the atlas must pick the discrete-log basis; known answer {4, 41, 28, 31, 30} pre-registered) coded and tested. Waiting on GPU runs: s1/s2 for A37 (about 16:20), the A38 development run, then modmul.
 - Nov 19, 14:04 ET (clock):
@@ -108,7 +109,7 @@ nets), where the existing reader and judge already work.
 
 ## 5. Next (in order)
 
-0. A38: development run of the CI-masked term on modadd_p113; then a held-out test on fresh seeds.
+0. A38c (one matrix at a time): development run on modadd_p113 plus both planted known answers; if all pass, a held-out test on fresh seeds. (A38 all-at-once breaks the planted RNN.)
 1. (Built; verdict pending the s1/s2 decompositions) A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
 2. (Done: A36 + A39, 33 → 4.7 min.) Faster atlas builds.
 2b. A40: decompose modmul_p113 (A35 pipeline) and score its pre-registered known answer.

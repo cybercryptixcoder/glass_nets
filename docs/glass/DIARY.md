@@ -1718,3 +1718,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Planted transformer with the A38 term (C = 20, still running): at step 20,000 its query matrix has no alive mechanism. The reference decomposition has one, so the known answer is at risk there too.
 - Reading: masks = importances, applied everywhere at once, lets several matrices share the work fractionally. That adds mechanisms in some places (W_h) and removes them in others (Q). A38 as entered is heading for a fail; its modadd development run continues so it can be judged by its own test.
 - Running instead: A38c (one matrix at a time, masks = importances, every other matrix exact), on modadd_p113 on the GPU since 14:46. If it passes its development test, it must then also pass both planted known answers before any held-out use.
+
+## Nov 19, 14:56 ET (clock): A38c known-answer checks started
+
+- The planted RNN and planted transformer are being decomposed with A38c (one matrix at a time) on the local CPU, as its must-not-change check: about 45 and 75 min. A38c's modadd development run is on the GPU (since 14:46).
+- Nothing new finished on the GPU since 14:38; s1/s2 are at step 8,000.
