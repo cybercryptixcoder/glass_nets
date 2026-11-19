@@ -1042,3 +1042,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - M4,3: "51% … keeps 99.3%; task rule 98.1%".
   - Next: (s), a synthesis step with no new runs.
 - **01:00 Check-in (trig_01US4…). (s) DONE (synthesis, no runs):** added 'Where the units program leaves Glass Networks' to UNITS_FINDINGS. It sets the plan (§3–§4) against the outcomes, says what to build next (choose targets by ε95; exact-structure route via SPD; unit map as the partial product), and lists decisions D1–D5 for Shreyas. Numbers cited there were checked against U17, U8 and P5 results. Next: (t) SPD feasibility.
+- **01:27 Check-in (trig_01YLT…). (t) step 1, SPD feasibility and prior work.**
+  - **Tool:** Goodfire's library (github.com/goodfire-ai/spd; paper Bushnaq, Braun and Sharkey 2025) clones fine here. The maintained trainer is JAX/multi-GPU and LM-only. The compact reference (`nano_param_decomp/run.py`, 1,212 lines, torch) is written for token-sequence LMs: wandb, a transformer causal-importance function, KL on logits. It cannot run on our RNNs as is.
+  - **Prior work:** I found no SPD or APD decomposition of AlgZoo or of any ReLU RNN.
+  - **Feasibility:** not minutes. A faithful SPD for our RNNs means re-implementing the core method for a recurrent network: rank-1 subcomponents of W_x, W_h and W_o; a causal-importance function per subcomponent; stochastic masks; faithfulness, stochastic-reconstruction and importance-minimality losses. About 150–250 lines.
+  - **Known-answer problem:** M4,3's correct decomposition into PARAMETER components is not defined by ARC's account (signed channels are an activation-level description), so it cannot serve as the known answer. The known answer has to be planted.
+  - **Decision:** a staged build (U19), each stage gated by its own known-answer test:
+    - (a) core SPD on a single linear layer, tested on a planted toy whose ground-truth components are known by construction (one component per sparse feature, as in the SPD paper's toy models);
+    - (b) extension to a ReLU RNN, tested on a hand-built RNN with two planted mechanisms;
+    - (c) only then M8,5.
+  - This is the one plan item never run (U2's decomposition) and costs no money. If Shreyas chooses a different direction under D4, it stops.

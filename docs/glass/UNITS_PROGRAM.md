@@ -243,10 +243,13 @@ raw/filter units; shuffled control in brackets):
       - (r) DONE: U18 passes (19/20), but the admitted parts are mostly the trivial step-1 units.
         - Built T6: unit map v4 records the replaceable parts (share after step 1, joint fidelity, task-rule bar), and the catalog states them in one line.
       - (s) DONE: "Where the units program leaves Glass Networks" in UNITS_FINDINGS. It covers the plan against the outcomes, what to build next, and decisions D1–D5 for Shreyas.
-      - (t) NEXT: the one plan item never run, a parameter decomposition (SPD/APD) on a small AlgZoo RNN.
-        - Step 1, prior-work and tool check: is an SPD implementation installable here (pip / GitHub), and has anyone run it on AlgZoo?
-        - Step 2, only if feasible in minutes: a known-answer test on M4,3 (its signed-channel structure must come out), then M8,5.
-        - Pre-register before any run.
+      - (t) Step 1 DONE: Goodfire's SPD library clones fine but is LM-only (JAX trainer; torch reference for token LMs). No SPD of AlgZoo or of any RNN was found. M4,3 cannot be the known answer (its account is activation-level).
+      - (u) NEXT: U19, a staged SPD build. Each stage is pre-registered with a planted known answer.
+        - (a) Core SPD for one linear layer, \`scripts/glass/units/spd_core.py\`, about 150 lines torch, following Bushnaq et al. 2025: rank-1 subcomponents, causal-importance MLPs, stochastic masks, faithfulness, stochastic-reconstruction and importance-minimality losses.
+          - Known answer: a planted toy y = relu(W x) with x sparse in k features and W = Σ_k (feature-k mechanism). SPD must recover k components, each active only when its feature is on (match ≥ 0.9).
+        - (b) ReLU RNN version, known answer: a hand-built RNN with two planted mechanisms.
+        - (c) M8,5.
+        - Stops if Shreyas picks another D4 direction.
       - (l) NEXT: write the "approximate universality, exact individuality" result up as a short note for Shreyas, only once (k) is in.
       - Check-in chain note: if a check-in arrives whose text lists (e)–(g) as the work, it is the old duplicate. Do §8 NEXT, but do not schedule a successor (DIARY 21:16).
   - (Original U7 spec:)
