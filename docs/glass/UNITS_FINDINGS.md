@@ -135,6 +135,17 @@ accuracy for the standard ones):
 - Even at 32 units, these networks stay far more fragile than the modular nets, and under 90% joint substitution.
 - By the pre-registered rule this was "mixed" (2× more tolerant, against a 3× bar).
 
+**Width and units (U13, U14):**
+- At n = 10, ARC's 2nd-argmax networks with 32 units are about half single-neuron library units: history coverage
+  0.49–0.67, against 0.02–0.22 at 16 units, the size of ARC's challenge network.
+- This is what superposition theory predicts (Elhage et al. 2022): a capacity-starved network blends its units across
+  neurons, and a wider one gives them neurons of their own.
+- The pre-registered joint-substitution bar was not met (+15 points against +20), partly because the narrow networks
+  substitute almost nothing.
+- **Not replicated on argmedian:** wider argmedian networks are far more accurate but no more library-like (coverage
+  ratio 1.6 and 0.8, against a bar of 2). That may be because the library is built from 2nd-argmax quantities; it is
+  open.
+
 **Reading:**
 - An account can be faithful in one of two ways. It captures EXACT structure, as with M4,3 (ε95 0.016, explained
   exactly by ARC) and Tracr count_greater (0.05). Or the network tolerates imprecision, as with the modular networks

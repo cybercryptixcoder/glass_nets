@@ -922,3 +922,16 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **22:25 U14 PRE-REGISTRATION (replicate "wider → more unit-like" on a second task).** Argmedian n = 5 and n = 7 at h = 16 (seeds 0–4; n = 5 are the U8 models) vs h = 32 (ARC, seeds 0–4; available).
   - **Measures:** as U12.
   - **Decision:** "wider networks are more unit-like" replicates if the h = 32 median history+raw coverage ≥ 2× the h = 16 median at BOTH n = 5 and n = 7. Otherwise it does not replicate on argmedian.
+- **22:28 U14 RESULT: does NOT replicate on argmedian** (`results/glass/units/u12_width_argmedian_16-32*.json`, read by hand).
+  - **Known answer:** argmedian 16_5 seeds reproduce U8 (ε95 0.0100 ×4, 0.0079; history coverage 0.16 / 0.02 / 0.05 / 0.03 / 0.01).
+
+    | argmedian | h | accuracy (median) | history+raw coverage (median) | ε95 (median) | joint substitution (median) |
+    |---|---|---|---|---|---|
+    | n = 5 | 16 | 0.972 | 0.37 | 0.010 | 65% |
+    | n = 5 | 32 | 0.995 | 0.60 | 0.016 | 75% |
+    | n = 7 | 16 | 0.700 | 0.24 | 0.005 | 52% |
+    | n = 7 | 32 | 0.968 | 0.20 | 0.005 | 58% |
+
+  - Coverage ratio 1.6 (n = 5) and 0.8 (n = 7), against a bar of ≥ 2 at both → not replicated.
+  - Accuracy rises a lot with width (n = 7: 0.70 → 0.97), but the library does not describe the wider argmedian networks any better.
+  - **Possible reason, not tested:** the library is built from 2nd-argmax quantities (max, 2nd, min). Argmedian needs rank and median quantities; U9 found one soft-rank neuron. So "wider → more unit-like" is shown for 2nd argmax with this library, and is open for argmedian.
