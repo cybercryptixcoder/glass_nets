@@ -194,8 +194,14 @@ raw/filter units; shuffled control in brackets):
 - **NEXT (check-in plan):**
   - **(a) DONE (T4, unit map v3):** reproduces P3; M16,10 has 16/160 substitution-grade neuron-steps, M4,3 8/12.
   - **(b) P4 DONE, NEGATIVE:** exact signed pairs M4,3 50% vs 2–19% in the bigger networks; no exact redundancy. M4,3's exactness does not scale. (Original plan:) search for EXACT structure in bigger networks: exact linear invariants or reductions, like M4,3's symmetry, holding on subsets of neurons (local pairings, exact low-rank subspaces, neurons that are exact linear functions of others). Exact pieces are the only units that can be substituted.
-  - **(c) U7:** the same program on the longest-cycle transformers.
-  - **(d)** Prior-work check on the ε95 finding.
+  - **(c) U7 SPEC (pre-registered; run next):**
+    - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
+    - **Residual units:** per position, the held-out R² of the decision-relevant residual (the top PCs that preserve decisions) regressed on token one-hots plus relational flags (fixed point, 2-cycle, preimage count).
+    - **ε95** on the residual stream.
+    - **Known-answer tests first:** the compiled Tracr transformers. tracr_reverse must be labelled pointer-to-(N−1−i) (as a fixed-position map); tracr_hist must be labelled same-token.
+    - **Control:** shuffled lc networks.
+    - **Decision.** If ≥ 50% of attention mass in the trained lc networks falls on labelled units → attention units are real → extend the unit map to transformers. Otherwise record it.
+  - **(d) DONE:** no quantitative tolerance measure was found; consistent with the qualitative "almost all ablations hurt dramatically".
 - **P2.** What do the unexplained argmedian neurons compute? A data-driven search, not a guessed library: fit each
   one with a sparse combination of pairwise comparisons relu(x_i − x_j) and the order statistics; then test
   sufficiency.

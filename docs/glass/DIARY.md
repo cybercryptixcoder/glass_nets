@@ -635,3 +635,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - No exact compact structure was found beyond M4,3 (7 routes).
   - The unit map v3 reports all of this honestly per unit.
   - Remaining in the plan: U7 (transformers) and the ε95 prior-work check.
+- **20:31 (d) PRIOR-WORK CHECK on ε95.** No published quantitative noise tolerance for AlgZoo networks was found. The closest is qualitative: "almost all ablations hurt the accuracy dramatically - the model makes use of all neurons" (LessWrong comment on ARC's post). ARC frames explanations as mechanistic estimates and measures them by MSE versus compute or by surprise accounting, not by tolerance. The ε95 measurement is therefore new as a number, and consistent with what is known qualitatively. Status: a candidate general finding; it needs replication on more networks before any claim.
+- **20:31 U7 SPECIFICATION written (UNITS_PROGRAM §8).** It runs at the next check-in.
