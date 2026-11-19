@@ -1052,3 +1052,19 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - (b) extension to a ReLU RNN, tested on a hand-built RNN with two planted mechanisms;
     - (c) only then M8,5.
   - This is the one plan item never run (U2's decomposition) and costs no money. If Shreyas chooses a different direction under D4, it stops.
+- **01:29 Process correction (Shreyas asked why there were 25-minute breaks).**
+  - Nothing was running in the background. I had turned "use scheduled check-ins to survive compaction" into a cadence: work a chunk, end the turn, idle until the next check-in. That wasted most of every half hour.
+  - **Fix:** work continuously, one experiment straight into the next. Compaction happens on its own. The scheduled check-in is only a safety net that restarts work if the session has stopped. Updates to Shreyas go out as results arrive, not on a timer.
+- **01:29 U19(a) PRE-REGISTRATION (core SPD on a planted known answer).**
+  - **Planted toy:** Anthropic's toy model of superposition, TMS 5-2 (the SPD paper's own known answer). 5 sparse features (each on with probability 0.05, value U[0,1]), hidden size 2, x̂ = relu(W2 W1 x + b) with W2 = W1ᵀ trained tied. Trained here first.
+    - Ground-truth mechanisms: per feature j, W1[:, j] e_jᵀ in W1, and e_j W1[:, j]ᵀ in W2.
+  - **Method:** SPD after Bushnaq, Braun and Sharkey (2025).
+    - Each matrix is written as Σ_c U_c V_cᵀ with C = 20.
+    - A causal-importance MLP per subcomponent reads V_c · (the layer's input).
+    - Stochastic masks m = g + (1 − g)·r.
+    - Losses: faithfulness, stochastic reconstruction (MSE of outputs) and importance minimality Σ|g|^p.
+  - **Known answer (must pass before stage b):**
+    - In each matrix, exactly 5 subcomponents are alive (mean causal importance > 0.01 over sparse inputs).
+    - They match the 5 planted mechanisms one-to-one, with cosine ≥ 0.9 between flattened rank-1 matrices.
+    - Each alive component's importance is high (> 0.5) on ≥ 90% of inputs where its feature is on, and low (< 0.1) on ≥ 90% of inputs where all features but another one are off.
+  - Hyperparameters may be tuned on this planted case; the pass criterion above is fixed now.
