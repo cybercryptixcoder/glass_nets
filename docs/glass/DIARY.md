@@ -1152,3 +1152,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **"only others needed"** = its coordinate is exactly 0 and some other coordinate is ≥ 0.2;
   - **pass** = exactly 5 alive per matrix, one-to-one, cosine ≥ 0.9, importance > 0.5 on ≥ 90% of needed calls and < 0.1 on ≥ 90% of only-others calls.
   - Run: 40k steps, batch 512. If it fails, I check the saved model for the cause before any further change.
+- **02:28 U19(c) launched early on the free core (original M8,5, 30k steps, batch 512 for compute; the pre-registered method is otherwise unchanged). Its result counts only if (b') passes. The shuffled control runs after it.**

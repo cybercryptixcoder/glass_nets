@@ -12,6 +12,7 @@ import judge
 target = sys.argv[1] if len(sys.argv) > 1 else "zoo_2nd_argmax_8_5"
 variant = sys.argv[2] if len(sys.argv) > 2 else "original"
 steps = int(sys.argv[3]) if len(sys.argv) > 3 else 30000
+batch = int(sys.argv[4]) if len(sys.argv) > 4 else 2048
 meta, W, X = judge.load_target(target, variant, 0)
 N = int(W["seq_len"][0]); H = W["W_h"].shape[0]
 Wx, Wh, Wo = (torch.tensor(W[k].T.copy(), dtype=torch.float64) for k in ("W_x", "W_h", "W_o"))   # as [d_out, d_in]
@@ -36,8 +37,8 @@ def sample(n):
 
 torch.manual_seed(0)
 mods = decompose(forward, {"W_x": Wx, "W_h": Wh, "W_o": Wo}, sample, C=20, steps=steps, coef_min=3e-3, p=1.0,
-                 coef_faith=1.0, lr=1e-3, batch=2048, seed=0)
-tag = f"{target}_{variant}_{steps}"
+                 coef_faith=1.0, lr=1e-3, batch=batch, seed=0)
+tag = f"{target}_{variant}_{steps}_{batch}"
 torch.save({"mods": mods.state_dict(), "SD": SD}, ROOT / f"results/glass/units/u19c_model_{tag}.pt")
 
 xs = torch.tensor(np.asarray(X[8000:16000] if len(X) >= 16000 else X[:8000]), dtype=torch.float64)
