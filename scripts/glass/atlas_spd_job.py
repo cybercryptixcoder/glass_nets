@@ -10,8 +10,7 @@ out, steps, batch, device = Path(args[0]), int(args[1]), int(args[2]), args[3]
 out.mkdir(parents=True, exist_ok=True)
 for spec in args[4:]:
     tid, _, var = spec.partition(":"); var = var or "original"
-    tgt = (atlas.planted_rnn() if tid == "planted_rnn" else atlas.planted_transformer() if tid == "planted_transformer"
-           else atlas.algzoo_transformer(tid, var) if tid.startswith("lc_") else atlas.algzoo_rnn(tid, var))
+    tgt = atlas.make_target(tid, var)
     t0 = time.time()
     mods = atlas.decompose(tgt, steps=steps, batch=batch, device=device, log=2000, coef_min=float(opts.get("coef-min", 3e-3)), recon=opts.get("recon", "mse"), C=int(opts.get("C", 20)))
     tag = ("_" + opts["tag"]) if "tag" in opts else ""

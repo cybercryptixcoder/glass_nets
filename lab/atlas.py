@@ -206,6 +206,116 @@ class TransformerTarget:
             return self.forward(torch.tensor(x), mm).numpy()
 
 
+class ModAddTarget:
+    """A35: the Nanda-style one-layer transformer with an MLP (no LayerNorm, no biases), e.g. modadd_p113.
+    Tokens: a, b, '=' (3 positions). Matrices ([d_out, d_in]): W_E [d, V] on one-hot tokens (every position);
+    per head h: H<h>_W_Q [k, d] (last position), H<h>_W_K / H<h>_W_V [k, d] (every position), H<h>_W_O [d, k]
+    (last position); W_in [mlp, d], W_out [d, mlp], W_U [classes, d] (last position). W_pos is a fixed additive term.
+    Multi-position rows are ordered position-major (row = p*B + b), as in TransformerTarget."""
+    kind = "transformer"
+
+    def __init__(self, name, weights, W_pos, X, task_rule, p, heads, meta):
+        self.name, self.weights, self.W_pos, self.X, self.task_rule, self.p, self.heads, self.meta = name, weights, W_pos, X, task_rule, p, heads, meta
+        self.P, self.V = X.shape[1], X.shape[2]; self.out_scale = 1.0
+        self.matrices = tuple(["W_E"] + [f"H{h}_W_{m}" for h in range(heads) for m in "QKVO"] + ["W_in", "W_out", "W_U"])
+
+    def sample(self, k):
+        a = torch.randint(0, self.p, (k, 2)); t = torch.cat([a, torch.full((k, 1), self.p)], 1)
+        return torch.nn.functional.one_hot(t, self.V).double()
+
+    def _rows(self, name):
+        return self.P if (name == "W_E" or name.endswith("_W_K") or name.endswith("_W_V")) else 1
+
+    def forward(self, x, mm):
+        B, P, V = x.shape
+        e = mm("W_E", x.reshape(B * P, V)).reshape(B, P, -1) + torch.as_tensor(self.W_pos[:P], dtype=x.dtype, device=x.device)
+        a = e.reshape(B * P, -1); last = e[:, -1]; attn = 0
+        for h in range(self.heads):
+            q = mm(f"H{h}_W_Q", last); k = mm(f"H{h}_W_K", a).reshape(B, P, -1); v = mm(f"H{h}_W_V", a).reshape(B, P, -1)
+            att = torch.softmax((q[:, None, :] * k).sum(-1) / math.sqrt(q.shape[-1]), -1)
+            attn = attn + mm(f"H{h}_W_O", (att[:, :, None] * v).sum(1))
+        mid = last + attn
+        res = mid + mm("W_out", torch.relu(mm("W_in", mid)))
+        return mm("W_U", res) / self.out_scale
+
+    def _pm(self, a, B, n):
+        return a.reshape(B, n, -1).transpose(1, 0, 2).reshape(B * n, -1)
+
+    def _bm(self, a, B, n):
+        return a.reshape(n, B, -1).transpose(1, 0, 2).reshape(B * n, -1)
+
+    def _feats(self, x, name):
+        t = x.argmax(-1); B, P = t.shape; a, b = t[:, 0], t[:, 1]; s = (a + b) % self.p
+        n = self._rows(name); pos = np.arange(P)[None].repeat(B, 0) if n == P else np.full((B, 1), P - 1)
+        here = t if n == P else t[:, -1:]
+        f = {"position": pos, "token here": here, "a": np.repeat(a[:, None], n, 1), "b": np.repeat(b[:, None], n, 1),
+             "(a+b) mod 113" if self.p == 113 else f"(a+b) mod {self.p}": np.repeat(s[:, None], n, 1)}
+        for kf in range(1, self.p // 2 + 1):
+            w = 2 * np.pi * kf / self.p
+            f[f"cos({kf}·token here)"] = np.cos(w * here); f[f"sin({kf}·token here)"] = np.sin(w * here)
+            f[f"cos({kf}·(a+b))"] = np.repeat(np.cos(w * s)[:, None], n, 1); f[f"sin({kf}·(a+b))"] = np.repeat(np.sin(w * s)[:, None], n, 1)
+        names = list(f); F = np.stack([np.asarray(v, float) for v in f.values()], -1)        # [B, n, F]
+        return names, self._pm(F.reshape(B * n, -1), B, n)
+
+    def network_calls(self, mods, x):
+        B = len(x); rec = {}
+
+        def mm(name, a):
+            rec[name] = a
+            return mods[name].apply(a)
+        with torch.no_grad():
+            self.forward(torch.tensor(x), mm)
+            out = {}
+            for k in self.matrices:
+                n = self._rows(k); names, F = self._feats(x, k)
+                out[k] = (names, F, self._pm(mods[k].ci_pre(rec[k]).clamp(0, 1).numpy(), B, n))
+        return out
+
+    def run_gated(self, mods, x, gate):
+        B = len(x); U = {k: mods[k].U.detach().numpy() for k in self.matrices}; Vv = {k: mods[k].V.detach().numpy() for k in self.matrices}
+
+        def mm(name, a):
+            a = a.numpy(); n = self._rows(name); names, F = self._feats(x, name)
+            m = self._bm(gate(name, names, F, self._pm(a, B, n)), B, n)
+            out = ((a @ Vv[name].T) * m) @ U[name]
+            R = getattr(mods[name], "_residual", None)
+            return torch.tensor(out + a @ R.T if R is not None else out)
+        with torch.no_grad():
+            return self.forward(torch.tensor(x), mm).numpy()
+
+    def ablated(self, x, name=None, call=None, U=None, V=None):
+        B = len(x)
+
+        def mm(k, a):
+            y = a @ self.weights[k].T
+            if k == name:
+                n = self._rows(k); rows = np.arange(B * n) % n == call
+                y = y - torch.tensor((a.numpy() @ V)[:, None] * U[None] * rows[:, None])
+            return y
+        with torch.no_grad():
+            return self.forward(torch.tensor(x), mm).numpy()
+
+
+def modadd_target(target_id, variant="original", n=16000):
+    import judge
+    meta, W, X = judge.load_target(target_id, variant, 0)
+    H = W["W_Q"].shape[0]; p = W["W_U"].shape[1]
+    Ws = {"W_E": torch.tensor(W["W_E"].T.copy(), dtype=torch.float64)}
+    for h in range(H):
+        for m in "QKV":
+            Ws[f"H{h}_W_{m}"] = torch.tensor(W[f"W_{m}"][h].T.copy(), dtype=torch.float64)
+        Ws[f"H{h}_W_O"] = torch.tensor(W["W_O"][h].T.copy(), dtype=torch.float64)
+    for k in ("W_in", "W_out", "W_U"):
+        Ws[k] = torch.tensor(W[k].T.copy(), dtype=torch.float64)
+    toks = np.asarray(X, dtype=int); toks = toks[np.random.default_rng(0).permutation(len(toks))][:n]     # A32: rows exchangeable
+    Xo = np.eye(W["W_E"].shape[0])[toks]
+    t = ModAddTarget(f"{target_id}|{variant}", Ws, np.asarray(W["W_pos"], dtype=np.float64), Xo,
+                     float(meta["test_acc"]) if variant == "original" else None, p, H, {"target": target_id, "variant": variant})
+    with torch.no_grad():
+        t.out_scale = float(t.forward(torch.tensor(Xo[:4000]), lambda n_, a: a @ Ws[n_].T).std())
+    return t
+
+
 def _lc_features(x):
     """Per (sample, position) features of a functional graph given as one-hot tokens: x_i = f(i)."""
     t = x.argmax(-1); B, P = t.shape; idx = np.arange(P)
@@ -1096,6 +1206,8 @@ def make_target(tid, variant="original"):
         return planted_transformer()
     if tid.startswith("lc_"):
         return algzoo_transformer(tid, variant)
+    if tid.startswith("modadd") or tid.startswith("modmul"):
+        return modadd_target(tid, variant)
     return algzoo_rnn(tid, variant)
 
 
