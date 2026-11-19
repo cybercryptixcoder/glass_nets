@@ -1259,6 +1259,9 @@ if __name__ == "__main__":
     out = LAB.parent / "results" / "glass" / "atlas"; out.mkdir(parents=True, exist_ok=True)
     import pickle
     spd_rel = str(Path(a_.spd).resolve().relative_to(LAB.parent)) if a_.spd else None      # repo-relative path
+    for tr_ in a.get("_trees", {}).values():                    # the training features are only needed to write rules
+        if hasattr(tr_, "_fit_values"):
+            del tr_._fit_values
     (out / f"{a_.target}_d{a_.depth}{SUF}_model.pkl").write_bytes(pickle.dumps({"spd": spd_rel,
         "trees": a.pop("_trees"), "alive": a.pop("_alive"), "conf": a.pop("_conf"), "conf_clear": a.pop("_conf_clear"), "sel": a.pop("_sel"), "depth": a_.depth, "absorb": bool(a_.absorb)}))
     if ctrl is not None:
