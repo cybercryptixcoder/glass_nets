@@ -1253,7 +1253,9 @@ def render(a, control=None):
             if e and e.get("role_changes"):
                 eff += "; flips go " + ", ".join(f"rank {r['from']} → rank {r['to']} ({100 * r['share_of_flips']:.0f}%)" for r in e["role_changes"][:2])
             spec = "-" if not e else ("only where needed" if e["specificity"] >= 1e5 else f"{e['specificity']:.0f}x")
-            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f} | {eff} | {spec} | {x.get('profile_text') or x.get('rw_text', '')} |")
+            lab_ = x["trigger"].get("label")                                       # A41
+            lab_ = f" ({lab_}{', unseen values %.2f' % x['trigger']['value_heldout'] if x['trigger'].get('value_heldout') is not None else ''})" if lab_ else ""
+            L.append(f"| {x['id']} | {100 * x['in_use']:.0f}% | {_expl(x).replace(chr(10), '<br>')} | {_conf(x):.2f}{lab_} | {eff} | {spec} | {x.get('profile_text') or x.get('rw_text', '')} |")
         L.append("")
     return "\n".join(L)
 
