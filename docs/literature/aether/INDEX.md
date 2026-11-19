@@ -432,3 +432,5 @@ arxiv-2211.03540 | Measuring Progress on Scalable Oversight for Large Language M
 arxiv-2210.10860 | Two-Turn Debate Doesn't Help Humans Answer Hard Reading Comprehension Questions | NYU / Stony Brook (Parrish, Bowman et al.) | 2022-10-19 | 2: the null result under human judging — one extra round of counter-arguments changes nothing (74.8 vs 72.8 correct without abstentions), raises incorrect calls under weak abstention incentives; matched no-explanation arm as the control any reader-facing account must beat
 
 arxiv-1805.00899 | AI safety via debate | OpenAI | 2018-05 | relevance 2 — the protocol statement behind both debate entries: designated-liar honest-win-rate control, precommit stake, and one-path-as-evidence-for-the-tree
+
+arxiv-1810.08575 | Supervising strong learners by amplifying weak experts | OpenAI (Christiano, Shlegeris, Amodei) | 2018-10-19 | 2: iterated amplification — a weaker decomposition model supervises a stronger agent and the decomposition is discarded, so the account describes the training scaffold, not the learned computation
