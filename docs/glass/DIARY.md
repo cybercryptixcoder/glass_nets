@@ -1270,3 +1270,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - (2) **Missing feature.** The mechanisms needed at the last position read the token at i − 1, but the planted feature library had only the token at i. So W_O and W_U triggers could not be expressed.
     - Q/K having no alive mechanisms is a property of SPD's importance: random scaling of Q/K barely changes the output here. It is not a failure of the decomposition; it is recorded in the atlas as residual.
   - **Fix of the known answer** (criteria unchanged): P = V = 4, which removes the slack; added features "token at i−1 is v". A fresh run is going locally in float32, and it also serves as the A9 transformer check.
+- **04:42 A3 first results (held-out, never-interpreted networks)** (`python3 scripts/glass/atlas_a3_eval.py`).
+  - **argmedian 8_5: PASSES (i)–(iv).**
+    - Residual 0.023; rebuilt with trusted triggers 0.814 vs task rule 0.705; 69% of non-always mechanisms trusted; median specificity 852×.
+    - 39 mechanisms. Triggers mostly use the step, x_t, and x_t against the previous min, max and the running median.
+  - **argmedian 16_5: FAILS (i) and (ii).**
+    - The W_h residual is 0.28, and the rebuilt network keeps 0.732 against a task rule of 0.984. Even SPD's own importance masks keep only 0.744.
+    - But its findings are strong: 21 mechanisms in two functional groups, against 1 in the shuffled control (v holds). Twelve keep the answer from moving to rank 2, nine from moving to rank 4: they hold the median against both neighbours.
+  - **Reading:** for an accurate (98.4%), fragile network, the decomposition itself is not precise enough at the decision level; the MSE loss and the minimality coefficient trade away what decisions need.
+  - **Alternatives being tried (A14),** on Colab CPUs: KL reconstruction at minimality 3e-3; MSE at 1e-3; KL at 1e-3. Plus the planted RNN with KL as A14's known answer.
