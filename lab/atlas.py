@@ -1335,7 +1335,7 @@ def make_target(tid, variant="original"):
         return planted_transformer()
     if tid.startswith("lc_"):
         return algzoo_transformer(tid, variant)
-    if tid.startswith("modadd") or tid.startswith("modmul"):
+    if tid.startswith(("modadd", "modmul", "modrand")):          # A41: modrand = the memorizing known answer
         return modadd_target(tid, variant)
     return algzoo_rnn(tid, variant)
 
