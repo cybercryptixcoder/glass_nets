@@ -1068,3 +1068,16 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - They match the 5 planted mechanisms one-to-one, with cosine ≥ 0.9 between flattened rank-1 matrices.
     - Each alive component's importance is high (> 0.5) on ≥ 90% of inputs where its feature is on, and low (< 0.1) on ≥ 90% of inputs where all features but another one are off.
   - Hyperparameters may be tuned on this planted case; the pass criterion above is fixed now.
+- **01:52 U19(a) progress (tuning on the planted case, allowed by the pre-registration).**
+  - **First configuration:** my own initialisation, faithfulness 1e3, lr 2e-3. It got stuck: reconstruction about 5e-3 while the ideal decomposition gives 2.5e-4 (computed directly), and 13–19 components alive.
+  - **Fix:** the SPD code release's initialisation (unit-norm random U and V, U scaled by its overlap with W), with the paper's faithfulness 1.0 and lr 1e-3. A 12k-step run then improved but split features across two components each (FAIL).
+  - **A 30k-step run** reached 5 alive per matrix with reconstruction 2.6e-4 by step 15,000; it is still running. A p = 0.9 variant is running in parallel, since splitting a feature costs nothing under p = 1.
+- **01:52 U19(b) PRE-REGISTRATION (written now, run only after (a) passes).**
+  - **Planted RNN:** h_t = relu(W_x x_t + W_h h_{t−1}), out = W_o h_6, with W_x = W_h = W_o = I (5×5). The input is 5 sparse features per step (each on with probability 0.03, value U[0,1]); the network sums each feature over 6 steps.
+  - **Planted mechanisms:** e_j e_jᵀ in each matrix. Each is needed exactly where its input coordinate is non-zero:
+    - W_x: at the steps where feature j arrives;
+    - W_h: at the steps after feature j has arrived;
+    - W_o: if feature j arrived at all.
+  - **SPD:** the same code with W_h's importances computed per step (`spd_core` handles repeated calls), using the configuration that passes (a).
+  - **Pass:** per matrix, exactly 5 alive, a one-to-one match at cosine ≥ 0.9, and importance > 0.5 on ≥ 90% of the calls where the mechanism is needed and < 0.1 on ≥ 90% of the calls where only others are needed.
+  - **Script:** `scripts/glass/units/u19b_rnn.py`.
