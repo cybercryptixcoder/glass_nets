@@ -1630,3 +1630,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - The development table under v4 (`atlas_a3_eval.py --v4`): 6 of 7 pass. The exception is zoo M16,10 seed 0, still on its old default atlas (no ladder decompositions were made for it).
   - `results/glass/atlas/OVERVIEW.md` regenerated.
   - lc_8_6 (the held-out transformer) is decomposing on the GPU.
+- **10:32 Progress since 10:24.**
+  - **A34 (presentation):** always-on mechanisms are grouped into one row per matrix in certificates and the catalog. On 32_10_s2, 39 of 110 mechanisms never switch; W_x alone has 40 near-identical pieces. The catalog headline now reads v4. The catalog test was updated and passes.
+  - **A31 first prototype failed** (`/tmp/a31_proto.py`, not kept). It regressed each mechanism's read on task quantities pooled over steps. The early-step quantities are degenerate (max = 2nd = min at step 1), and held-out R² came out negative or around 0.3. A useful "what it computes" needs per-step fits and a known-answer test first. Parked.
+  - **lc_8_6 (held-out transformer):** at 6k of 30k on the GPU, roughly 40 minutes to go.
