@@ -1768,3 +1768,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - Shreyas asked for a high-level update on everything since last night: where we are, what's achieved, what's left, what works and what doesn't. Sent as a message. Its substance matches ATLAS.md §4 and ATLAS_RESULTS.md.
 - GPU: s1/s2 at step 26,000 (A37 verdict about 17:05); modmul at 18,000; A38d modadd at 6,000 (H0 Q keeps 3 mechanisms). Local: seed-1 planted RNN runs, with and without A38d.
+
+## Nov 19, 16:53 ET (clock): A38d splits the planted RNN at a second seed too: it fails
+
+- Seed 1, planted RNN with A38d: W_h has 7 mechanisms (`atlas_test.py`: 1 FAILED). Without the term, the same seed is at 5/5/5 at step 34,000. Two seeds out of two split with the term and neither without it, so the term is the cause, not chance. A38d fails its must-not-change check and is not used.
+- What A38d did show: forcing "one matrix alone, with its important components only" fixes the attention query (planted transformer: mechanisms alone 1.000). The cost is a pull toward splitting mechanisms in recurrent matrices. A future version would need to keep the first without the second. Not pursued tonight; the A37 and A40 verdicts come first.
+- Answered Shreyas's question about the catalogue: it exists (36 networks, browsable, certified for most small ones). The gap to discovery-grade is mainly explanation depth ("what it computes") and a stricter trust test, more than size.
