@@ -1556,3 +1556,21 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - The main finding is that 25 mechanisms keep the network from returning the max.
   - True and checked, but it says *when* mechanisms act and *what decision* they protect, not *what they compute*.
   - **Next presentation step (A29 idea):** describe each mechanism's input and output directions with the unit-map labels of the neurons it mostly reads and writes, e.g. "reads neuron 4 [≈ relu(max − x_t)], writes neuron 9 [≈ …]". Unit maps exist for the development networks; `lab/unitmap.py` can make them for the others.
+- **07:23 A28 design decisions, fixed before the test set is decomposed.**
+  - **Wide networks (design case zoo_2nd_argmax_32_8_s0, 99.3%):**
+
+    | setting | (i') alone | v3 | v4 | trusted | v4 off_recall |
+    |---|---|---|---|---|---|
+    | C = 20, 1e-4, 30k | 0.974 ✗ | 0.998 | 0.998 | 0.46 ✗ | 0.97 |
+    | **C = 40, 1e-4, 30k** | 1.000 ✓ | 0.975 ✗ | **0.997 ✓** | 0.54 ✓ | 0.85 ✓ |
+    | C = 40, 3e-4, 10k (quick) | 1.000 | 0.945 | 0.991 ✗ | 0.64 | 0.53 |
+    | C = 40, 1e-3, 10k (quick) | 0.636 (not absorbed) | 0.545 | 0.995 | 0.70 | 0.04 |
+
+    Only C = 40 at 1e-4 passes, and only with the decision-checked gate (v4).
+  - **Selection rule:** I tried selecting on v4's training numbers. It overfits: v4 reaches the bar on the training half by construction. On argmedian 16_5 it picked 3e-4, which then falls short held out (v4 0.979 vs 0.984). So selection stays on v3's training numbers (every trusted trigger used), which picked 1e-4 there.
+  - **A28 pre-registration.**
+    - **Test set: seed s2** of the six A18/A27 architectures: zoo_2nd_argmax_16_5_s2, 16_8_s2, 32_5_s2, zoo_argmedian_32_5_s2, zoo_2nd_argmax_32_10_s2 (+ shuffled control), zoo_argmedian_32_7_s2.
+    - **Decomposition:** components C = max(20, ⌈1.25·H⌉), i.e. 20 for 16-wide and 40 for 32-wide; ladder of minimality 1e-3, 3e-4, 1e-4. The 3e-3 default is left out because every ≥ 94%-accurate network so far needed more precision. 30k steps, CPU batch 512, absorption.
+    - **Selection:** the first rung whose training-half mechanisms alone and v3 reach task rule + 2 SE; else the densest.
+    - **Certificate (primary): v4.** (i') alone ≥ task rule; (ii) v4 ≥ task rule; (iii) clear-cut trusted ≥ 0.5; (iv) median specificity ≥ 10; (vi) v4 off_recall ≥ 0.5; (v) for 32_10_s2 the control, on the same rung, has fewer functional mechanisms. v3 reported alongside.
+    - **Pass: (i')–(iv) and (vi) in ≥ 4 of 6, and (v).**

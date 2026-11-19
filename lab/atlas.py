@@ -662,8 +662,16 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
     alone_tr = float(judge.same(net_tr, gated(mods, xtr, all_on)).mean())
     for k in MATS:
         mods[k]._residual = saved[k]
+    offn_tr, n_not_tr = 0, 0                                     # v4's off_recall on the training half (A28)
+    for (k, c) in sel:
+        _, Ftr_k, Gtr_k = tr[k]
+        on = _trigger_on(trees[(k, c)], Ftr_k, GATE_TAU) > 0.5; nn = Gtr_k[:, c] < 0.1
+        offn_tr += int((~on & nn).sum())
+    for (k, c) in cand:
+        n_not_tr += int((tr[k][2][:, c] < 0.1).sum())
     atlas["fidelity_train"] = {"mechanisms_alone": alone_tr,
-                               "rule_gated_trusted_v3": float(judge.same(net_tr, gated(mods, xtr, g_rules(trusted=TRUSTED, tau=GATE_TAU, cf=conf_clear))).mean())}
+                               "rule_gated_trusted_v3": float(judge.same(net_tr, gated(mods, xtr, g_rules(trusted=TRUSTED, tau=GATE_TAU, cf=conf_clear))).mean()),
+                               "v4_off_recall": offn_tr / n_not_tr if n_not_tr else 0.0}
     atlas["gate_v4"] = {"bar_train": bar, "switched": [f"{k}.{c}" for k, c in sel], "n_trusted": len(cand)}
     for k in MATS:
         for x in atlas["matrices"][k]["mechanisms"]:
@@ -701,16 +709,18 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
 
 def build_adaptive(tgt, spd_paths, depth=4, absorb=True):
     """A28 part 2: spd_paths ordered from sparsest to densest decomposition. Builds each in turn and returns the first
-    whose TRAINING-half mechanisms-alone and v3 fidelities both reach task rule + 2 standard errors (a sampling margin);
-    if none does, the densest. The choice never looks at the held-out half."""
+    whose TRAINING-half mechanisms-alone and v3 (every trusted trigger used) fidelities reach task rule + 2 standard
+    errors (a sampling margin); if none does, the densest. The choice never looks at the held-out half. (Selecting on
+    v4's training numbers instead overfits: v4 reaches the bar on the training half by construction; DIARY 07:23.)"""
     log = []
     for p in spd_paths:
         a = build_atlas(tgt, spd_model=p, depth=depth, absorb=absorb)
         tr = tgt.task_rule
         n = len(tgt.X[:16000]) // 2
         bar = (tr + 2 * math.sqrt(tr * (1 - tr) / n)) if tr is not None else 0.99
-        ft = a["fidelity_train"]; ok = ft["mechanisms_alone"] >= bar and ft["rule_gated_trusted_v3"] >= bar
-        log.append({"spd": str(p), "train_alone": ft["mechanisms_alone"], "train_v3": ft["rule_gated_trusted_v3"], "bar": bar, "chosen": False})
+        ft = a["fidelity_train"]; ok = ft["mechanisms_alone"] >= bar and ft["rule_gated_trusted_v3"] >= bar   # all trusted triggers used
+        log.append({"spd": str(p), "train_alone": ft["mechanisms_alone"], "train_v3": ft["rule_gated_trusted_v3"],
+                    "train_v4_off_recall": ft["v4_off_recall"], "bar": bar, "chosen": False})
         if ok or p == spd_paths[-1]:
             log[-1]["chosen"] = True; a["adaptive"] = {"ladder": log, "precise_enough": bool(ok)}
             return a
