@@ -233,7 +233,8 @@ def algzoo_transformer(target_id, variant="original", n=16000):
         for m in "QKV":
             Ws[f"L{l}_W_{m}"] = torch.tensor(W[f"L{l}.W_{m}"][0].T.copy(), dtype=torch.float64)      # [k, d]
         Ws[f"L{l}_W_O"] = torch.tensor(W[f"L{l}.W_O"][0].T.copy(), dtype=torch.float64)                # [d, k]
-    toks = np.asarray(X, dtype=int)[:n]; V = W["W_E"].shape[0]; P = toks.shape[1]
+    toks = np.asarray(X, dtype=int); toks = toks[np.random.default_rng(0).permutation(len(toks))][:n]     # A32: rows exchangeable
+    V = W["W_E"].shape[0]; P = toks.shape[1]
     Xo = np.eye(V)[toks]
 
     def sample(k):

@@ -1615,3 +1615,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **Unit maps for the six A28 networks** (`lab/unitmap.py`, about a minute in total), so their certificates now carry glosses (A20, A29). Read by hand on 32_10_s2: rank-1 directions are spread thin; a mechanism's largest read or write is 8–18% of its weight. "Reads neuron 8 [≈ relu(x_t − 2nd)]" is a hint, not a description. Many trusted rules are time gates. Deeper "what it computes" needs something else, e.g. fitting each mechanism's read V_c·a to task quantities, with a known-answer test first. Noted as A31, not started.
   - **Local background jobs die when a session pauses.** M16,10's control run (local, 24k of 30k) was lost during the pause; restarted. Colab jobs survive. Long jobs belong on Colab.
 - **10:10 Waiting on decompositions.** Transformer ladders (9 runs) are past 24k of 30k on the Colab GPU. It is slow and the connection drops now and then, but the jobs survive. M16,10's control is at 14k of 30k locally. Nothing new to judge yet. Next: the transformer atlases as soon as their ladders finish.
+- **10:19 Transformer ladders, first pass: invalid, because of a translation error (A32).** lc_3_4, lc_4_5 and lc_6_5 load their whole input domain in lexicographic order. So the "training half" was inputs with a small first token and the held-out half those with a large one (lc_4_5: mean first token 0.8 vs 3.2). Triggers, absorption and decision checks were fit on one part of the domain and judged on another; for example lc_4_5 rebuilt 0.889 on its training half and 0.808 held out. Fixed by shuffling the rows at load with a fixed seed. RNN domains are random draws, so they were unaffected (checked: the two halves have equal means).
+- **10:21 Transformer development results with the A28 pipeline unchanged (after A32), certificate v4:**
+
+  | network (task rule) | rung chosen | alone | rebuilt v4 | trusted | specificity | off_recall | result |
+  |---|---|---|---|---|---|---|---|
+  | lc_3_4 (0.902) | 1e-4 (none precise enough) | 1.000 | 0.930 ✓ | 0.70 | 21× | 0.32 ✗ | fail |
+  | lc_4_5 (0.810) | 1e-3 | 1.000 | 0.887 ✓ | 0.61 | 54× | 0.95 | PASS |
+  | lc_6_5 (0.947) | 1e-4 (none precise enough) | 1.000 | 0.958 ✓ | 0.54 | only where needed | 0.74 | PASS |
+
+  - lc_3_4 (3-dimensional, 256 inputs) keeps its decisions only by switching few mechanisms. The others pass with no change to the pipeline.
+  - **Pre-registration (transformer held-out test, A33):** lc_8_6 (8-dimensional, 2 layers, task rule 0.854; never decomposed). Same pipeline as A28: C = 20, ladder 1e-3 / 3e-4 / 1e-4 on the GPU at batch 2048 (like the development transformers), absorption, selection on training-half alone + v3, certificate v4. Criteria (i'), (ii) v4, (iii), (iv), (vi); (v) does not apply, since transformer outputs have no rank roles. **Pass: all five hold on lc_8_6.**
