@@ -11,6 +11,27 @@ A public library of **constructions**: readable programs that stand in for a who
 with a **certificate** that states, with numbers, how true it is and how much of an explanation it is, so that
 anyone can run it, test it and argue with it. A **reader** (an AI) writes them. A fixed **judge** certifies them.
 
+## Addendum, Nov 19, 2026: a second route for fragile networks (approved by Shreyas, 03:11 ET)
+
+**The evidence** (`UNITS_FINDINGS.md`; U17, P3, U19):
+- On fragile networks (AlgZoo above 32 parameters: 5% of decisions flip at about 1% noise), no readable APPROXIMATE
+  construction can be faithful. Rules can replace at most 7% of such a network before it falls below the task rule.
+- An EXACT parameter decomposition is faithful and sparse. On M8,5, SPD finds 11 recurrent mechanisms, about 5 of them
+  used per input, and the masked network beats the task rule.
+
+**So the library gets a second kind of entry**, built by a second route (`ATLAS.md`):
+- A **mechanism atlas**: the network's weights split exactly into mechanisms.
+- For each mechanism, a readable trigger (when it fires) and effect (what it does), each with a held-out confidence
+  and a causal check.
+- The whole rebuilt from rule-switched mechanisms is certified against the task rule.
+
+This does not replace constructions:
+- **Constructions** remain the route for tolerant networks, where short approximate accounts can be faithful (the
+  modular nets).
+- **Atlases** are the route where they cannot.
+
+The judge's existing certificate is unchanged. The atlas has its own certificate, defined in `ATLAS.md` §2.
+
 ## The changes from version 1
 
 | # | Version 1 (what we asked for) | The mistake, and the evidence | Version 2 |

@@ -43,7 +43,7 @@ deleted from here; Shreyas can delete it.)
   four keys.
 - **Lean:** every new piece names the failure it catches or the job it serves (see the plan's table).
 
-## NOW (Nov 19, 03:30 ET): THE MECHANISM ATLAS BUILD. Read `docs/glass/ATLAS.md` (intent, components, status, next steps). Plan change approved by Shreyas at 03:11 ET: build first; experiments only to inform the build.
+## NOW (Nov 19, 03:13 ET): THE MECHANISM ATLAS BUILD. Read `docs/glass/ATLAS.md` (intent, components, status, next steps). Plan change approved by Shreyas at 03:11 ET: build first; experiments only to inform the build.
 
 ## EARLIER (Nov 18, 19:23 ET): THE UNITS PROGRAM (concluded Nov 19; findings in `UNITS_FINDINGS.md`). Unit map built and tested; next P1–P4 in UNITS_PROGRAM §8. Earlier header: THE UNITS PROGRAM, under Shreyas's go-ahead (19:06). Read `docs/glass/UNITS_PROGRAM.md` first; its status table is current.
 

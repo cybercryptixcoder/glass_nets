@@ -1183,3 +1183,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - work continuously; the check-in is only a safety net; update Shreyas when results land.
   - CHECKLIST NOW, the HANDOFF header and the UNITS_PROGRAM header now point to ATLAS.md.
   - Rule-gated construction prototype on M8,5: fidelity 0.895 (depth 5, task + neuron features) against the task rule's 0.879. Importance-masked fidelity is 0.918–0.927, and all alive mechanisms on gives 0.981 (`results/glass/units/rule_construction_*`).
+- **03:13 INTENT.md addendum** (approved plan change): the library gets a second kind of entry, the mechanism atlas, for fragile networks. Constructions remain the route for tolerant ones. I also corrected two hand-typed times I had just written (ATLAS status and CHECKLIST NOW said 03:30; the clock said 03:13). Times are now set from `date`.

@@ -72,7 +72,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
-- Nov 19, 03:30 ET:
+- Nov 19, 03:13 ET (clock):
   - Components 1–3 exist as prototypes.
   - The M8,5 SPD model is saved (`results/glass/units/u19c_model_zoo_2nd_argmax_8_5_original_30000_512.pt`).
   - The shuffled-control SPD for U19(c) is running (`/tmp/u19c_shuf.log`).
