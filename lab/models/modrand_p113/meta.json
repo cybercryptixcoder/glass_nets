@@ -1,0 +1,182 @@
+{
+ "name": "Memorizer: the adder architecture trained on random labels (A41 known answer)",
+ "family": "Algorithmic transformers (trained here)",
+ "forward": "onelayer_transformer",
+ "order": [
+  "W_E",
+  "W_pos",
+  "W_Q",
+  "W_K",
+  "W_V",
+  "W_O",
+  "W_in",
+  "W_out",
+  "W_U"
+ ],
+ "arch": "A one-layer transformer with no LayerNorm and no biases. Vocabulary of 114 tokens; the input is a sequence of 3 tokens; the output is 113 logits read at the last position.\n  x = W_E[tokens] + W_pos                     W_E: 114 x 128, W_pos: 3 x 128\n  attention: 4 heads of size 32, causal       W_Q, W_K, W_V: 4 x 128 x 32 (per head: d_model x d_head), W_O: 4 x 32 x 128\n  x = x + sum_h softmax(q k^T / sqrt(32)) v W_O[h]\n  x = x + relu(x @ W_in) @ W_out              W_in: 128 x 512, W_out: 512 x 128\n  logits = x[last] @ W_U                      W_U: 128 x 113",
+ "context": "Tokens 0..112 stand for the numbers 0..112; token 113 is '='. Every input has the form 'a b =', and output class c stands for the number c.",
+ "tensor_desc": {
+  "W_E": "token embedding (row = token)",
+  "W_pos": "position embedding",
+  "W_Q": "queries [head, d_model, d_head]",
+  "W_K": "keys [head, d_model, d_head]",
+  "W_V": "values [head, d_model, d_head]",
+  "W_O": "head outputs [head, d_head, d_model]",
+  "W_in": "MLP input (column = neuron)",
+  "W_out": "MLP output (row = neuron)",
+  "W_U": "unembedding (column = output class)"
+ },
+ "answer": {
+  "short": "memorized random labels (no rule)",
+  "detail": "Trained on fixed random labels for 40% of all pairs (train accuracy 1.0000); held-out accuracy 0.0077, chance 0.0088. Any mechanism should be case-by-case (A41 known answer K1)."
+ },
+ "source": "Trained in this repo (scripts/glass/train_modadd_gpu.py --labels random), same recipe as the adders.",
+ "perm_groups": [
+  {
+   "size": 512,
+   "members": [
+    [
+     "W_in",
+     1
+    ],
+    [
+     "W_out",
+     0
+    ]
+   ]
+  },
+  {
+   "size": 4,
+   "members": [
+    [
+     "W_Q",
+     0
+    ],
+    [
+     "W_K",
+     0
+    ],
+    [
+     "W_V",
+     0
+    ],
+    [
+     "W_O",
+     0
+    ]
+   ]
+  }
+ ],
+ "input": "token ids, shape [B, 3], e.g. [[a, b, 113]]",
+ "domain": {
+  "axes": [
+   {
+    "range": [
+     0,
+     113
+    ]
+   },
+   {
+    "range": [
+     0,
+     113
+    ]
+   },
+   {
+    "values": [
+     113
+    ]
+   }
+  ],
+  "text": "The network is used on every input [i, j, 113] with i and j each ranging over 0..112 (12,769 inputs)."
+ },
+ "key_frequencies": [
+  35,
+  22,
+  42,
+  52,
+  32,
+  46
+ ],
+ "test_acc": 0.007700338959693909,
+ "id": "modrand_p113",
+ "tensors": [
+  {
+   "name": "W_E",
+   "shape": [
+    114,
+    128
+   ],
+   "desc": "token embedding (row = token)"
+  },
+  {
+   "name": "W_pos",
+   "shape": [
+    3,
+    128
+   ],
+   "desc": "position embedding"
+  },
+  {
+   "name": "W_Q",
+   "shape": [
+    4,
+    128,
+    32
+   ],
+   "desc": "queries [head, d_model, d_head]"
+  },
+  {
+   "name": "W_K",
+   "shape": [
+    4,
+    128,
+    32
+   ],
+   "desc": "keys [head, d_model, d_head]"
+  },
+  {
+   "name": "W_V",
+   "shape": [
+    4,
+    128,
+    32
+   ],
+   "desc": "values [head, d_model, d_head]"
+  },
+  {
+   "name": "W_O",
+   "shape": [
+    4,
+    32,
+    128
+   ],
+   "desc": "head outputs [head, d_head, d_model]"
+  },
+  {
+   "name": "W_in",
+   "shape": [
+    128,
+    512
+   ],
+   "desc": "MLP input (column = neuron)"
+  },
+  {
+   "name": "W_out",
+   "shape": [
+    512,
+    128
+   ],
+   "desc": "MLP output (row = neuron)"
+  },
+  {
+   "name": "W_U",
+   "shape": [
+    128,
+    113
+   ],
+   "desc": "unembedding (column = output class)"
+  }
+ ],
+ "params": 226048
+}
