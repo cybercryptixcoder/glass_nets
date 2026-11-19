@@ -1184,3 +1184,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - CHECKLIST NOW, the HANDOFF header and the UNITS_PROGRAM header now point to ATLAS.md.
   - Rule-gated construction prototype on M8,5: fidelity 0.895 (depth 5, task + neuron features) against the task rule's 0.879. Importance-masked fidelity is 0.918–0.927, and all alive mechanisms on gives 0.981 (`results/glass/units/rule_construction_*`).
 - **03:13 INTENT.md addendum** (approved plan change): the library gets a second kind of entry, the mechanism atlas, for fragile networks. Constructions remain the route for tolerant ones. I also corrected two hand-typed times I had just written (ATLAS status and CHECKLIST NOW said 03:30; the clock said 03:13). Times are now set from `date`.
+- **03:17 A1 DONE: the mechanism atlas v1** (`lab/spd.py`, `lab/atlas.py`; CHANGES A1).
+  - **Known answer:** `scripts/glass/atlas_test.py` failed before (no module) and passes after. On the planted RNN it gives 5 mechanisms per matrix, with readable triggers that are exactly the planted ones ("ON when feature 4 arrives now", "ON when neuron 1 active in the state before this step"), confidence ≥ 0.98 and rule-gated fidelity 0.997.
+  - **M8,5 (design case):**
+    - W_h triggers at ≥ 0.9: 8/11 at depth 3, 9/11 at depth 4. W_o triggers are weak (0.60–0.65).
+    - Gating every mechanism by its rule gives 0.71–0.74 (the weak W_o triggers hurt).
+    - **Trusted policy:** a trigger is used only at confidence ≥ 0.9, the labelling bar used throughout; otherwise the mechanism stays always on. That gives 0.896 / 0.924 / 0.918 at depths 3 / 4 / 5, all above the task rule (0.879).
+    - Depth 4 is fixed from here on, for the held-out networks.
