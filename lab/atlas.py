@@ -216,7 +216,21 @@ class TransformerTarget:
             return self.forward(torch.tensor(x), mm).numpy()
 
 
-MODADD_VOCAB = os.environ.get("ATLAS_MODADD_VOCAB", "angle")      # A37; "cossin" = the A35 vocabulary (comparison only)
+MODADD_VOCAB = os.environ.get("ATLAS_MODADD_VOCAB", "angle")      # A37; "cossin" = the A35 vocabulary (comparison only); "both" = A40
+
+
+def _dlog_table(p):
+    """A40: discrete logarithms mod a prime p, base the smallest primitive root; index p (the '=' token) and 0 get -1."""
+    for g in range(2, p):
+        x, seen = 1, set()
+        for _ in range(p - 1):
+            x = x * g % p; seen.add(x)
+        if len(seen) == p - 1:
+            break
+    L = np.full(p + 1, -1); x = 1
+    for e in range(p - 1):
+        L[x] = e; x = x * g % p
+    return L
 
 
 class ModAddTarget:
@@ -267,11 +281,13 @@ class ModAddTarget:
         return self._fcache[key][1]
 
     def _feats_uncached(self, x, name):
-        t = x.argmax(-1); B, P = t.shape; a, b = t[:, 0], t[:, 1]; s = (a + b) % self.p
+        t = x.argmax(-1); B, P = t.shape; a, b = t[:, 0], t[:, 1]
+        op = getattr(self, "op", "add"); sym = {"add": "+", "sub": "-", "mul": "·"}[op]          # A40
+        s = {"add": a + b, "sub": a - b, "mul": a * b}[op] % self.p; vname = f"(a{sym}b)"
         n = self._rows(name); pos = np.arange(P)[None].repeat(B, 0) if n == P else np.full((B, 1), P - 1)
         here = t if n == P else t[:, -1:]
         f = {"position": pos, "token here": here, "a": np.repeat(a[:, None], n, 1), "b": np.repeat(b[:, None], n, 1),
-             "(a+b) mod 113" if self.p == 113 else f"(a+b) mod {self.p}": np.repeat(s[:, None], n, 1)}
+             f"{vname} mod {self.p}": np.repeat(s[:, None], n, 1)}
         if MODADD_VOCAB == "cossin":                    # the A35 vocabulary, kept only for the pre-registered A37 comparison
             for kf in range(1, self.p // 2 + 1):
                 w = 2 * np.pi * kf / self.p
@@ -283,8 +299,16 @@ class ModAddTarget:
         # one interval of one feature. k = 1 is the raw value itself.
         for kf in range(2, self.p // 2 + 1):
             f[f"{kf}·token here mod {self.p}"] = (kf * here) % self.p
-            for v_, val in (("a", a), ("b", b), ("(a+b)", s)):
+            for v_, val in (("a", a), ("b", b), (vname, s)):
                 f[f"{kf}·{v_} mod {self.p}"] = np.repeat(((kf * val) % self.p)[:, None], n, 1)
+        if MODADD_VOCAB == "both":                      # A40: discrete-log angles too; the atlas chooses the basis
+            L = _dlog_table(self.p)                     # L[v] = log_g v for v = 1..p-1; L[0] = L[p] ('=') = -1 (raw 'log v' only)
+            q = self.p - 1
+            for v_, val in (("token here", here), ("a", a), ("b", b), (vname, s)):
+                lv = L[val] if v_ == "token here" else np.repeat(L[val][:, None], n, 1)
+                f[f"log {v_}"] = lv
+                for kf in range(2, q // 2 + 1):
+                    f[f"{kf}·log {v_} mod {q}"] = np.where(lv >= 0, (kf * lv) % q, np.nan)     # undefined at 0 and '=' (the tree routes it)
         names = list(f); F = np.stack([np.asarray(v, float) for v in f.values()], -1)        # [B, n, F]
         return names, self._pm(F.reshape(B * n, -1), B, n)
 
@@ -340,8 +364,11 @@ def modadd_target(target_id, variant="original", n=16000):
         Ws[k] = torch.tensor(W[k].T.copy(), dtype=torch.float64)
     toks = np.asarray(X, dtype=int); toks = toks[np.random.default_rng(0).permutation(len(toks))][:n]     # A32: rows exchangeable
     Xo = np.eye(W["W_E"].shape[0])[toks]
+    short = meta.get("answer", {}).get("short", "")
+    op = "mul" if "*" in short else "sub" if " - " in short else "add"                       # A40
     t = ModAddTarget(f"{target_id}|{variant}", Ws, np.asarray(W["W_pos"], dtype=np.float64), Xo,
-                     float(meta["test_acc"]) if variant == "original" else None, p, H, {"target": target_id, "variant": variant})
+                     float(meta["test_acc"]) if variant == "original" else None, p, H, {"target": target_id, "variant": variant, "op": op})
+    t.op = op
     with torch.no_grad():
         t.out_scale = float(t.forward(torch.tensor(Xo[:4000]), lambda n_, a: a @ Ws[n_].T).std())
     return t
