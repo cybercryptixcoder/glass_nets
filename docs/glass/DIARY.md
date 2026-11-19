@@ -1153,3 +1153,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **pass** = exactly 5 alive per matrix, one-to-one, cosine ≥ 0.9, importance > 0.5 on ≥ 90% of needed calls and < 0.1 on ≥ 90% of only-others calls.
   - Run: 40k steps, batch 512. If it fails, I check the saved model for the cause before any further change.
 - **02:28 U19(c) launched early on the free core (original M8,5, 30k steps, batch 512 for compute; the pre-registered method is otherwise unchanged). Its result counts only if (b') passes. The shuffled control runs after it.**
+- **03:09 U19(b') RESULT: PASS, cleanly** (`results/glass/units/u19b_rnn_20_40000_3e-3_1.0_1.0_1e-3_512.json`, read by hand).
+  - In all three matrices (W_x, W_h, W_o): exactly 5 alive, one-to-one, cosine 1.00 with the planted mechanisms.
+  - Importance > 0.5 on 100% of needed calls and < 0.1 on 100% of only-others calls.
+  - So the SPD implementation, including per-step importances for the recurrent W_h, recovers planted recurrent mechanisms exactly. The gate for (c) is passed.
+- **03:09 U19(c) RESULT (M8,5, original): NOT a readable decomposition by the pre-registered rule; (iii) fails** (`results/glass/units/u19c_zoo_2nd_argmax_8_5_original_30000_512.json`).
+  - **(i) passes:** decision fidelity with the importance-masked model is 0.901, above the task rule's 0.879. Alive components alone give 0.979.
+  - **(ii) passes:** W_h has 11 alive rank-1 components, and about 4.8 of them are in use per step (half would be 5.5). W_x has 4 alive; W_o has 7 alive, about 4.8 in use.
+  - **(iii) fails:** none of the 11 W_h components' use is predicted by a single task event. The best balanced accuracies are 0.71–0.84, e.g. "not (max was at t−1)" 0.84 and "not (x_t is a new max)" 0.82, against a bar of 0.9.
+  - **Reading:**
+    - SPD finds an EXACT, sparsely used decomposition of M8,5: about 5 of 11 recurrent mechanisms per step, and faithful above the task rule. The unit map could not do that (U17: at most 7% replaceable).
+    - But the mechanisms' usage does not line up with single task events. Event-like structure is partly there (0.84), but not clean.
+    - The shuffled control is running; it decides whether even (i) and (ii) are special to the trained network.
