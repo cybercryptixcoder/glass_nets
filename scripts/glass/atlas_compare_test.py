@@ -20,4 +20,12 @@ s0 = json.loads((ROOT / "results/glass/atlas/zoo_2nd_argmax_16_10_s0_d4.json").r
 r = atlas.compare_atlases(m, s0); print(r["summary"]); print(r["pairs"])
 check(all(p.get("basis") in ("role and trigger variables", "role only") for p in r["pairs"]) and "role only" in r["summary"], "A24: each pair names its basis, and the summary counts both kinds")
 check(all(p["basis"] == "role only" or p["variables"] for p in r["pairs"]), "A24: a 'role and trigger variables' match shares at least one variable")
+# A25: chance control
+if not hasattr(atlas, "recurrence_control"):
+    check(False, "A25: atlas has recurrence_control")
+else:
+    rs = atlas.recurrence_control(a, a, n=100); print("self:", rs)
+    check(rs["p_value"] <= 0.05, f"A25: an atlas against itself recurs beyond chance (P = {rs['p_value']:.3f})")
+    rc = atlas.recurrence_control(a, c, n=100); print("vs control:", rc)
+    check(rc["p_value"] == 1.0, f"A25: M8,5 against its shuffled control: P = 1 (got {rc['p_value']:.3f})")
 print("ALL PASS" if not fails else f"{len(fails)} FAILED"); sys.exit(1 if fails else 0)

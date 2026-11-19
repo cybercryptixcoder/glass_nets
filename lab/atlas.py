@@ -779,6 +779,25 @@ def compare_atlases(a, b, bar=0.5):
                        f"{100 * share_a:.0f}% of A's {len(fa)} functional mechanisms and {100 * share_b:.0f}% of B's {len(fb)} have a counterpart."}
 
 
+def recurrence_control(a, b, n=300, seed=0):
+    """A25: chance control for compare_atlases. B's triggers (main and task-level, with their confidences) are shuffled
+    among B's mechanisms, keeping each mechanism's matrix and role; the role-and-variable matches are recounted n times."""
+    import copy
+    import random
+    real = sum(p["basis"] != "role only" for p in compare_atlases(a, b)["pairs"])
+    mb = [x for m in b["matrices"].values() for x in m["mechanisms"]]
+    trig = [x["trigger"] for x in mb]; rng = random.Random(seed); null = []
+    for _ in range(n):
+        perm = trig[:]; rng.shuffle(perm)
+        bb = copy.deepcopy(b)
+        for x, t in zip([x for m in bb["matrices"].values() for x in m["mechanisms"]], perm):
+            x["trigger"] = t
+        null.append(sum(p["basis"] != "role only" for p in compare_atlases(a, bb)["pairs"]))
+    null = np.array(null)
+    return {"real": real, "null_mean": float(null.mean()), "null_p95": float(np.percentile(null, 95)),
+            "p_value": float((null >= real).mean()), "n": n}
+
+
 def fact_sheet(a):
     """The facts a narrative may use (A13)."""
     meta = a["target"]; L = [f"Network: {meta.get('target')} ({a.get('kind', 'rnn')})."]
