@@ -59,7 +59,7 @@ nets), where the existing reader and judge already work.
 | 1 | SPD engine (any forward function; repeated calls for recurrent weights) | `lab/spd.py` (A1) | Planted RNN, 5 mechanisms per matrix (U19(b')): PASS. TMS 5-2: structure PASS on 2 seeds (U19(a), (a')) | built, tested |
 | 2 | Trigger explainer (shallow trees over task features + neuron states, simplified to 'ON when …' rules; held-out balanced accuracy = confidence) | `lab/atlas.py` (A1) | Planted RNN: PASS (exact planted triggers, confidence ≥ 0.98) | built; M8,5 depth 4: W_x 4/4, W_h 9/11, W_o 2/7 at ≥ 0.9 |
 | 3 | Rule-gated construction + fidelity (trusted policy: a trigger switches its mechanism only at confidence ≥ 0.9, otherwise always on) | `lab/atlas.py` (A1) | Planted RNN: PASS (0.997) | built; M8,5 (design case) depth 4: 0.924 vs task rule 0.879 |
-| 4 | Effect + causal specificity per mechanism | to build | Planted RNN: removing mechanism j changes only feature j's output | not started |
+| 4 | Effect + causal specificity per mechanism (remove it at one call; output change where needed vs not; flip rate; which output it lowers/raises) | `lab/atlas.py` (A2) | Planted RNN: PASS | built; M8,5: W_h specificity median ×75 (min ×16) |
 | 5 | Atlas certificate (JSON + markdown) + catalog card | to build (`lab/atlas.py`, catalog) | End to end in headless Chrome, as T5/T6 | not started |
 | 6 | Transformer support (attention QK/OV matrices as decomposed weights) | to build | Tracr compiled networks (known mechanisms) | not started |
 
@@ -85,7 +85,7 @@ nets), where the existing reader and judge already work.
 ## 5. Next (in order)
 
 1. **A1: DONE.**
-2. **A2:** component 4 (effects and specificity), with the same planted test.
+2. **A2: DONE.**
 3. **A3:** run the atlas on M8,5, argmedian 8_5 and 16_5, and zoo M16,10 seed 0.
    - Improve triggers by trying alternatives until rule-gated fidelity beats the task rule with most mechanisms at
      confidence ≥ 0.9, or record why not.

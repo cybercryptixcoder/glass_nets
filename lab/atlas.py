@@ -155,6 +155,54 @@ def _network_calls(tgt, mods, x):
     return {"W_x": (names, F, np.concatenate(Gx)), "W_h": (names, F, np.concatenate(Gh)), "W_o": (names_o, Fo, Go)}
 
 
+# ------------------------------------------------------------------ effects (A2)
+
+def _net_ablated(tgt, x, name=None, call=None, U=None, V=None):
+    """The network on x, with one rank-1 mechanism U V^T removed from matrix `name` at one call (None: intact)."""
+    W = {k: v.numpy() for k, v in tgt.weights.items()}; h = np.zeros((len(x), tgt.H))
+    cut = lambda a: (a @ V)[:, None] * U[None]          # noqa: E731
+    for t in range(1, tgt.N + 1):
+        ax = x[:, t - 1] @ W["W_x"].T; ah = h @ W["W_h"].T
+        if name == "W_x" and call == t - 1:
+            ax = ax - cut(x[:, t - 1])
+        if name == "W_h" and call == t - 1:
+            ah = ah - cut(h)
+        h = np.maximum(ax + ah, 0)
+    out = h @ W["W_o"].T
+    if name == "W_o":
+        out = out - cut(h)
+    return out / tgt.out_scale
+
+
+def effects(tgt, mods, x, calls, alive):
+    """Per alive mechanism: remove it at one call at a time; compare the output change where it is needed
+    (importance > 0.5) with where it is not (< 0.1)."""
+    import judge
+    base = _net_ablated(tgt, x); B = len(x); res = {}
+    for k in MATRICES:
+        G = calls[k][2]; n_calls = len(G) // B
+        for c in alive[k]:
+            U = mods[k].U[c].detach().numpy(); V = mods[k].V[c].detach().numpy()
+            on_n, off_n, flips, d_on = [], [], [], np.zeros(base.shape[1])
+            for call in range(n_calls):
+                g = G[call * B:(call + 1) * B, c]
+                if not (g > 0.5).any() and not (g < 0.1).any():
+                    continue
+                out = _net_ablated(tgt, x, k, call, U, V); d = out - base; nrm = np.linalg.norm(d, axis=1)
+                on, off = g > 0.5, g < 0.1
+                on_n.append(nrm[on]); off_n.append(nrm[off]); d_on += d[on].sum(0)
+                flips.append(~judge.same(base[on], out[on]) if on.any() else np.zeros(0, bool))
+            on_all = np.concatenate(on_n) if on_n else np.zeros(0); off_all = np.concatenate(off_n) if off_n else np.zeros(0)
+            e_on = float(on_all.mean()) if len(on_all) else 0.0; e_off = float(off_all.mean()) if len(off_all) else 0.0
+            mean_d = d_on / max(len(on_all), 1)
+            res[(k, c)] = {"effect_when_needed": e_on, "effect_when_not_needed": e_off,
+                           "specificity": float(min(e_on / (e_off + 1e-12), 1e6)),
+                           "decision_flip_rate_when_needed": float(np.concatenate(flips).mean()) if flips and len(np.concatenate(flips)) else 0.0,
+                           "mean_output_change_when_needed": mean_d.tolist(),
+                           "most_lowered_class": int(mean_d.argmin()), "most_raised_class": int(mean_d.argmax())}
+    return res
+
+
 # ------------------------------------------------------------------ readable rules
 
 def rule_text(tree, names):
@@ -251,6 +299,10 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
                         ("rule_gated_trusted", g_rules(trusted=TRUSTED))):
         fid[label] = float(judge.same(net, run_gated(tgt, mods, xte, gate)).mean())
     atlas["fidelity"] = fid
+    eff = effects(tgt, mods, xte, te, alive)                     # A2
+    for k in MATRICES:
+        for x in atlas["matrices"][k]["mechanisms"]:
+            x["effect"] = eff[(k, int(x["id"].split(".")[1]))]
     return atlas
 
 
@@ -260,6 +312,10 @@ def summary(a):
         confs = [x["trigger"]["confidence"] for x in m["mechanisms"]]
         lines.append(f"  {k}: {len(confs)} mechanisms, trigger confidence " + (f"min {min(confs):.3f} median {np.median(confs):.3f}, "
                      f"{sum(c >= 0.9 for c in confs)}/{len(confs)} >= 0.9" if confs else "-") + f"; alive-only rel. error {m['alive_only_rel_error']:.3f}")
+        sp = [x["effect"]["specificity"] for x in m["mechanisms"] if "effect" in x]
+        if sp:
+            lines.append(f"      effects: specificity median {np.median(sp):.1f} (min {min(sp):.1f}); decision flips when needed: median "
+                         f"{np.median([x['effect']['decision_flip_rate_when_needed'] for x in m['mechanisms']]):.3f}")
     return "\n".join(lines)
 
 

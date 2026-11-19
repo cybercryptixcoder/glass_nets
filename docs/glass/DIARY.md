@@ -1191,3 +1191,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - Gating every mechanism by its rule gives 0.71–0.74 (the weak W_o triggers hurt).
     - **Trusted policy:** a trigger is used only at confidence ≥ 0.9, the labelling bar used throughout; otherwise the mechanism stays always on. That gives 0.896 / 0.924 / 0.918 at depths 3 / 4 / 5, all above the task rule (0.879).
     - Depth 4 is fixed from here on, for the held-out networks.
+- **03:18 A2 DONE: effects and causal specificity** (CHANGES A2; `atlas_test.py` failed before, passes after).
+  - **Planted RNN:** every mechanism's removal lowers its own feature's output, specificity ≥ 10.
+  - **M8,5:**
+    - Removing a W_h mechanism where its importance says it is needed changes the output 16–266× more than where it is not (median 75×). It flips 6–41% of decisions.
+    - Each mechanism gets a readable effect, e.g. W_h.4 "fires when neuron 7 was active and the max is at most 1 step old; removing it lowers position 4 and raises position 1" (confidence 0.99, specificity 266×).
