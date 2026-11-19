@@ -55,5 +55,6 @@ All bars were fixed before the networks they judge were run. The task-rule bar m
 
 - Transformers: the known answer passes, but real AlgZoo transformers decompose poorly with the default settings (rebuilt 53–77% vs task rules 81–95%). The A26 settings have not been tried on them yet.
 - At the precise settings almost every component the decomposition offers is used (57 of 60 in argmedian 16_5), so mechanism counts partly reflect that budget.
+- With absorption, criterion (i') becomes close to automatic whenever the alive mechanisms' input directions span the matrix's inputs: least squares can then make their sum exact on the data. Under A26 the informative criteria are (ii), the triggers keeping the decisions, and (vi), the triggers switching off most not-needed activity. Absorption does not make those easier: at minimality 1e-3 it made (ii) worse (0.876 → 0.723 on argmedian 16_5).
 - Triggers for output-layer mechanisms are often not trusted: their importance is graded, not on/off.
 - Findings are stated in the task's terms (ranks, steps, values), but many triggers still name other neurons. A unit-map gloss is shown where one exists.
