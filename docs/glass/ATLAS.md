@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 16:58 ET (clock): A38, A38c and A38d all fail (A38d fixes the planted query but splits a planted RNN mechanism at two seeds). The attention Q/K problem stays open. s1/s2 at step 28,000 (A37 verdict about 17:10); modmul at 20,000.
 - Nov 19, 16:08 ET (clock): A38d planted transformer keeps its Q mechanism at step 8,000 (A38c lost it). Waiting on the planted results (about 17:00), then the s1/s2 verdict for A37 (about 17:00), modmul (A40, about 18:00) and the A38d modadd run.
 - Nov 19, 15:51 ET (clock): A38/A38c had a translation error (leaky negative masks let dead components rebuild Q; found with the planted transformer, which shows the same Q failure as modadd). Fix A38d: mask value = clamped importance, leaky gradient only. The planted transformer is now the fast test bed (about 50 min on CPU).
 - Nov 19, 15:32 ET (clock): fresh adders s3/s4 trained and reserved (100% accurate). A38c's planted RNN shows 5/5/5 at step 32,000 (A38 gave 7 in W_h). GPU: s1/s2 about halfway.
@@ -113,7 +114,7 @@ nets), where the existing reader and judge already work.
 
 ## 5. Next (in order)
 
-0. A38c (one matrix at a time): development run on modadd_p113 plus both planted known answers; if all pass, a held-out test on fresh seeds. (A38 all-at-once breaks the planted RNN.)
+0. Attention Q/K kept by the decomposition: A38/A38c/A38d failed (see CHANGES). Open; the planted transformer (Q alone 0.919 in the reference) and the planted RNN together are the fast test bed for the next design.
 1. (Built; verdict pending the s1/s2 decompositions) A37: add Fourier features of each input token (cos/sin of k·a and k·b at every position) to the modular-arithmetic vocabulary; judge it on a fresh network with a pre-registered known answer, never on modadd_p113 itself.
 2. (Done: A36 + A39, 33 → 4.7 min.) Faster atlas builds.
 2b. A40: decompose modmul_p113 (A35 pipeline) and score its pre-registered known answer.

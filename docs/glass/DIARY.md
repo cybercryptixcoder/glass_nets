@@ -1774,3 +1774,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Seed 1, planted RNN with A38d: W_h has 7 mechanisms (`atlas_test.py`: 1 FAILED). Without the term, the same seed is at 5/5/5 at step 34,000. Two seeds out of two split with the term and neither without it, so the term is the cause, not chance. A38d fails its must-not-change check and is not used.
 - What A38d did show: forcing "one matrix alone, with its important components only" fixes the attention query (planted transformer: mechanisms alone 1.000). The cost is a pull toward splitting mechanisms in recurrent matrices. A future version would need to keep the first without the second. Not pursued tonight; the A37 and A40 verdicts come first.
 - Answered Shreyas's question about the catalogue: it exists (36 networks, browsable, certified for most small ones). The gap to discovery-grade is mainly explanation depth ("what it computes") and a stricter trust test, more than size.
+
+## Nov 19, 16:58 ET (clock): status refreshed; A37 verdict in about 10 minutes
