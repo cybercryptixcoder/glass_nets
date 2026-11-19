@@ -1248,3 +1248,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **04:00 A10 DONE: atlas playground** (CHANGES A10). In the catalog, "Random input" runs one input through the network and through its rebuilt-from-mechanisms version. A per-step table shows which mechanisms the triggers switch on, next to which the network's importances say are needed, plus both answers. Screenshot checked by eye.
   - **Noted for improvement:** depth-4 triggers with many paths are long to read (e.g. W_h.0 has 6 paths). Next readability step: show the main path, the one covering most ON cases, with "+ N rarer cases" folded away.
 - **04:02 Readability:** each trigger now shows its main paths, those covering ≥ 80% of its ON cases, each with its share, and folds the rest ("+ N rarer cases, x%"). The full rule is kept in `rule_full`. Example: W_h.4 "ON when neuron 7 active in the state before this step AND steps since the max <= 1.5 (96% of its ON cases)". Tests pass; fidelity unchanged.
+- **04:05 Colab rebalanced.**
+  - **Problem:** at 12 CPU processes, M16,10 reached only 4k of 30k steps in about 40 min (about 4.5 h to finish). The GPU process was also starved of CPU: the planted transformer ran at only 5.5 steps/s.
+  - **Fix:**
+    - Removed the M16,10 and lc CPU jobs.
+    - Six CPU jobs remain (argmedian 8_5, 8_7, 16_5, 16_7, M8,8, shuffled argmedian 16_5; float64, batch 512).
+    - Three GPU queues: (1) planted transformer then lc_3_4; (2) M16,10 then shuffled M16,10; (3) lc_6_5 then zoo M16,10 seed 0. Queues 2 and 3 run float32 at batch 2048.
+  - **Config note, recorded before results:** the M16,10 and lc decompositions use batch 2048 (the GPU's cheap batch) instead of the pre-registered 512. Same steps (30k); only the batch differs. Larger batches only lower gradient noise.
