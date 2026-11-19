@@ -1165,3 +1165,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - SPD finds an EXACT, sparsely used decomposition of M8,5: about 5 of 11 recurrent mechanisms per step, and faithful above the task rule. The unit map could not do that (U17: at most 7% replaceable).
     - But the mechanisms' usage does not line up with single task events. Event-like structure is partly there (0.84), but not clean.
     - The shuffled control is running; it decides whether even (i) and (ii) are special to the trained network.
+- **03:10 Direction from Shreyas: build, not more reports.** He wants a working system that does real, discovery-grade interpretability on networks larger than we have managed so far, reached by trying many ways to build it and testing each, not by more experiments for their own sake.
+- **03:10 BUILD DECISION, from the evidence: a "decompose → explain → certify" pipeline**, the new constructor route for fragile networks.
+  - **Why this and not more reader work:** U17 and P3 show approximate accounts cannot be faithful there. U19(c) shows an exact, sparsely used decomposition IS faithful on M8,5 (0.90 against a task rule of 0.88). The missing piece is a readable trigger for each mechanism.
+  - **Components:**
+    - (1) SPD engine: `spd_core`, validated on the planted RNN.
+    - (2) Trigger explainer: for each mechanism, a readable rule for when its importance is high. Learned (shallow rules over interpretable features) and/or written by the reader, scored on held-out inputs.
+    - (3) Construction plus certificate: the network as Σ mechanisms, with importance functions REPLACED by the readable rules. Measured: fidelity against the task rule; per-mechanism confidence (rule accuracy); an ablation specificity check (removing mechanism c changes decisions mainly where its rule says it is on).
+    - (4) Catalog integration.
+  - Each component gets a known-answer test before use (the planted RNN first).
