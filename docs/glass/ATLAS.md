@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 16:08 ET (clock): A38d planted transformer keeps its Q mechanism at step 8,000 (A38c lost it). Waiting on the planted results (about 17:00), then the s1/s2 verdict for A37 (about 17:00), modmul (A40, about 18:00) and the A38d modadd run.
 - Nov 19, 15:51 ET (clock): A38/A38c had a translation error (leaky negative masks let dead components rebuild Q; found with the planted transformer, which shows the same Q failure as modadd). Fix A38d: mask value = clamped importance, leaky gradient only. The planted transformer is now the fast test bed (about 50 min on CPU).
 - Nov 19, 15:32 ET (clock): fresh adders s3/s4 trained and reserved (100% accurate). A38c's planted RNN shows 5/5/5 at step 32,000 (A38 gave 7 in W_h). GPU: s1/s2 about halfway.
 - Nov 19, 15:14 ET (clock): A38c's modadd run keeps query/key mechanisms at step 2,000 (all earlier runs had none); its planted checks are running. A38 keeps the planted transformer passing but still breaks the planted RNN.

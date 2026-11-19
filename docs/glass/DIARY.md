@@ -1744,3 +1744,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Cause, reproduced: in the A38c decomposition, the CI-masked Q-only output matches the network (MSE 2.5e-7) even though every Q importance is ≤ 0. Two components have pre-activations of −554 and −774. The mask function is leaky below 0 (as in SPD's stochastic masks), so those components get masks of −5.5 and −7.7 and rebuild the query with negative masks. The atlas clamps importances to [0, 1], so it sees them as dead.
 - This is a translation error: the intent was "masks = the importances the atlas uses", which lie in [0, 1]. Fix (A38d): the CI-masked term uses clamp(z, 0, 1) as the mask value, keeping the leaky gradient (straight-through). Then the term can only be met by components the atlas will count as alive.
 - Plan: stop the A38 and A38c modadd runs (both measure the faulty version); rerun the planted transformer (the fast check) with A38d locally; if it keeps Q with mechanisms alone at 1.0 and the planted RNN still passes, run modadd.
+
+## Nov 19, 16:08 ET (clock): A38d running everywhere; no verdicts yet
+
+- A38d (clamped mask values) planted transformer, step 8,000 of 30,000: Q keeps 1 alive mechanism (A38c had none by then). Planted RNN at step 8,000 (still settling, as A38c did before reaching 5/5/5).
+- GPU: A38d modadd run started 15:53, replacing the faulty A38/A38c runs. s1/s2 (A37) at step ~20,000; modmul (A40) at ~12,000.
