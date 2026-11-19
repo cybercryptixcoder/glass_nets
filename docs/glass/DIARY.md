@@ -1235,3 +1235,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - Trained: 22 mechanisms, 12 trusted triggers (12 use task variables), 13 mechanisms in rank-based functional groups.
     - Control: 20 mechanisms, 11 trusted (9 using task variables), **0** in functional groups.
   - **Reading:** trigger vocabulary is not distinctive, since shuffled networks also gate on x_t and ranks. Functional roles in task terms are what separate a trained network from its control. Findings must lean on that.
+- **03:57 Feature set frozen for A3 (feature set v2).** Two running-median features were added for the argmedian networks: x_t minus the running median, and the distance of x_t's rank from the middle. M8,5 is unchanged in substance (trusted fidelity 0.925; 11 trusted triggers; 13 vs 0 in functional groups against the control). All atlas tests pass.
+- **03:57 A3 PRE-REGISTRATION (held-out networks; feature set v2, depth 4, trusted bar 0.9, SPD 30k steps at batch 512).**
+  - **Networks:** argmedian 8_5, 8_7, 16_5, 16_7; ARC's M16,10; zoo M16,10 seed 0; M8,8. Controls exist for argmedian 16_5 and M16,10.
+  - **Per network:**
+    - (i) exact: alive-only relative error ≤ 0.05 in every matrix;
+    - (ii) rule-gated (trusted) fidelity ≥ the task rule;
+    - (iii) ≥ 50% of the non-always mechanisms have a trusted trigger;
+    - (iv) median specificity ≥ 10;
+    - (v) where a control exists: more mechanisms in functional groups than the control.
+  - **Decision:** "the atlas works on networks it was not designed on" if (i)–(iv) hold in ≥ 4 of the 7, and (v) holds in both controlled pairs. If not, the failing criterion says which component to improve next, and I try alternatives there.

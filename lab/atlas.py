@@ -60,7 +60,9 @@ def _scalar_seq_features(x, t):
     mn_p = prev.min(1) if t > 1 else np.full(B, np.nan)
     rank = (upto > cur[:, None]).sum(1) + 1
     amax = upto.argmax(1); a2 = np.argsort(upto, 1)[:, -2] if t > 1 else np.zeros(B, int); amin = upto.argmin(1)
+    med = np.median(upto, 1)
     f = {"step t": np.full(B, t), "x_t": cur, "rank of x_t so far (1 = largest)": rank,
+         "x_t minus the running median": cur - med, "distance of x_t's rank from the middle": np.abs(rank - (t + 1) / 2),
          "x_t minus the previous max": np.nan_to_num(cur - mx_p), "x_t minus the previous 2nd": np.nan_to_num(cur - s2_p),
          "x_t minus the previous min": np.nan_to_num(cur - mn_p),
          "steps since the max": t - 1 - amax, "steps since the 2nd": np.where(t > 1, t - 1 - a2, -1), "steps since the min": t - 1 - amin}
