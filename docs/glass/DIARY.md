@@ -1838,3 +1838,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Next: pre-register that as A42 (the frequency known answer counted over rule-labelled mechanisms, two-basis vocabulary, at least 20 such triggers per network) and judge it on networks never used. Fresh modmul seed 1 (to train now), and the reserved adders s3 and s4. A38's held-out test will need new seeds when it is ready; they're cheap.
 
 ## Nov 19, 18:14 ET (clock): training fresh modmul seed 1 for A42; pre-registration follows once its key frequencies are computed (before any decomposition)
+
+## Nov 19, 18:17 ET (clock): A42 pre-registered
+
+- The rule: the frequency known answer, counted only over triggers that A41 labels "rule". Two-basis vocabulary, so the atlas picks the basis. At least 20 such triggers per network. PASS only if all three networks pass.
+- Networks, never used for design:
+  - modmul_p113_s1, trained just now. 100% accurate; log-order key frequencies {19, 14, 20, 56, 38}, share 0.96 (number line 0.10). Must reach ≥ 80% on log-basis keys.
+  - The reserved adders s3 {14, 13, 51, 19, 11} and s4 {37, 8, 43, 52, 34}. Must reach ≥ 80% on number-line keys.
+- Decompositions (A35 pipeline) go on the GPU now: 6 runs.
