@@ -1524,3 +1524,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **C = 40:** alone 1.000 ✓, v3 0.975 ✗ (v4 0.997 ✓, off_recall 0.85), trusted 0.54 ✓. But all 120 components are alive again, so it is still saturated.
   - Reading: more components fix (i') and (iii); at 1e-4 the decomposition fills whatever room it gets. Next on the design case: C = 40 and 64 at minimality 1e-3 and 3e-4. M16,10 at 3e-4 completes its ladder.
 - **06:58 Colab incident:** several `colab exec` launches hung, the CLI pruned and reattached the session, and every running job was killed, including lc_4_5/lc_6_5 at 1e-4 (12k and 8k of 30k). Nothing finished was lost (outputs are files). Everything was relaunched: the design-case ladder (four runs), M16,10 at 3e-4, and lc_4_5/lc_6_5 at 1e-4 on the GPU.
+- **07:00 Development networks at minimality 1e-4 (absorbed), against their default-setting atlases:**
+
+  | network (task rule) | default: v3 / trusted | 1e-4: v3 / trusted | mechanisms (switched) at 1e-4 |
+  |---|---|---|---|
+  | argmedian 16_5 (0.984) | 0.818 ✗ / 0.70 | 0.989 ✓ / 0.64 ✓ | 57 (44) |
+  | argmedian 16_7 (0.712) | 0.825 ✓ / 0.58 | 0.971 ✓ / 0.73 ✓ | 59 (33) |
+  | M8,5 (0.879) | 0.950 ✓ / 0.74 | 0.995 ✓ / 0.74 ✓ | 54 (27) |
+  | M16,10 (0.953) | 0.939 ✗ / 0.51 | 0.996 ✓ / 0.48 ✗ | 60 (33) |
+  | M8,8 (0.459) | 0.835 ✓ / 0.62 | 0.985 ✓ / 0.35 ✗ | 53 (17) |
+
+  - 1e-4 always helps precision but can cost trust: in M8,8 and M16,10 most extra mechanisms are always on, and the switched ones are harder to predict.
+  - So no single minimality wins. This supports the adaptive design for A28: per network, take the sparsest setting that is precise enough on the training half.
