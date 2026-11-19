@@ -718,3 +718,4 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - n = 2 explained-approximate networks;
     - architectures differ;
     - task margins differ: modular arithmetic has 113 classes with large logit gaps.
+- **21:08 (f) DONE:** `docs/glass/UNITS_FINDINGS.md` consolidates every units-program result, with numbers, controls, prior work (including Josh Snider's Oct 26 LessWrong post and Arora et al. 2018) and limits. Next: (g) the catalog integration.

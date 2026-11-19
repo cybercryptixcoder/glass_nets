@@ -206,7 +206,9 @@ raw/filter units; shuffled control in brackets):
       - Relational share beats shuffled by ≥ 0.2 in only 2 of 4 networks.
       - Residual ε95 0.8–5% (Tracr 6–10%).
       - The U7 line is closed.
-    - (f) Write `docs/glass/UNITS_FINDINGS.md`: the consolidated findings with numbers, prior-work context and limits, for Shreyas.
+    - (f) DONE: `docs/glass/UNITS_FINDINGS.md`.
+      - Includes P5: ε95 across families. Modular nets 0.79 vs AlgZoo median 0.010.
+      - Two routes to an explanation: exact structure, or tolerance.
     - (g) Put the RNN unit maps in the catalog as per-part-confidence entries (a CHANGES entry first, then an end-to-end test in headless Chrome as with the round-1 catalog).
   - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
