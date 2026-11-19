@@ -719,3 +719,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - architectures differ;
     - task margins differ: modular arithmetic has 113 classes with large logit gaps.
 - **21:08 (f) DONE:** `docs/glass/UNITS_FINDINGS.md` consolidates every units-program result, with numbers, controls, prior work (including Josh Snider's Oct 26 LessWrong post and Arora et al. 2018) and limits. Next: (g) the catalog integration.
+- **21:09 (g) started: catalog integration.** First, regenerating the unit maps that were still v2 (eight networks) with the current v3, so every map carries ε95 and per-unit relative error. This is not a code change, just a rerun of `lab/unitmap.py`. M16,10 and M4,3 are already v3.
+- **21:12 Unit maps regenerated with v3** (`/tmp/unitmap_v3.log`, maps in `results/glass/units/maps/`). ε95 reproduces P3 for every network: M2,2 0.158, M4,4 0.005, M8,5 0.013, M8,8 0.001, argmedian 8_5 0.004, 16_5 0.010, 16_7 0.005; new: argmedian 8_7 0.006.
+  - Substitution-grade neuron-steps: M2,2 3/4, M4,4 4/16, M8,5 8/40, M8,8 8/64, argmedian 8_5 8/40, 8_7 8/56, 16_5 22/80, 16_7 16/112.
+- **21:12 (g) DONE: the catalog shows unit maps** (CHANGES T5).
+  - `scripts/glass/units/t5_catalog_test.py` failed before the change (13 FAILs) and passes after (ALL PASS):
+    - the designed case argmedian 16_5;
+    - held-out cases argmedian 16_7 and M8,8;
+    - M16,10;
+    - existing cards unchanged;
+    - no JavaScript errors.
+  - Screenshots of argmedian 16_5 and M16,10 checked by eye.
+  - **Noticed, not changed (T5 must not change verdicts):** the AlgZoo cards still carry round-1 "complete" badges from the old judge. Round 2 showed such constructions can be copies (J3, open). The Parts section now sits next to them and shows how little of each network is actually explained.

@@ -2,7 +2,9 @@
 runs the real network and the construction side by side. Job: make every certified construction something a person
 can inspect and test, not just a report (Shreyas, Nov 17). Served by server.py at /catalog.
 
-  entries()                 one card per network that has a judged construction (the best run)
+  entries()                 one card per network that has a judged construction (the best run), plus its unit map
+                            (per-part confidence, CHANGES T5); a network with a unit map but no construction gets a
+                            card of its own ("unit map only")
   play(target, run, cfg)    one input through both; optionally an interchange (a variable taken from another input)
 """
 import ast, json
@@ -12,6 +14,7 @@ import numpy as np
 
 LAB = Path(__file__).resolve().parent
 CONS = LAB / "constructions"
+MAPS = LAB.parent / "results" / "glass" / "units" / "maps"     # unit maps written by lab/unitmap.py (read only here)
 import judge   # noqa: E402
 import nets    # noqa: E402
 
@@ -55,6 +58,21 @@ def _runs(tid):
     return out
 
 
+def _unit_map(tid):
+    """The network's unit map as written by lab/unitmap.py, or None. Nothing is recomputed."""
+    f = MAPS / f"{tid}.json"
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text()); m, c = d["map"], d["control"]
+    return {"eps95": m.get("eps95"), "coverage_history": m["coverage_history"], "coverage_raw": m["coverage_raw"],
+            "control_history": c["coverage_history"], "control_raw": c["coverage_raw"],
+            "per_unit": [{"neuron": int(j), "label": lab} for j, lab in sorted(m["per_unit"].items(), key=lambda kv: int(kv[0]))],
+            "cells": [{k: x.get(k) for k in ("t", "unit", "label", "fit", "sufficiency", "importance", "rel_error", "substitution_grade")}
+                      for x in m["cells"]],
+            "substitution_grade": sum(1 for x in m["cells"] if x.get("substitution_grade")),
+            "file": f"results/glass/units/maps/{tid}.md"}
+
+
 def entries():
     cards = []
     for tdir in sorted(CONS.iterdir()):
@@ -79,8 +97,20 @@ def entries():
             "cost": run.get("cost"), "steps": len(run.get("steps", [])),
             "written": "without access to the network (prior-only control: told the task, one submission)" if not run.get("config", {}).get("weights", True)
                        else ("by a blinded reader with the weights" if not run.get("config", {}).get("told") else "by a reader told the task, with the weights"),
+            "unit_map": _unit_map(tdir.name),
         })
-    order = {"complete": 0, "verified": 1, "not verified": 2}
+    have = {c["target"] for c in cards}
+    for f in sorted(MAPS.glob("*.json")) if MAPS.exists() else []:
+        tid = f.stem
+        if tid in have or not (LAB / "models" / tid / "meta.json").exists():
+            continue
+        m = _meta(tid)
+        cards.append({"target": tid, "run": None, "name": m.get("name", tid), "family": m.get("family", ""),
+                      "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
+                      "playable": False, "runs": 0, "status": "unit map only", "stages": "–", "behaviour": None,
+                      "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
+                      "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid)})
+    order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3}
     return sorted(cards, key=lambda c: (order[c["status"]], c["params"] or 0))
 
 

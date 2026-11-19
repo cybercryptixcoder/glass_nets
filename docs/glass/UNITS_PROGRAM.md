@@ -209,7 +209,10 @@ raw/filter units; shuffled control in brackets):
     - (f) DONE: `docs/glass/UNITS_FINDINGS.md`.
       - Includes P5: ε95 across families. Modular nets 0.79 vs AlgZoo median 0.010.
       - Two routes to an explanation: exact structure, or tolerance.
-    - (g) Put the RNN unit maps in the catalog as per-part-confidence entries (a CHANGES entry first, then an end-to-end test in headless Chrome as with the round-1 catalog).
+    - (g) DONE (CHANGES T5): the catalog shows each network's unit map.
+      - The four argmedian networks now have cards ("unit map only").
+      - Every AlgZoo RNN card has a Parts section: coverage vs control, ε95, per-neuron labels, and per neuron-step fit, sufficiency, importance, relative error and substitution grade.
+      - All maps regenerated with v3 first.
   - (Original U7 spec:)
     - **Attention units:** per head and query position, the share of attention mass that falls on each library unit's target set. Library: pointer j = x_i; inverse pointer {j: x_j = i}; same token {j: x_j = x_i}; self; a fixed position; uniform. A unit is labelled when it carries ≥ 90% of the mass on average.
     - **Residual units:** per position, the held-out R² of the decision-relevant residual (the top PCs that preserve decisions) regressed on token one-hots plus relational flags (fixed point, 2-cycle, preimage count).

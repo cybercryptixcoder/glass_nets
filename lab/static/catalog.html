@@ -25,7 +25,7 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 .entry:hover{background:var(--field)}.entry.sel{background:var(--yellow)}
 .entry .n{font-weight:800}.entry .m{font-family:var(--mono);font-size:11px;opacity:.8}
 .badge{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 6px;border:var(--thin);margin-left:6px}
-.badge.complete{background:var(--green)}.badge.verified{background:var(--blue)}.badge.notv{background:var(--grey)}
+.badge.complete{background:var(--green)}.badge.verified{background:var(--blue)}.badge.notv{background:var(--grey)}.badge.umap{background:var(--field)}
 .bar{height:8px;border:1px solid var(--ink);background:var(--field);margin-top:4px}.bar>i{display:block;height:100%;background:var(--teal)}
 table{border-collapse:collapse;width:100%}td,th{border:1px solid rgba(28,26,23,.3);padding:5px 8px;text-align:left;font-size:13px}
 th{background:var(--field);font-weight:600}.mono{font-family:var(--mono);font-size:12px}
@@ -55,9 +55,9 @@ let E = [], cur = null;
 async function load() {
   E = await (await fetch("/api/catalog")).json();
   $("#list").innerHTML = E.map((e, i) => `<div class="entry" data-i="${i}">
-    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : "notv"}">${e.status}</span></div>
+    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : e.status === "unit map only" ? "umap" : "notv"}">${e.status}</span></div>
     <div class="m">${esc(e.family)} · ${e.params?.toLocaleString() ?? "?"} params · stages ${e.stages}</div>
-    <div class="bar" title="behaviour"><i style="width:${100 * e.behaviour}%"></i></div></div>`).join("") || '<div class="pad">No judged constructions yet.</div>';
+    <div class="bar" title="behaviour"><i style="width:${100 * (e.behaviour || 0)}%"></i></div></div>`).join("") || '<div class="pad">No judged constructions yet.</div>';
   document.querySelectorAll(".entry").forEach(d => d.onclick = () => show(+d.dataset.i));
   const want = new URLSearchParams(location.search).get("t");
   const i = E.findIndex(e => e.target === want);
@@ -78,6 +78,12 @@ function show(i) {
   document.querySelectorAll(".entry").forEach(d => d.classList.toggle("sel", +d.dataset.i === i));
   history.replaceState(null, "", "?t=" + cur.target);
   const c = cur.coverage || {}, un = c.unexplained || [];
+  if (!cur.run) {
+    $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)}</span></h2>
+    <div class="pad"><div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
+    <p>No construction has been written for this network yet. What is known about its parts is below.</p>${partsHTML(cur.unit_map)}</div>`;
+    return;
+  }
   $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)} / ${esc(cur.run)}</span></h2>
   <div class="pad">
     <div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
@@ -85,11 +91,33 @@ function show(i) {
     <div class="grid2"><div><h3>Certificate</h3><table>${certRows(cur)}</table></div>
     <div><h3>Not explained</h3>${un.length ? "<ul>" + un.map(u => `<li>${esc(u)}</li>`).join("") + "</ul>" : '<p class="muted">Nothing found by the tests.</p>'}
     ${cur.fails.length ? `<h3>Why it isn't certified</h3><ul>${cur.fails.map(f => `<li class="small">${esc(f)}</li>`).join("")}</ul>` : ""}</div></div>
+    ${partsHTML(cur.unit_map)}
     <h3>Playground</h3>${cur.playable ? playgroundHTML() : '<p class="muted">The playground runs weight-level networks; language-model constructions are shown with their certificate only.</p>'}
     <details><summary>The construction (Python)</summary><pre>${esc(cur.source)}</pre></details>
     <details><summary>The judge's full report</summary><pre>${esc(cur.report)}</pre></details>
   </div>`;
   if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+}
+
+function partsHTML(u) {
+  if (!u) return "";
+  const f2 = v => v == null ? "–" : v.toFixed(2), sub = u.cells.filter(x => x.substitution_grade != null);
+  return `<div id="parts"><h3>Parts (unit map)</h3>
+  <p class="small">What each hidden neuron computes, as far as a library of simple units can say, with a confidence for each part.
+  A unit is a single ReLU of a few simple quantities (the current input, the previous input, the running max, 2nd max or min).
+  Each part is fitted on half of the inputs and scored on the other half.</p>
+  <table><tr><th>Neuron-steps explained (held-out R² ≥ 0.9), units that use the input history</th><td>${f2(u.coverage_history)} (same network with shuffled weights: ${f2(u.control_history)})</td></tr>
+  <tr><th>Neuron-steps explained by raw-input units</th><td>${f2(u.coverage_raw)} (shuffled: ${f2(u.control_raw)})</td></tr>
+  <tr><th>Precision the network needs (ε95)</th><td>${u.eps95 == null ? "–" : (100 * u.eps95).toFixed(2) + "%"} — noise of this size (as a share of each neuron's spread) flips 5% of the network's decisions, so any account of a neuron must be at least this precise</td></tr>
+  <tr><th>Substitution-grade parts (error ≤ ε95)</th><td>${sub.length ? u.substitution_grade + " of " + u.cells.length + " neuron-steps" : "–"}</td></tr></table>
+  <h3>Per neuron</h3><p class="small muted">The most common label over the steps where the neuron is explained.</p>
+  <table class="neurons"><thead><tr><th>neuron</th><th>label</th></tr></thead><tbody>${u.per_unit.map(r => `<tr><td>${r.neuron}</td><td class="mono">${esc(r.label)}</td></tr>`).join("")}</tbody></table>
+  <details><summary>Every neuron-step (${u.cells.length})</summary>
+  <p class="small muted">Fit: held-out R² of the unit. Sufficiency: decisions kept when this one neuron-step is replaced by its unit. Importance: decisions lost when it is set to its mean. Relative error: the unit's error as a share of the neuron's spread.</p>
+  <table><thead><tr><th>step</th><th>neuron</th><th>unit</th><th>fit</th><th>sufficiency</th><th>importance</th><th>relative error</th><th>substitution-grade</th></tr></thead><tbody>
+  ${u.cells.map(x => `<tr><td>${x.t}</td><td>${x.unit}</td><td class="mono">${esc(x.label || "")}</td><td>${x.fit == null ? "–" : x.fit.toFixed(3)}</td><td>${pct(x.sufficiency)}</td><td>${pct(x.importance)}</td><td>${x.rel_error == null ? "–" : x.rel_error.toFixed(3)}</td><td>${x.substitution_grade == null ? "–" : x.substitution_grade ? "yes" : "no"}</td></tr>`).join("")}
+  </tbody></table></details>
+  <p class="small muted">Source: <span class="mono">${esc(u.file)}</span> (lab/unitmap.py). Read only: the catalog shows the map, it does not recompute it.</p></div>`;
 }
 
 function playgroundHTML() {
