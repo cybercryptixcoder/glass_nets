@@ -78,43 +78,28 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
-- Nov 19, 04:06 ET (clock):
-  - **Built and tested:**
-    - A1: SPD engine, triggers, rule-gated fidelity.
-    - A2: effects and specificity.
-    - A4: certificate and catalog.
-    - A5: transformer support (code done; known-answer test pending its SPD).
-    - A6: GPU/CPU jobs.
-    - A7: task-relative effects.
-    - A8: findings with a control comparison.
-    - A9: float32 SPD (validation running).
-    - A10: playground.
-    - A11: atlas comparison.
-    - Readable trigger summaries.
-  - **M8,5 (design case):**
-    - 22 exact mechanisms, 11 with trusted triggers.
-    - Rebuilt network: 92.5% of decisions, against the task rule's 87.9%.
-    - Two functional groups (13 mechanisms) against 0 in the shuffled control.
-    - In the catalog, with a playground.
+- Nov 19, 05:14 ET (clock):
+  - **Built and tested** (each with a CHANGES entry and a passing test):
+    - A1 SPD engine, triggers, rule-gated fidelity; A2 effects and specificity; A4 certificate and catalog; A6 GPU/CPU jobs; A7 task-relative effects; A8 findings with a control; A9 float32 SPD; A10 playground; A11 atlas comparison; A12 exact residual; A13 guarded narrative.
+    - **A5 transformers: known answer PASSES.** The planted copy-previous-token transformer is recovered exactly: 4 mechanisms ("copy token v") in each of W_E, W_V, W_O, W_U, triggers ≥ 0.997, rebuilt fidelity 1.000.
+    - **A15 gate v2:** a trusted trigger switches its mechanism off only where P(needed) < 0.05. Rebuilt fidelity went up in every network (e.g. M16,10 0.700 → 0.951), while the gate still switches off 75–95% of not-needed calls.
+    - **A17 "mechanisms alone":** the residual is judged by what it does (decisions kept with all mechanisms on and the residual removed), not by its weight norm, which counts inert directions.
+    - **A19 clear-cut confidence:** triggers are scored on calls where "needed" is clear (importance > 0.9 or < 0.1), and each reports its graded share.
+    - Tried and dropped: A16 (neuron values as trigger features failed the planted known answer; extra task features gave no gain on the design case).
+  - **Development set (the 7 A3 networks, which shaped A15–A19), version v3: 4 of 7 pass all criteria** (argmedian 8_5, 8_7, 16_7, M8,8). Both failures are accurate networks whose decomposition is not precise enough (argmedian 16_5: mechanisms alone 0.900 vs 0.984; M16,10: 0.939 vs 0.953).
+  - **Transformers (reported):** lc_6_5 (83 mechanisms, 44 trusted) and lc_4_5 atlases exist; for both the decomposition is the first limit (mechanisms alone below the task rule).
   - **Running:**
-    - Colab "atlas":
-      - CPU queue: argmedian 8_5, 8_7, 16_5, 16_7, M8,8, shuffled argmedian 16_5.
-      - GPU queues: planted transformer → lc_3_4; ARC's M16,10 → its shuffled control; lc_6_5 → zoo M16,10 seed 0.
-      - Outputs go to `/content/spd_out2`.
-    - Locally: planted RNN in float32 (the A9 known answer) and lc_4_5 in float32.
-  - **A3** (held-out networks) is pre-registered in DIARY. It is judged when those SPDs finish.
+    - Colab: A18 held-out set (zoo_2nd_argmax_16_5_s0, 16_8_s0, 32_5_s0, zoo_argmedian_32_5_s0 on CPU; zoo_2nd_argmax_32_10_s0 → its shuffled control → zoo_argmedian_32_7_s0 on GPU queue 4); shuffled M16,10; zoo M16,10 seed 0; lc_3_4; planted RNN with KL loss (A14 known answer).
+    - Locally: argmedian 16_5 A14 variants (KL 3e-3, KL 1e-3, MSE 1e-3) being evaluated.
+  - **A18 decision rule is pre-registered** (DIARY 05:09): pass if (i')–(iv) and (vi) hold in ≥ 4 of 6 held-out networks, and (v) holds for zoo_2nd_argmax_32_10_s0.
 
 ## 5. Next (in order)
 
-1. As SPD outputs land:
-   - download them to `results/glass/atlas/spd/`;
-   - build atlases with controls (`python3 lab/atlas.py T SPD 4 --control-spd SHUF`);
-   - judge A3 against its pre-registered criteria;
-   - run the A5 known-answer test (`atlas_tf_test.py`) and the A9 test (planted RNN float32 through `atlas_test.py`).
-2. If A3 falls short on a criterion, improve that component and try alternatives: features, depth, gating policy, SPD steps.
-3. Run `compare_atlases` on ARC's M16,10 vs zoo M16,10 seed 0 (do mechanisms recur across training runs?).
-4. Transformers: atlases for lc_3_4 … lc_8_6, with controls.
-5. Larger: ARC's 2nd argmax M32,10 (1,344 params) on the GPU.
+1. Judge the A14 variants on argmedian 16_5 (does a decision-focused loss or a lower minimality coefficient lift "mechanisms alone" above 0.984?). If one does, rerun it on M16,10 and the A18 networks that need it.
+2. As A18 SPDs land: download, build atlases (`python3 lab/atlas.py T SPD 4 [--control-spd SHUF]`), judge with `python3 scripts/glass/atlas_a3_eval.py --v3 --a18`.
+3. Make v3 the certificate's headline (findings, catalog, playground use the v3 gate and clear-cut trust) once A18 is judged.
+4. `compare_atlases` on ARC's M16,10 vs zoo M16,10 seed 0.
+5. Transformers: improve the decomposition for lc networks (same A14 options), then lc_3_4 … lc_8_6 with controls.
 6. Write the atlas results up for Shreyas: what works, on which networks, and the findings.
 
 ## 6. How to run what exists

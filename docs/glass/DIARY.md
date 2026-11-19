@@ -1363,3 +1363,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Trade-off seen: trusting more triggers costs some fidelity (M16,10: v2 0.951 → v3 0.939; argmedian 16_5: 0.839 → 0.818).
   - The remaining failures are both "decomposition not precise enough for a very accurate network" (16_5: mechanisms alone 0.900 vs 0.984; M16,10: v3 just under 0.953).
 - **05:13 A14 variants for argmedian 16_5 downloaded** (KL at minimality 3e-3 and 1e-3; MSE at 1e-3). Evaluating (i') and (ii).
+- **05:15 A14 variants on argmedian 16_5 (task rule 0.984), judged on (i') and (ii):**
+
+  | SPD variant | mechanisms alone (i') | v2 | v3 | mechanisms | W_h weight residual |
+  |---|---|---|---|---|---|
+  | MSE, minimality 3e-3 (default) | 0.900 | 0.839 | 0.818 | 22 | 0.28 |
+  | MSE, minimality 1e-3 | **0.953** | 0.888 | 0.876 | 31 | 0.13 |
+  | KL, minimality 3e-3 | 0.579 | 0.882 | 0.759 | 60 | 0.98 |
+  | KL, minimality 1e-3 | 0.652 | 0.917 | 0.853 | 60 | 0.98 |
+
+  - **KL reconstruction fails:** W_h's mechanisms come out as large pieces that cancel each other, so the alive mechanisms alone keep only 58–65% of decisions. Dropped.
+  - **A lower minimality coefficient helps** (0.900 → 0.953 for mechanisms alone; 22 → 31 mechanisms), but is not yet at 0.984.
+  - **Next variants, on Colab CPU:** MSE at minimality 3e-4 and 1e-4 (30k steps), and 1e-3 at 60k steps.
