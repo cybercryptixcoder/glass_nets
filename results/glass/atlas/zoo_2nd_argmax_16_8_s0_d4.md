@@ -4,8 +4,8 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 
 ## Whole-network certificate
 
-- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= 0.9 on clear-cut cases; otherwise always on), and switched off only where the trigger gives it under a 5% chance of being needed: keeps **63.6%** of the network's decisions; the task rule alone keeps 97.6%.
-- The mechanisms alone (all on, the small leftover residual removed): 82.1%. Every trigger used (no confidence bar): 33.7%. Mechanisms switched by their own learned importances: 45.3%. Earlier gates, for the record: v1 48.9%, v2 63.6%.
+- Rebuilt from its mechanisms, each switched by its trigger where that trigger is trusted (confidence >= 0.9 on clear-cut cases) AND passed a decision check on the training half (3 of 23 trusted triggers); every other mechanism stays on; switched off only where the trigger gives it under a 5% chance of being needed: keeps **98.4%** of the network's decisions; the task rule alone keeps 97.6%.
+- The mechanisms alone (all on, the small leftover residual removed): 82.1%. Every trigger used (no confidence bar): 33.7%. Mechanisms switched by their own learned importances: 45.3%. Other gates, for the record: v1 48.9%, v2 63.6%, v3 (every trusted trigger, no decision check) 63.6%.
 
 ## Findings
 
@@ -14,7 +14,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 2. 21 of the 23 trusted triggers use a task variable (not only neuron states). Most used: x_t minus the previous max (11), x_t (10), step t (6), x_t minus the previous 2nd (6), steps since the 2nd (6).
 3. 9 mechanism(s) (W_x.3, W_x.9, W_x.11, W_x.17, W_h.2, W_o.0, W_o.3, W_o.12, W_o.19) keep the network from answering rank 3 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 3.
 3. 6 mechanism(s) (W_h.6, W_h.9, W_h.11, W_h.13, W_h.17, W_h.19) keep the network from answering rank 1 instead of rank 2: removing them where needed mostly flips the answer from rank 2 to rank 1.
-4. Rebuilt from mechanisms switched by trusted triggers: 63.6% of decisions (task rule 97.6%).
+4. Rebuilt from mechanisms switched by trusted triggers: 98.4% of decisions (task rule 97.6%).
 
 ## W_x: 5 mechanisms (5 with a trusted trigger)
 

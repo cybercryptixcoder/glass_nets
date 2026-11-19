@@ -4,8 +4,8 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 
 ## Whole-network certificate
 
-- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= 0.9 on clear-cut cases; otherwise always on), and switched off only where the trigger gives it under a 5% chance of being needed: keeps **93.9%** of the network's decisions; the task rule alone keeps 95.3%.
-- The mechanisms alone (all on, the small leftover residual removed): 96.3%. Every trigger used (no confidence bar): 58.3%. Mechanisms switched by their own learned importances: 79.5%. Earlier gates, for the record: v1 70.0%, v2 95.1%.
+- Rebuilt from its mechanisms, each switched on by its trigger where the trigger is trusted (confidence >= 0.9 on clear-cut cases; otherwise always on), switched off only where the trigger gives it under a 5% chance of being needed: keeps **93.9%** of the network's decisions; the task rule alone keeps 95.3%.
+- The mechanisms alone (all on, the small leftover residual removed): 96.3%. Every trigger used (no confidence bar): 58.3%. Mechanisms switched by their own learned importances: 79.5%. Other gates, for the record: v1 70.0%, v2 95.1%, v3 (every trusted trigger, no decision check) 93.9%.
 
 ## Findings
 
