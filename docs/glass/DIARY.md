@@ -1413,3 +1413,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - v4: rebuilt 0.997 ✓, but only by switching few mechanisms: off_recall 0.17 ✗. Mechanisms alone still ✗.
   - Findings (reported): 6 mechanisms keep the answer from moving from rank 2 to rank 3.
   - **Reading:** a 99%-accurate network is described almost perfectly by its task ("it returns the 2nd largest"), so a mechanism account must be more precise than that to pass. The decomposition loses 6.5% of decisions with its residual removed. Making the decomposition more precise for accurate networks (A14 variants running) is the lever.
+- **05:38 Exploration (development only): absorb the residual into the alive mechanisms** (`scripts/glass/atlas_absorb_explore.py`). Each alive mechanism keeps its input direction, so its importance and trigger are unchanged; its output direction is refit by least squares on the matrix's real inputs.
+
+  | argmedian 16_5 (task rule 0.984) | mechanisms alone | v3 | v4 (off_recall) |
+  |---|---|---|---|
+  | minimality 3e-3 | 0.900 | 0.818 | 0.986 (0.32) |
+  | minimality 3e-3, absorbed | 0.916 | 0.896 | 0.988 (0.28) |
+  | minimality 1e-3 | 0.953 | 0.876 | 0.981 (0.38) |
+  | minimality 1e-3, absorbed | **0.991** | 0.723 | 0.984 (0.20) |
+
+  - Lower minimality plus absorption makes the mechanisms alone more faithful than the task rule, criterion (i'), for the first time on an accurate network.
+  - But then switching mechanisms off by their triggers costs more. Absorbed output directions are larger, so a wrong "off" removes more.
+  - **Reading:** in a 98%-accurate network, faithfulness of the parts and safe switching pull against each other. The decision-checked gate keeps the rebuilt network above the bar but can switch off only 20–38% of the not-needed calls.
