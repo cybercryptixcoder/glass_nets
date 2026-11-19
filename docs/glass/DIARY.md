@@ -1458,3 +1458,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - Criteria as A18: (i') mechanisms alone ≥ task rule; (ii) v3 ≥ task rule; (iii) clear-cut trusted share ≥ 0.5; (iv) median specificity ≥ 10; (vi) v3 off_recall ≥ 0.5; (v) groups beat the shuffled control for zoo_2nd_argmax_32_10_s1.
     - **Pass: (i')–(iv) and (vi) in ≥ 4 of 6, and (v).** v4 is reported alongside.
 - **05:48 A26 built and tested** (`build_atlas(..., absorb=True)`, CLI `--absorb`; `--tag` writes a variant next to the main atlas). The test fails before and passes after; without absorb nothing changes. **A27 decompositions running on Colab CPU**: seven runs at minimality 1e-4 (six s1 networks plus the shuffled control of 32_10_s1). The superseded variants (40 components; 1e-3 at 60k steps) were stopped to free cores.
+- **05:50 Second development network agrees: ARC's M16,10 (95.3%) passes every criterion at minimality 1e-3 with absorption** (local run; A26 itself uses 1e-4).
+
+  | M16,10 | alone | v3 | v4 | trusted | spec. | off_recall v3 / v4 | mechanisms |
+  |---|---|---|---|---|---|---|---|
+  | minimality 3e-3 (GPU, batch 2048) | 0.963 | 0.939 | 0.963 | 0.51 | 26× | 0.75 / 0.71 | 35 |
+  | minimality 1e-3 | 0.984 | 0.935 | 0.956 | 0.62 | 109× | 0.81 / 0.68 | 47 |
+  | minimality 1e-3, absorbed | **0.997** | **0.968** | **0.968** | 0.62 | 113× | **0.81 / 0.81** | 47 |
