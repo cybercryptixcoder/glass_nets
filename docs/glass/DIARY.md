@@ -687,3 +687,34 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
     - My stated expectation ("compiled networks tolerate far more noise") holds only weakly: about one noise-grid step for the bigger lc networks.
     - Shuffled controls tolerate more noise (0.06–0.50). Their decisions depend on fewer positions (decision-relevant k is often 1), so this is not a fair comparison of precision.
   - **Decision:** no residual-unit stage for transformers. The U7 line is closed: in these trained transformers neither the attention patterns nor the layer-0 residual decompose into the library's units. Training adds partial relational structure, but not clean units.
+- **21:05 P5 PRE-REGISTRATION (does ε95 separate the networks we can explain from those we can't?).** This replicates the ε95 finding outside AlgZoo before any claim, as required at 20:31.
+  - **Question:** the system certifies the modular-arithmetic transformers with approximate constructions (fidelity 97–100%, S < 0.01) but fails on AlgZoo. Is that because the modular networks tolerate imprecision and AlgZoo networks don't?
+  - **Measure:** ε95, the same definition as P3: Gaussian noise of ε × each coordinate's spread, added at one intermediate site; the ε at which decision agreement falls below 95%. Same log grid, 3 seeds, at most 4,000 inputs.
+    - Transformers: the residual after the first attention layer (`resid_mid` / `resid0.mid`).
+    - MLPs: the first hidden layer `h1`.
+  - **AlgZoo reference** (P3 and U7c, already measured): median 0.010 over 13 networks.
+  - **Hypothesis:** modadd_p113 and modmul_p113 both have ε95 ≥ 0.1 (10× the AlgZoo median).
+  - **Known confound, stated in advance:** these networks have 384 noised coordinates against 16–160 for the RNNs. More noised coordinates makes a network look LESS tolerant, so the confound works against the hypothesis.
+  - **Decision.**
+    - Yes → the findings doc reports ε95 as a candidate predictor of when approximate accounts can work, with its limits.
+    - No → hypersensitivity is common and does not explain the AlgZoo failure; the findings doc says so.
+  - **Descriptive only (no decision):** the compiled Tracr networks count_greater and first_match, the tiny boolean MLPs, and the Breakout policy MLP.
+- **21:07 P5 RESULT: hypothesis CONFIRMED** (`results/glass/units/p5_eps95_cross.json`, read by hand).
+  - **ε95 at the first intermediate site:**
+    - modadd_p113 0.79 and modmul_p113 0.79: 80× the AlgZoo median of 0.010 (bar 0.1).
+    - Tracr: count_greater 0.05, first_match 0.32 (hist 0.063 and reverse 0.10 from U7c).
+    - Boolean MLPs: 0.25–1.0.
+    - Breakout policy MLP (trained, never explained): 0.02.
+  - **Correction to my pre-registered confound:** `resid_mid` here is the last position only, so 128 noised coordinates, not 384. That is still in the same range as the RNNs (16–160 neuron-steps), so the comparison stands.
+  - **Reading: there are two routes to an explanation.**
+    - **Exact structure** works whatever the tolerance: M4,3 at 0.016, Tracr count_greater at 0.05.
+    - **Approximate accounts** work only where the network tolerates imprecision: the modular networks at 0.79, where our constructions certify at 97–100%.
+  - **AlgZoo above 32 params has neither:** no exact structure (P4, 7 routes) and ε95 about 1%. This is the measured reason the reader failed there.
+  - **Prior work:**
+    - Arora, Ge, Neyshabur and Zhang (ICML 2018) show that noise stability of trained nets is what makes them compressible.
+    - Morcos et al. (2018) tie robustness to noise injected at nodes to generalization.
+    - Our result is the interpretability version: noise tolerance at intermediate sites predicts whether a short APPROXIMATE readable account can be faithful. As far as I found, no one has measured it as a predictor of explainability; I'll check this again before calling it new.
+  - **Decision (per the pre-registration):** the findings doc reports ε95 as a candidate predictor, with its limits:
+    - n = 2 explained-approximate networks;
+    - architectures differ;
+    - task margins differ: modular arithmetic has 113 classes with large logit gaps.
