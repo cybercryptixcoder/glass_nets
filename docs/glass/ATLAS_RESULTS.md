@@ -62,11 +62,15 @@ Six well-trained networks that were never used to design anything: seed 2 of six
 
 **Transformers (A33, held out, pre-registered):** the same pipeline, unchanged, passes on lc_8_6, the one longest-cycle transformer not used in design (8-dimensional, 2 attention layers): rebuilt 90.2% vs task rule 85.4%, triggers switch off 89% of not-needed activity, 64 of 106 mechanisms have trusted task-level explanations (token values, positions, fixed points). On development, after fixing a data-split bug (A32), lc_4_5 and lc_6_5 pass and lc_3_4 does not; it keeps its decisions only by switching off a third of its not-needed activity.
 
-**A first step up in scale (A35, pre-registered known answer): narrow fail.** The grokked modular-addition transformer (mod 113, 227k parameters, one attention layer and one MLP; its mechanism is known to be a few Fourier frequencies) is about 10× larger than any network certified above.
-- The test: at least 80% of the trusted Fourier triggers must use the network's key frequencies {8, 11, 22, 23, 25}.
-- The result: 71% did (chance 9%), so it fails by its own rule. The MLP output (12 of 12), unembedding (14 of 15) and embedding (40 of 51) were close to clean; the attention value matrices were weaker (36–60%).
-- Its certificate passes four of five criteria: rules rebuild 100% of decisions, 60% of rules are trusted, removal matters 33× more where needed, and rules switch off 88% of not-needed activity. Mechanisms alone reach only 59.7%, below the task rule.
-- A probable cause (found after the verdict): the rule vocabulary lacks Fourier features of the two inputs separately. That fix will be judged on a different network.
+**Scaling to 227k parameters (Nov 19, all held out and pre-registered).** The grokked modular-arithmetic transformers (one attention layer and one MLP, 227k parameters, about 165× larger than anything certified above) have a known mechanism: a few Fourier frequencies, which differ from one training run to the next.
+- **A35 (the first try): narrow fail.** 71% of trusted frequency rules used the key frequencies (bar 80%, chance 9%).
+- **A37 (rule vocabulary of angles "k·v mod p"): PASS.** On two freshly trained adders never used for design, 84% and 86% of trusted frequency rules use that network's own key frequencies. With the old vocabulary the same decompositions give 72% and 84%.
+- **A40 (multiplication, where the structure lives in discrete-log order; the atlas is offered both orderings): FAIL.** 56% (bar 80%, chance 5%). The basis is chosen correctly: only 16% of rules use those frequencies on the number line, and the MLP and unembedding are led by the right log-basis frequencies. The larger vocabulary gives the rule-fitter more ways to memorise token lists.
+- **A41 (rule vs lookup).** Each mechanism is labelled "rule" (its explanation carries over to token values never seen) or "lookup" (it only describes the cases seen).
+  - In the fresh adders, 82% and 88% of trusted MLP/unembedding mechanisms are rules. The embedding (34 of 35, 48 of 56) and attention-value mechanisms are mostly lookups, so the atlas no longer presents them as understood.
+  - The memorization check on a network trained on random labels is pending.
+- **Post hoc, to be tested as A42:** over rule-labelled mechanisms only, 90–98% of frequency rules use key frequencies in every network so far, multiplication included. The structural claims are nearly all right; the noise is memorised rules.
+- **Certificates at this size:** everything passes except "mechanisms alone". The decomposition gives the attention query/key weights no mechanisms: they are spread over many components, and SPD's random partial masks never remove them all. A version that fixes this (A38d) breaks a planted known answer, so it is not used.
 
 **Known answers** (networks built by hand, so the true mechanisms are known):
 - A recurrent network with 5 planted features: all 15 planted mechanisms recovered.
@@ -85,7 +89,7 @@ Six well-trained networks that were never used to design anything: seed 2 of six
 
 ## Limits, stated plainly
 
-- Transformers: one held-out pass (lc_8_6), small attention-only models (d_model ≤ 8). The one MLP transformer tried (modadd_p113, A35) narrowly failed its known-answer test.
+- Transformers: one held-out certificate pass (lc_8_6, attention only, d_model ≤ 8). At 227k parameters (MLP transformers) the known answer is recovered on held-out adders (A37) but not yet for multiplication (A40), and no certificate passes yet because of the attention query/key gap.
 - Only one network family so far (AlgZoo ReLU RNNs on 2nd-argmax and argmedian). 1,376 parameters is larger than anything certified before in this project, but small in absolute terms.
 - Explanations are often shallow: many trusted rules are time gates ("after step 2"). The certificate says when a mechanism acts and which decision it protects. What it computes is told only coarsely, as a profile of the unit types it reads and writes (A31). Example, M16,10 W_h.0: "reads relu(max − x_t) 29%, relu(2nd − x_t) 14%…". In 32-wide networks 20–50% of a profile sits on neurons the unit library cannot label.
 - At the precise settings almost every component the decomposition offers is used (57 of 60 in argmedian 16_5), so mechanism counts partly reflect that budget.
