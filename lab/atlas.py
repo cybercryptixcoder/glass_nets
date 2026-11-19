@@ -268,16 +268,16 @@ def planted_transformer(P=5, V=4, s=4.0, n=16000):
 
 # ------------------------------------------------------------------ decomposition
 
-def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu"):
+def decompose(tgt, steps=30000, batch=512, seed=0, C=20, log=1000, device="cpu", dtype=torch.float32):
     mods = spd.decompose(tgt.forward, tgt.weights, tgt.sample, C=C, steps=steps, coef_min=3e-3, p=1.0,
-                         coef_faith=1.0, lr=1e-3, batch=batch, seed=seed, log=log, device=device)
-    return mods.cpu()
+                         coef_faith=1.0, lr=1e-3, batch=batch, seed=seed, log=log, device=device, dtype=dtype)
+    return mods.cpu().double()
 
 
 def load_decomposition(tgt, path, C=20):
     d = torch.load(path, weights_only=False)
     mods = torch.nn.ModuleDict({k: spd.Decomposed(v, C).double() for k, v in tgt.weights.items()})
-    mods.load_state_dict(d["mods"])
+    mods.load_state_dict({k: v.double() for k, v in d["mods"].items()})     # float32 decompositions load as float64 (A9)
     return mods
 
 
