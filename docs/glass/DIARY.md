@@ -1259,3 +1259,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **04:08 A12 DONE: exact residual.** Each matrix keeps an always-on residual (the dead subcomponents' weight), so the rebuilt network with every mechanism on IS the network (fidelity 1.000; it was 0.981). This matters for accurate networks, where the task-rule bar is close to 100%. M8,5 rule-gated trusted 0.923 (was 0.925). All tests pass.
 - **04:15 A9 check, planted RNN in float32: PASS.** A 40k-step float32 decomposition (`results/glass/atlas/spd/spd_planted_rnn_original_40000_512.pt`, 22 min on one local core) passes every check in `atlas_test.py` (39 PASS: mechanisms, triggers, effects, the exact residual, rule-gated fidelity). The float32 planted-transformer check is running locally (`/tmp/spd_planted_tf32.log`).
 - **04:17 A13 DONE: guarded plain-English narrative** (`--narrate`). The reader model writes one paragraph from the atlas's fact sheet; any number or mechanism id not in the facts is rejected. The M8,5 paragraph is honest about its limits ("The facts do not explain how the network combines these mechanisms into a single answer …"). It appears in the markdown and the catalog.
+- **04:29 A5 known answer (planted transformer, P = 5, V = 4, GPU float64): FAIL** (6 checks failed).
+  - **What passed:** rule-gated fidelity 1.000; W_V triggers 1.00; 4 mechanisms in each of W_V, W_O and W_U; W_O and W_U one per token.
+  - **What failed:**
+    - W_V input directions are not token-aligned (cosine about 0.45); alive-only error 1.26, so dead components carry large weight.
+    - W_O and W_U triggers are at chance (0.62, 0.50).
+    - Q and K have no alive mechanisms: everything is in the residual.
+  - **Diagnosis (two flaws in the planted design, not in the code):**
+    - (1) **Slack dimensions.** With P = 5 > V = 4 the head size is 5, so one value dimension is unused by W_O. That, plus the position dims in W_V's input, lets dead components park weight where it has no effect. The cosine check assumes the one canonical solution.
+    - (2) **Missing feature.** The mechanisms needed at the last position read the token at i − 1, but the planted feature library had only the token at i. So W_O and W_U triggers could not be expressed.
+    - Q/K having no alive mechanisms is a property of SPD's importance: random scaling of Q/K barely changes the output here. It is not a failure of the decomposition; it is recorded in the atlas as residual.
+  - **Fix of the known answer** (criteria unchanged): P = V = 4, which removes the slack; added features "token at i−1 is v". A fresh run is going locally in float32, and it also serves as the A9 transformer check.

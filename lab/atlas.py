@@ -238,7 +238,7 @@ def algzoo_transformer(target_id, variant="original", n=16000):
     return t
 
 
-def planted_transformer(P=5, V=4, s=4.0, n=16000):
+def planted_transformer(P=4, V=4, s=4.0, n=16000):
     """Known answer: one attention layer copies the PREVIOUS token to the last position, which the readout reads.
     Embedding: token one-hot (dims 0..V-1), position one-hot (V..V+P-1), an empty 'previous token' slot (V+P..V+P+V-1).
     Q/K select position i-1; V/O copy token v into the slot; W_U reads the slot. Planted mechanisms: one per token in
@@ -262,10 +262,12 @@ def planted_transformer(P=5, V=4, s=4.0, n=16000):
         return torch.nn.functional.one_hot(torch.randint(0, V, (m, P)), V).double()
 
     def feats(x):
-        t = x.argmax(-1); B = len(t)
+        t = x.argmax(-1); B = len(t); prev = np.concatenate([np.full((B, 1), -1), t[:, :-1]], 1)
         f = {"position i": np.broadcast_to(np.arange(P), (B, P))}
         for v in range(V):
             f[f"token at i is {v}"] = t == v
+        for v in range(V):
+            f[f"token at i-1 is {v}"] = prev == v
         return list(f), np.stack([np.asarray(a, float) for a in f.values()], -1)
     return TransformerTarget("planted_transformer", Ws, Wpos, 1, [P - 1], X, sample, None, feats, {"target": "planted_transformer"})
 
