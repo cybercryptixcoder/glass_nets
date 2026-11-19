@@ -1605,3 +1605,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **(1) Make the adaptive pipeline the default for the development atlases.** Two of them need matched shuffled controls at their chosen rungs: argmedian 16_5 at 1e-4 and M16,10 at 1e-3, decomposing locally.
   - **(2) Transformers, development:** ladder runs (1e-3 / 3e-4 / 1e-4, C = 20, which is ample for d_model 3–6) for lc_3_4, lc_4_5 and lc_6_5 on the Colab GPU (9 runs).
   - **lc_8_6 is reserved as the held-out transformer.** It will not be run until the transformer settings are fixed on the three development networks.
+- **09:47 Progress (the session was paused between about 08:55 and 09:45).**
+  - **The development atlases now use the adaptive pipeline in their main files** (`T_d4.json`, which the catalog reads; the playground uses v4's switched set). Rebuilt: M8,5 (with control), M8,8, argmedian 8_5, 8_7, 16_7, and argmedian 16_5.
+  - argmedian 16_5 now has a control at its chosen rung (1e-4): 37 functional mechanisms vs 0, and every criterion passes under v4.
+  - M16,10's matched control (1e-3) is at 24k of 30k locally.
+  - Transformer ladders (lc_3_4, lc_4_5, lc_6_5; 1e-3 / 3e-4 / 1e-4) are at 20k of 30k on the Colab GPU. lc_8_6 stays reserved as the held-out transformer.
+  - **Next:** build the transformer atlases with the ladder; fix the transformer settings on those three; pre-register and run lc_8_6.
