@@ -65,7 +65,7 @@ def _run(forward, x, mods, mask_for, record=None):
 
 
 def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, coef_faith=1e3, coef_rec=1.0,
-              coef_min=3e-3, p=1.0, seed=0, log=500, device="cpu", dtype=torch.float64):
+              coef_min=3e-3, p=1.0, seed=0, log=500, device="cpu", dtype=torch.float64, recon="mse", kl_scale=1.0):
     """forward(x, mm) -> output, where mm(name, a) applies matrix `name` to a; weights: {name: tensor [d_out, d_in]};
     sample(n) -> a batch of inputs. Returns the trained {name: Decomposed}."""
     torch.manual_seed(seed)
@@ -80,9 +80,14 @@ def decompose(forward, weights, sample, C=20, steps=20000, batch=2048, lr=2e-3, 
             y_t = _run(forward, x, mods, lambda n, k: None, record=acts)
         gs = {k: [mods[k].ci_pre(a) for a in acts[k]] for k in mods}               # per call
         masks = {k: [lower_leaky(z) + (1 - lower_leaky(z)) * torch.rand_like(z) for z in zs] for k, zs in gs.items()}
-        rec = F.mse_loss(_run(forward, x, mods, lambda n, k: masks[n][k]), y_t)
+        if recon == "kl":   # A14: decision-focused reconstruction (softmax KL on the original logit scale)
+            lt = F.log_softmax(y_t * kl_scale, -1)
+            loss_fn = lambda y: F.kl_div(F.log_softmax(y * kl_scale, -1), lt, log_target=True, reduction="batchmean")  # noqa: E731
+        else:
+            loss_fn = lambda y: F.mse_loss(y, y_t)  # noqa: E731
+        rec = loss_fn(_run(forward, x, mods, lambda n, k: masks[n][k]))
         for name in mods:   # one matrix at a time
-            rec = rec + F.mse_loss(_run(forward, x, mods, lambda n, k, name=name: masks[n][k] if n == name else None), y_t) / len(mods)
+            rec = rec + loss_fn(_run(forward, x, mods, lambda n, k, name=name: masks[n][k] if n == name else None)) / len(mods)
         faith = sum(((m.W - m.weight()) ** 2).mean() for m in mods.values())
         mini = sum((upper_leaky(torch.stack(zs)) ** p).sum(-1).mean() for zs in gs.values())
         loss = coef_faith * faith + coef_rec * rec + coef_min * mini
