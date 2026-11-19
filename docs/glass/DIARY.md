@@ -1581,3 +1581,23 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - **08:14 A28, second held-out network: zoo_2nd_argmax_16_8_s2 (95.7%) PASSES** (v4 and v3). The ladder stopped at its sparsest rung: 1e-3 was precise enough on the training half (v3 0.980 vs bar 0.963), so the 1e-4 run was stopped. Held out: alone 1.000, rebuilt 0.979 vs 0.957, trusted 0.57, specificity 142×, off_recall 0.86.
 - **08:14 A30 done** (certificate and playground lead with v4, the decision-checked gate, when present; v3 listed for the record). The 32-wide A28 runs are at 20–26k of 30k on Colab.
 - **08:19 A28, third held-out network: zoo_argmedian_32_7_s2 (95.2%, 32 wide, 1,280 parameters) PASSES** (v4 and v3). **The first 32-wide held-out network to pass.** Ladder: 1e-3 and 3e-4 fell short on the training half (v3 0.793, 0.898 vs bar 0.958); 1e-4 with 40 components cleared it (0.984). Held out: alone 1.000, rebuilt 0.980 vs 0.952, trusted 0.53, effects only where needed, off_recall 0.98. All atlas tests pass after A26–A30 (suite rerun).
+- **08:34 A28 VERDICT (pre-registered 07:23): PASS. 5 of 6 held-out networks pass every criterion under v4 (bar ≥ 4), and (v) holds (17 functional mechanisms vs 0 in the shuffled control).**
+
+  | network (accuracy, size) | rung chosen | (i') alone | (ii) v4 vs task rule | (iii) trusted | (iv) specificity | (vi) off_recall | result |
+  |---|---|---|---|---|---|---|---|
+  | 2nd argmax 16_5_s2 (99.2%, 352 params) | 1e-4 | 1.000 ✓ | 0.995 vs 0.992 ✓ | 0.76 ✓ | 1,853× ✓ | 0.86 ✓ | PASS |
+  | 2nd argmax 16_8_s2 (95.7%, 400) | 1e-3 | 1.000 ✓ | 0.979 vs 0.957 ✓ | 0.57 ✓ | 142× ✓ | 0.86 ✓ | PASS |
+  | 2nd argmax 32_5_s2 (99.4%, 1,216) | 1e-4 | 1.000 ✓ | 0.998 vs 0.994 ✓ | 0.70 ✓ | 1,854× ✓ | 0.95 ✓ | PASS |
+  | argmedian 32_5_s2 (99.3%, 1,216) | 1e-4 | 0.999 ✓ | 0.991 vs 0.993 ✗ | 0.68 ✓ | 819× ✓ | 0.83 ✓ | fail (narrowly) |
+  | 2nd argmax 32_10_s2 (99.1%, 1,376) | 1e-4 | 1.000 ✓ | 0.996 vs 0.991 ✓ | 0.62 ✓ | 1,171× ✓ | 0.95 ✓ | PASS; control 17 vs 0 ✓ |
+  | argmedian 32_7_s2 (95.2%, 1,280) | 1e-4 | 1.000 ✓ | 0.980 vs 0.952 ✓ | 0.53 ✓ | only where needed ✓ | 0.98 ✓ | PASS |
+
+  - v3 for the record (every trusted trigger switched, no decision check): 3 of 6. The decision check is what makes the 99%+ networks pass.
+  - **What this establishes, on networks never used in design:** for well-trained recurrent networks of this family up to 1,376 parameters and 32 hidden units, the atlas
+    - splits the weights into mechanisms whose sum is exact on the data;
+    - gives each a rule for when it is needed: 53–76% of switched mechanisms have a trusted rule;
+    - rebuilt with those rules switching the mechanisms, reproduces the network better than its own task description does;
+    - switches off 83–98% of the activity that is not needed;
+    - finds mechanisms whose removal matters 142–1,854× more where they are said to be needed;
+    - finds functional structure that a shuffled-weights network does not have.
+  - Before today, the largest network with a passing certificate was the 113-parameter M8,5 (the design case). The development history: A18 0/6 → A27 2/6 → A28 5/6.
