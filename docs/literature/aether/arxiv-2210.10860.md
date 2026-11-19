@@ -1,0 +1,40 @@
+# Two-Turn Debate Doesn't Help Humans Answer Hard Reading Comprehension Questions
+
+- **Key:** arxiv-2210.10860
+- **Authors / organisation:** Alicia Parrish, Vishakh Padmakumar, Amanpreet Singh Saimbhi, Samuel R. Bowman (New York University); Harsh Trivedi and Nikita Nangia (Stony Brook University); Jason Phang (no affiliation line printed) — the HTML byline carries an explicit "Affiliation:" field per author
+- **Date:** 2022-10-19
+- **Link:** https://arxiv.org/abs/2210.10860
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+Language-model question answerers are unreliable in ways fluent text hides, so the field has hoped that making a model argue — for the right answer and for a wrong one, with a human judging — buys justified trust. The mechanism is debate (Irving et al.): if two advocates are forced to answer each other, deception should get harder to sustain across turns than across a single turn. The authors had previously measured that one turn of advocacy per option did not help crowdworkers on hard reading comprehension, so this paper tests the cheapest possible increment: add exactly one round of counter-arguments and see whether the back-and-forth, rather than the arguments themselves, is what makes debate work. The negative result is the point — they are checking whether the field's central optimism survives the smallest honest test of its mechanism.
+
+## What they studied
+Human judges recruited on Upwork answering multiple-choice questions over long passages from QuALITY, on items the earlier work had already equipped with per-option arguments and quoted snippets. The unit of analysis is a judge's decision: a seven-point confidence slider whose midpoint is abstention, taken after round one (passage + snippet + argument) and again after round two (counter-arguments added), under two reward structures. The model is out of the loop in this paper — its writers are professional freelancers — so what is under test is the debate *format*, not any model's debating ability.
+
+## How they did it
+Counter-arguments were written by ten writers selected from fifteen candidates on a paid qualification task, working against the arguments in the earlier single-turn dataset; writers were bonused when a judge moved toward the option they had argued for, at a higher rate for the incorrect option because that side is harder. Thirty-two judges were hired and filtered to sixteen on pilot accuracy after reading the passage, which also set the time budget: five minutes per judgment, drawn from the third quartiles the pilot observed. The main task crossed two factors with two levels each — arguments present or absent (Passage+Snippet+Argument against Passage+Snippet) and first versus second judgment — and also crossed incentive structure, which was revised mid-study from a "simple" setting (abstain below 60% certainty, strongest confidence above 70%) to "encourage abstain" (75% and 85%) after judges reported over-abstention was socially uncomfortable and after the authors modelled expected bonuses under different strategies. Judges annotated quality separately: two raters per question over four passages on a 1–10 scale, plus a binary check of whether the counter-argument actually responded to the argument it was aimed at, because the bonus scheme could tempt writers to write a better case rather than a rebuttal.
+
+## What counts as an explanation here
+Not an internal account at all: a written argument for an option plus quoted spans from the passage, and then a written rebuttal of the opposing argument plus spans. The claim such an explanation is supposed to carry is *rhetorical* — that a judge who cannot compute the answer from the facts can nonetheless be moved toward it by reading two opposed cases. Completeness is not claimed; what matters is whether the form transmits usable discriminability.
+
+## How they judged success
+Binary accuracy after collapsing the slider to correct / incorrect / abstain, computed with abstentions removed, plus the correct-to-incorrect ratio and the abstention rate as separate columns; a 2×2×2 repeated-measures ANOVA over argument presence, judgment round and incentive structure, on the full seven-point scale; confident-correct versus confident-wrong rates read off the slider distribution. Writers' counter-arguments were scored for subjective quality and for addressing the argument, with two raters per item and their absolute disagreement reported.
+
+## What they found
+Arguments did not help. With abstentions excluded, passage+snippet alone gave 74.8% correct in the simple-incentive first judgment and 63.3% in the encourage-abstain setting, against 72.8% and 60.6% with arguments added — i.e. always equal or slightly worse — and the second judgment moved nothing (74.8 / 66.7 without arguments, 72.2 / 64.7 with them). Adding arguments raised incorrect calls in the low-stakes setting (17.1 to 20.4, and 17.5 to 20.7 on the second judgment) while raising abstentions under the high-stakes incentive (8.0 to 26.1 for the no-argument condition, 7.7 to 22.0 with arguments). The ANOVA found no significant main effect of argument presence or judgment round and no interactions; the only main effect was incentive structure, on the confidence scale, driven by more abstention. Confidently-wrong responses were more common with arguments under simple incentives, and the effect shrank with strong abstention incentives. The writers' work was not the failure: quality ratings averaged 7.5 for correct-answer arguments, 7.2 for incorrect ones, 7.9 and 7.1 for the counter-arguments, and 90% of correct-side and 85% of incorrect-side counter-arguments were judged to respond to the first argument.
+
+## Limits and open problems they name
+The authors conclude that for multiple-choice reading comprehension the format is at best neutral and possibly harmful, while leaving open that other settings — technical topics, where judging is harder and the asymmetry between true and false arguments is different — might behave otherwise. Two structural caveats are visible in their own analysis: a sizeable share of questions are interpretation items where both answers are defensible and one is merely more complete, which makes the task nearly undecidable by argument; and judges were chosen from a pilot on accuracy after seeing the passage, so the sample is a filtered high-performer subset rather than a representative crowd.
+
+## What we take from it
+A null, and the folder's first one with a human judge in the seat. Three things are reusable. (1) **A reader-side ceiling experiment needs a matched no-explanation arm and a within-subject round structure**, because this design shows a fluent, high-quality, correctly-targeted argument set moving accuracy by roughly nothing — so any claim that a generated account *helps a reader* has to beat exactly this control set, which costs one extra condition rather than a new dataset. (2) **The correct-to-incorrect ratio rather than accuracy is the column that caught the harm**: accuracy with abstentions removed barely moved while incorrect calls rose in the low-stakes condition, which is the same "report what the changed cases changed into" rule the folder already holds from the faithfulness papers, applied to a human read-out. (3) **Abstention incentive is a treatment, not a nuisance parameter** — it changed the abstention rate by a factor of about three and eliminated the harmful direction of the argument effect, so any study that asks a person (or a model) to rely on an explanation must state the cost of being wrong, or its result is a statement about one incentive level. Coreference for the pair: `arxiv-2211.03540` (a team beats both parties, with a different incentive design and refusals allowed) and `arxiv-2402.04614` (plausibility read as usefulness, which this paper prices at zero).
+
+## Tags
+unit: whole-model
+form: description
+method: other
+eval: human-rating
+goal: evaluation-of-methods
