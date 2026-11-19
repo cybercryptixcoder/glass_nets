@@ -1081,3 +1081,29 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - **SPD:** the same code with W_h's importances computed per step (`spd_core` handles repeated calls), using the configuration that passes (a).
   - **Pass:** per matrix, exactly 5 alive, a one-to-one match at cosine ≥ 0.9, and importance > 0.5 on ≥ 90% of the calls where the mechanism is needed and < 0.1 on ≥ 90% of the calls where only others are needed.
   - **Script:** `scripts/glass/units/u19b_rnn.py`.
+- **02:03 U19(a) RESULT: FAIL by the pre-registered criterion** (30k steps, p = 1; `results/glass/units/u19a_tms_20_30000_3e-3_1.0_1.0_1e-3_2048.json`).
+  - **What passed:**
+    - 5 alive per matrix, matched one-to-one to the 5 features.
+    - W2: all 5 components match their planted mechanisms (cosine 0.993–0.996).
+    - W1: 3 of 5 match perfectly (cosine 1.00).
+    - Importance is selective: low on 80–100% of the inputs where only another feature is on.
+  - **What failed:**
+    - Two W1 components are not clean (cosine 0.19 and 0.69).
+    - Importance is > 0.5 on only 53–72% of the inputs where the feature is on (bar 90%).
+  - **Diagnosis, to be checked and not assumed:**
+    - (1) **The importance criterion conflates "feature on" with "mechanism needed".** TMS has a bias of about −0.25, so a feature with value below about 0.2 produces output 0 whether or not its mechanism is present. SPD is then right to give it low importance. That is an error in my test's intent, not in the code.
+    - (2) **Dead components can absorb weight** (faithfulness constrains only the sum of all 20). An alive component may then carry off-feature entries that a dead one cancels, which lowers the raw cosine without changing the function.
+  - **Next:**
+    - Rerun with model saving, so I can check (1) directly: importance against x_j and against the target output.
+    - Write the revised criterion BEFORE that rerun, and judge it on a fresh seed (seed 1), not on the run that suggested it.
+  - The p = 0.9 variant ended with 4 alive in W2 (a feature merged or dropped), so p = 1 stays.
+- **02:03 U19(a') PRE-REGISTRATION (revised known-answer criterion; fresh seed 1).**
+  - **Configuration:** C = 20, p = 1, minimality 3e-3, faithfulness 1, lr 1e-3, 30k steps.
+  - **(i) Structure:**
+    - 5 alive per matrix, matched one-to-one.
+    - The alive components alone reconstruct W (relative error ≤ 0.1).
+    - Each alive component's input direction (V_c for W1) or output direction (U_c for W2) aligns with its feature's planted direction (|cosine| ≥ 0.9).
+  - **(ii) Importance:**
+    - > 0.5 on ≥ 90% of the inputs where its feature is on AND the target output for that feature is > 0.05 (the mechanism is needed);
+    - < 0.1 on ≥ 90% of the inputs where only another feature is on.
+  - Pass both → stage (b) results count.
