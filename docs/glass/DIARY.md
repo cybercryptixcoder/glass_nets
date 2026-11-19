@@ -1697,3 +1697,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A40 code: the adapter reads the operation from the model (modmul's result feature is now a·b), and the vocabulary 'both' adds discrete-log angles. Its test failed before and passes after. One correction on the way: undefined log angles (at 0 and '=') first got the value −1, and the test caught the tree isolating a = 0 with an arbitrary log feature, which the scoring would have counted as a frequency. They are now missing values that the tree routes.
 - GPU: the s1/s2 decompositions are at step ~4,000 of 30,000 (done around 16:20). The A38 development run is at step ~2,000. The planted known-answer reruns with the A38 term are on Colab CPU. modmul_p113's decomposition waits for a free GPU slot.
 - Next: when s1/s2 land, build both vocabularies and score the A37 verdict (the script is ready).
+
+## Nov 19 (after 14:21): a development probe of what "trusted" means for token-valued networks
+
+- Question: in modadd, every trigger feature is a function of tokens, and every token appears in both halves of the data. So a tree can be "trusted" (correct on held-out inputs) by memorising token sets, using whichever frequency happens to put the right tokens next to each other. Every angle feature is a permutation of the 113 tokens, so such orderings are easy to find.
+- Probe (`scripts/glass/proto_token_heldout.py`, development atlas only): refit each trusted trigger on inputs whose tokens are in a random half of the vocabulary, and test it on inputs whose tokens are all in the other half.
+  - Key-frequency triggers generalise to unseen tokens far more often than the others: 55% vs 25% reach 0.9.
+  - By matrix: MLP input 35/39 key triggers generalise; MLP output 10/11; unembedding 13/13. The embedding generalises in only 3/35, and the value matrices are mostly memorised.
+- Reading: the MLP and unembedding rules capture structure; the embedding and value rules mostly describe token lists. Not acted on yet. If A37 fails on s1/s2, a value-held-out trust test (A41) is the principled next candidate, judged on fresh seeds.
