@@ -22,7 +22,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.014.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.19 | 100% | always | 1.00 | changes the output by 1.05 and flips 34% of decisions; lowers class 1, raises class 0; flips go rank 3 → rank 4 (44%), rank 3 → rank 2 (36%) | only where needed | reads +x_t 100% → writes -neuron 2 10% |
+| 1 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.19) | - | removing any one flips 34–34% of decisions | - | - |
 | W_x.9 | 90% | task-level: ON when x_t > 0.12 (50% of its ON cases)<br>ON when x_t <= -0.13 (50% of its ON cases) | 1.00 | changes the output by 0.59 and flips 26% of decisions; lowers class 1, raises class 3; flips go rank 3 → rank 2 (47%), rank 3 → rank 4 (40%) | 25x | reads -x_t 100% → writes -neuron 31 12% |
 | W_x.11 | 80% | task-level: ON when x_t <= -0.25 (50% of its ON cases)<br>ON when x_t > 0.27 (50% of its ON cases) | 1.00 | changes the output by 0.34 and flips 14% of decisions; lowers class 0, raises class 3; flips go rank 3 → rank 2 (51%), rank 3 → rank 4 (40%) | 14x | reads +x_t 100% → writes +neuron 21 8% |
 

@@ -22,7 +22,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.034.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.19 | 100% | always | 1.00 | changes the output by 0.43 and flips 15% of decisions; lowers class 4, raises class 1; flips go rank 2 → rank 3 (58%), rank 2 → rank 1 (29%) | only where needed | reads +x_t 100% → writes -neuron 2 11% |
+| 1 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.19) | - | removing any one flips 15–15% of decisions | - | - |
 | W_x.10 | 92% | task-level: ON when x_t > 0.08 (51% of its ON cases)<br>ON when x_t <= -0.12 (49% of its ON cases) | 1.00 | changes the output by 0.64 and flips 24% of decisions; lowers class 4, raises class 0; flips go rank 2 → rank 3 (52%), rank 2 → rank 1 (41%) | 32x | reads -x_t 100% → writes -neuron 21 15% |
 | W_x.3 | 68% | task-level: ON when x_t > 0.29 (57% of its ON cases)<br>ON when x_t <= -0.54 (43% of its ON cases) | 1.00 | changes the output by 0.30 and flips 11% of decisions; lowers class 1, raises class 4; flips go rank 2 → rank 1 (59%), rank 2 → rank 3 (39%) | 11x | reads +x_t 100% → writes +neuron 21 13% |
 | W_x.18 | 1% | task-level: ON when x_t <= -2.42 (67% of its ON cases)<br>ON when x_t > 2.59 (33% of its ON cases) | 1.00 | changes the output by 0.14 and flips 2% of decisions; lowers class 2, raises class 4; flips go rank 2 → rank 3 (60%), rank 2 → rank 1 (40%) | 5x | reads +x_t 100% → writes +neuron 5 12% |
@@ -33,7 +33,7 @@ Alive mechanisms reproduce W_h to a relative error of 0.029.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_h.4 | 100% | always | 1.00 | changes the output by 1.11 and flips 38% of decisions; lowers class 4, raises class 2; flips go rank 2 → rank 3 (36%), rank 2 → rank 1 (34%) | only where needed | reads +neuron 5 11% → writes +neuron 19 19% |
+| 1 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_h (W_h.4) | - | removing any one flips 38–38% of decisions | - | - |
 | W_h.8 | 80% | task-level: ON when step t > 1.50 | 1.00 | changes the output by 2.21 and flips 46% of decisions; lowers class 0, raises class 3; flips go rank 2 → rank 3 (39%), rank 2 → rank 1 (38%) | only where needed | reads +neuron 23 8% → writes -neuron 19 28% |
 | W_h.10 | 80% | task-level: ON when step t > 1.50 (clear-cut confidence 1.00) | 1.00 | changes the output by 5.82 and flips 66% of decisions; lowers class 2, raises class 3; flips go rank 2 → rank 1 (44%), rank 2 → rank 3 (27%) | 59752x | reads +neuron 21 10% → writes -neuron 19 34% |
 | W_h.5 | 80% | task-level: ON when step t > 1.50 | 1.00 | changes the output by 3.93 and flips 64% of decisions; lowers class 1, raises class 2; flips go rank 2 → rank 1 (44%), rank 2 → rank 3 (28%) | 78274x | reads -neuron 20 9% → writes +neuron 19 44% |

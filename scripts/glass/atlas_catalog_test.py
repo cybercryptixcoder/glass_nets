@@ -23,10 +23,11 @@ try:
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path="/usr/bin/google-chrome", headless=True); pg = b.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
         for t in targets:
-            a = json.loads((ROOT / f"results/glass/atlas/{t}_d4.json").read_text()); n = sum(len(m["mechanisms"]) for m in a["matrices"].values())
+            a = json.loads((ROOT / f"results/glass/atlas/{t}_d4.json").read_text())
+            n = sum(sum(x["trigger"]["rule"] != "always" for x in m["mechanisms"]) + any(x["trigger"]["rule"] == "always" for x in m["mechanisms"]) for m in a["matrices"].values())   # A34
             pg.goto(f"http://localhost:{port}/catalog?t={t}"); pg.wait_for_timeout(1500)
             rows = pg.locator("#atlas table.mechs tbody tr").count()
-            check(rows == n, f"{t}: page shows the atlas with one row per mechanism ({rows} of {n})")
+            check(rows == n, f"{t}: page shows one row per switched mechanism plus one per matrix with always-on ones ({rows} of {n})")
         check(not errs, f"no JavaScript errors {errs[:1]}"); b.close()
 finally:
     srv.terminate()

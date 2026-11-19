@@ -22,9 +22,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.016.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.1 | 100% | always | 1.00 | changes the output by 0.27 and flips 12% of decisions; lowers class 2, raises class 1; flips go rank 2 → rank 3 (38%), rank 2 → rank 1 (21%) | only where needed | reads -x_t 100% → writes +neuron 3 25% |
-| W_x.12 | 100% | always | 1.00 | changes the output by 1.02 and flips 35% of decisions; lowers class 0, raises class 1; flips go rank 2 → rank 3 (40%), rank 2 → rank 1 (30%) | only where needed | reads +x_t 100% → writes +neuron 7 23% |
-| W_x.17 | 100% | always | 1.00 | changes the output by 0.75 and flips 27% of decisions; lowers class 1, raises class 2; flips go rank 2 → rank 3 (37%), rank 2 → rank 1 (27%) | only where needed | reads +x_t 100% → writes -neuron 5 34% |
+| 3 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.1, W_x.12, W_x.17) | - | removing any one flips 12–35% of decisions | - | - |
 | W_x.4 | 90% | task-level: ON when x_t > 0.11 (51% of its ON cases)<br>ON when x_t <= -0.15 (49% of its ON cases) | 1.00 | changes the output by 0.69 and flips 28% of decisions; lowers class 0, raises class 3; flips go rank 2 → rank 3 (39%), rank 2 → rank 1 (30%) | only where needed | reads -x_t 100% → writes -neuron 7 19% |
 | W_x.8 | 72% | task-level: ON when x_t > 0.33 (52% of its ON cases)<br>ON when x_t <= -0.40 (48% of its ON cases) | 1.00 | changes the output by 0.44 and flips 17% of decisions; lowers class 3, raises class 1; flips go rank 2 → rank 3 (36%), rank 2 → rank 1 (30%) | 10x | reads -x_t 100% → writes +neuron 0 22% |
 | W_x.14 | 67% | task-level: ON when x_t > 0.35 (54% of its ON cases)<br>ON when x_t <= -0.50 (46% of its ON cases) | 1.00 | changes the output by 0.38 and flips 15% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 3 (42%), rank 2 → rank 1 (22%) | only where needed | reads -x_t 100% → writes +neuron 2 35% |

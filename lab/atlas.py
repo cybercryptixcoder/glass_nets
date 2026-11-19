@@ -985,7 +985,13 @@ def render(a, control=None):
         L += [f"## {k}: {len(mech)} mechanisms ({sum(c >= TRUSTED for c in confs)} with a trusted trigger)", "",
               f"Alive mechanisms reproduce {k} to a relative error of {m['alive_only_rel_error']:.3f}.", "",
               "| mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |", "|---|---|---|---|---|---|---|"]
-        for x in sorted(mech, key=lambda x: -x["in_use"]):
+        always = [x for x in mech if x["trigger"]["rule"] == "always"]                     # A34: one row for the always-on ones
+        if always:
+            fl = [100 * x["effect"]["decision_flip_rate_when_needed"] for x in always if x.get("effect")]
+            L.append(f"| {len(always)} always-on | 100% | always needed: they never switch off, so together they act as one fixed part of {k} ("
+                     + ", ".join(x["id"] for x in always) + ") | - | removing any one flips "
+                     + (f"{min(fl):.0f}–{max(fl):.0f}% of decisions" if fl else "-") + " | - | - |")
+        for x in sorted([x for x in mech if x["trigger"]["rule"] != "always"], key=lambda x: -x["in_use"]):
             e = x.get("effect", {})
             eff = (f"changes the output by {e['effect_when_needed']:.2f} and flips {100 * e['decision_flip_rate_when_needed']:.0f}% of decisions; "
                    f"lowers class {e['most_lowered_class']}, raises class {e['most_raised_class']}") if e else "-"

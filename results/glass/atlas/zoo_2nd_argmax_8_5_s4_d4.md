@@ -22,12 +22,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.003.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.4 | 100% | always | 1.00 | changes the output by 0.91 and flips 35% of decisions; lowers class 0, raises class 4; flips go rank 2 → rank 1 (37%), rank 2 → rank 3 (31%) | only where needed | reads -x_t 100% → writes +neuron 3 20% |
-| W_x.5 | 100% | always | 1.00 | changes the output by 0.61 and flips 25% of decisions; lowers class 4, raises class 1; flips go rank 2 → rank 3 (35%), rank 2 → rank 1 (30%) | only where needed | reads +x_t 100% → writes +neuron 3 31%, -neuron 6 29% |
-| W_x.6 | 100% | always | 1.00 | changes the output by 0.32 and flips 14% of decisions; lowers class 2, raises class 0; flips go rank 2 → rank 3 (34%), rank 2 → rank 1 (22%) | only where needed | reads -x_t 100% → writes -neuron 0 24% |
-| W_x.13 | 100% | always | 1.00 | changes the output by 0.83 and flips 29% of decisions; lowers class 2, raises class 0; flips go rank 2 → rank 3 (32%), rank 2 → rank 1 (28%) | only where needed | reads -x_t 100% → writes +neuron 5 44% |
-| W_x.14 | 100% | always | 1.00 | changes the output by 1.07 and flips 36% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (34%), rank 2 → rank 3 (32%) | only where needed | reads -x_t 100% → writes +neuron 2 26% |
-| W_x.19 | 100% | always | 1.00 | changes the output by 0.74 and flips 27% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (40%), rank 2 → rank 3 (31%) | only where needed | reads +x_t 100% → writes +neuron 7 36% |
+| 6 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.4, W_x.5, W_x.6, W_x.13, W_x.14, W_x.19) | - | removing any one flips 14–36% of decisions | - | - |
 | W_x.15 | 91% | task-level: ON when x_t > 0.11 (50% of its ON cases)<br>ON when x_t <= -0.13 (50% of its ON cases) | 1.00 | changes the output by 0.85 and flips 33% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (34%), rank 2 → rank 3 (33%) | only where needed | reads -x_t 100% → writes +neuron 6 32% |
 | W_x.17 | 86% | task-level: ON when x_t <= -0.16 (50% of its ON cases)<br>ON when x_t > 0.18 (50% of its ON cases) | 1.00 | changes the output by 0.62 and flips 23% of decisions; lowers class 1, raises class 0; flips go rank 2 → rank 3 (34%), rank 2 → rank 1 (25%) | only where needed | reads +x_t 100% → writes -neuron 5 31% |
 

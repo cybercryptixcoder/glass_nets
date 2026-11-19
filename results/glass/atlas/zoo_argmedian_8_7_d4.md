@@ -20,8 +20,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.000.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.4 | 100% | always | 1.00 | changes the output by 0.51 and flips 21% of decisions; lowers class 1, raises class 5; flips go rank 4 → rank 3 (13%), rank 4 → rank 5 (13%) | only where needed | reads -x_t 100% → writes +neuron 4 [≈ relu(-1.99*x_t +0.55*x_prev)] 34%, -neuron 1 [≈ relu(x_t - min)] 30% |
-| W_x.11 | 100% | always | 1.00 | changes the output by 0.50 and flips 21% of decisions; lowers class 1, raises class 5; flips go rank 4 → rank 3 (13%), rank 4 → rank 5 (13%) | only where needed | reads -x_t 100% → writes +neuron 4 [≈ relu(-1.99*x_t +0.55*x_prev)] 34%, -neuron 1 [≈ relu(x_t - min)] 30% |
+| 2 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.4, W_x.11) | - | removing any one flips 21–21% of decisions | - | - |
 
 ## W_h: 13 mechanisms (12 with a trusted trigger)
 

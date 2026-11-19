@@ -23,9 +23,7 @@ Alive mechanisms reproduce W_x to a relative error of 0.000.
 
 | mechanism | in use | trigger (when it is needed) | confidence (clear-cut) | removing it where needed | specificity | reads → writes |
 |---|---|---|---|---|---|---|
-| W_x.4 | 100% | always | 1.00 | changes the output by 0.08 and flips 2% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (33%), rank 2 → rank 3 (24%) | only where needed | reads -x_t 100% → writes -neuron 7 [≈ relu(x_t - 2nd)] 27%, +neuron 3 [≈ relu(max - x_t)] 25% |
-| W_x.12 | 100% | always | 1.00 | changes the output by 0.15 and flips 5% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (38%), rank 2 → rank 3 (26%) | only where needed | reads +x_t 100% → writes +neuron 7 [≈ relu(x_t - 2nd)] 27%, -neuron 3 [≈ relu(max - x_t)] 25% |
-| W_x.17 | 100% | always | 1.00 | changes the output by 0.27 and flips 8% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 1 (39%), rank 2 → rank 3 (30%) | only where needed | reads +x_t 100% → writes +neuron 7 [≈ relu(x_t - 2nd)] 27%, -neuron 3 [≈ relu(max - x_t)] 25% |
+| 3 always-on | 100% | always needed: they never switch off, so together they act as one fixed part of W_x (W_x.4, W_x.12, W_x.17) | - | removing any one flips 2–8% of decisions | - | - |
 | W_x.2 | 84% | task-level: ON when x_t > 0.20 (50% of its ON cases)<br>ON when x_t <= -0.22 (50% of its ON cases) | 1.00 | changes the output by 0.83 and flips 28% of decisions; lowers class 0, raises class 2; flips go rank 2 → rank 3 (42%), rank 2 → rank 1 (33%) | 21x | reads +x_t 100% → writes +neuron 7 [≈ relu(x_t - 2nd)] 27%, -neuron 3 [≈ relu(max - x_t)] 25% |
 
 ## W_h: 11 mechanisms (11 with a trusted trigger)
