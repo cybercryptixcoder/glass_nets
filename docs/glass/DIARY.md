@@ -1836,3 +1836,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - s1 and s2 under the A37 vocabulary: 98% and 95%.
 - So the off-key triggers are almost all lookups. The atlas's real structural claims are right about 90–98% of the time; the noise comes from memorized rules that A41 now flags.
 - Next: pre-register that as A42 (the frequency known answer counted over rule-labelled mechanisms, two-basis vocabulary, at least 20 such triggers per network) and judge it on networks never used. Fresh modmul seed 1 (to train now), and the reserved adders s3 and s4. A38's held-out test will need new seeds when it is ready; they're cheap.
+
+## Nov 19, 18:14 ET (clock): training fresh modmul seed 1 for A42; pre-registration follows once its key frequencies are computed (before any decomposition)

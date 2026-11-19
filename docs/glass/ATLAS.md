@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 18:14 ET (clock): A40 FAIL (modmul 56% vs 80%; the basis is chosen right). Post hoc, rule-labelled (A41) triggers are 90–98% on key frequencies in every network; to be pre-registered as A42 on fresh networks (modmul seed 1 training now, adders s3/s4). Memorizer (A41 K1) decomposing. A38e (one matrix, on/off masks) known-answer runs on Colab CPU.
 - Nov 19, 17:48 ET (clock): A41 K2 PASS (fresh adders' MLP/unembedding mechanisms 82% / 88% rule; embeddings mostly lookup). K1 (memorizer) decomposing, about 19:20. A40 (modmul) atlases building.
 - Nov 19, 17:23 ET (clock): **A37 PASS (held out):** on two fresh 227k-parameter adders, 84% and 86% of trusted frequency triggers use the network's key frequencies (bar 80%, chance 9%). Their certificates fail only (i') (attention Q/K, the known open problem), plus s2's (ii) by 0.05 points.
 - Nov 19, 17:17 ET (clock): A41 (rule vs lookup labels) built and tested; its memorizing known answer (modrand_p113: 100% train, chance on held-out) is being decomposed on the GPU (about 2 h). A37 builds running locally; modmul (A40) at step 24,000.
@@ -118,7 +119,8 @@ nets), where the existing reader and judge already work.
 ## 5. Next (in order; plan sent to Shreyas 17:09, see DIARY)
 
 1. (Done 17:23: PASS, 84% / 86%.) A37 verdict on modadd_p113_s1/_s2.
-2. A40 verdict on modmul_p113 (decomposition finishing on the GPU): does the atlas pick the discrete-log basis and frequencies by itself?
+2. (Done 18:13: FAIL, 56%; basis right.) A40 verdict on modmul_p113.
+2b. A42: the frequency known answer counted over A41 rule-labelled triggers, two-basis vocabulary; held out on modmul_p113_s1, modadd_p113_s3, _s4.
 3. A41, faithful labelling including memorization (Shreyas, Nov 19 17:05): every mechanism is labelled "rule" (its rule carries over to unseen input values) or "lookup" (memorized cases), never presented as an algorithm when it is case-by-case. Known answers: a network trained on random labels must come out lookup; the adders' MLP mechanisms must come out structured. Pre-register before building.
 4. Attention Q/K kept by the decomposition (A38/A38c/A38d failed): new design, tested first on the planted transformer and planted RNN (about 50 min per try), then the modadd development run, then held out on s3/s4.
 5. "What it computes" explanations, verified by intervention.
