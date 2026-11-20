@@ -1965,3 +1965,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - The Colab GPU session is now idle. Asked Shreyas whether to release it (it uses compute units while up).
 
 ## Nov 19, 22:29 ET (clock): last queued check-in fired; nothing has changed since 22:18 (paused for Shreyas's review); no further check-ins scheduled
+
+## Nov 20, 06:52 ET (clock): showcase package done
+
+- Shreyas asked for something to show a researcher. Done: `docs/glass/SHOWCASE.md` (one page), `scripts/glass/showcase_blind.sh` (one command: fresh network → answer key from its weights → decompose → atlas → score), and the catalogue now lists every network with an atlas (A45; the catalogue and unit tests pass).
+- Prior-work check:
+  - Both mechanisms are published: addition by Nanda et al. 2023; multiplication's discrete-log form by Chughtai et al. 2023 and Nguyen, ICML 2026. So our claim is automated blind recovery, positioned next to ground-truth benchmarks such as InterpBench, on naturally trained networks.
+  - The SPD attention gap matches what the SPD group's successor method VPD (Oct 2026) addresses with adversarial masks and a stricter joint-ablation criterion. So it is not a new finding, and VPD's adversarial masks are the planned fix.
+- Smoke test of the one-command script on CPU, with a deliberately untrained network (50 epochs): runs end to end, and correctly FAILS both checks (2 rule triggers; no structure claimed).
