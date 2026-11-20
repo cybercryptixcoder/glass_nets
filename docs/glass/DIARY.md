@@ -1871,3 +1871,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A38e (one matrix at a time, on/off masks): planted RNN ALL PASS at seeds 0 and 1 (A38d split W_h at both). So on/off masks remove the incentive to split, as the A38e entry predicted.
 - Planted transformer: Q keeps 2 mechanisms, and mechanisms alone is 1.000, with every matrix alone at 1.000 (the reference had Q at 0.919). One copy mechanism (W_O, token 0) aligns 0.879 with its token (bar 0.9). A38d also missed one alignment (0.863, a different matrix).
 - Is that the term or chance? Running on Colab CPU: A38e at seeds 1 and 2, and the reference (no term) at seed 1. About 45 min.
+
+## Nov 19, 19:00 ET (clock): A43, a structure summary per network (what it is made of; which parts are memorized)
+
+- Each atlas with A41 labels now ends with a "Structure" statement. It gives, per matrix, how many trusted mechanisms are rules and how many are lookups, and which frequencies (with basis) the rule-labelled mechanisms use most. Test failed before, passes after; presentation only.
+- What it reads out, development files:
+  - Multiplication (A40's network): the top five rule frequencies are exactly its log-basis key frequencies, 28, 41, 30, 4, 31. Embedding 49 of 51 lookup; MLP input 12 rule / 3 lookup; MLP output 9 / 3; unembedding 11 / 6.
+  - Adder s1: top rule frequencies 19, 30, 43, 38 (four of its five keys), then 56 and 18.
+- This is the "discovery" read-out in the form we want: what the network computes with, plus where the description is only a memorized list. A42 tests it on networks never seen.
+- GPU: A42 runs at step ~6,000; memorizer at 16,000; A38e seed reruns on Colab CPU at ~6,000; fresh adders s5/s6 trained (reserved for an A38e held-out test).
