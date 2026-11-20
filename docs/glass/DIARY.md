@@ -1902,3 +1902,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - The reference decomposition (no term) at seed 1 keeps clean copy mechanisms but loses Q itself (mechanisms alone 0.524). So the query problem is a general weakness of SPD as used here, not only a modadd problem. The CI-masked terms fix it, at the price of messier mechanisms elsewhere.
 - Stopping rule (ATLAS §5 (b)): this step has now had three principled designs (A38 all-at-once, A38d one-matrix-soft, A38e one-matrix-on/off), each failing a must-not-change known answer. It is recorded as an open limit, and work moves on. The fresh adders s5/s6 stay reserved.
 - Still to land tonight: A41 K1 (the memorizer, step 24,000 of 30,000) and A42 (step ~12,000).
+
+## Nov 19, 20:03 ET (clock): waiting on the memorizer (A41 K1) and A42; ATLAS_RESULTS updated with the Q/K limit
