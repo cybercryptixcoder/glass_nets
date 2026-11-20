@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 19:06 ET (clock): A43 structure summary done (modmul's rule frequencies are exactly its log-basis keys, post hoc). Waiting on: memorizer (A41 K1, about 20:00), A38e seed reruns (about 19:45), A42 (about 21:30). Fresh adders s5/s6 reserved for A38e.
 - Nov 19, 18:48 ET (clock): A38e passes the planted RNN at two seeds; on the planted transformer it keeps Q (alone 1.000) but misses one alignment (0.879). Seed reruns running. A42 decompositions and the memorizer (A41 K1) on the GPU.
 - Nov 19, 18:32 ET (clock): A42 decompositions running (GPU, 6 runs, about 3 h); memorizer (A41 K1) at step 12,000; A38e planted runs (Colab CPU) at 5/5/5 so far; building the A38d modadd atlas locally (development: does the full certificate pass once Q/K are kept?).
 - Nov 19, 18:14 ET (clock): A40 FAIL (modmul 56% vs 80%; the basis is chosen right). Post hoc, rule-labelled (A41) triggers are 90–98% on key frequencies in every network; to be pre-registered as A42 on fresh networks (modmul seed 1 training now, adders s3/s4). Memorizer (A41 K1) decomposing. A38e (one matrix, on/off masks) known-answer runs on Colab CPU.

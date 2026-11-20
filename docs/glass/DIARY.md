@@ -1880,3 +1880,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Adder s1: top rule frequencies 19, 30, 43, 38 (four of its five keys), then 56 and 18.
 - This is the "discovery" read-out in the form we want: what the network computes with, plus where the description is only a memorized list. A42 tests it on networks never seen.
 - GPU: A42 runs at step ~6,000; memorizer at 16,000; A38e seed reruns on Colab CPU at ~6,000; fresh adders s5/s6 trained (reserved for an A38e held-out test).
+
+## Nov 19, 19:06 ET (clock): fresh adders s5/s6 trained and reserved for A38e's held-out test
+
+- modadd_p113_s5 (key frequencies {46, 55, 45, 7, 23}, share 0.93) and _s6 ({35, 7, 4, 23, 41}, 0.92), both 100% accurate. Untouched until a pre-registration names them.
