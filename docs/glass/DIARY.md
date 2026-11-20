@@ -1908,3 +1908,11 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 20:20 ET (clock): memorizer at step ~28,000 of 30,000; its build-and-score script is ready (`/tmp/a41_k1.sh`: ladder, then `atlas_lookup_known.py --expect=lookup`)
 
 ## Nov 19, 20:39 ET (clock): memorizer decomposed (10,148 s); its atlas is building (ladder, then the K1 score)
+
+## Nov 19, 20:55 ET (clock): A41 memorizer verdict: passes, and the substance is clear even though the judged count is tiny
+
+- modrand_p113 (the adder architecture trained on random labels; 100% train, chance on held-out), A35 pipeline (the ladder chose the sparser rung, as expected with a near-zero task rule).
+- Pre-registered K1: ≥ 80% of trusted MLP/unembedding mechanisms labelled lookup. Result: 1 of 1. That passes by the letter, but on a single mechanism, because I set no minimum count. Recorded as a weakness of the test.
+- What actually happened: in the MLP input, MLP output and unembedding, 187 of 193 mechanisms get no trusted rule at all ("not explained"; 5 always on, 1 lookup). Across the whole network, 162 of 169 trusted mechanisms are lookups (96%), with 7 rules (in attention values and the embedding).
+- Compared with the structured adders: there, MLP/unembedding mechanisms are 82–88% rules. So the atlas tells the two apart. For a network that memorized, it reports "no rule / lookup" and invents no algorithm. That's the behaviour Shreyas asked for.
+- A41: PASS (K1 and K2), with the caveat that K1's judged count was tiny. A later version should require at least 20 judged mechanisms, as A42 does.
