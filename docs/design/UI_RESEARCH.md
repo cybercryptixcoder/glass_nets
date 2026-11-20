@@ -1,6 +1,8 @@
 # UI research: what makes a dark, glassy, minimal interface look professional
 
-*Written Nov 20, 2026 (15:59 ET by the system clock) for the A49 redesign (branch `ui-design`). The rules that came out of this are in `THEME.md`; the code is `lab/static/theme.css`.*
+*Written Nov 20, 2026 (15:59 ET by the system clock) for the A49 redesign, and extended for A50 (§7). Branch `ui-design`. The current rules are in `THEME.md` (v2); the code is `lab/static/theme.css`, `shell.html` and `shell.js`.*
+
+> §1–§6 record the first round (A49). Several of its decisions were replaced in round two (§7): no hue in the chrome, the serif, Inter and the panel layout. They are kept here because the measurements still hold.
 
 Shreyas asked for a researched, production-grade redesign of the lab's three pages: subtle, minimal, decluttered, dark, and glassy, with glass that does not look amateur. This file records what I read and measured, what I concluded, and why.
 
@@ -184,6 +186,54 @@ Everything shouted at the same volume.
 - **Tests:** the catalogue's own tests pass (see `docs/glass/CHANGES.md` A49).
 - **Scripts:** `/tmp/ui/states.py` during the work; the method is described in `THEME.md` §9.
 
+## 7. Round two (A50): from a restyle to a revamp
+
+**Shreyas's verdict on A49:** still incremental. He asked for everything to change (font, design, layout), with Linear, Raycast and Vercel as the design systems, plus a reference image. The image is a dark "SalesOps" sales dashboard shown at three depths: Overview, Team Performance, Pipeline.
+
+### What the reference image does (read off the image)
+- **App shell.**
+  - A ~250px left sidebar: brand chip (white rounded square, dark glyph) and name at the top; icon + label nav items about 42px tall.
+  - The selected item has a **green 1.5px outline with a faint green glow** and a green icon.
+  - A 64px header with a 20px title and a context line (calendar icon, "Last 30 days"). On the right: a search field, a bell with a green dot, and a gradient avatar.
+- **KPI cards.**
+  - Grey label top left, a small bordered icon box top right.
+  - A ~32px semibold number with a coloured delta beside it (green "↗ +12.5%", red "↘ −5").
+- **Cards with a title and a grey subtitle:**
+  - "Revenue Trend · Monthly performance vs target", with a two-series line chart on dashed gridlines and a legend of dots;
+  - "Pipeline Stages · Distribution by stage", made of progress rows (label, count, percent, a thin coloured bar).
+- **Colour:**
+  - near-black zinc surfaces, cards one step lighter with hairline borders;
+  - **green** as the brand and positive colour, **cyan** as the first data series;
+  - orange and red only for a stage or a decline;
+  - the primary button is green.
+- **Type:** a modern grotesk with tight tracking on headings. Geist's proportions match it closely (the measured Vercel stack).
+
+### How the three named systems map onto it
+- **Linear:** zinc near-black at rgb 8–10; white-alpha hairlines (8% most common); 13–15px UI type in an Inter-class face; dense lists with quiet group headers; a selected row as a tinted background, not an inversion.
+- **Raycast:** lit edges (an inner top highlight); near-opaque floating surfaces with `blur(24–30px) saturate(1.5)`; layered window shadows with a 0.5px black ring.
+- **Vercel / Geist:** the Geist and Geist Mono fonts (both free on Google Fonts); 10-step scales where each step has a job; underline tabs; tabular numbers; the Web Interface Guidelines for focus, motion and contrast.
+
+### What changed from A49, and why
+| A49 | A50 | Why |
+|---|---|---|
+| Inter + Instrument Serif + Geist Mono | **Geist + Geist Mono** only | "Use their fonts": Geist is Vercel's face and matches the reference's grotesk. One family reads as one product; the serif read as decoration |
+| No hue anywhere in the chrome | **Green accent + cyan partner**, status colours | The reference is green-led; colour now marks the primary action, selection and meaning |
+| Three floating panels per page, same layout as the old pages | **App shell**: sidebar (all three pages in one navigation), header, list panes, KPI rows, cards, underline tabs | The ask was a revamp, not a restyle. Layout is what makes the reference read as a product |
+| Selection = a raised grey surface | **Selection = a green outline and tint** (sidebar, chips, tensors, tabs, list bar) | Taken directly from the reference's sidebar |
+| Fidelity numbers in a key–value table | **Progress rows** (the "Pipeline Stages" pattern) | Shares read faster as bars |
+| Summary numbers as tiles inside one panel | **KPI cards** with icon boxes and deltas (e.g. "+2.7 pts" against the task rule; "+80 pts" against a constant output) | The reference's main pattern; the deltas compare numbers the page already shows |
+| Text glyphs as icons (✕, ▸, ◐) | **Lucide icons** throughout (ISC licence) | Linear, Raycast and the reference all use a consistent line-icon set |
+| Heatmap blue ↔ red | **Orange ↔ cyan**, neutral zinc midpoint | Matches the palette; validated with the dataviz palette checker (CVD ΔE 21, both poles in the dark lightness band) |
+
+### Nothing fake
+The reference has a bell and a user avatar. The lab has no notifications and no accounts, so neither was added. Every number on a KPI card is one the page already had: params, tensors, numbers on the slide, prompt tokens, stages, matches, characters. The deltas are differences between two numbers already shown side by side.
+
+### Testing
+- **Pages and states:** every page at 1600, 1440 and 1280 wide, in dark and light, in the same states as round one: lab heatmap selection, output, drawer and dialogs; constructor tables, runs and tasks; catalogue tabs, step-through, playground and filters.
+- **Sidebar:** the rail breakpoint and the manual collapse were both checked.
+- **Errors:** none in any state.
+- **Tests:** `atlas_catalog_test.py` (with t5 and t6) and `catalog_atlasonly_test.py` pass.
+
 ## Sources
 
 - [Apple HIG: Materials](https://developer.apple.com/design/human-interface-guidelines/materials)
@@ -202,3 +252,5 @@ Everything shouted at the same volume.
 - [NN/g: Glassmorphism](https://www.nngroup.com/articles/glassmorphism/)
 - [CSS-Tricks: dark mode and variable fonts](https://css-tricks.com/?p=330342)
 - Measured live: linear.app, raycast.com, resend.com, vercel.com, vercel.com/geist, cursor.com, planetscale.com
+- [Lucide icons](https://lucide.dev) (ISC licence), [Geist on Google Fonts](https://fonts.google.com/specimen/Geist)
+- Shreyas's reference image: a dark "SalesOps" dashboard (Nov 20, 2026, in the conversation; not in the repo)

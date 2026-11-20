@@ -1992,3 +1992,26 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - the four catalogue tests pass;
   - 23 states per theme screenshotted at 1600 and 1280 widths, in dark and light, with no page or console errors;
   - no paid calls: run views were rebuilt from saved runs.
+
+## Nov 20, 16:43 ET (clock): A50, the full revamp: a dashboard app shell in the Linear / Raycast / Vercel style (branch `ui-design`)
+
+- Shreyas (16:19): A49 was still incremental. He asked for everything to change (font, design, layout), with Linear, Raycast, Vercel and a reference dashboard image as the models.
+- Theme v2:
+  - Geist and Geist Mono (Vercel); zinc near-black surfaces with hairlines;
+  - a green accent with a cyan partner;
+  - Lucide icons;
+  - KPI cards, progress rows, underline tabs, badges, and a green outline for every selection.
+- A shared app shell:
+  - a sidebar linking the catalogue, lab and constructor, which collapses to an icon rail on narrow screens or by hand;
+  - a page header with the title, its context and its tools.
+  The sidebar and icons live in `shell.html` and `shell.js`, inlined with the theme by `sync_theme.py`; the server is untouched.
+- Pages:
+  - **Catalogue:** list pane, detail with KPI cards and deltas, fidelity as progress rows, cards for every section.
+  - **Lab:** specimens pane, KPI row (params, tensors, numbers on the slide, prompt tokens), tensor card with an orange ↔ cyan heatmap, slide card, reader pane.
+  - **Constructor:** three panes; the construction leads with KPI cards and a verdict banner.
+  - Same ids, data and endpoints everywhere.
+- Checks:
+  - the catalogue tests pass;
+  - all pages and states were screenshotted at 1600, 1440 and 1280, dark and light, with no errors;
+  - no paid calls.
+- Docs: `docs/design/THEME.md` was rewritten for v2, and `docs/design/UI_RESEARCH.md` gained §7 (the reference image, the mapping to Linear, Raycast and Vercel, and what changed and why).
