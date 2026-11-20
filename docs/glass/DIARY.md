@@ -1906,3 +1906,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 20:03 ET (clock): waiting on the memorizer (A41 K1) and A42; ATLAS_RESULTS updated with the Q/K limit
 
 ## Nov 19, 20:20 ET (clock): memorizer at step ~28,000 of 30,000; its build-and-score script is ready (`/tmp/a41_k1.sh`: ladder, then `atlas_lookup_known.py --expect=lookup`)
+
+## Nov 19, 20:39 ET (clock): memorizer decomposed (10,148 s); its atlas is building (ladder, then the K1 score)
