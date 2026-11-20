@@ -55,7 +55,7 @@ let E = [], cur = null;
 async function load() {
   E = await (await fetch("/api/catalog")).json();
   $("#list").innerHTML = E.map((e, i) => `<div class="entry" data-i="${i}">
-    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : e.status === "unit map only" ? "umap" : "notv"}">${e.status}</span></div>
+    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : (e.status === "unit map only" || e.status === "atlas only") ? "umap" : "notv"}">${e.status}</span></div>
     <div class="m">${esc(e.family)} · ${e.params?.toLocaleString() ?? "?"} params · stages ${e.stages}</div>
     <div class="bar" title="behaviour"><i style="width:${100 * (e.behaviour || 0)}%"></i></div></div>`).join("") || '<div class="pad">No judged constructions yet.</div>';
   document.querySelectorAll(".entry").forEach(d => d.onclick = () => show(+d.dataset.i));

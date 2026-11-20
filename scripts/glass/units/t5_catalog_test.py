@@ -13,7 +13,7 @@ MAPS = ROOT / "results/glass/units/maps"
 KEYS = ("target", "status", "stages", "behaviour")
 
 def verdicts(E):
-    return [{k: e.get(k) for k in KEYS} for e in E if e.get("status") != "unit map only"]
+    return [{k: e.get(k) for k in KEYS} for e in E if e.get("status") not in ("unit map only", "atlas only")]   # A45: atlas-only cards are new, not existing
 
 if sys.argv[1:] == ["snapshot"]:
     SNAP.write_text(json.dumps(verdicts(catalog.entries()), indent=0)); print("saved", SNAP); sys.exit()

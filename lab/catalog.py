@@ -125,7 +125,18 @@ def entries():
                       "playable": False, "runs": 0, "status": "unit map only", "stages": "–", "behaviour": None,
                       "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
                       "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid), "atlas": _atlas(tid)})
-    order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3}
+    have = {c["target"] for c in cards}
+    for f in sorted(ATLASES.glob("*_d4.json")):                 # A45: networks that have only an atlas
+        tid = f.name[:-len("_d4.json")]
+        if tid in have or not (LAB / "models" / tid / "meta.json").exists():
+            continue
+        m = _meta(tid)
+        cards.append({"target": tid, "run": None, "name": m.get("name", tid), "family": m.get("family", ""),
+                      "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
+                      "playable": False, "runs": 0, "status": "atlas only", "stages": "–", "behaviour": None,
+                      "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
+                      "cost": None, "steps": 0, "written": "", "unit_map": None, "atlas": _atlas(tid)})
+    order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3, "atlas only": 4}
     return sorted(cards, key=lambda c: (order[c["status"]], c["params"] or 0))
 
 
