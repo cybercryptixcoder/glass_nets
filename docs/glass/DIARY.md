@@ -1918,3 +1918,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - A41: PASS (K1 and K2), with the caveat that K1's judged count was tiny. A later version should require at least 20 judged mechanisms, as A42 does.
 
 ## Nov 19, 21:13 ET (clock): A42 decompositions at step ~24,000 of 30,000; the build-and-score script is ready (`/tmp/a42_build.sh`); verdict about 22:30
+
+## Nov 19, 21:31 ET (clock): A42 decompositions at step ~27,000; builds start when they finish (about 21:50)
