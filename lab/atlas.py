@@ -296,7 +296,8 @@ class ModAddTarget:
         here = t if n == P else t[:, -1:]
         f = {"position": pos, "token here": here, "a": np.repeat(a[:, None], n, 1), "b": np.repeat(b[:, None], n, 1),
              f"{vname} mod {self.p}": np.repeat(s[:, None], n, 1)}
-        if MODADD_VOCAB == "cossin":                    # the A35 vocabulary, kept only for the pre-registered A37 comparison
+        vocab = getattr(self, "vocab", MODADD_VOCAB)    # A46: a target can carry the vocabulary its atlas was built with
+        if vocab == "cossin":                           # the A35 vocabulary, kept only for the pre-registered A37 comparison
             for kf in range(1, self.p // 2 + 1):
                 w = 2 * np.pi * kf / self.p
                 f[f"cos({kf}·token here)"] = np.cos(w * here); f[f"sin({kf}·token here)"] = np.sin(w * here)
@@ -309,7 +310,7 @@ class ModAddTarget:
             f[f"{kf}·token here mod {self.p}"] = (kf * here) % self.p
             for v_, val in (("a", a), ("b", b), (vname, s)):
                 f[f"{kf}·{v_} mod {self.p}"] = np.repeat(((kf * val) % self.p)[:, None], n, 1)
-        if MODADD_VOCAB == "both":                      # A40: discrete-log angles too; the atlas chooses the basis
+        if vocab == "both":                             # A40: discrete-log angles too; the atlas chooses the basis
             L = _dlog_table(self.p)                     # L[v] = log_g v for v = 1..p-1; L[0] = L[p] ('=') = -1 (raw 'log v' only)
             q = self.p - 1
             for v_, val in (("token here", here), ("a", a), ("b", b), (vname, s)):
@@ -1357,6 +1358,13 @@ def _load_play(tid):
         import pickle
         P = pickle.loads((LAB.parent / "results" / "glass" / "atlas" / f"{tid}_d4_model.pkl").read_bytes())
         tgt = make_target(tid); mods = load_decomposition(tgt, LAB.parent / P["spd"])
+        if isinstance(tgt, ModAddTarget):                        # A46: use the vocabulary the trees were fitted on
+            nf = next((t_.n_features_in_ for t_ in P["trees"].values() if hasattr(t_, "n_features_in_")), None)
+            for v_ in ("angle", "both", "cossin"):
+                tgt.vocab = v_
+                if nf is None or len(tgt._feats_uncached(tgt.X[:2], "W_U")[0]) == nf:
+                    break
+            tgt._fcache = {}
         if P.get("absorb"):                                      # A26: the same absorption as at build time (training half)
             X = tgt.X[:16000]; absorb_residual(tgt, mods, P["alive"], X[:len(X) // 2])
         set_residuals(mods, P["alive"])
