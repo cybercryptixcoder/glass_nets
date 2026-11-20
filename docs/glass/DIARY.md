@@ -1922,3 +1922,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 21:31 ET (clock): A42 decompositions at step ~27,000; builds start when they finish (about 21:50)
 
 ## Nov 19, 21:42 ET (clock): A42 decompositions done (modmul_s1 12,034 s); the three atlases are building locally (two-basis vocabulary, ladder)
+
+## Nov 19, 21:52 ET (clock): A42 atlases still building (three in parallel, two-basis vocabulary)
