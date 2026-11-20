@@ -1924,3 +1924,14 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 21:42 ET (clock): A42 decompositions done (modmul_s1 12,034 s); the three atlases are building locally (two-basis vocabulary, ladder)
 
 ## Nov 19, 21:52 ET (clock): A42 atlases still building (three in parallel, two-basis vocabulary)
+
+## Nov 19, 22:11 ET (clock): A42 PASSES on all three held-out networks: the discovery read-out works at 227k parameters
+
+- Pre-registered at 18:17 on networks never used: a fresh multiplication network and two reserved adders. The two-basis vocabulary means the atlas picks the basis. Only triggers labelled "rule" (they carry over to unseen values) count, and each network needs at least 20.
+  - Multiplication s1 (keys in discrete-log order {19, 14, 20, 56, 38}): 77 of 81, 95%. On the number line the same frequencies cover only 7%, so the basis is chosen correctly.
+  - Adder s3 ({14, 13, 51, 19, 11}): 55 of 60, 92%.
+  - Adder s4 ({37, 8, 43, 52, 34}): 44 of 48, 92%.
+- Over all trusted triggers (memorized ones included) the shares are 76–79%, under 80%. So the A41 filter is what makes the read-out clean.
+- The catalogue's structure summary for each network lists the key frequencies and their second harmonics (e.g. s4: 37, 43, 8, then 39 = −2·37 mod 113, 52, 16 = 2·8). Second harmonics are what a ReLU MLP acting on cos/sin features should produce.
+- In plain terms: given a 227k-parameter network it has never seen, the pipeline reports which arithmetic structure it uses (number line or discrete log) and which frequencies. It says which parts it can vouch for and which are memorized lists. And it was right three times out of three on a test fixed in advance.
+- Still open: no network of this size passes the full certificate, because the decomposition loses the attention query/key weights.
