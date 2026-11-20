@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 19:57 ET (clock): the attention Q/K step is recorded as an open limit under the stopping rule (A38, A38d, A38e each fix Q but fail a planted must-not-change; the default SPD itself loses Q at some seeds). Waiting on A41 K1 (about 20:40) and A42 (about 23:30).
 - Nov 19, 19:06 ET (clock): A43 structure summary done (modmul's rule frequencies are exactly its log-basis keys, post hoc). Waiting on: memorizer (A41 K1, about 20:00), A38e seed reruns (about 19:45), A42 (about 21:30). Fresh adders s5/s6 reserved for A38e.
 - Nov 19, 18:48 ET (clock): A38e passes the planted RNN at two seeds; on the planted transformer it keeps Q (alone 1.000) but misses one alignment (0.879). Seed reruns running. A42 decompositions and the memorizer (A41 K1) on the GPU.
 - Nov 19, 18:32 ET (clock): A42 decompositions running (GPU, 6 runs, about 3 h); memorizer (A41 K1) at step 12,000; A38e planted runs (Colab CPU) at 5/5/5 so far; building the A38d modadd atlas locally (development: does the full certificate pass once Q/K are kept?).
@@ -125,7 +126,7 @@ nets), where the existing reader and judge already work.
 2. (Done 18:13: FAIL, 56%; basis right.) A40 verdict on modmul_p113.
 2b. A42: the frequency known answer counted over A41 rule-labelled triggers, two-basis vocabulary; held out on modmul_p113_s1, modadd_p113_s3, _s4.
 3. A41, faithful labelling including memorization (Shreyas, Nov 19 17:05): every mechanism is labelled "rule" (its rule carries over to unseen input values) or "lookup" (memorized cases), never presented as an algorithm when it is case-by-case. Known answers: a network trained on random labels must come out lookup; the adders' MLP mechanisms must come out structured. Pre-register before building.
-4. Attention Q/K kept by the decomposition (A38/A38c/A38d failed): new design, tested first on the planted transformer and planted RNN (about 50 min per try), then the modadd development run, then held out on s3/s4.
+4. Attention Q/K kept by the decomposition: **open limit** (A38, A38d, A38e fix Q but each fails a planted must-not-change; see CHANGES). Fresh adders s5/s6 reserved for a future design.
 5. "What it computes" explanations, verified by intervention.
 
 **Stopping rule for this phase.** (a) Success: 1–4 pass their pre-registered held-out tests. That gives a certified catalogue up to the 227k networks, with known answers recovered and memorizing networks flagged; write it up in ATLAS_RESULTS, then stop for Shreyas's review before step 5 or larger networks. (b) Stuck: a step that fails its held-out test after two principled redesigns is recorded as a limit, and work moves to the next step.

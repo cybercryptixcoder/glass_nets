@@ -1895,3 +1895,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - Full regression check of today's changes: angle, lookup, structure, catalogue, modadd adapter, feature cache, log vocabulary, planted RNN (atlas_test), speed, v4, gate and clear-cut tests all pass.
 - GPU: A42 at step 10,000; memorizer at 22,000. Colab CPU: A38e planted-transformer seeds at 24,000, reference at 26,000.
+
+## Nov 19, 19:57 ET (clock): A38e fails a known answer at 2 of 3 seeds; the attention problem is recorded as a limit for now
+
+- Planted transformer, three seeds with A38e. Q is kept every time (Q alone and mechanisms alone 1.000). But the copy mechanisms come out clean only at seed 1: seed 0 has one alignment at 0.879, and at seed 2 two unembedding mechanisms both cover token 1 (alignments about 0.59). Planted RNN: clean at both seeds.
+- The reference decomposition (no term) at seed 1 keeps clean copy mechanisms but loses Q itself (mechanisms alone 0.524). So the query problem is a general weakness of SPD as used here, not only a modadd problem. The CI-masked terms fix it, at the price of messier mechanisms elsewhere.
+- Stopping rule (ATLAS §5 (b)): this step has now had three principled designs (A38 all-at-once, A38d one-matrix-soft, A38e one-matrix-on/off), each failing a must-not-change known answer. It is recorded as an open limit, and work moves on. The fresh adders s5/s6 stay reserved.
+- Still to land tonight: A41 K1 (the memorizer, step 24,000 of 30,000) and A42 (step ~12,000).
