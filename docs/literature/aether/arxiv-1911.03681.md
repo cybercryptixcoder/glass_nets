@@ -1,0 +1,47 @@
+# E-BERT: Efficient-Yet-Effective Entity Embeddings for BERT
+
+- **Key:** arxiv-1911.03681
+- **Authors / organisation:** Nina Poerner (LMU Munich, Center for Information and Language Processing); Ulli Waltinger (Siemens AG Munich, Corporate Technology Machine Intelligence); Hinrich Schütze (LMU Munich, CIS)
+- **Date:** 2020-05-01 (v2; v1 2019-11-09)
+- **Link:** https://arxiv.org/abs/1911.03681
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+*Title note: v1 of this preprint was titled "BERT is not a Knowledge Base (yet): Factual Knowledge vs. Name-Based Reasoning in Unsupervised QA". The v2 record used here is retitled "E-BERT: Efficient-Yet-Effective Entity Embeddings for BERT", and every number below comes from v2.*
+
+## What they wanted, and why
+
+Adding world knowledge to a language model normally means new encoder layers plus another large pretraining run, which is expensive and hard to reproduce. The authors ask whether knowledge can instead be smuggled in through the input layer only: if an entity's vector already lives in a space that looks like BERT's wordpiece space, it can be handed to the encoder as if it were a token and no new parameters need to be pretrained. Separately they wanted to settle a measurement question left open by the "language models as knowledge bases" line of work — whether a good cloze score on a factual benchmark tells you the model stores facts, or only that entity names are informative enough to guess from. The two questions join in the same frame: a name-based guess is a surface-form shortcut, and giving the model an entity identity instead of a name is the natural way to remove it.
+
+## What they studied
+
+BERT-base and BERT-large (cased), with ERNIE, KnowBert W+W and K-Adapter as entity-enhanced baselines, and a cased Wikipedia2Vec model trained on a September 2019 Wikipedia dump with 2.7M entities. The unit of analysis is the embedding lookup: wordpiece vectors from BERT's own table, and entity vectors from Wikipedia2Vec mapped into that table's space by one linear matrix. Three tasks: unsupervised cloze QA (LAMA on Google-RE and T-REx), supervised relation classification on a FewRel subset prepared by the ERNIE authors, and entity linking on AIDA.
+
+## How they did it
+
+Fit a single unconstrained linear map W from the Wikipedia2Vec space to the BERT wordpiece space by least squares on the vocabulary the two share — the wordpieces that are also words, since no entity is a wordpiece — and then apply that same map to the entity vectors, which live in the same space as the words by construction of Wikipedia2Vec. Two input regimes. In the concat variant, an entity is written in the text as its identifier name followed by a slash and its surface form, and the identifier is embedded with the mapped entity vector while the surface pieces use BERT's table. In the replace variant the surface form is dropped and only the entity vector is fed. The encoder, the pretraining and the tokenizer are untouched in both. For entity linking they reuse the masked-LM head: a special mask token is embedded as the mean of the candidate entity vectors for the span, the output distribution is restricted to the candidate set plus a null symbol whose bias is the candidates' log prior, and decoding is iterated three times with already-decided entities swapped into the input as entity vectors. To test the alignment claim they train the same models with unaligned Wikipedia2Vec vectors as an ablation. To test the name-shortcut claim they build LAMA-UHN by two deletion heuristics: drop triples whose answer string appears inside the subject name, and drop triples where asking BERT whether either part of a person's name is a common name in the answer's language returns that language in its top three.
+
+## What counts as an explanation here
+
+None in the representational sense — the paper's understanding is a causal one about its own input change: which information the model has access to, and what its score therefore is evidence of. The reusable artefact is instead a *diagnostic partition of a benchmark*, LAMA-UHN, plus a cheap probe (one templated question about a name) that identifies questions a name-similarity heuristic alone can answer. It is partial by design and predicts one thing only: which benchmark items a model can score without knowing the fact.
+
+## How they judged success
+
+Mean Hits@1 on LAMA, averaged within relations and then across relations (the authors rename Petroni et al.'s Precision@k to Hits@k because it is not the information-retrieval precision); the same metric restricted to the three cumulative filters, original, string-match-filtered, and both filters; Hits@k across k on a log axis; per-relation deltas against BERT plotted against each relation's substring frequency; macro precision/recall/F1 on relation classification; strong-match micro and macro F1 on AIDA (start, end and URL must all agree, redirects treated as equal), with unsupervised F1 before finetuning as a measure of how good the initialization is. Controls: unaligned-vector ablations, random-head versus pretrained-MLM-head baselines, the replace-versus-concat input ablation, and an evaluation restricted to questions whose subject KnowBert's smaller entity vocabulary covers.
+
+## What they found
+
+On the combined LAMA set, concat E-BERT-base reaches 36.2 Hits@1 against 29.2 for BERT-base, 30.4 for ERNIE and 31.7 for KnowBert, and 34.2 for the large variant against 30.6 for BERT-large, with K-Adapter at 27.6 as recomputed from its own table. The decomposition is the point: on LAMA-UHN BERT drops to 20.2 while replace-E-BERT falls only from 29.1 to 28.2, so the surface-only model loses roughly a third of its score when helpful names are removed and the entity-only model barely moves. Individual relations show the mechanism plainly — named-after falls from 61.6 to 5.0 for BERT-base after the string filter, and native language from 72.2 to 45.8 after both filters, while relations whose answers are rarely substrings of the subject go the other way with entity vectors (country of citizenship 25.4 to 69.9, instance of 36.7 to 46.9 for concat). Concat mitigates most of replace's losses while keeping most of its gains, and the advantage over BERT grows with k, i.e. it is larger at almost-getting-the-answer than at exact top-1. Relation classification: concat 88.38 macro F1 on test against 85.45 for BERT and 88.32 for ERNIE; unaligned Wikipedia2Vec vectors cost about two and a half F1 points in the concat setting (85.84 test) and more than ten in the replace setting (77.45 test), which is the paper's direct evidence that the alignment, not merely the extra vectors, carries the gain. Entity linking: 85.0 micro F1 on AIDA-B and 90.8 micro on dev, versus 80.6 for the unaligned MLM baseline and 73.7 for KnowBert as reported. Unsupervised AIDA F1 before any finetuning is 31.5 for the aligned MLM versus 2.3 for the unaligned one, and training converges faster — the mapped entity vectors act as a usable initialization for entity prediction. Cost: about six CPU-hours for Wikipedia2Vec and no GPU, against a further pretraining run for KnowBert or ERNIE.
+
+## Limits and open problems they name
+
+The name filter is a heuristic built on the model's own associations and deletes triples rather than scoring them, so LAMA-UHN is a *subset*, not a corrected benchmark, and the authors treat deletion as the only clean way to make a correct answer sufficient evidence. Entity coverage is imperfect — 90% on FewRel against ERNIE's 96%, and 6% of LAMA questions have no entity vector and fall back to plain BERT — and the AIDA vocabulary is built with knowledge of the test set's entities, which they flag as unrealistic but necessary for comparability with the numbers they compare against. The concat variant still sees the surface form, so it keeps some of the shortcut along with the gains. No seeds or variance are reported anywhere, and the paper does not attempt to explain mechanistically where inside the encoder the entity vector does its work.
+
+## What we take from it
+
+A construction, three times over. First, **the split-by-shortcut diagnostic**: any benchmark we build can be partitioned by a surface-feature heuristic that a shallow model could exploit, and the difference in score across the partition is a direct estimate of how much of the measured performance is shortcut. Their person-name filter is the template for how to generate the heuristic — ask the model itself, then delete items it can answer without the fact. Second, **an external representation can be admitted to a model's input layer by one linear map fitted on the shared vocabulary, and the map is testable as an ablation** — the unaligned control is what turns "we added knowledge" into "we added knowledge *in a form the model can read*", and for our white-box work the same control applies whenever we splice in a probe or dictionary direction. Third, **a score that survives removal of the easy items, and a score that collapses when they are removed, are two different measurements of the same model**; reporting both, with the subset size, is a reporting rule worth copying. Read the arXiv identifier with care: this id's v1 carries a different title and the earlier title is what most citations use.
+
+## Tags
+
+unit: whole-model | form: probe | method: probing | eval: benchmark | goal: evaluation-of-methods
