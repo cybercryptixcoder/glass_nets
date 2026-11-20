@@ -1890,3 +1890,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - The local workspace restarted at about 19:23. No local jobs were running; the repo is intact and pushed. Colab jobs are unaffected.
 - Progress is slow because 8 runs share one GPU and 3 CPU runs share the VM. A42 is at step 8,000 of 30,000 (about 2,000 steps per 17 min, so about 23:30). The memorizer is at 20,000 (about 20:50). The A38e seed reruns are at 16,000 (about 20:00).
 - Asked Shreyas whether a second Colab GPU session is worth its compute units (it would roughly halve the waiting). Not blocking; work continues either way.
+
+## Nov 19, 19:44 ET (clock): regression check; waiting
+
+- Full regression check of today's changes: angle, lookup, structure, catalogue, modadd adapter, feature cache, log vocabulary, planted RNN (atlas_test), speed, v4, gate and clear-cut tests all pass.
+- GPU: A42 at step 10,000; memorizer at 22,000. Colab CPU: A38e planted-transformer seeds at 24,000, reference at 26,000.
