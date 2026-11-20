@@ -1916,3 +1916,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - What actually happened: in the MLP input, MLP output and unembedding, 187 of 193 mechanisms get no trusted rule at all ("not explained"; 5 always on, 1 lookup). Across the whole network, 162 of 169 trusted mechanisms are lookups (96%), with 7 rules (in attention values and the embedding).
 - Compared with the structured adders: there, MLP/unembedding mechanisms are 82–88% rules. So the atlas tells the two apart. For a network that memorized, it reports "no rule / lookup" and invents no algorithm. That's the behaviour Shreyas asked for.
 - A41: PASS (K1 and K2), with the caveat that K1's judged count was tiny. A later version should require at least 20 judged mechanisms, as A42 does.
+
+## Nov 19, 21:13 ET (clock): A42 decompositions at step ~24,000 of 30,000; the build-and-score script is ready (`/tmp/a42_build.sh`); verdict about 22:30
