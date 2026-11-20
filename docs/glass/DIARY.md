@@ -1935,3 +1935,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - The catalogue's structure summary for each network lists the key frequencies and their second harmonics (e.g. s4: 37, 43, 8, then 39 = −2·37 mod 113, 52, 16 = 2·8). Second harmonics are what a ReLU MLP acting on cos/sin features should produce.
 - In plain terms: given a 227k-parameter network it has never seen, the pipeline reports which arithmetic structure it uses (number line or discrete log) and which frequencies. It says which parts it can vouch for and which are memorized lists. And it was right three times out of three on a test fixed in advance.
 - Still open: no network of this size passes the full certificate, because the decomposition loses the attention query/key weights.
+
+## Nov 19, 22:14 ET (clock): plan step 5 begins: A44, what a mechanism writes (pre-registered)
+
+- Steps 1–3 of tonight's plan passed; step 4 (attention Q/K) is an open limit. So, by the stopping rule, on to step 5: "what it computes".
+- For the modular networks there is a direct, weight-level answer. A mechanism in the MLP output or the unembedding adds a pattern to the answer logits, and that pattern is a wave over the answers at some frequency. Development probe: the wave's frequency is the frequency its trigger reads for 65–82% of rule-labelled mechanisms (chance about 20%), and is always a key frequency. That is the Nanda et al. mechanism: read cos/sin of k·(a+b), write a frequency-k wave over the answers.
+- A44 adds "writes a frequency-k wave over the answers" to each such mechanism. Known answer, fixed now: on the A42 networks (not used for A44's design), more than half of these mechanisms must write the frequency they read, with at least 15 each.
