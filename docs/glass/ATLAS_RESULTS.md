@@ -70,7 +70,9 @@ Six well-trained networks that were never used to design anything: seed 2 of six
   - In the fresh adders, 82% and 88% of trusted MLP/unembedding mechanisms are rules. The embedding (34 of 35, 48 of 56) and attention-value mechanisms are mostly lookups, so the atlas no longer presents them as understood.
   - The memorization check on a network trained on random labels is pending.
 - **Post hoc, to be tested as A42:** over rule-labelled mechanisms only, 90–98% of frequency rules use key frequencies in every network so far, multiplication included. The structural claims are nearly all right; the noise is memorised rules.
-- **Certificates at this size:** everything passes except "mechanisms alone". The decomposition gives the attention query/key weights no mechanisms: they are spread over many components, and SPD's random partial masks never remove them all. A version that fixes this (A38d) breaks a planted known answer, so it is not used.
+- **Certificates at this size:** everything passes except "mechanisms alone". The decomposition gives the attention query/key weights no mechanisms: they are spread over many components, and SPD's random partial masks never remove them all. The default decomposition loses the query even in the small planted transformer at some seeds.
+  - Three fixes (A38, A38d, A38e) add a check that each matrix's important pieces alone reproduce the network. Each keeps the query: on the adder, mechanisms alone goes from 59.7% to 100%, and 4 of 5 checks pass, the miss being 99.92% vs a perfect network. But each also breaks a planted known answer at some seeds (a split mechanism, or a mixed copy mechanism).
+  - Recorded as an open limit.
 
 **Known answers** (networks built by hand, so the true mechanisms are known):
 - A recurrent network with 5 planted features: all 15 planted mechanisms recovered.
