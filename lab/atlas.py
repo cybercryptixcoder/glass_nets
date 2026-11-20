@@ -739,6 +739,53 @@ def value_heldout(Ftr, ytr, tok_tr, Fte, yte, clear_te, tok_te, p, depth=4):
     return float(np.mean(scores)) if scores else None
 
 
+def answer_wave(w, p):
+    """A44: the dominant wave of a pattern over the answers 0..p-1: (frequency, basis, power share), in whichever basis
+    (number line, or discrete log with base the smallest primitive root) concentrates it more."""
+    w = np.asarray(w, float)[:p]
+    v = w - w.mean(); P1 = (np.abs(np.fft.rfft(v)) ** 2)[1:]
+    L = _dlog_table(p)[:p]; order = np.argsort(np.where(np.arange(p) == 0, p + 1, L))[:p - 1]       # answers 1..p-1 by log
+    u = w[order] - w[order].mean(); P2 = (np.abs(np.fft.rfft(u)) ** 2)[1:]
+    s1 = float(P1.max() / P1.sum()) if P1.sum() > 0 else 0.0; s2 = float(P2.max() / P2.sum()) if P2.sum() > 0 else 0.0
+    return (int(np.argmax(P1)) + 1, "line", s1) if s1 >= s2 else (int(np.argmax(P2)) + 1, "log", s2)
+
+
+def main_read_frequency(tree, names):
+    """A44: the (frequency, basis) a trigger relies on most: the largest summed tree importance over its frequency features."""
+    import re as _re
+    imp = {}
+    for i, v in enumerate(getattr(tree, "feature_importances_", [])):
+        if v > 0:
+            u = names[i]
+            for f_ in _re.findall(r"(\d+)·", u):
+                kb = (int(f_), "log" if "·log " in u else "line")
+                imp[kb] = imp.get(kb, 0.0) + float(v)
+    return max(imp, key=imp.get) if imp else None
+
+
+def annotate_writes(a, tgt, trees, names_of):
+    """A44: for ModAddTarget atlases, each W_out / W_U mechanism gets 'writes' (its wave over the answer logits) and each tree
+    trigger in those matrices 'reads_frequency'. names_of(k) -> the feature names its trees were fitted on."""
+    WU = tgt.weights["W_U"].detach().numpy() if hasattr(tgt.weights["W_U"], "detach") else np.asarray(tgt.weights["W_U"])
+    for k in ("W_out", "W_U"):
+        if k not in a["matrices"]:
+            continue
+        nm = names_of(k)
+        for x in a["matrices"][k]["mechanisms"]:
+            U = np.asarray(x["U"]); w = U if k == "W_U" else WU @ U
+            f_, b_, sh = answer_wave(w, tgt.p)
+            x["answer_wave"] = {"frequency": f_, "basis": b_, "share": sh}
+            t_ = trees.get((k, int(x["id"].rsplit(".", 1)[1])))
+            r = None
+            if t_ is not None and not isinstance(t_, bool):
+                r = main_read_frequency(t_, nm)
+                x["trigger"]["reads_frequency"] = None if r is None else {"frequency": r[0], "basis": r[1]}
+            bn = {"line": "number line", "log": "discrete-log order"}
+            x["rw_text"] = ((f"reads frequency {r[0]} ({bn[r[1]]}) → " if r else "")
+                            + f"writes a frequency-{f_} wave over the answers ({bn[b_]}; {100 * sh:.0f}% of its power)")
+    return a
+
+
 def mech_label(conf, vh):
     """A41: 'rule' (trusted and carries over to unseen token values), 'lookup' (trusted on held-out inputs, but only
     describes the cases seen), 'not explained' (not trusted), 'unchecked' (trusted; unseen values could not be scored)."""
@@ -807,6 +854,8 @@ def build_atlas(tgt, spd_model=None, depth=5, n=16000, steps=30000, batch=512, s
             m = mods[k]
             mechs.append({"id": f"{k}.{c}", "in_use": float(yte.mean()), "U": m.U[c].tolist(), "V": m.V[c].tolist(), "trigger": trig})
         atlas["matrices"][k] = {"mechanisms": mechs, "faithfulness_rel_error": faith, "alive_only_rel_error": alive_err}
+    if hasattr(tgt, "row_tokens"):                               # A44: what W_out / W_U mechanisms write onto the answers
+        annotate_writes(atlas, tgt, trees, lambda k_: tr[k_][0])
 
     am = {k: np.isin(np.arange(C), alive[k]).astype(float) for k in MATS}
     set_residuals(mods, alive)                                   # A12

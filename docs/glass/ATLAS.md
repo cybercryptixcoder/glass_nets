@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 22:17 ET (clock): **A44 PASS (3 of 3):** rule-labelled MLP-output/unembedding mechanisms write back the frequency they read (60%, 71%, 71%; chance about 20%); the catalogue now states "reads frequency k → writes a frequency-k wave over the answers".
 - Nov 19, 22:11 ET (clock): **A42 PASS (held out, 3 of 3):** fresh multiplication 95% on log-basis keys (number line 7%), fresh adders 92% and 92%, counting rule-labelled triggers (≥ 20 each). Tonight's queue is done: A37 PASS, A40 FAIL, A41 PASS (thin K1), A42 PASS; attention Q/K open (A38/A38d/A38e).
 - Nov 19, 20:55 ET (clock): **A41 PASS.** Memorizer: no algorithm invented (MLP/unembedding 187 of 193 mechanisms 'not explained', whole network 96% of trusted mechanisms 'lookup'); K1 passed on a single judged mechanism (no minimum count was set). Adders: MLP/unembedding 82–88% 'rule'. A42 due about 23:30.
 - Nov 19, 19:57 ET (clock): the attention Q/K step is recorded as an open limit under the stopping rule (A38, A38d, A38e each fix Q but fail a planted must-not-change; the default SPD itself loses Q at some seeds). Waiting on A41 K1 (about 20:40) and A42 (about 23:30).
@@ -129,7 +130,7 @@ nets), where the existing reader and judge already work.
 2b. (Done 22:11: PASS 3/3.) A42: the frequency known answer counted over A41 rule-labelled triggers, two-basis vocabulary.
 3. (Done 20:55: PASS, with a caveat on K1's count.) A41, faithful labelling including memorization (Shreyas, Nov 19 17:05): every mechanism is labelled "rule" (its rule carries over to unseen input values) or "lookup" (memorized cases), never presented as an algorithm when it is case-by-case. Known answers: a network trained on random labels must come out lookup; the adders' MLP mechanisms must come out structured. Pre-register before building.
 4. Attention Q/K kept by the decomposition: **open limit** (A38, A38d, A38e fix Q but each fails a planted must-not-change; see CHANGES). Fresh adders s5/s6 reserved for a future design.
-5. "What it computes" explanations, verified by intervention.
+5. (A44 done for modular networks: read/write frequency, PASS 3/3.) "What it computes" explanations; next: intervention checks and other families.
 
 **Stopping rule for this phase.** (a) Success: 1–4 pass their pre-registered held-out tests. That gives a certified catalogue up to the 227k networks, with known answers recovered and memorizing networks flagged; write it up in ATLAS_RESULTS, then stop for Shreyas's review before step 5 or larger networks. (b) Stuck: a step that fails its held-out test after two principled redesigns is recorded as a limit, and work moves to the next step.
 

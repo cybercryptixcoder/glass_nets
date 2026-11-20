@@ -1941,3 +1941,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - Steps 1–3 of tonight's plan passed; step 4 (attention Q/K) is an open limit. So, by the stopping rule, on to step 5: "what it computes".
 - For the modular networks there is a direct, weight-level answer. A mechanism in the MLP output or the unembedding adds a pattern to the answer logits, and that pattern is a wave over the answers at some frequency. Development probe: the wave's frequency is the frequency its trigger reads for 65–82% of rule-labelled mechanisms (chance about 20%), and is always a key frequency. That is the Nanda et al. mechanism: read cos/sin of k·(a+b), write a frequency-k wave over the answers.
 - A44 adds "writes a frequency-k wave over the answers" to each such mechanism. Known answer, fixed now: on the A42 networks (not used for A44's design), more than half of these mechanisms must write the frequency they read, with at least 15 each.
+
+## Nov 19, 22:17 ET (clock): A44 PASSES (3 of 3): mechanisms write back the frequency they read
+
+- On the three A42 networks (not used to design A44): of the rule-labelled MLP-output and unembedding mechanisms whose rule reads a frequency, 60% (multiplication), 71% and 71% (adders) write a wave over the answers at that same frequency, in the same basis. The bar was more than half, at least 15 mechanisms; chance about 20%. 96–100% write one of the network's key frequencies.
+- The catalogue now says, per mechanism, what it computes in the network's own terms. Example: "reads frequency 14 (discrete-log order) → writes a frequency-14 wave over the answers (…% of its power)".
+- With A42 and A44 together, the atlas of a 227k-parameter modular network states:
+  - the basis (number line or discrete log) and the frequencies, rule by rule;
+  - which parts are only memorized lists;
+  - that the MLP output and unembedding take each frequency read from (a, b) and write it back as a wave over the answers.
+  That is the published mechanism (Nanda et al. 2023), recovered on networks the pipeline had never seen, including multiplication, whose mechanism was never hand-verified here.
