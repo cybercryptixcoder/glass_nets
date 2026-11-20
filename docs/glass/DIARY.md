@@ -1951,3 +1951,15 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - which parts are only memorized lists;
   - that the MLP output and unembedding take each frequency read from (a, b) and write it back as a wave over the answers.
   That is the published mechanism (Nanda et al. 2023), recovered on networks the pipeline had never seen, including multiplication, whose mechanism was never hand-verified here.
+
+## Nov 19, 22:18 ET (clock): end of this phase, per the stopping rule; stopping for Shreyas's review
+
+- Against the plan sent at 17:09:
+  1. A37: PASS.
+  2. A40: FAIL, which led to A42: PASS (3/3).
+  3. A41: PASS, thin on K1's count.
+  4. Attention Q/K: open limit after three designs.
+  5. "What it computes": A44 PASS (3/3) for the modular family.
+- Stopping rule: (a) is not met, because step 4 is a recorded limit. Every step of the plan has now been attempted. What remains (a new Q/K design, intervention checks, other families, larger networks) is new scope, which the plan said comes to Shreyas for review first. So I stop here and write it up rather than start new rounds overnight.
+- Write-up: ATLAS_RESULTS.md (the 227k-parameter section) and ATLAS.md §4/§5 are current. All results, decompositions and tests are pushed.
+- The Colab GPU session is now idle. Asked Shreyas whether to release it (it uses compute units while up).

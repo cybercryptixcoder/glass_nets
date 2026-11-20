@@ -78,6 +78,7 @@ nets), where the existing reader and judge already work.
 
 ## 4. Status (keep current)
 
+- Nov 19, 22:18 ET (clock): **phase ended for review** (stopping rule, ATLAS §5). Plan steps 1–3 and 5 (modular family) passed; step 4 (attention Q/K) is an open limit. Next steps (new Q/K design; intervention checks; other families; larger networks) wait for Shreyas.
 - Nov 19, 22:17 ET (clock): **A44 PASS (3 of 3):** rule-labelled MLP-output/unembedding mechanisms write back the frequency they read (60%, 71%, 71%; chance about 20%); the catalogue now states "reads frequency k → writes a frequency-k wave over the answers".
 - Nov 19, 22:11 ET (clock): **A42 PASS (held out, 3 of 3):** fresh multiplication 95% on log-basis keys (number line 7%), fresh adders 92% and 92%, counting rule-labelled triggers (≥ 20 each). Tonight's queue is done: A37 PASS, A40 FAIL, A41 PASS (thin K1), A42 PASS; attention Q/K open (A38/A38d/A38e).
 - Nov 19, 20:55 ET (clock): **A41 PASS.** Memorizer: no algorithm invented (MLP/unembedding 187 of 193 mechanisms 'not explained', whole network 96% of trusted mechanisms 'lookup'); K1 passed on a single judged mechanism (no minimum count was set). Adders: MLP/unembedding 82–88% 'rule'. A42 due about 23:30.
