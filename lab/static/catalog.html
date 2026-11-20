@@ -1,72 +1,312 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Catalog · Glass Networks</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><circle cx=%228%22 cy=%228%22 r=%227%22 fill=%22%232CC4B3%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#EEDCC2;--card:#F7ECDC;--ink:#1C1A17;--yellow:#F6C744;--teal:#4FA596;--orange:#F0692A;--blue:#7F9CE2;--green:#62BE76;--grey:#AEB4B5;--field:#FFF8EF;--shadow:#1C1A17;
---thick:3px solid var(--ink);--thin:2px solid var(--ink);--mono:"Space Mono",ui-monospace,monospace;--serif:"Instrument Serif",Georgia,serif;--sans:"Archivo",system-ui,sans-serif}
-*{box-sizing:border-box}html,body{margin:0;height:100%}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px}
-button,input,select{font:inherit;color:inherit}button{cursor:pointer}
-.top{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:var(--thick);background:var(--card)}
-.wm{font-family:var(--serif);font-style:italic;font-size:30px}
-.wm b{font-family:var(--sans);font-style:normal;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-right:10px;padding:4px 8px;border:var(--thin);background:var(--yellow)}
-.spacer{flex:1}a.btn,.btn{border:var(--thin);background:var(--card);padding:7px 12px;font-weight:600;box-shadow:3px 3px 0 var(--shadow);text-decoration:none;color:inherit}
-.btn.teal{background:var(--teal)}.btn.orange{background:var(--orange)}.btn.sm{padding:4px 8px;font-size:12px;box-shadow:2px 2px 0 var(--shadow)}
-.main{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px;align-items:start}
-.frame{background:var(--card);border:var(--thick);box-shadow:5px 5px 0 var(--shadow)}
-.frame>h2{margin:0;padding:10px 14px;border-bottom:var(--thin);font-family:var(--serif);font-style:italic;font-weight:400;font-size:22px}
-.pad{padding:12px 14px}
-.entry{padding:10px 14px;border-bottom:2px solid rgba(28,26,23,.15);cursor:pointer}
-.entry:hover{background:var(--field)}.entry.sel{background:var(--yellow)}
-.entry .n{font-weight:800}.entry .m{font-family:var(--mono);font-size:11px;opacity:.8}
-.badge{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 6px;border:var(--thin);margin-left:6px}
-.badge.complete{background:var(--green)}.badge.verified{background:var(--blue)}.badge.notv{background:var(--grey)}.badge.umap{background:var(--field)}
-.bar{height:8px;border:1px solid var(--ink);background:var(--field);margin-top:4px}.bar>i{display:block;height:100%;background:var(--teal)}
-table{border-collapse:collapse;width:100%}td,th{border:1px solid rgba(28,26,23,.3);padding:5px 8px;text-align:left;font-size:13px}
-th{background:var(--field);font-weight:600}.mono{font-family:var(--mono);font-size:12px}
-pre{font-family:var(--mono);font-size:12px;background:var(--field);border:var(--thin);padding:10px;overflow:auto;max-height:420px;white-space:pre-wrap}
+/* Same design language as the main branch's lab (cards, soft depth, dark by default). */
+:root{
+  --bg:#F4F5F7; --surface:rgb(255 255 255 / .78); --raised:#F1F2F5; --sunken:#E9EAEE; --line:rgb(0 0 0 / .06); --line2:rgb(0 0 0 / .1);
+  --ink:#111113; --muted:#62626C; --faint:#9A9AA4;
+  --accent:#14A394; --accent-soft:rgb(20 163 148 / .12); --accent-ink:#fff; --warm:#E5733A; --warm-soft:rgb(229 115 58 / .12);
+  --good:#2E9E5B; --bad:#D9583A; --amber:#B7820F; --amber-soft:rgb(201 148 24 / .14);
+  --glow1:rgb(20 163 148 / .14); --glow2:rgb(229 115 58 / .10);
+  --shadow:0 1px 1px rgb(0 0 0 / .03), 0 10px 30px -10px rgb(0 0 0 / .12);
+  --r:20px; --ease:cubic-bezier(.2,.8,.2,1);
+  --mono:"Space Mono",ui-monospace,monospace; --serif:"Instrument Serif",Georgia,serif; --sans:"Archivo",system-ui,sans-serif;
+}
+:root[data-theme=dark]{
+  --bg:#0A0B0E; --surface:rgb(24 25 30 / .72); --raised:rgb(255 255 255 / .05); --sunken:rgb(0 0 0 / .25); --line:rgb(255 255 255 / .06); --line2:rgb(255 255 255 / .1);
+  --ink:#ECECEF; --muted:#9496A0; --faint:#5E606A;
+  --accent:#2CC4B3; --accent-soft:rgb(44 196 179 / .14); --accent-ink:#06100F; --warm:#F08C5A; --warm-soft:rgb(240 140 90 / .14);
+  --good:#4CC27E; --bad:#F07A5C; --amber:#E2B23E; --amber-soft:rgb(226 178 62 / .14);
+  --glow1:rgb(44 196 179 / .13); --glow2:rgb(240 140 90 / .08);
+  --shadow:0 1px 0 rgb(255 255 255 / .04) inset, 0 18px 40px -18px rgb(0 0 0 / .8);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 35% at 15% 10%,var(--glow1),transparent 70%),radial-gradient(35% 30% at 90% 85%,var(--glow2),transparent 70%)}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::selection{background:var(--accent-soft)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:10px;border:3px solid transparent;background-clip:content-box}
+.app{display:grid;grid-template-rows:64px 1fr;height:100vh}
+.top{display:flex;align-items:center;gap:12px;padding:0 24px}
+.brand{display:flex;align-items:center;gap:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px var(--accent-soft),0 0 18px var(--accent)}
+.wm{font-family:var(--serif);font-style:italic;font-size:26px}
+.sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.spacer{flex:1}
+.nav{display:flex;gap:4px;padding:4px;border-radius:99px;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav a,.nav button{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none}
+.nav a:hover,.nav button:hover{color:var(--ink);background:var(--raised)}
+.nav a.on{background:var(--accent);color:var(--accent-ink)}
+.main{display:grid;grid-template-columns:300px 1fr;gap:20px;padding:6px 22px 22px;min-height:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.side{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.side .hd{padding:16px 16px 10px}
+.side h2{margin:0 0 10px;font-family:var(--serif);font-style:italic;font-weight:400;font-size:22px}
+.search{width:100%;padding:9px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--sunken);outline:none}
+.search:focus{border-color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:5px 10px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);background:var(--raised)}
+.chip.on{background:var(--accent-soft);color:var(--accent)}
+.list{overflow:auto;padding:0 8px 12px;min-height:0}
+.grp>.gh{display:flex;align-items:center;gap:8px;width:100%;padding:10px 10px 6px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left}
+.grp>.gh .n{margin-left:auto;color:var(--faint)}
+.grp>.gh .chev{transition:transform .25s var(--ease);font-size:9px;color:var(--faint)}
+.grp.shut>.gh .chev{transform:rotate(-90deg)}.grp.shut>.items{display:none}
+.entry{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;transition:background .2s var(--ease)}
+.entry:hover{background:var(--raised)}.entry.sel{background:var(--accent-soft)}
+.entry .nm{font-weight:600;font-size:13px;line-height:1.3}.entry.sel .nm{color:var(--accent)}
+.entry .m{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+.sd{flex:none;width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.sd.complete{background:var(--good)}.sd.verified{background:var(--accent)}.sd.atlas{background:var(--amber)}.sd.umap{background:var(--faint)}.sd.notv{background:var(--bad)}
+.detail{overflow:auto;min-height:0;padding-right:4px}
+.hero{padding:22px 24px;display:flex;gap:20px;align-items:flex-start}
+.hero h1{margin:0;font-family:var(--serif);font-weight:400;font-size:36px;line-height:1.1}
+.hero .task{margin-top:8px;color:var(--muted)}
+.hero .ids{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:99px;background:var(--raised);color:var(--muted)}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;white-space:nowrap}
+.pill.complete{background:rgb(76 194 126 / .15);color:var(--good)}.pill.verified{background:var(--accent-soft);color:var(--accent)}
+.pill.atlas{background:var(--amber-soft);color:var(--amber)}.pill.umap{background:var(--raised);color:var(--muted)}.pill.notv{background:var(--warm-soft);color:var(--warm)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:18px 0}
+.tile{border-radius:18px;padding:16px 18px;color:#14151A;position:relative;overflow:hidden;box-shadow:0 14px 30px -18px rgb(0 0 0 / .7)}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgb(255 255 255 / .35),transparent 45%);pointer-events:none}
+.tile .lb{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.tile .v{font-size:34px;font-weight:700;margin:8px 0 4px;letter-spacing:-.01em}
+.tile .s{font-size:12px;font-weight:500;opacity:.8;line-height:1.35}
+.t1{background:#F6D86B}.t2{background:#F59E6B}.t3{background:#C6A7F7}.t4{background:#B5EC7A}.t5{background:#8FD6F2}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(16px);margin-bottom:14px;flex-wrap:wrap}
+.tabs button{padding:8px 16px;border-radius:10px;font-weight:600;font-size:13px;color:var(--muted)}
+.tabs button:hover{color:var(--ink)}.tabs button.on{background:var(--raised);color:var(--ink);box-shadow:0 1px 0 rgb(255 255 255 / .06) inset}
+.panel{display:none}.panel.on{display:block}
+.sec{padding:18px 20px;margin-bottom:16px}
+.sec h3{margin:0 0 10px;font-family:var(--serif);font-style:italic;font-weight:400;font-size:21px}
+.sec p{line-height:1.55}
+.find{display:grid;gap:10px}
+.fi{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 14px;border-radius:14px;background:var(--raised);line-height:1.5;font-size:13px}
+.fi .no{font-family:var(--mono);font-size:11px;color:var(--accent);padding-top:2px}
+.fi.hl{background:var(--accent-soft)}
+table{border-collapse:collapse;width:100%}
+td,th{padding:9px 10px;text-align:left;font-size:12.5px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:11.5px}
+.kv th{width:46%}
+.mechs tbody tr:hover{background:var(--raised)}
+.mechs tr.always td{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:11.5px}
+.lab{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px}
+.lab.rule{background:var(--accent-soft);color:var(--accent)}.lab.lookup{background:var(--amber-soft);color:var(--amber)}
+.lab.not{background:var(--raised);color:var(--muted)}.lab.unchecked{background:var(--raised);color:var(--muted)}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.toolbar select,.toolbar input{padding:7px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--sunken);outline:none}
+.toolbar .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.btn{border-radius:99px;padding:8px 16px;font-weight:600;font-size:13px;background:var(--raised);color:var(--ink);transition:transform .15s var(--ease),filter .2s}
+.btn:hover{filter:brightness(1.15)}.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 8px 22px -8px var(--accent)}
+.btn.warm{background:var(--warm-soft);color:var(--warm)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.ok{color:var(--good);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.agree{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;font-size:12px}
+.agree.y{background:rgb(76 194 126 / .15);color:var(--good)}.agree.n{background:var(--warm-soft);color:var(--warm)}
+pre{font-family:var(--mono);font-size:11.5px;background:var(--sunken);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;max-height:420px;white-space:pre-wrap;color:var(--ink)}
+details{margin:10px 0}details summary{cursor:pointer;font-weight:600;color:var(--muted)}details summary:hover{color:var(--ink)}
+input.x{width:100%;font-family:var(--mono);font-size:12px;padding:9px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--sunken);outline:none}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.ok{background:var(--green);padding:1px 6px;border:1px solid var(--ink)}.no{background:var(--orange);padding:1px 6px;border:1px solid var(--ink)}
-input.x{width:100%;font-family:var(--mono);font-size:12px;padding:6px;border:var(--thin);background:var(--field)}
-details summary{cursor:pointer;font-weight:600;margin:8px 0}
-.vals{display:flex;gap:2px;align-items:flex-end;height:60px;border-bottom:1px solid var(--ink)}
-.vals span{flex:1;background:var(--blue);min-width:4px}.vals span.top{background:var(--orange)}
-.muted{opacity:.7}.small{font-size:12px}
+.vals{display:flex;gap:2px;align-items:flex-end;height:64px;padding:6px;border-radius:10px;background:var(--sunken)}
+.vals span{flex:1;background:var(--accent);opacity:.55;min-width:3px;border-radius:3px 3px 0 0}.vals span.top{background:var(--warm);opacity:1}
+.muted{color:var(--muted)}.small{font-size:12px}
+.prose{white-space:pre-wrap;line-height:1.65;font-size:13.5px;max-width:95ch}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 12px}
+@media (max-width:900px){.main{grid-template-columns:1fr}.side{max-height:40vh}body{overflow:auto}.app{height:auto}}
 </style>
 </head>
 <body>
-<div class="top"><div class="wm"><b>Glass Networks</b>Catalog of constructions</div><div class="spacer"></div>
-<a class="btn sm" href="/constructor">Constructor</a><a class="btn sm" href="/">Lab</a></div>
+<div class="app">
+<div class="top">
+  <div class="brand"><span class="dot"></span><span class="wm">Glass Networks</span><span class="sub">Catalog</span></div>
+  <div class="spacer"></div>
+  <nav class="nav"><a class="on" href="/catalog">Catalog</a><a href="/">Lab</a><a href="/constructor">Constructor</a><button id="theme" title="Switch light / dark">Light mode</button></nav>
+</div>
 <div class="main">
-  <div class="frame"><h2>Networks</h2><div id="list"><div class="pad muted">Loading…</div></div></div>
-  <div id="detail" class="frame"><h2>Pick a network</h2><div class="pad muted">Each entry is the best construction found for one network, with the certificate the judge gave it. The playground runs the real network and the construction side by side.</div></div>
+  <aside class="card side">
+    <div class="hd"><h2>Networks</h2>
+      <input class="search" id="q" placeholder="Search networks…">
+      <div class="chips" id="chips"></div></div>
+    <div class="list" id="list"><div class="empty">Loading…</div></div>
+  </aside>
+  <section class="detail" id="detail"><div class="card empty">Pick a network on the left.</div></section>
+</div>
 </div>
 <script>
 const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const pct = v => v == null ? "–" : (100 * v).toFixed(1) + "%";
-const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c]));
-let E = [], cur = null;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const conf = x => x.trigger.confidence_clear ?? x.trigger.confidence;
+const stCls = s => ({"complete": "complete", "verified": "verified", "atlas only": "atlas", "unit map only": "umap"}[s] || "notv");
+let E = [], cur = null, filt = "all", shut = new Set();
+
+/* theme (dark by default; remembered where the browser allows) */
+try { const t = localStorage.getItem("gn-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+const themeLabel = () => $("#theme").textContent = document.documentElement.dataset.theme === "dark" ? "Light mode" : "Dark mode";
+themeLabel();
+$("#theme").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; themeLabel(); try { localStorage.setItem("gn-theme", r.dataset.theme); } catch (e) {} };
+
+const FILTERS = [["all", "All"], ["atlas", "Has an atlas"], ["certified", "Certified"]];
+function renderChips() {
+  $("#chips").innerHTML = FILTERS.map(([k, l]) => `<button class="chip${filt === k ? " on" : ""}" data-k="${k}">${l}</button>`).join("");
+  $$("#chips .chip").forEach(b => b.onclick = () => { filt = b.dataset.k; renderChips(); renderList(); });
+}
+
+function renderList() {
+  const q = $("#q").value.trim().toLowerCase();
+  const keep = E.map((e, i) => [e, i]).filter(([e]) =>
+    (!q || (e.name + " " + e.target + " " + e.task).toLowerCase().includes(q)) &&
+    (filt === "all" || (filt === "atlas" && e.atlas) || (filt === "certified" && (e.status === "complete" || e.status === "verified"))));
+  const groups = {};
+  keep.forEach(([e, i]) => (groups[e.family || "Other"] ||= []).push([e, i]));
+  $("#list").innerHTML = Object.entries(groups).map(([g, items]) => `<div class="grp${shut.has(g) ? " shut" : ""}" data-g="${esc(g)}">
+    <button class="gh"><span class="chev">▼</span>${esc(g)}<span class="n">${items.length}</span></button>
+    <div class="items">${items.map(([e, i]) => `<div class="entry${cur === e ? " sel" : ""}" data-i="${i}"><span class="sd ${stCls(e.status)}" title="${esc(e.status)}"></span>
+      <div><div class="nm">${esc(e.name)}</div><div class="m">${e.params?.toLocaleString() ?? "?"} params · ${esc(e.status)}</div></div></div>`).join("")}</div></div>`).join("")
+    || '<div class="empty">No networks match.</div>';
+  $$(".grp>.gh").forEach(b => b.onclick = () => { const g = b.parentElement.dataset.g; shut.has(g) ? shut.delete(g) : shut.add(g); b.parentElement.classList.toggle("shut"); });
+  $$(".entry").forEach(d => d.onclick = () => show(+d.dataset.i));
+}
 
 async function load() {
   E = await (await fetch("/api/catalog")).json();
-  $("#list").innerHTML = E.map((e, i) => `<div class="entry" data-i="${i}">
-    <div class="n">${esc(e.name)}<span class="badge ${e.status === "complete" ? "complete" : e.status === "verified" ? "verified" : (e.status === "unit map only" || e.status === "atlas only") ? "umap" : "notv"}">${e.status}</span></div>
-    <div class="m">${esc(e.family)} · ${e.params?.toLocaleString() ?? "?"} params · stages ${e.stages}</div>
-    <div class="bar" title="behaviour"><i style="width:${100 * (e.behaviour || 0)}%"></i></div></div>`).join("") || '<div class="pad">No judged constructions yet.</div>';
-  document.querySelectorAll(".entry").forEach(d => d.onclick = () => show(+d.dataset.i));
+  renderChips(); renderList();
+  $("#q").oninput = renderList;
   const want = new URLSearchParams(location.search).get("t");
   const i = E.findIndex(e => e.target === want);
-  if (E.length) show(i >= 0 ? i : 0);
+  if (E.length) show(i >= 0 ? i : Math.max(0, E.findIndex(e => e.atlas)));
+}
+
+/* ---------- the detail page ---------- */
+function labelOf(x) {
+  const l = x.trigger.label;
+  if (!l) return "";
+  return `<span class="lab ${l === "not explained" ? "not" : l}">${esc(l)}</span>`;
+}
+
+function atlasStats(a) {
+  const ms = Object.values(a.matrices).flatMap(m => m.mechanisms);
+  const sw = ms.filter(x => x.trigger.rule !== "always" && x.trigger.rule !== "never");
+  const trusted = sw.filter(x => conf(x) >= 0.9);
+  const lab = trusted.filter(x => x.trigger.label);
+  return {n: ms.length, mats: Object.keys(a.matrices).length, trusted: trusted.length, sw: sw.length,
+          rule: lab.filter(x => x.trigger.label === "rule").length, lookup: lab.filter(x => x.trigger.label === "lookup").length, labelled: lab.length};
+}
+
+function tilesHTML(e) {
+  const t = [];
+  if (e.atlas) {
+    const a = e.atlas, f = a.fidelity, s = atlasStats(a);
+    t.push(`<div class="tile t1"><div class="lb">Rebuilt from its parts</div><div class="v">${pct(f.rule_gated_trusted_v4 ?? f.rule_gated_trusted_v3 ?? f.rule_gated_trusted)}</div><div class="s">of the network's decisions, with each part switched on by its rule${a.task_rule == null ? "" : `<br>network's own accuracy: ${pct(a.task_rule)}`}</div></div>`);
+    t.push(`<div class="tile t2"><div class="lb">Mechanisms</div><div class="v">${s.n}</div><div class="s">pieces of the weights, across ${s.mats} matrices</div></div>`);
+    if (s.labelled)
+      t.push(`<div class="tile t4"><div class="lb">Understood</div><div class="v">${Math.round(100 * s.rule / s.labelled)}%</div><div class="s">of trusted rules carry over to unseen inputs (${s.rule} rule · ${s.lookup} memorized)</div></div>`);
+    else
+      t.push(`<div class="tile t4"><div class="lb">Trusted rules</div><div class="v">${s.sw ? Math.round(100 * s.trusted / s.sw) : 0}%</div><div class="s">${s.trusted} of ${s.sw} switching mechanisms have a rule that holds on held-out inputs</div></div>`);
+    t.push(`<div class="tile t3"><div class="lb">Parts alone</div><div class="v">${pct(f.mechanisms_alone)}</div><div class="s">decisions kept with only the listed mechanisms, nothing else</div></div>`);
+  }
+  if (e.run) t.push(`<div class="tile t5"><div class="lb">Construction</div><div class="v">${pct(e.behaviour)}</div><div class="s">same decision as the network · stages ${esc(e.stages)}</div></div>`);
+  return t.length ? `<div class="tiles">${t.join("")}</div>` : "";
+}
+
+function overviewHTML(a) {
+  const st = a.findings ? a.findings.statements : [];
+  const f = a.fidelity;
+  return `<div class="card sec"><h3>What the atlas finds</h3>
+    <div class="find">${st.map(x => { const m = x.match(/^(\d+[a-z]?)\. /); return `<div class="fi${/^6\./.test(x) ? " hl" : ""}"><span class="no">${m ? m[1] : "•"}</span><div>${esc(x.replace(/^\d+[a-z]?\. /, ""))}</div></div>`; }).join("") || '<p class="muted">No findings recorded.</p>'}</div></div>
+  <div class="card sec"><h3>How faithful the description is</h3>
+    <p class="hint">The weights split exactly into mechanisms. These numbers say how much of the network's behaviour survives when it is rebuilt from them in different ways.</p>
+    <table class="kv">
+      <tr><th>Each mechanism switched by its trusted, decision-checked rule</th><td><b>${pct(f.rule_gated_trusted_v4 ?? f.rule_gated_trusted_v3 ?? f.rule_gated_trusted)}</b></td></tr>
+      <tr><th>Every rule used, trusted or not</th><td>${pct(f.rule_gated)}</td></tr>
+      <tr><th>Switched by the network's own importances</th><td>${pct(f.importance_masked)}</td></tr>
+      <tr><th>Only the listed mechanisms, all on</th><td>${pct(f.mechanisms_alone)}</td></tr>
+      <tr><th>Every live mechanism on</th><td>${pct(f.all_alive)}</td></tr>
+      ${a.task_rule == null ? "" : `<tr><th>The task rule alone (the network's accuracy)</th><td>${pct(a.task_rule)}</td></tr>`}
+    </table><p class="small muted" style="margin-top:10px">Source: <span class="mono">${esc(a.file)}</span></p></div>`;
+}
+
+function mechRows(a) {
+  const rows = [];
+  for (const [k, m] of Object.entries(a.matrices)) {
+    const always = m.mechanisms.filter(x => x.trigger.rule === "always");
+    if (always.length) {
+      const fl = always.filter(x => x.effect).map(x => x.effect.decision_flip_rate_when_needed);
+      rows.push(`<tr class="always" data-m="${esc(k)}" data-l="always" data-t="${esc((k + " always " + always.map(x => x.id).join(" ")).toLowerCase())}"><td class="mono">${always.length} always-on</td><td>100%</td><td class="small">always needed: together a fixed part of ${esc(k)} (${esc(always.map(x => x.id).join(", "))})</td><td>–</td><td class="small">${fl.length ? `removing any one flips ${pct(Math.min(...fl))}–${pct(Math.max(...fl))} of decisions` : "–"}</td><td>–</td><td>–</td></tr>`);
+    }
+    for (const x of m.mechanisms.filter(x => x.trigger.rule !== "always").sort((p, q) => q.in_use - p.in_use)) {
+      const e = x.effect || {};
+      const rule = (x.trigger.task_level && x.trigger.task_level.confidence_clear >= 0.9 && x.trigger.rule !== "never") ? "task-level: " + x.trigger.task_level.rule : (x.trigger.rule_glossed || x.trigger.rule);
+      const rw = x.profile_text || x.rw_text || "–";
+      rows.push(`<tr data-m="${esc(k)}" data-l="${esc(x.trigger.label || (conf(x) >= 0.9 ? "trusted" : "not explained"))}" data-t="${esc((x.id + " " + rule + " " + rw).toLowerCase())}">
+        <td class="mono">${esc(x.id)}</td><td>${pct(x.in_use)}</td><td class="mono">${esc(rule).replace(/\n/g, "<br>")}</td>
+        <td>${conf(x).toFixed(2)}${labelOf(x)}</td>
+        <td class="small">${e.effect_when_needed == null ? "–" : `flips ${pct(e.decision_flip_rate_when_needed)} of decisions; lowers class ${e.most_lowered_class}, raises ${e.most_raised_class}`}</td>
+        <td>${e.specificity == null ? "–" : e.specificity >= 1e5 ? "only where needed" : e.specificity.toFixed(0) + "×"}</td>
+        <td class="mono">${esc(rw)}</td></tr>`);
+    }
+  }
+  return rows.join("");
+}
+
+function mechsHTML(a) {
+  return `<div id="atlas" class="card sec"><h3>Mechanisms</h3>
+    <p class="hint">Each row is one piece of the network's weights. <b>Trigger</b>: when the piece is needed. <b>Confidence</b>: how well that rule predicts it on held-out inputs, with a label where checked: <span class="lab rule">rule</span> carries over to unseen inputs, <span class="lab lookup">lookup</span> only describes memorized cases. <b>Specificity</b>: how much more removing it matters where the rule says it is needed than elsewhere.</p>
+    <div class="toolbar">
+      <select id="fm"><option value="">All matrices</option>${Object.keys(a.matrices).map(k => `<option>${esc(k)}</option>`).join("")}</select>
+      <select id="fl"><option value="">Any label</option><option value="rule">rule</option><option value="lookup">lookup</option><option value="not explained">not explained</option><option value="always">always on</option></select>
+      <input id="ft" placeholder="Search rules, e.g. frequency 14">
+      <span class="count" id="fc"></span></div>
+    <div style="overflow:auto"><table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th><th>what it reads and writes</th></tr></thead>
+    <tbody>${mechRows(a)}</tbody></table></div></div>`;
+}
+
+function filterMechs() {
+  const m = $("#fm").value, l = $("#fl").value, t = $("#ft").value.trim().toLowerCase();
+  let n = 0;
+  $$("#atlas table.mechs tbody tr").forEach(r => {
+    const ok = (!m || r.dataset.m === m) && (!l || r.dataset.l === l) && (!t || r.dataset.t.includes(t));
+    r.style.display = ok ? "" : "none"; n += ok;
+  });
+  $("#fc").textContent = `${n} shown`;
+}
+
+function stepHTML() {
+  return `<div class="card sec"><h3>Step through an input</h3>
+    <p class="hint">A random input goes through the real network and through the network rebuilt from its mechanisms, each switched on by its trusted rule. Below: at each step, which mechanisms the rules switch on, and which the network's own importances say are needed.</p>
+    <p><button class="btn primary" id="atlas-play">Random input</button></p><div id="atlas-out"></div></div>`;
+}
+
+function constructionHTML(e) {
+  const c = e.coverage || {}, un = c.unexplained || [];
+  return `<div class="card sec"><h3>What the construction says the network does</h3><div class="prose">${esc(e.description || "(no description in the file)")}</div></div>
+  <div class="grid2">
+    <div class="card sec"><h3>Certificate</h3><table class="kv">${certRows(e)}</table></div>
+    <div class="card sec"><h3>Not explained</h3>${un.length ? "<ul>" + un.map(u => `<li>${esc(u)}</li>`).join("") + "</ul>" : '<p class="muted">Nothing found by the tests.</p>'}
+      ${e.fails.length ? `<h3 style="margin-top:14px">Why it isn't certified</h3><ul>${e.fails.map(f => `<li class="small">${esc(f)}</li>`).join("")}</ul>` : ""}</div></div>
+  <div class="card sec"><h3>Playground</h3>${e.playable ? playgroundHTML() : '<p class="muted">The playground runs weight-level networks; language-model constructions are shown with their certificate only.</p>'}</div>
+  <div class="card sec"><details><summary>The construction (Python)</summary><pre>${esc(e.source)}</pre></details>
+  <details><summary>The judge's full report</summary><pre>${esc(e.report)}</pre></details></div>`;
 }
 
 function certRows(e) {
   const c = e.coverage || {};
-  const rows = [["Verdict", `<b>${e.status}</b> (judged by ${esc(e.judged_by)})`], ["Stages explained", e.stages],
+  const rows = [["Verdict", `<b>${esc(e.status)}</b> (judged by ${esc(e.judged_by)})`], ["Stages explained", e.stages],
     ["Behaviour (same decision as the network)", pct(e.behaviour)], ["All named sites replaced at once", pct(c.joint)],
     ["Worst slice", pct(c.worst_slice)], ["Network's own mistakes reproduced", pct(c.errors_reproduced)],
     ["How it was written", esc(e.written || "")], ["Runs of the constructor on this network", e.runs], ["Cost of this run", e.cost == null ? "–" : "$" + e.cost.toFixed(2) + ` (${e.steps} steps)`]];
@@ -75,103 +315,74 @@ function certRows(e) {
 
 function show(i) {
   cur = E[i];
-  document.querySelectorAll(".entry").forEach(d => d.classList.toggle("sel", +d.dataset.i === i));
+  $$(".entry").forEach(d => d.classList.toggle("sel", +d.dataset.i === i));
   history.replaceState(null, "", "?t=" + cur.target);
-  const c = cur.coverage || {}, un = c.unexplained || [];
-  if (!cur.run) {
-    $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)}</span></h2>
-    <div class="pad"><div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
-    <p>No construction has been written for this network yet. What is known about its parts is below.</p>${atlasHTML(cur.atlas)}${partsHTML(cur.unit_map)}</div>`;
-    return;
-  }
-  $("#detail").innerHTML = `<h2>${esc(cur.name)} <span class="small mono muted">${esc(cur.target)} / ${esc(cur.run)}</span></h2>
-  <div class="pad">
-    <div class="small muted">Task the network was trained on: ${esc(cur.task)}</div>
-    <h3>What the construction says the network does</h3><pre>${esc(cur.description || "(no description in the file)")}</pre>
-    <div class="grid2"><div><h3>Certificate</h3><table>${certRows(cur)}</table></div>
-    <div><h3>Not explained</h3>${un.length ? "<ul>" + un.map(u => `<li>${esc(u)}</li>`).join("") + "</ul>" : '<p class="muted">Nothing found by the tests.</p>'}
-    ${cur.fails.length ? `<h3>Why it isn't certified</h3><ul>${cur.fails.map(f => `<li class="small">${esc(f)}</li>`).join("")}</ul>` : ""}</div></div>
-    ${atlasHTML(cur.atlas)}
-    ${partsHTML(cur.unit_map)}
-    <h3>Playground</h3>${cur.playable ? playgroundHTML() : '<p class="muted">The playground runs weight-level networks; language-model constructions are shown with their certificate only.</p>'}
-    <details><summary>The construction (Python)</summary><pre>${esc(cur.source)}</pre></details>
-    <details><summary>The judge's full report</summary><pre>${esc(cur.report)}</pre></details>
-  </div>`;
-  if (cur.atlas && $("#atlas-play")) $("#atlas-play").onclick = atlasPlay;
-  if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+  const tabs = [];
+  if (cur.atlas) tabs.push(["overview", "Overview", overviewHTML(cur.atlas)], ["mechs", "Mechanisms", mechsHTML(cur.atlas)], ["step", "Step through", stepHTML()]);
+  if (cur.run) tabs.push(["cons", "Construction", constructionHTML(cur)]);
+  if (cur.unit_map) tabs.push(["parts", "Parts (unit map)", `<div class="card sec">${partsHTML(cur.unit_map)}</div>`]);
+  $("#detail").innerHTML = `<div class="card hero"><div style="flex:1">
+      <h1>${esc(cur.name)}</h1><div class="task">Trained on: <b>${esc(cur.task)}</b></div>
+      <div class="ids"><span class="tag">${esc(cur.target)}</span><span class="tag">${cur.params?.toLocaleString() ?? "?"} parameters</span><span class="tag">${esc(cur.family)}</span>${cur.run ? `<span class="tag">run ${esc(cur.run)}</span>` : ""}</div></div>
+      <span class="pill ${stCls(cur.status)}">${esc(cur.status)}</span></div>
+    ${tilesHTML(cur)}
+    ${tabs.length ? `<div class="tabs">${tabs.map(([k, l], j) => `<button data-k="${k}" class="${j ? "" : "on"}">${l}</button>`).join("")}</div>
+      ${tabs.map(([k, , h], j) => `<div class="panel${j ? "" : " on"}" data-k="${k}">${h}</div>`).join("")}` : '<div class="card empty">Nothing has been built for this network yet.</div>'}`;
+  $$(".tabs button").forEach(b => b.onclick = () => {
+    $$(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+    $$(".panel").forEach(p => p.classList.toggle("on", p.dataset.k === b.dataset.k));
+  });
+  if (cur.atlas) { ["#fm", "#fl"].forEach(s => $(s).onchange = filterMechs); $("#ft").oninput = filterMechs; filterMechs(); $("#atlas-play").onclick = atlasPlay; }
+  if (cur.run && cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); play(true); }
+  $("#detail").scrollTop = 0;
+  const sel = $(".entry.sel"); if (sel) sel.scrollIntoView({block: "nearest"});
 }
 
 async function atlasPlay() {
+  $("#atlas-out").innerHTML = '<p class="muted">Running…</p>';
   const r = await (await fetch(`/api/catalog/${cur.target}/atlas_play`, {method: "POST", body: JSON.stringify({seed: Math.floor(Math.random() * 1e9)})})).json();
   if (r.error) { $("#atlas-out").innerHTML = `<p class="muted">${esc(r.error)}</p>`; return; }
-  const rows = r.calls.map(c => `<tr><td>${esc(c.at)}</td><td class="mono">${esc(c.matrix)}</td><td class="mono small">${esc(c.on_by_trigger.join(", ") || "–")}</td><td class="mono small">${esc(c.on_by_importance.join(", ") || "–")}</td></tr>`).join("");
-  $("#atlas-out").innerHTML = `<p class="mono small">input: ${esc(JSON.stringify(r.x))}</p>
-    <p>Network's answer: <b>${r.network_decision}</b> · rebuilt from mechanisms: <b>${r.rebuilt_decision}</b> ${r.network_decision === r.rebuilt_decision ? "(agree)" : "(differ)"}</p>
-    <table><thead><tr><th>where</th><th>matrix</th><th>switched on by triggers</th><th>needed by importance</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-function atlasHTML(a) {
-  if (!a) return "";
-  const f = a.fidelity, rows = [];
-  for (const [k, m] of Object.entries(a.matrices)) {
-    const always = m.mechanisms.filter(x => x.trigger.rule === "always");          // A34: one row for the always-on ones
-    if (always.length) {
-      const fl = always.filter(x => x.effect).map(x => x.effect.decision_flip_rate_when_needed);
-      rows.push(`<tr class="always"><td class="mono">${always.length} always-on</td><td>100%</td><td class="small">always needed: together a fixed part of ${esc(k)} (${esc(always.map(x => x.id).join(", "))})</td><td>–</td><td class="small">${fl.length ? `removing any one flips ${pct(Math.min(...fl))}–${pct(Math.max(...fl))} of decisions` : "–"}</td><td>–</td><td>–</td></tr>`);
-    }
-  for (const x of m.mechanisms.filter(x => x.trigger.rule !== "always").sort((p, q) => q.in_use - p.in_use)) {
-    const e = x.effect || {};
-    rows.push(`<tr><td class="mono">${esc(x.id)}</td><td>${pct(x.in_use)}</td><td class="mono small">${esc((x.trigger.task_level && x.trigger.task_level.confidence_clear >= 0.9 && x.trigger.rule !== 'always' && x.trigger.rule !== 'never') ? 'task-level: ' + x.trigger.task_level.rule : (x.trigger.rule_glossed || x.trigger.rule)).replace(/\n/g, "<br>")}</td><td>${(x.trigger.confidence_clear ?? x.trigger.confidence).toFixed(2)}${x.trigger.label ? ' <span class="small">(' + esc(x.trigger.label) + ')</span>' : ''}</td>
-      <td class="small">${e.effect_when_needed == null ? "–" : `flips ${pct(e.decision_flip_rate_when_needed)} of decisions; lowers class ${e.most_lowered_class}, raises class ${e.most_raised_class}`}</td><td>${e.specificity == null ? "–" : e.specificity >= 1e5 ? "only where needed" : e.specificity.toFixed(0) + "×"}</td><td class="mono small">${esc(x.profile_text || x.rw_text || "–")}</td></tr>`);
-  }
-  }
-  return `<div id="atlas"><h3>Mechanism atlas</h3>
-  <p class="small">The weights split <b>exactly</b> into mechanisms. For each: a readable trigger (when it is needed), its confidence on held-out inputs, and what removing it does where it is needed. Specificity: how much more removing it changes the output where its importance says it is needed than where it says not.</p>
-  <table><tr><th>Rebuilt from mechanisms, each switched by its trigger (trusted and decision-checked triggers; the rest always on)</th><td><b>${pct(f.rule_gated_trusted_v4 ?? f.rule_gated_trusted_v3 ?? f.rule_gated_trusted)}</b> of the network's decisions${a.task_rule == null ? "" : `; the task rule alone: ${pct(a.task_rule)}`}</td></tr>
-  <tr><th>Every trigger used / own importances / all mechanisms on</th><td>${pct(f.rule_gated)} / ${pct(f.importance_masked)} / ${pct(f.all_alive)}</td></tr></table>
-  ${a.narrative ? `<h3>In plain English</h3><p>${esc(a.narrative.text)}</p><p class="small muted">(${esc(a.narrative.note)}${a.narrative.violations.length ? "; unresolved: " + esc(a.narrative.violations.join("; ")) : ""})</p>` : ""}
-  ${a.findings ? `<h3>What the atlas finds</h3><ol class="small">${a.findings.statements.map(x => `<li>${esc(x.replace(/^\d+[a-z]?\. /, ""))}</li>`).join("")}</ol>` : ""}
-  <table class="mechs"><thead><tr><th>mechanism</th><th>in use</th><th>trigger</th><th>confidence</th><th>removing it where needed</th><th>specificity</th><th>what it reads and writes</th></tr></thead><tbody>${rows.join("")}</tbody></table>
-  <h3>Step through an input</h3>
-  <p class="small">A random input goes through the network and through the network rebuilt from its mechanisms, each switched on by its trusted trigger. The table lists, at each step, which mechanisms the triggers switch on (and which the network's own importances say are needed).</p>
-  <p><button class="btn sm teal" id="atlas-play">Random input</button></p><div id="atlas-out"></div>
-  <p class="small muted">Source: <span class="mono">${esc(a.file)}</span> (lab/atlas.py).</p></div>`;
+  const rows = r.calls.map(c => `<tr><td>${esc(c.at)}</td><td class="mono">${esc(c.matrix)}</td><td class="mono">${esc(c.on_by_trigger.join(", ") || "–")}</td><td class="mono">${esc(c.on_by_importance.join(", ") || "–")}</td></tr>`).join("");
+  const same = r.network_decision === r.rebuilt_decision;
+  $("#atlas-out").innerHTML = `<div class="tiles" style="margin:6px 0 14px">
+      <div class="tile t5"><div class="lb">Network's answer</div><div class="v">${r.network_decision}</div></div>
+      <div class="tile t1"><div class="lb">Rebuilt from mechanisms</div><div class="v">${r.rebuilt_decision}</div></div></div>
+    <p><span class="agree ${same ? "y" : "n"}">${same ? "they agree" : "they differ"}</span> <span class="mono muted" style="margin-left:8px">input ${esc(JSON.stringify(r.x))}</span></p>
+    <div style="overflow:auto"><table><thead><tr><th>where</th><th>matrix</th><th>switched on by rules</th><th>needed by importance</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function partsHTML(u) {
   if (!u) return "";
   const f2 = v => v == null ? "–" : v.toFixed(2), sub = u.cells.filter(x => x.substitution_grade != null);
   return `<div id="parts"><h3>Parts (unit map)</h3>
-  <p class="small">What each hidden neuron computes, as far as a library of simple units can say, with a confidence for each part.
-  A unit is a single ReLU of a few simple quantities (the current input, the previous input, the running max, 2nd max or min).
-  Each part is fitted on half of the inputs and scored on the other half.</p>
-  <table><tr><th>Neuron-steps explained (held-out R² ≥ 0.9), units that use the input history</th><td>${f2(u.coverage_history)} (same network with shuffled weights: ${f2(u.control_history)})</td></tr>
+  <p class="hint">What each hidden neuron computes, as far as a library of simple units can say. A unit is a single ReLU of a few simple quantities (the current input, the previous input, the running max, 2nd max or min). Each part is fitted on half of the inputs and scored on the other half.</p>
+  <table class="kv"><tr><th>Neuron-steps explained (held-out R² ≥ 0.9), units that use the input history</th><td>${f2(u.coverage_history)} (same network with shuffled weights: ${f2(u.control_history)})</td></tr>
   <tr><th>Neuron-steps explained by raw-input units</th><td>${f2(u.coverage_raw)} (shuffled: ${f2(u.control_raw)})</td></tr>
-  <tr><th>Precision the network needs (ε95)</th><td>${u.eps95 == null ? "–" : (100 * u.eps95).toFixed(2) + "%"} — noise of this size (as a share of each neuron's spread) flips 5% of the network's decisions, so any account of a neuron must be at least this precise</td></tr>
+  <tr><th>Precision the network needs (ε95)</th><td>${u.eps95 == null ? "–" : (100 * u.eps95).toFixed(2) + "%"}: noise of this size (as a share of each neuron's spread) flips 5% of the network's decisions</td></tr>
   <tr><th>Substitution-grade parts (error ≤ ε95)</th><td>${sub.length ? u.substitution_grade + " of " + u.cells.length + " neuron-steps" : "–"}</td></tr>
-  <tr><th>Replaceable parts</th><td>${u.replaceable ? `Replaceable by their units: ${(100 * u.replaceable.share_after_step1).toFixed(0)}% of the network's activity after step 1 (${u.replaceable.n} neuron-steps, counting the exact first-step input units). Replacing them all at once keeps ${pct(u.replaceable.joint_fidelity)} of the network's decisions; the task rule alone keeps ${pct(u.replaceable.task_rule)}.` : "–"}</td></tr></table>
-  <h3>Per neuron</h3><p class="small muted">The most common label over the steps where the neuron is explained.</p>
+  <tr><th>Replaceable parts</th><td>${u.replaceable ? `${(100 * u.replaceable.share_after_step1).toFixed(0)}% of the network's activity after step 1 (${u.replaceable.n} neuron-steps). Replacing them all at once keeps ${pct(u.replaceable.joint_fidelity)} of decisions; the task rule alone keeps ${pct(u.replaceable.task_rule)}.` : "–"}</td></tr></table>
+  <h3 style="margin-top:16px">Per neuron</h3><p class="hint">The most common label over the steps where the neuron is explained.</p>
   <table class="neurons"><thead><tr><th>neuron</th><th>label</th></tr></thead><tbody>${u.per_unit.map(r => `<tr><td>${r.neuron}</td><td class="mono">${esc(r.label)}</td></tr>`).join("")}</tbody></table>
   <details><summary>Every neuron-step (${u.cells.length})</summary>
-  <p class="small muted">Fit: held-out R² of the unit. Sufficiency: decisions kept when this one neuron-step is replaced by its unit. Importance: decisions lost when it is set to its mean. Relative error: the unit's error as a share of the neuron's spread.</p>
+  <p class="hint">Fit: held-out R² of the unit. Sufficiency: decisions kept when this one neuron-step is replaced by its unit. Importance: decisions lost when it is set to its mean. Relative error: the unit's error as a share of the neuron's spread.</p>
   <table><thead><tr><th>step</th><th>neuron</th><th>unit</th><th>fit</th><th>sufficiency</th><th>importance</th><th>relative error</th><th>substitution-grade</th></tr></thead><tbody>
   ${u.cells.map(x => `<tr><td>${x.t}</td><td>${x.unit}</td><td class="mono">${esc(x.label || "")}</td><td>${x.fit == null ? "–" : x.fit.toFixed(3)}</td><td>${pct(x.sufficiency)}</td><td>${pct(x.importance)}</td><td>${x.rel_error == null ? "–" : x.rel_error.toFixed(3)}</td><td>${x.substitution_grade == null ? "–" : x.substitution_grade ? "yes" : "no"}</td></tr>`).join("")}
   </tbody></table></details>
-  <p class="small muted">Source: <span class="mono">${esc(u.file)}</span> (lab/unitmap.py). Read only: the catalog shows the map, it does not recompute it.</p></div>`;
+  <p class="small muted">Source: <span class="mono">${esc(u.file)}</span> (lab/unitmap.py). Read only.</p></div>`;
 }
 
 function playgroundHTML() {
-  return `<div class="small muted">An input (comma-separated numbers; empty = a random input from the network's domain). Then compare the network with the construction, or take one of the construction's variables from another input: the construction predicts what the network will do when that variable is changed inside it, and the network shows what it actually does.</div>
+  return `<p class="hint">Type an input (comma-separated numbers), or leave it empty for a random one. Then compare the network with the construction, or take one of the construction's variables from another input: the construction predicts what the network will do when that variable is changed inside it, and the network shows what it actually does.</p>
   <p><input class="x" id="xin" placeholder="random"></p>
-  <p><button class="btn sm teal" id="run">Run this input</button> <button class="btn sm" id="rand">Random input</button>
-  &nbsp; Variable: <select id="var"></select> <button class="btn sm orange" id="swap">Take it from a random other input</button></p>
+  <div class="toolbar"><button class="btn primary sm" id="run">Run this input</button><button class="btn sm" id="rand">Random input</button>
+  <span class="muted small" style="margin-left:8px">Variable</span><select id="var"></select><button class="btn warm sm" id="swap">Take it from a random other input</button></div>
   <div id="out"></div>`;
 }
 
 function valsHTML(o) {
-  const v = o.values, mx = Math.max(...v.map(Math.abs), 1e-9), top = o.decision;
-  return `<div class="vals">${v.map((a, j) => `<span class="${top.includes(j) && v.length > 1 && j === v.indexOf(Math.max(...v)) ? "top" : ""}" title="${j}: ${a}" style="height:${Math.max(2, 58 * (a - Math.min(...v)) / ((Math.max(...v) - Math.min(...v)) || 1))}px"></span>`).join("")}</div>
-  <div class="mono">decision ${esc(JSON.stringify(o.decision))}</div>`;
+  const v = o.values, top = o.decision;
+  return `<div class="vals">${v.map((a, j) => `<span class="${top.includes(j) && v.length > 1 && j === v.indexOf(Math.max(...v)) ? "top" : ""}" title="${j}: ${a}" style="height:${Math.max(2, 52 * (a - Math.min(...v)) / ((Math.max(...v) - Math.min(...v)) || 1))}px"></span>`).join("")}</div>
+  <div class="mono muted" style="margin-top:6px">decision ${esc(JSON.stringify(o.decision))}</div>`;
 }
 
 async function play(random = false, swap = false) {
@@ -182,18 +393,18 @@ async function play(random = false, swap = false) {
   if (swap) { body.x = txt ? txt.split(/[\s,]+/).map(Number) : undefined; body.swap = {variable: $("#var").value}; body.seed = Math.floor(Math.random() * 1e9); }
   const r = await fetch(`/api/catalog/${cur.target}/${cur.run}/play`, {method: "POST", body: JSON.stringify(body)});
   const d = await r.json();
-  if (d.error) { $("#out").innerHTML = `<p class="no">${esc(d.error)}</p>`; return; }
+  if (d.error) { $("#out").innerHTML = `<p class="bad">${esc(d.error)}</p>`; return; }
   $("#xin").value = d.x.join(", ");
   const sel = $("#var"), was = sel.value;
   sel.innerHTML = d.variables.filter(v => v.sites.length).map(v => `<option${v.name === was ? " selected" : ""}>${esc(v.name)}</option>`).join("");
   let h = `<div class="grid2"><div><b>Network</b>${valsHTML(d.network)}</div><div><b>Construction</b>${valsHTML(d.construction)}</div></div>
-  <p>${d.agree ? '<span class="ok">same decision</span>' : '<span class="no">different decisions</span>'}</p>
+  <p><span class="agree ${d.agree ? "y" : "n"}">${d.agree ? "same decision" : "different decisions"}</span></p>
   <table><tr><th>Variable</th><th>Value on this input</th><th>Lives at</th></tr>${d.variables.map(v => `<tr><td class="mono">${esc(v.name)}</td><td class="mono">${esc(JSON.stringify(v.value))}</td><td class="mono">${esc(v.sites.join(", ") || "not placed")}</td></tr>`).join("")}</table>`;
   if (d.swap) {
     const s = d.swap;
-    h = `<h3>Intervention: <span class="mono">${esc(s.variable)}</span> at <span class="mono">${esc(s.site)}</span> taken from input [${esc(s.source_x.join(", "))}] (value ${esc(JSON.stringify(s.source_value))})</h3>
+    h = `<h3>Intervention: <span class="mono">${esc(s.variable)}</span> at <span class="mono">${esc(s.site)}</span>, taken from input [${esc(s.source_x.join(", "))}] (value ${esc(JSON.stringify(s.source_value))})</h3>
     <div class="grid2"><div><b>The construction predicts</b>${valsHTML(s.construction_predicts)}</div><div><b>The network actually does</b>${valsHTML(s.network_after)}</div></div>
-    <p>${s.prediction_right ? '<span class="ok">prediction right</span>' : '<span class="no">prediction wrong</span>'}</p><hr>` + h;
+    <p><span class="agree ${s.prediction_right ? "y" : "n"}">${s.prediction_right ? "prediction right" : "prediction wrong"}</span></p><hr style="border:none;border-top:1px solid var(--line)">` + h;
   }
   $("#out").innerHTML = h;
 }
