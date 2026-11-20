@@ -1024,6 +1024,26 @@ def findings(a, control=None):
                    f"removing them where needed mostly flips the answer from rank {fr} to rank {to}.")
     out.append(f"4. Rebuilt from mechanisms switched by trusted triggers: {100 * S['fid']:.1f}% of decisions"
                + (f" (task rule {100 * S['task_rule']:.1f}%)." if S["task_rule"] is not None else "."))
+    labelled = [(k, x) for k, m in a["matrices"].items() for x in m["mechanisms"]
+                if x["trigger"].get("label") and _conf(x) >= TRUSTED and x["trigger"]["rule"] not in ("always", "never")]
+    if labelled:                                                  # A43: what the network is made of, from the A41 labels
+        import re as _re
+        parts, freq = [], {}
+        for k in a["matrices"]:
+            c = {}
+            for k2, x in labelled:
+                if k2 == k:
+                    c[x["trigger"]["label"]] = c.get(x["trigger"]["label"], 0) + 1
+            if c:
+                parts.append(f"{k}: " + ", ".join(f"{c[l_]} {l_}" for l_ in ("rule", "lookup", "unchecked") if c.get(l_)))
+        for k, x in labelled:
+            if x["trigger"]["label"] == "rule":
+                for fb in {(int(f_), "log" if "·log " in u else "line") for u in x["trigger"].get("features_used", []) for f_ in _re.findall(r"(\d+)·", u)}:
+                    freq[fb] = freq.get(fb, 0) + 1
+        top = ", ".join(f"{f_} ({b_}, {n_})" for (f_, b_), n_ in sorted(freq.items(), key=lambda kv: -kv[1])[:8])
+        out.append("6. Structure (a 'rule' carries over to token values never seen when fitting it; a 'lookup' only describes the cases seen). "
+                   "Trusted mechanisms by matrix: " + "; ".join(parts) + "."
+                   + (f" Frequencies most used by rule-labelled mechanisms (basis, count): {top}." if top else ""))
     C = None
     if control is not None:
         C = stats(control)

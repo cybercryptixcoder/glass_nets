@@ -13,6 +13,7 @@ The network's weights are split EXACTLY into rank-1 mechanisms (SPD). Each mecha
 1b. 145 of the 198 mechanisms that are not always on have a task-level explanation (a trigger in task variables only, confidence >= 0.9 on clear-cut cases).
 2. 145 of the 145 trusted triggers use a task variable (not only neuron states). Most used: token here (33), 41·log token here mod 112 (15), 31·log token here mod 112 (13), 10·log token here mod 112 (12), 4·log (a·b) mod 112 (11).
 4. Rebuilt from mechanisms switched by trusted triggers: 99.9% of decisions (task rule 100.0%).
+6. Structure (a 'rule' carries over to token values never seen when fitting it; a 'lookup' only describes the cases seen). Trusted mechanisms by matrix: W_E: 2 rule, 49 lookup; H0_W_K: 1 lookup; H0_W_V: 3 rule, 10 lookup; H1_W_V: 1 rule, 10 lookup; H2_W_K: 1 rule; H2_W_V: 9 lookup; H2_W_O: 1 lookup; H3_W_V: 1 rule, 10 lookup, 1 unchecked; H3_W_O: 1 lookup; W_in: 12 rule, 3 lookup; W_out: 9 rule, 3 lookup, 1 unchecked; W_U: 11 rule, 6 lookup. Frequencies most used by rule-labelled mechanisms (basis, count): 28 (log, 14), 41 (log, 10), 30 (log, 7), 4 (log, 7), 31 (log, 6), 55 (line, 4), 56 (log, 4), 8 (log, 4).
 
 ## W_E: 56 mechanisms (54 with a trusted trigger)
 
