@@ -1920,3 +1920,5 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 21:13 ET (clock): A42 decompositions at step ~24,000 of 30,000; the build-and-score script is ready (`/tmp/a42_build.sh`); verdict about 22:30
 
 ## Nov 19, 21:31 ET (clock): A42 decompositions at step ~27,000; builds start when they finish (about 21:50)
+
+## Nov 19, 21:42 ET (clock): A42 decompositions done (modmul_s1 12,034 s); the three atlases are building locally (two-basis vocabulary, ladder)
