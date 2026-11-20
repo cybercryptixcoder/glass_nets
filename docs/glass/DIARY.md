@@ -1973,3 +1973,22 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Both mechanisms are published: addition by Nanda et al. 2023; multiplication's discrete-log form by Chughtai et al. 2023 and Nguyen, ICML 2026. So our claim is automated blind recovery, positioned next to ground-truth benchmarks such as InterpBench, on naturally trained networks.
   - The SPD attention gap matches what the SPD group's successor method VPD (Oct 2026) addresses with adversarial masks and a stricter joint-ablation criterion. So it is not a new finding, and VPD's adversarial masks are the planned fix.
 - Smoke test of the one-command script on CPU, with a deliberately untrained network (50 epochs): runs end to end, and correctly FAILS both checks (2 rule triggers; no structure claimed).
+
+## Nov 20, 16:04 ET (clock): A49, one researched design system for the lab, constructor and catalogue (branch `ui-design`)
+
+- Shreyas (15:37): the glass looked amateur, and the lab and constructor were still cream neo-brutalist. He asked for researched, production-grade, subtle, minimal, dark, glassy UI, presentation only, with a theme file for the future.
+- Research: read Apple's materials guidance, Material's dark theme, Superhuman's dark-theme rules, Linear's redesign, Vercel Geist and its interface guidelines, Radix's colour scale, and Josh Comeau and Emil Kowalski. Measured the computed styles of Linear, Raycast, Resend, Vercel, Geist, Cursor and PlanetScale in headless Chrome. Write-up: `docs/design/UI_RESEARCH.md`.
+- Diagnosis of the old catalogue glass:
+  - blur on every card over a flat background;
+  - white blobs as "light";
+  - milky 4.5% surfaces with big radii;
+  - inverted white for every selection;
+  - heavy type.
+- Built:
+  - `lab/static/theme.css` (tokens, materials, controls, motion), inlined into each page by `lab/static/sync_theme.py`, because the server serves only the three pages and the server was not to be touched;
+  - the three pages restyled on it. Same ids, scripts, endpoints and layout. Small presentation-only markup hooks: panel and glass classes, the top-bar actions grouped in one capsule, and dark as the default theme.
+- Rules for the future: `docs/design/THEME.md`.
+- Checks:
+  - the four catalogue tests pass;
+  - 23 states per theme screenshotted at 1600 and 1280 widths, in dark and light, with no page or console errors;
+  - no paid calls: run views were rebuilt from saved runs.

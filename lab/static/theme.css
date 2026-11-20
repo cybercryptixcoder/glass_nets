@@ -1,0 +1,281 @@
+/* ==========================================================================
+   Glass theme, v1 (Nov 20, 2026). The one source of truth for how the lab looks.
+   Rules and reasons: docs/design/THEME.md. Research behind them: docs/design/UI_RESEARCH.md.
+
+   The server only serves the three pages, so this file is not linked. Edit it here, then run
+       python3 lab/static/sync_theme.py
+   which copies it into each page between the @theme markers. Never edit the copies.
+
+   Pages load these fonts (Google Fonts):
+     Inter (opsz, 300..700), Geist Mono (400..600), Instrument Serif (regular, italic)
+   ========================================================================== */
+
+/* ---------- 1. Tokens: dark is the designed default ---------- */
+:root{
+  color-scheme:dark;
+
+  /* type */
+  --font-sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --font-display:"Instrument Serif",Georgia,serif;
+  --fs-11:11px; --fs-12:12px; --fs-13:13px; --fs-14:14px; --fs-15:15px; --fs-16:16px; --fs-20:20px; --fs-24:24px; --fs-32:32px;
+
+  /* surfaces: neutral near-black, no hue. Far = darker, near = lighter. */
+  --bg:#09090A;                 /* the page */
+  --well:#0C0C0E;               /* sunken, opaque: inputs, the heatmap well */
+  --sunk:rgb(0 0 0 / .26);      /* sunken, on any surface (panels or glass): code, output, logs */
+  --surface-1:#111113;          /* panels (content layer) */
+  --surface-2:#161618;          /* raised inside a panel */
+  --surface-3:#1B1B1E;          /* controls at rest, selected rows */
+  --surface-4:#242428;          /* the selected segment, hovered controls */
+  --glass:rgb(20 20 22 / .66);  /* floating chrome (with --blur) */
+  --glass-strong:rgb(16 16 18 / .82);
+  --scrim:rgb(0 0 0 / .55);
+
+  /* hairlines: white at low alpha so they sit on any surface */
+  --line-1:rgb(255 255 255 / .055);   /* dividers inside panels */
+  --line-2:rgb(255 255 255 / .08);    /* panel and card edges */
+  --line-3:rgb(255 255 255 / .13);    /* interactive edges, hover */
+  --line-4:rgb(255 255 255 / .22);    /* active, focus */
+  --edge:rgb(255 255 255 / .06);      /* the 1px top highlight on raised things */
+
+  /* fills: for controls and states, layered on any surface */
+  --fill-1:rgb(255 255 255 / .03);
+  --fill-2:rgb(255 255 255 / .055);
+  --fill-3:rgb(255 255 255 / .085);
+  --fill-4:rgb(255 255 255 / .12);
+
+  /* text: never pure white (halation), four steps */
+  --text-1:#EDEDEF;   /* primary */
+  --text-2:#A0A0A7;   /* secondary */
+  --text-3:#6C6C73;   /* tertiary: labels, meta */
+  --text-4:#47474D;   /* disabled, placeholders on wells */
+
+  /* the primary action is inverse (light on dark), never a hue */
+  --inv-bg:#EDEDEF; --inv-hover:#FFFFFF; --inv-text:#09090A;
+
+  /* status: meaning only, as a dot, a word or a hairline; fills at most 12% */
+  --ok:#4CC38A; --warn:#E0B047; --bad:#EC6A6A; --info:#6AA6F8;
+  --ok-soft:rgb(76 195 138 / .11); --warn-soft:rgb(224 176 71 / .11); --bad-soft:rgb(236 106 106 / .11); --info-soft:rgb(106 166 248 / .11);
+
+  /* data: a diverging pair with a neutral midpoint (heatmaps of weights). Hex only: canvas code reads these. */
+  --div-neg:#E66767; --div-pos:#3987E5; --div-mid:#18181B;
+
+  /* shape */
+  --r-xs:4px; --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-full:999px;
+  --h-sm:26px; --h-md:30px; --h-lg:36px;
+
+  /* materials */
+  --panel-bg:radial-gradient(140% 90px at 50% 0%, rgb(255 255 255 / .028), transparent),
+             linear-gradient(180deg, rgb(19 19 21 / .78), rgb(15 15 17 / .84));
+  --ring:linear-gradient(180deg, rgb(255 255 255 / .12), rgb(255 255 255 / .06) 22%, rgb(255 255 255 / .045));
+  --ring-float:linear-gradient(180deg, rgb(255 255 255 / .17), rgb(255 255 255 / .07) 30%, rgb(255 255 255 / .05));
+
+  /* elevation: hairline + top edge + layered shadow (light from above) */
+  --shadow-panel:0 1px 2px rgb(0 0 0 / .35), 0 10px 30px -18px rgb(0 0 0 / .7);
+  --shadow-raised:inset 0 1px 0 var(--edge), 0 1px 2px rgb(0 0 0 / .4);
+  --shadow-float:inset 0 1px 0 rgb(255 255 255 / .07), 0 0 0 .5px rgb(0 0 0 / .8), 0 4px 10px rgb(0 0 0 / .35), 0 18px 48px -6px rgb(0 0 0 / .6);
+  --blur:blur(22px) saturate(1.5);
+  --focus:0 0 0 2px var(--bg), 0 0 0 4px rgb(255 255 255 / .42);
+
+  /* motion */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --dur-1:120ms; --dur-2:180ms; --dur-3:280ms;
+
+  /* ambient light behind everything, so translucent layers have something to show */
+  --ambient:radial-gradient(1200px 560px at 50% -240px, rgb(255 255 255 / .07), transparent 72%),
+            radial-gradient(800px 600px at 0% 100%, rgb(255 255 255 / .025), transparent 70%);
+  --noise-alpha:.035;
+}
+
+/* Light: supported, not the default. Same structure, its own steps (not an inversion). */
+:root[data-theme=light]{
+  color-scheme:light;
+  --bg:#F4F4F5; --well:#FAFAFA; --sunk:rgb(0 0 0 / .035); --surface-1:#FFFFFF; --surface-2:#FAFAFA; --surface-3:#F4F4F5; --surface-4:#FFFFFF;
+  --glass:rgb(255 255 255 / .7); --glass-strong:rgb(255 255 255 / .86); --scrim:rgb(15 15 18 / .28);
+  --line-1:rgb(0 0 0 / .06); --line-2:rgb(0 0 0 / .085); --line-3:rgb(0 0 0 / .14); --line-4:rgb(0 0 0 / .24); --edge:rgb(255 255 255 / .9);
+  --fill-1:rgb(0 0 0 / .025); --fill-2:rgb(0 0 0 / .045); --fill-3:rgb(0 0 0 / .07); --fill-4:rgb(0 0 0 / .1);
+  --text-1:#18181B; --text-2:#56565E; --text-3:#85858D; --text-4:#B4B4BA;
+  --inv-bg:#18181B; --inv-hover:#000000; --inv-text:#FAFAFA;
+  --ok:#1F9D63; --warn:#B7861A; --bad:#D64545; --info:#2F74D0;
+  --ok-soft:rgb(31 157 99 / .1); --warn-soft:rgb(183 134 26 / .12); --bad-soft:rgb(214 69 69 / .1); --info-soft:rgb(47 116 208 / .1);
+  --div-neg:#E34948; --div-pos:#2A78D6; --div-mid:#F0EFEC;
+  --panel-bg:linear-gradient(180deg, rgb(255 255 255 / .92), rgb(255 255 255 / .86));
+  --ring:linear-gradient(180deg, rgb(0 0 0 / .07), rgb(0 0 0 / .09));
+  --ring-float:linear-gradient(180deg, rgb(0 0 0 / .08), rgb(0 0 0 / .11));
+  --shadow-panel:0 1px 2px rgb(0 0 0 / .05), 0 8px 24px -16px rgb(0 0 0 / .18);
+  --shadow-raised:0 1px 2px rgb(0 0 0 / .07);
+  --shadow-float:0 0 0 .5px rgb(0 0 0 / .12), 0 4px 10px rgb(0 0 0 / .06), 0 18px 48px -8px rgb(0 0 0 / .18);
+  --focus:0 0 0 2px var(--bg), 0 0 0 4px rgb(0 0 0 / .35);
+  --ambient:radial-gradient(1100px 520px at 50% -260px, rgb(255 255 255 / .9), transparent 72%);
+  --noise-alpha:.025;
+}
+
+/* ---------- 2. Base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg);color:var(--text-1);
+  font-family:var(--font-sans);font-size:var(--fs-13);line-height:1.5;font-weight:400;
+  font-feature-settings:"cv11","ss03";
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+}
+/* ambient light + fine grain, fixed behind the page (grain stops gradient banding) */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--ambient)}
+body::after{content:"";position:fixed;inset:0;z-index:100;pointer-events:none;opacity:var(--noise-alpha);mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+button,select,input,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit}
+b,strong{font-weight:600}
+::selection{background:rgb(255 255 255 / .18);color:var(--text-1)}
+:root[data-theme=light] ::selection{background:rgb(0 0 0 / .12)}
+:focus{outline:none}
+:focus-visible{outline:none;box-shadow:var(--focus)}
+::placeholder{color:var(--text-3);opacity:1}
+/* scrollbars: present, quiet */
+*{scrollbar-width:thin;scrollbar-color:var(--fill-4) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--fill-3);border-radius:10px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--fill-4);background-clip:content-box}
+::-webkit-scrollbar-corner{background:transparent}
+h1,h2,h3,h4{text-wrap:balance}
+p,li{text-wrap:pretty}
+.mono,code,kbd,pre{font-family:var(--font-mono);font-feature-settings:"zero" 0}
+.num{font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+.muted{color:var(--text-2)}
+.faint{color:var(--text-3)}
+.small{font-size:var(--fs-12)}
+
+/* ---------- 3. Surfaces ---------- */
+/* Panel: the content layer. A smoked-glass slab: slightly translucent (the ambient light shows through),
+   a soft sheen where the light falls, an edge that is brighter at the top, and layered depth.
+   No backdrop blur: nothing moves behind a panel, so blur would cost GPU and show nothing. */
+.t-panel{position:relative;border-radius:var(--r-lg);background:var(--panel-bg);box-shadow:var(--shadow-panel)}
+/* Glass: the floating layer only (top bars, menus, drawers, dialogs, tooltips), where content passes behind. */
+.t-glass{position:relative;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-float)}
+/* the edge: a 1px ring drawn with a mask, lit from above (a flat border reads as a box; a lit one reads as glass) */
+.t-panel::before,.t-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:2;
+  background:var(--ring);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.t-glass::before{background:var(--ring-float)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.t-glass{background:var(--glass-strong)}}
+@media (prefers-reduced-transparency:reduce){.t-glass{background:var(--surface-2);-webkit-backdrop-filter:none;backdrop-filter:none}.t-panel{background:var(--surface-1)}}
+
+/* ---------- 4. Controls ---------- */
+/* Buttons. Default = secondary. Legacy names kept so page scripts keep working:
+   .orange and .primary = primary; .yellow = emphasized secondary; .teal = secondary; .warm = outline. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);padding:0 12px;border-radius:var(--r-md);
+  font-size:var(--fs-13);font-weight:500;line-height:1;white-space:nowrap;text-decoration:none;color:var(--text-1);
+  background:var(--fill-2);border:0;box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 var(--edge);
+  transition:background-color var(--dur-1) ease,box-shadow var(--dur-1) ease,color var(--dur-1) ease,transform var(--dur-1) var(--ease-out);
+  cursor:pointer;user-select:none}
+.btn:hover{background:var(--fill-3);box-shadow:inset 0 0 0 1px var(--line-3),inset 0 1px 0 var(--edge)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{box-shadow:inset 0 0 0 1px var(--line-3),var(--focus)}
+.btn.sm{height:var(--h-sm);padding:0 10px;font-size:var(--fs-12);border-radius:var(--r-sm)}
+.btn.primary,.btn.orange{background:var(--inv-bg);color:var(--inv-text);box-shadow:0 1px 2px rgb(0 0 0 / .3),inset 0 -1px 0 rgb(0 0 0 / .12)}
+.btn.primary:hover,.btn.orange:hover{background:var(--inv-hover);box-shadow:0 1px 2px rgb(0 0 0 / .3),0 0 0 3px rgb(255 255 255 / .06)}
+.btn.yellow{background:var(--fill-3);box-shadow:inset 0 0 0 1px var(--line-3),inset 0 1px 0 var(--edge)}
+.btn.yellow:hover{background:var(--fill-4)}
+.btn.warm{background:transparent;box-shadow:inset 0 0 0 1px var(--line-3)}
+.btn.warm:hover{background:var(--fill-2)}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--text-2)}
+.btn.ghost:hover{background:var(--fill-2);color:var(--text-1)}
+.btn.on{background:var(--surface-4);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--line-4),inset 0 1px 0 var(--edge)}
+.btn:disabled,.btn[disabled]{opacity:.38;cursor:not-allowed;transform:none;box-shadow:inset 0 0 0 1px var(--line-1)}
+.btn.primary:disabled,.btn.orange:disabled{background:var(--fill-3);color:var(--text-2)}
+
+/* Chips: small toggles and filters. Selected = raised, not inverted. */
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-full);
+  font-family:var(--font-sans);font-size:var(--fs-12);font-weight:500;color:var(--text-2);background:var(--fill-2);
+  box-shadow:inset 0 0 0 1px var(--line-1);cursor:pointer;user-select:none;white-space:nowrap;
+  transition:background-color var(--dur-1) ease,color var(--dur-1) ease,box-shadow var(--dur-1) ease}
+.chip:hover{background:var(--fill-3);color:var(--text-1)}
+.chip.on{background:var(--surface-4);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--line-3),inset 0 1px 0 var(--edge),0 1px 2px rgb(0 0 0 / .3)}
+:root[data-theme=light] .chip.on{background:var(--surface-1);box-shadow:inset 0 0 0 1px var(--line-3),0 1px 2px rgb(0 0 0 / .08)}
+
+/* Pill: a passive label (a model name, a balance, a status). */
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-full);
+  font-size:var(--fs-12);font-weight:500;color:var(--text-2);background:var(--fill-1);box-shadow:inset 0 0 0 1px var(--line-2);white-space:nowrap}
+
+/* Segmented control: a well with a raised thumb on the chosen item. */
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:var(--r-md);background:var(--fill-2);box-shadow:inset 0 0 0 1px var(--line-1)}
+.seg button{height:24px;padding:0 10px;border-radius:var(--r-sm);font-size:var(--fs-12);font-weight:500;color:var(--text-2);
+  transition:background-color var(--dur-1) ease,color var(--dur-1) ease}
+.seg button:hover{color:var(--text-1)}
+.seg button.on{background:var(--surface-4);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 var(--edge),0 1px 2px rgb(0 0 0 / .35)}
+:root[data-theme=light] .seg button.on{background:var(--surface-1);box-shadow:0 0 0 .5px rgb(0 0 0 / .1),0 1px 2px rgb(0 0 0 / .1)}
+
+/* Switch: label.toggle > input[type=checkbox] + i */
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-12);color:var(--text-2);cursor:pointer;user-select:none}
+.toggle:hover{color:var(--text-1)}
+.toggle input{position:absolute;opacity:0;width:0;height:0}
+.toggle i{position:relative;flex:none;width:26px;height:16px;border-radius:var(--r-full);background:var(--fill-3);box-shadow:inset 0 0 0 1px var(--line-2);transition:background-color var(--dur-2) ease}
+.toggle i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-2);box-shadow:0 1px 2px rgb(0 0 0 / .4);transition:transform var(--dur-2) var(--ease-out),background-color var(--dur-2) ease}
+.toggle input:checked+i{background:var(--inv-bg);box-shadow:none}
+.toggle input:checked+i::after{transform:translateX(10px);background:var(--inv-text)}
+.toggle input:focus-visible+i{box-shadow:var(--focus)}
+
+/* Fields */
+input[type=text],input[type=number],input[type=search],input:not([type]),select,textarea{
+  height:var(--h-md);padding:0 10px;border-radius:var(--r-md);border:0;background:var(--well);color:var(--text-1);
+  box-shadow:inset 0 0 0 1px var(--line-2);font-size:var(--fs-13);transition:box-shadow var(--dur-1) ease}
+input[type=text]:hover,input[type=number]:hover,input:not([type]):hover,select:hover,textarea:hover{box-shadow:inset 0 0 0 1px var(--line-3)}
+input[type=text]:focus,input[type=number]:focus,input:not([type]):focus,select:focus,textarea:focus{box-shadow:inset 0 0 0 1px var(--line-4),0 0 0 3px rgb(255 255 255 / .05);outline:none}
+:root[data-theme=light] input[type=text]:focus,:root[data-theme=light] input:not([type]):focus,:root[data-theme=light] select:focus,:root[data-theme=light] textarea:focus{box-shadow:inset 0 0 0 1px var(--line-4),0 0 0 3px rgb(0 0 0 / .05)}
+input[type=number]{font-variant-numeric:tabular-nums}
+select{appearance:none;-webkit-appearance:none;padding-right:28px;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238A8A91' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center}
+select option,select optgroup{background:var(--surface-2);color:var(--text-1)}
+textarea{height:auto;padding:10px 12px;line-height:1.55;resize:vertical}
+/* checkbox: a small rounded square; checked = inverse with a tick */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:14px;height:14px;margin:0;border-radius:var(--r-xs);background:var(--fill-1);
+  box-shadow:inset 0 0 0 1px var(--line-3);cursor:pointer;display:inline-grid;place-content:center;transition:background-color var(--dur-1) ease}
+input[type=checkbox]:hover{box-shadow:inset 0 0 0 1px var(--line-4)}
+input[type=checkbox]:checked{background:var(--inv-bg);box-shadow:none}
+input[type=checkbox]:checked::after{content:"";width:7px;height:4px;margin-top:-2px;border-left:1.5px solid var(--inv-text);border-bottom:1.5px solid var(--inv-text);transform:rotate(-45deg)}
+input[type=checkbox]:focus-visible{box-shadow:var(--focus)}
+
+/* Disclosure */
+details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text-2);font-weight:500;user-select:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";flex:none;width:5px;height:5px;margin:0 2px 0 1px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform var(--dur-2) var(--ease-out);opacity:.8}
+details[open]>summary::before{transform:rotate(45deg)}
+details>summary:hover{color:var(--text-1)}
+
+/* Code */
+pre{font-family:var(--font-mono);font-size:var(--fs-12);line-height:1.6;color:var(--text-1);background:var(--sunk);
+  border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--line-1);padding:10px 12px;margin:0;overflow:auto;tab-size:4}
+code{font-size:.92em;padding:1px 5px;border-radius:var(--r-xs);background:var(--fill-2);color:var(--text-1)}
+pre code{padding:0;background:none}
+
+/* Tables: hairlines between rows, quiet headers, aligned numbers */
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line-1)}
+th{font-size:var(--fs-12);font-weight:500;color:var(--text-3);white-space:nowrap}
+td{font-size:var(--fs-13)}
+tbody tr:last-child td{border-bottom:0}
+
+/* Status: a dot and a word. Never colour alone, never a big coloured block. */
+.t-dot{display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;background:var(--text-3)}
+.t-dot.ok{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.t-dot.warn{background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+.t-dot.bad{background:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)}
+.t-dot.info{background:var(--info);box-shadow:0 0 0 3px var(--info-soft)}
+
+/* Kbd */
+kbd{display:inline-flex;align-items:center;height:18px;padding:0 5px;border-radius:var(--r-xs);font-size:var(--fs-11);color:var(--text-2);background:var(--fill-2);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 -1px 0 var(--line-2)}
+
+/* ---------- 5. Motion ---------- */
+@keyframes t-rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes t-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes t-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
