@@ -1884,3 +1884,9 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 19, 19:06 ET (clock): fresh adders s5/s6 trained and reserved for A38e's held-out test
 
 - modadd_p113_s5 (key frequencies {46, 55, 45, 7, 23}, share 0.93) and _s6 ({35, 7, 4, 23, 41}, 0.92), both 100% accurate. Untouched until a pre-registration names them.
+
+## Nov 19, 19:24 ET (clock): slow GPU queue; the local workspace restarted (nothing lost)
+
+- The local workspace restarted at about 19:23. No local jobs were running; the repo is intact and pushed. Colab jobs are unaffected.
+- Progress is slow because 8 runs share one GPU and 3 CPU runs share the VM. A42 is at step 8,000 of 30,000 (about 2,000 steps per 17 min, so about 23:30). The memorizer is at 20,000 (about 20:50). The A38e seed reruns are at 16,000 (about 20:00).
+- Asked Shreyas whether a second Colab GPU session is worth its compute units (it would roughly halve the waiting). Not blocking; work continues either way.
