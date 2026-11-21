@@ -1,0 +1,51 @@
+# Robust Causal Discovery under Imperfect Structural Constraints
+
+- **Key:** arxiv-2511.06790
+- **Authors / organisation:** Zidong Wang, Xi Lin, Chuchao He, Xiaoguang Gao. Department of Computer Science, City University of Hong Kong; School of Electronic Information Engineering, Xi'an Technological University; School of Electronics and Information, Northwestern Polytechnical University. He is marked as corresponding author in the HTML.
+- **Date:** 2025-11 (v1 submitted 10 Nov 2025)
+- **Link:** https://arxiv.org/abs/2511.06790
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+Causal discovery from observational data is often helped by expert knowledge about which edges must exist and which cannot. Most published methods assume that knowledge is correct, or that its error type is known in advance, and they apply it as a hard constraint or a fixed-weight penalty. When the knowledge contains spurious edges whose location and type nobody knows, those methods either chase the wrong structure or overfit to it. The authors want a procedure that uses as much of the prior as the data supports and discounts the rest, without being told which parts are wrong. The larger goal is small-sample discovery in domains where data are scarce but experts are plentiful — rare disease diagnosis and industrial fault analysis are the two they name. They frame the fix as a multi-objective problem: knowledge and data are two objectives that ought to agree, and the interesting case is when they do not.
+
+## What they studied
+
+Random graphs of twenty or forty variables, Erdős–Rényi and scale-free, with edge ratios of one, two and four per node, and sample sizes of twice or four times the variable count. Linear structural equation models with weights drawn from a fixed magnitude band and Gaussian, exponential, Gumbel or uniform noise, split into equal-variance and non-equal-variance settings; nonlinear models built from MLPs or Gaussian processes. The unit of analysis is the weighted adjacency matrix of a continuous-optimisation structure learner (NOTEARS-style acyclicity penalty, with GOLEM and NOTEARS-MLP as the base optimisers), plus the expert constraint matrix as a separate input typed positive, negative or absent. One real dataset, Sachs, with eleven proteins and 853 observational samples.
+
+## How they did it
+
+Prior alignment comes first. A surrogate regressor is fitted to predict each variable from the variables the constraints name as its parents, with all negative constraints turned into positive ones so every candidate is re-examined on the same footing — linear regression or lasso in the linear case, random forest with permutation importance or a degree-three polynomial in the nonlinear case. The regression coefficients that survive are the aligned weight matrix; an edge the experts asserted but the regression reports as approximately zero is thereby downgraded before the structure search starts. The knowledge objective is then an L1 distance between a sigmoid of the learned adjacency and a sigmoid of the aligned matrix, masked to the entries the constraints mention, with the sigmoid replacing a step function only to keep the loss differentiable.
+
+The conflict between that objective and the ordinary data-plus-acyclicity objective is handed to a multi-task learner: the two gradients are normalised (divided by the objective's own loss value and by the gradient's L2 norm), and a small quadratic program finds the minimum-norm convex combination, which yields a descent direction that is non-increasing in both objectives. The combined direction is followed with Adam after a warm-up phase that ignores the knowledge term entirely. The paper proves, under what it calls consistency of the constraint matrix, that the aligned regressions separate true from false positive constraints asymptotically, that the joint objective is then asymptotically consistent for the true graph, and in the linear special case that the aligned penalty has elementwise error no worse than a fixed-threshold penalty. The assumptions needed for the second theorem are strong: false positive constraints must be conditionally independent of the target given the true parent constraints, and a true-parent constraint must be marginally independent of a false-parent constraint. The authors state plainly that verifying these is intractable in practice and that the regime where priors matter most is the small-sample regime where their guarantees are weakest.
+
+## What counts as an explanation here
+
+A recovered weighted adjacency matrix and its thresholded graph — a structure, not an account of a mechanism. The knowledge side of the explanation is graded rather than categorical: instead of asserting an edge, the alignment step emits a credibility score for each claimed edge, which is a partial and per-constraint answer to "how much of this should I believe". Nothing in the output describes why an edge is present or what computation uses it.
+
+## How they judged success
+
+F1 and structural Hamming distance against the ground-truth graph, averaged over ten repetitions, with the imperfect-constraint rate swept from zero to seventy per cent and the positive-constraint rate from ten to seventy per cent; PC-stable, DirectLiNGAM, GOLEM and NOTEARS-MLP without priors, and two prior-aware continuous methods (a hard-constraint method and a cross-entropy prior method) as baselines. Ablations remove the alignment step or the multi-task solver separately in linear and nonlinear settings, and the paper also sweeps four gradient-normalisation schemes and four surrogate models. Sachs is run with simulated imperfect constraints injected at the same rates rather than with real expert error.
+
+## What they found
+
+With thirty per cent of constraints flipped in the equal-variance linear setting, the method reaches F1 0.821 and SHD 11.4 on Gaussian ER graphs where the best prior-aware baseline reaches 0.787 and 13.2 and the base GOLEM-EV reaches 0.807 and 12.1; the abstract's "robust to both linear and nonlinear settings" is supported unevenly. The gains are largest in the nonlinear setting, where both prior-aware baselines collapse — their SHD rises above one hundred edges, i.e. they add edges wholesale to satisfy a bad prior — and the method stays near SHD 25.9 on MLP ER graphs against 31.9 for unconstrained NOTEARS-MLP. In the non-equal-variance linear setting the method is only competitive with PC-stable, which is the best performer there. Under dense graphs the hard-constraint baseline sometimes beats it on SHD while losing on F1; the authors attribute this to alignment getting worse as density rises. The ablation is the most interesting number in the paper: in the linear case removing the multi-task solver costs 14.8 per cent F1 while removing alignment costs 4.9, whereas in the nonlinear case the ordering inverts — 21.1 per cent for alignment, 3.8 for the solver. On Sachs with injected errors the method holds SHD at 13, matching its own no-error run. Adding data improves F1 by about 1.6 per cent (linear) and 4.5 per cent (nonlinear), which is a smaller gain than the prior itself contributes.
+
+## Limits and open problems they name
+
+The guarantee needs the constraint matrix to be "consistent" in a sense that cannot be checked without knowing the answer, and the method's whole purpose is the case where it is not; the multi-task solver therefore has no theory behind it in the regime the experiments exercise. It returns whichever Pareto-stationary point multi-gradient descent happens to reach, which the authors concede is not aligned with any decision-maker's preference and put on the future-work list along with extension to interventional data. Alignment degrades in dense graphs and, in the nonlinear setting, when negative constraints are abundant; both are attributed to the surrogate regressor rather than diagnosed. The threshold used to binarise the learned matrix is fixed and swept only as a reporting choice, so the "no worse than thresholding" theorem is asymptotic and elementwise while the reported metric is a whole-graph count. Non-Gaussianity is not exploited for identification in the nonlinear arm, and causal sufficiency and faithfulness are assumed throughout.
+
+## What we take from it
+
+Two reusable instruments and two warnings. The instrument is the **credibility pass**: before any prior enters a selection loop, refit the claim it makes against the data in isolation and keep the fitted magnitude as the prior's own score, so a wrong claim arrives at the loop already weakened rather than at full strength. For our probing batteries this is the constructive version of the anonymised-channel control noted in earlier entries — instead of only testing whether a prior carries information, re-estimate it per claim and let the estimate modulate how much the claim can move the answer. The second instrument is the **gradient-agreement diagnostic**: the multi-task solver's mixing weight is exactly a readable number for how much the data objective and the knowledge objective disagree at the current solution, which is a cheap mid-experiment signal that the prior is wrong — the thing earlier entries in this folder asked for and did not find. The warnings: the ablation ordering says the right repair depends on whether the landscape is convex, so a fix validated in a linear toy does not transfer to the nonlinear case; and a guarantee gated on an unverifiable consistency condition is a statement about the easy case, exactly the failure mode of publishing an in-distribution number. Concretely for us: report a per-claim credibility score beside every account that used a prior, report the two objective values at convergence so the reader can see whether they agreed, and do not describe agreement as validation.
+
+## Tags
+
+unit: whole-model
+form: graph
+method: other (continuous-optimisation structure learning with multi-objective prior alignment)
+eval: benchmark | ablation | prediction/simulation
+goal: understanding | science | evaluation-of-methods
