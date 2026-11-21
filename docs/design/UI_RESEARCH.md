@@ -234,6 +234,48 @@ The reference has a bell and a user avatar. The lab has no notifications and no 
 - **Errors:** none in any state.
 - **Tests:** `atlas_catalog_test.py` (with t5 and t6) and `catalog_atlasonly_test.py` pass.
 
+## 8. Round three (A51): cards and progressive disclosure
+
+**Shreyas's verdict on A50:** it still showed walls of text, fully laid-out lists and filters everywhere. He wants a usable, readable, comfortable system:
+- everything in cards;
+- long text, lists and options put away behind a button, a menu or a "see all", until he asks;
+- no big headline numbers.
+
+His second reference is a card-based dark dashboard ("Tract SEO"). Its pattern:
+- a gradient balance card as the one bright element;
+- small cards, each with an icon box, a title and one action;
+- a notification column of cards with "See all";
+- a chart card with an open arrow (↗);
+- options inside dropdowns ("Last 7 Month ▾").
+
+**What the usability literature says:**
+- **Progressive disclosure** is Nielsen's name for this. Jakob Nielsen defines it as showing users only the most important options at first and revealing the specialized ones on a secondary display when asked. NN/g lists it as one of application design's primary guidelines.
+  - It improves 3 of usability's 5 components: learnability, efficiency of use and error rate.
+  - Placement carries meaning: whatever appears on the initial display tells users it is important.
+  - The cost is discoverability. The secondary controls must be clearly visible and simple to operate.
+- **Cards** (NN/g): a card is a snapshot meant to invite a click or tap for more details. The border groups its content, and a slight shadow signals that it is clickable.
+- **Card guidelines** from design systems:
+  - The European Commission's component library: cards are an entry point to more detailed information. Use them for browsing and scanning in small portions, not for searching. Limit links on a card, ideally to the one that opens it.
+  - UX Planet: one subject per card (a title, a short summary, optional actions). Cards make comparing harder, so use a list or grid view for comparison. That is why comparisons here (fidelity measures, sites, interventions) are progress bars or tables inside a sheet.
+
+**How it was applied:**
+
+| Was always on screen | Now |
+|---|---|
+| Catalogue: a 58-row network list | A network menu in the header; "All networks" opens every network as a card, grouped by family, with a filter menu |
+| Catalogue: five headline-number tiles | A gradient hero card (name, task, ids, actions) plus a "How faithful" card with two bars ("Show every measure" reveals the rest) |
+| Catalogue: findings as numbered paragraphs | The three key findings as cards, clamped; "See all" opens the rest in a sheet |
+| Catalogue: a 180-row mechanism table with three always-visible filters | A summary card (counts, the top 3); "Browse all" opens a view of mechanism cards, 30 at a time, search plus a filter menu, each card expanding for its effect |
+| Catalogue: certificate table, not-explained list, failures, code, report | Buttons on the construction card, each opening a sheet; the description is clamped with "Read the full description" |
+| Lab: the specimen list, weight variants, unit picker, format options, templates and all reader settings | The header specimen menu; the "Trained weights ▾", "More ▾", "Format ▾" and "Template ▾" menus; a settings menu, with a one-line summary beside "Read it" |
+| Lab: four headline-number tiles | Removed. The counts sit in card subtitles |
+| Lab: a reading's thinking, code and answer all expanded | A reading card: the answer clamped to 7 lines ("Read the full answer", or open it in a sheet); thinking and Python folded; maths rendered with KaTeX |
+| Lab: 15 slide items in rows | The first 6, then "+9 more" |
+| Constructor: run settings, a runs list, a tasks list and three always-open panes of logs and tables | "New run ▾" and "Language-model tasks" in the header; runs as cards; the construction as a verdict hero card, stage cards and evidence cards (Units, Interventions, Mechanism, Circuit, Transfer, Benchmark), each opening its table in a sheet; the reader's log as one-line step cards that expand |
+
+**Nothing was lost.** Every table and text the pages had is one click away.
+- The catalogue tests still find their DOM: the mechanism rows in `#atlas table.mechs` are kept and drawn as cards, and `#parts` keeps its text.
+
 ## Sources
 
 - [Apple HIG: Materials](https://developer.apple.com/design/human-interface-guidelines/materials)
@@ -252,5 +294,7 @@ The reference has a bell and a user avatar. The lab has no notifications and no 
 - [NN/g: Glassmorphism](https://www.nngroup.com/articles/glassmorphism/)
 - [CSS-Tricks: dark mode and variable fonts](https://css-tricks.com/?p=330342)
 - Measured live: linear.app, raycast.com, resend.com, vercel.com, vercel.com/geist, cursor.com, planetscale.com
+- [NN/g: Progressive disclosure](https://www.nngroup.com/articles/progressive-disclosure/), [NN/g: Cards component](https://www.nngroup.com/articles/cards-component/), [Nielsen: Progressive disclosure (UX Tigers)](https://uxtigers.com/post/progressive-disclosure)
+- [European Commission component library: Cards](https://ec.europa.eu/component-library/eu/components/card/usage), [UX Planet: Simple design tips for crafting better UI cards](https://uxplanet.org/simple-design-tips-for-crafting-better-ui-cards-19c1ac31a44e)
 - [Lucide icons](https://lucide.dev) (ISC licence), [Geist on Google Fonts](https://fonts.google.com/specimen/Geist)
-- Shreyas's reference image: a dark "SalesOps" dashboard (Nov 20, 2026, in the conversation; not in the repo)
+- Shreyas's reference images: a dark "SalesOps" dashboard and a dark "Tract SEO" card dashboard (Nov 20, 2026, in the conversation; not in the repo)

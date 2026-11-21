@@ -23,3 +23,38 @@ hydrateIcons();
   const b = document.getElementById('sbCollapse');
   if (b) b.onclick = () => { const on = !shell.classList.contains('is-rail'); try { localStorage.setItem(key, on ? 'on' : 'off'); } catch (e) {} upd(); };
 })();
+/* ---------- side sheet: details open here, on request ---------- */
+function openSheet({title = '', kicker = '', html = '', wide = false} = {}) {
+  const s = document.getElementById('sheet'); if (!s) return null;
+  document.getElementById('sheetT').textContent = title;
+  document.getElementById('sheetK').innerHTML = kicker;
+  const b = document.getElementById('sheetB'); b.innerHTML = html; b.scrollTop = 0;
+  s.classList.toggle('wide', !!wide); s.classList.add('open'); s.setAttribute('aria-hidden', 'false');
+  document.getElementById('sheetScrim').classList.add('open');
+  closePops(); fitMore(b);
+  return b;
+}
+function closeSheet() {
+  const s = document.getElementById('sheet'); if (!s) return;
+  s.classList.remove('open'); s.setAttribute('aria-hidden', 'true'); document.getElementById('sheetScrim').classList.remove('open');
+}
+(() => { const x = document.getElementById('sheetX'), r = document.getElementById('sheetScrim'); if (x) x.onclick = closeSheet; if (r) r.onclick = closeSheet; })();
+/* ---------- popover menus: one open at a time, closed by a click outside or Esc ---------- */
+function closePops(except) { document.querySelectorAll('details.pop[open]').forEach(d => { if (d !== except) d.removeAttribute('open'); }); }
+document.addEventListener('click', e => closePops(e.target.closest('details.pop')));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePops(); closeSheet(); } });
+/* ---------- "read more": <div class="clamp" id="x">…</div><button class="link-btn" data-more="x">Read more</button> ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-more]'); if (!b) return;
+  const t = document.getElementById(b.dataset.more) || b.previousElementSibling; if (!t) return;
+  b.dataset.label = b.dataset.label || b.textContent;
+  t.classList.toggle('open'); b.textContent = t.classList.contains('open') ? (b.dataset.less || 'Show less') : b.dataset.label;
+});
+/* hide "read more" where the text already fits */
+function fitMore(root = document) {
+  requestAnimationFrame(() => root.querySelectorAll('[data-more]').forEach(b => {
+    const t = document.getElementById(b.dataset.more) || b.previousElementSibling;
+    if (t && !t.classList.contains('open')) b.style.display = t.scrollHeight <= t.clientHeight + 2 ? 'none' : '';
+  }));
+}
+

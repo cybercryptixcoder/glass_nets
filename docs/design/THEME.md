@@ -1,6 +1,6 @@
-# The Glass Networks theme (v2): how the lab should look, and how to keep it that way
+# The Glass Networks theme (v3): how the lab should look, and how to keep it that way
 
-*Version 2, Nov 20, 2026 (A50). It replaces v1 (A49, the "smoked glass" theme), which Shreyas judged too incremental. Code: `lab/static/theme.css`, `shell.html` and `shell.js`. Research and reasons: `UI_RESEARCH.md` (§7 covers v2).*
+*Version 3, Nov 20, 2026 (A51: cards and progressive disclosure, on top of v2's look from A50). v1 (A49) was judged too incremental; v2 still showed walls of text and lists. Code: `lab/static/theme.css`, `shell.html` and `shell.js`. Research and reasons: `UI_RESEARCH.md` (§7 covers v2).*
 
 This file is for anyone (person or agent) who adds or changes a page. Follow it, and the lab stays one product. If a rule here is wrong, change it here first, then in the code, then run the sync.
 
@@ -12,6 +12,27 @@ A dark product dashboard in the Linear / Raycast / Vercel family, modelled on Sh
 - content made of **cards**, **KPI cards** (label, icon box, big number, delta) and **progress rows**.
 
 Surfaces are zinc near-black with hairline borders. Type is Geist. **Green** is the one accent, used for the primary action, the selected item and anything good. **Cyan** is its partner for data and information. Orange, amber and red appear only to mean something. Real frosted glass is kept for things that float over content: the header, drawers, dialogs and tooltips.
+
+## Rule zero: cards, and nothing long until it is asked for (A51)
+
+Shreyas, Nov 20: "everywhere I look, I still see walls of text, lists completely laid out, filters… that should be when I actually want to do it, not just all the time." This rule comes before every other one in this file.
+
+1. **Everything is a card.**
+   - A subject (a network, a mechanism, a reading, a run, a step, a finding, a neuron) is one card: an icon box, a title, one line, and at most one or two actions.
+   - Lists of subjects are grids of cards, not tables or bulleted text.
+   - Tables survive only inside a sheet that the user opened on purpose.
+2. **Show a summary; open the rest on request.** In order of preference:
+   - **a side sheet** (`openSheet()`): full tables, full texts, certificates, code;
+   - **a menu** (`details.pop`): pickers, filters, options and settings;
+   - **a sub-view inside the page**, with a back button (catalogue: mechanisms, playground, parts);
+   - **"Read more"** (`.clamp` + `[data-more]`): long text inside a card, clamped to 2–7 lines;
+   - **"Show more" / "+N more"**: long collections (mechanism cards are 30 at a time; slide items show 6 at first).
+3. **Explanations live in a tip** (`.tipi` with `data-tip`), not in paragraphs above the content.
+4. **One thing at a time.**
+   - The catalogue shows one network. Every network as a card is a button away ("All networks").
+   - The lab and constructor pick their subject from a menu or select in the header, not a permanent list.
+5. **No headline-number tiles.** Shreyas doesn't want big statistics as decoration. A number appears where it answers a question (a progress bar with its value, "5 of 5 pass", a pill), never as a hero.
+6. **Defaults are calm.** Thinking, code and steps are folded. Options sit in menus. A one-line summary of the current settings sits next to the action (the lab's `#askNote`), so nothing has to be opened to know what will happen.
 
 ## 1. How the theme is wired
 
@@ -129,14 +150,8 @@ The server serves only the three pages and is not to be touched, so shared code 
 - **Panes** (lab's reader, the constructor's three columns): full-height columns separated by hairlines, each with a 56px header (an icon, a 14px/600 title, meta on the right).
 - **Detail:**
   - a breadcrumb (`.crumb`), the title, a subtitle and mono tags, with the status badge on the right;
-  - then a **KPI row**;
-  - then **underline tabs**;
-  - then cards.
-- **KPI card** (`.kpi`):
-  - the label top left and an icon box top right (`.kpi-ic`; `.g` green or `.c` cyan for the headline one);
-  - the value, with a delta chip (`.kpi-d`, green up, red down);
-  - a short sub-line. Keep sub-lines to about six words.
-  - One row of KPIs: set `grid-template-columns: repeat(n, minmax(0,1fr))`, and compact them on narrow screens.
+  - then a grid of cards (v3), each opening its detail in a sheet or a sub-view.
+- **KPI cards were removed in v3.** Use a hero card for identity, progress rows for shares, and `.mstat` cards for a few labelled values.
 - **Progress rows** (`.prog`, `.prog-row`, `.track > i`): a label, a value on the right and a 6px bar. Use them for any list of shares; colour by meaning (green = the headline measure, cyan or violet = alternatives, grey = a baseline).
 - **Empty states** (`.t-empty`): an icon box, a bold line and one sentence that says what to do.
 
@@ -158,7 +173,20 @@ The server serves only the three pages and is not to be touched, so shared code 
 - **`.field-ic`:** a field with a leading icon (search).
 - **`.icon-btn`:** a 36px square icon button.
 - **`.card`, `.card-h`, `.card-t`, `.card-s`, `.card-b`, `.card-x`:** a card, its header, title, subtitle, body, and actions slot on the right.
-- **`.kpis` / `.kpi`**, **`.prog`**, **`.t-empty`**, **`.glass`**.
+- **`.prog`**, **`.t-empty`**, **`.glass`**.
+- **Added in v3 (A51):**
+  - **`.hero-card`**: the gradient identity card of a view, at most one. Green to cyan; amber or red variants (`.part`, `.no`) for a verdict.
+  - **`.card.feat`**: a gradient border for the one card that matters most, at most one.
+  - **`.icard`** with `.icard-h`, `.icard-t`, `.icard-m`, `.icard-x`: an item card. It is clickable when it opens something. `.sel` marks the selected one.
+  - **`.ibox`**: an icon box (`.g`, `.c`, `.o`, `.r`, `.v` tones).
+  - **`.cgrid`**: an auto-fill grid of cards (`--min` sets the card width).
+  - **`.mstat`**: a small label-and-value card.
+  - **`.sec-h` + `.see-all`**: a section header with a "see all" link.
+  - **`.card-open`**: the round open button (↗).
+  - **`.clamp` + `[data-more]`**: read more; `fitMore()` hides the link when the text already fits.
+  - **`.tipi[data-tip]`**: an info tip.
+  - **`details.pop` > `summary` + `.pop-b`**: a popover menu (`.l` left-aligned, `.up` opens upward), with `.mi` items, `.pop-sec` labels, `.pop-row` settings and `.pop-sep`. `closePops()` closes them all.
+  - **`openSheet({title, kicker, html, wide})` / `closeSheet()`**: the side sheet, from `shell.html` and `shell.js`; Esc and the scrim close it.
 - **Tables:** hairlines between rows, 12px `--text-3` headers, tabular numbers. Wide tables go in `.tw` (a bordered scroll box).
 
 ## 7. Motion
@@ -189,7 +217,8 @@ The server serves only the three pages and is not to be touched, so shared code 
    Use Playwright with `/usr/bin/google-chrome`. Look at each screenshot and at 2× crops.
 4. No page errors or console errors.
 5. The catalogue tests pass (`scripts/glass/atlas_catalog_test.py`, which also runs t5 and t6; `scripts/glass/catalog_atlasonly_test.py`).
-6. Compare with the references: Linear's density, Raycast's edges, Vercel's type, and the dashboard image's shell, KPI cards and accents. If a screen would look out of place next to them, it isn't done.
+6. Compare with the references: Linear's density, Raycast's edges, Vercel's type, and the two dashboard images (the shell, the cards, the gradient hero card, the accents). If a screen would look out of place next to them, it isn't done.
+7. Look for walls: any text longer than about four lines, any list longer than about eight items, or any option that is always visible. Each one should be in a card, clamped, or behind a menu or sheet (rule zero).
 
 ## 10. Planned, not done
 

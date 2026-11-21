@@ -2015,3 +2015,19 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - all pages and states were screenshotted at 1600, 1440 and 1280, dark and light, with no errors;
   - no paid calls.
 - Docs: `docs/design/THEME.md` was rewritten for v2, and `docs/design/UI_RESEARCH.md` gained §7 (the reference image, the mapping to Linear, Raycast and Vercel, and what changed and why).
+
+## Nov 20, 20:17 ET (clock): A51, cards and progressive disclosure on all three pages (branch `ui-design`)
+
+- Shreyas (19:50): the pages still showed walls of text, full lists and filters everywhere. He wants a usable, readable, comfortable system: everything in cards; long text, lists and options behind a button, a menu or a "see all" until asked for; no big headline numbers. Reference: a card-based dark dashboard.
+- Research: Nielsen and NN/g on progressive disclosure and on cards, plus card guidelines from design systems. Added as §8 of `docs/design/UI_RESEARCH.md`.
+- Built:
+  - **Shared:** a side sheet, popover menus, read-more clamps, info tips, item cards, a hero card and section headers, in `theme.css`, `shell.html` and `shell.js`.
+  - **Catalogue:** one network at a time as a grid of cards; every network as a card on request; mechanisms, playground and parts as sub-views; certificate, findings, code and report in sheets.
+  - **Lab:** specimen, weights, unit, format, template and reader settings moved into menus; the headline-number tiles removed; readings as cards with the answer clamped, thinking and code folded, and maths rendered (KaTeX).
+  - **Constructor:** "New run" and tasks in the header; runs as cards; the construction as a verdict card plus stage and evidence cards that open each table in a sheet; the reader's log as one-line step cards.
+- Same endpoints and data.
+- Checks:
+  - the catalogue tests pass;
+  - 40 states screenshotted at 1600 and 1280, dark and light, with no errors;
+  - no paid calls.
+- Rules for the future: "Rule zero" at the top of `docs/design/THEME.md`.
