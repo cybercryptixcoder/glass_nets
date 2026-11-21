@@ -2060,3 +2060,35 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - xyxy: Z112 = log(t+1), M1 1.000, M2 0.922.
   - Memorizer: no structure.
 - Lead: in the pow (a^b mod 113) embedding, planes cluster b by its quadratic residue class mod 7, and a by the quadratic residue class of dlog(a) mod 7 (`/tmp` analysis, to be rebuilt as a tool). Prior work checked: Africa et al. 2025 (variable modulus, 4-layer encoder-decoder) report nothing like it; Nguyen 2026 covers multiplication only.
+
+## Nov 21, 16:42 ET (clock): D1, the a^b discovery, universality runs, decompiler v2, catalogue integration
+
+- **a^b mod 113 (`dc_pow_s1`)** computes powers by nested discrete logarithms. Details and numbers: `docs/decomp/POW_MECHANISM.md`; test script: `scripts/decomp/pow_mechanism.py`.
+  - x = log_g(a).
+  - The exponent ring Z_112 is split by CRT into Z_7 × Z_16. Side representations: x1 = F(a) + G(b) at 99.7%, and F as functions of the residues at 99.7%.
+  - Inside each part, the multiplicative structure is used: the Legendre and cubic characters of Z_7*, and the 2-adic valuation with ⟨−1⟩ × ⟨5⟩ in Z_16*.
+  - Causal swaps of one CRT part, and of one unit-group factor, move the answer exactly as predicted: 1.000 in every test.
+- **Universality** (pre-registered at 15:25, then run):
+  - p = 109: perfect.
+  - p = 97 and p = 101: the CRT split and the part swaps pass (T2 ≥ 0.94; T4 0.87–1.00). The 2-power unit-factor swaps fall short of the 0.8 line (0.60–0.79): criterion (c) fails there.
+  - Seeds 2 and 3 at p = 113 also use characters of the unit group Z_112*, but some of those characters mix the CRT parts, so the part swaps reach only 0.48–0.96.
+  - The universal statement is therefore "characters of the unit group of the exponent ring"; the clean CRT split depends on the network.
+- **Decompiler v2:**
+  - stage 1 runs on side representations as well as the embedding;
+  - consensus group vote;
+  - relaxed fallback for noisy representations;
+  - "off-circle" means central in most planes;
+  - closed-form naming: k·t, k·t^e, k·log(t + s);
+  - M2 v2, an interchange on the recovered variable (logged in PLAN.md at 16:05).
+- **Sum of squares:** passes on both seeds (s1: M1 0.991, M2 0.990; s2: 0.973 and 0.976), and the decompiler reports "the input is squared", blind.
+- Failures on the way:
+  - **Spectral planes** (joint diagonalisation of invariant kernels): whitened Gram matrices are degenerate, and with equally weighted characters even nonlinear kernels stay degenerate. Kept as an experiment, not used.
+  - **ICA split of the pow side representations into CRT parts:** works for some seeds of the ICA itself, but the grouping and block clustering were not robust. Not used for claims.
+  - **First Colab session expired** with the seed-2 networks on it; they were retrained in round 2. Colab CPU turned out slower than the local machine for decompiles, so the batch was moved local.
+- **Non-abelian:**
+  - On the S4 network, whitened F(a) at rank 4 is a sphere (radius cv 0.018).
+  - Its orthogonal symmetries form a group of order 48, with 2 regular subgroups of order 24, both with S4's element-order profile (1, 9, 8, 6).
+  - One of them reproduces the true Cayley table exactly.
+  - This is built as `lab/decomp/orbit.py` plus a decompile fallback. The identity symbol and handedness are chosen by M1, and that selection is disclosed.
+- **Catalogue:** `lab/catalog.py` and `catalog.html` show the decompiled program card (group, name, M1/M2, the answer-key check from `score_known.py`) and the a^b mechanism card. Screenshots are clean, with no JavaScript errors.
+- **GPU spend so far:** about 1 h 15 min of L4 time across sessions dc1–dc3, plus about 30 min of CPU.
