@@ -1,0 +1,54 @@
+# Generalised Transportability via Causal Abstractions
+
+- **Key:** arxiv-2608.15645
+- **Authors / organisation:** Yorgos Felekis, Paris Giampouras, Fabio Massimo Zennaro, Theodoros Damoulas; University of Warwick (Dept. of Computer Science, and Depts. of Computer Science & Statistics for Damoulas) and University of Bergen (Dept. of Informatics, Zennaro).
+- **Date:** 2026-08-16
+- **Link:** https://arxiv.org/abs/2608.15645
+- **Kind:** paper
+- **Read from:** full text — arXiv HTML v1, ~333k chars stripped, read as abstract + §1–§12 + appendix overview; the ten appendices (A–J, proofs, algorithms, benchmark equations, extra results) were read only through that overview plus their headings and the C.1/G/J openings, so **no proof step, no algorithm box and no appendix figure is reported as read**.
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+Classical causal transportability asks a yes/no question per query: given experiments in a source population, observations in a target, and a diagram saying which mechanisms differ, either the query has an identification formula or it does not. The authors argue this is unhelpful in two regimes that occur constantly in practice — the query is not identifiable at all, and no target data exist yet — because a binary verdict leaves the practitioner with nothing to deploy. Their move is to raise the object of study from the query to the *relation between the two models*: ask whether one map carries the source's entire family of interventional distributions onto the target's, so that if it does, every target query transports at once. Since source and target share variables, graph and intervention semantics and differ only at a known set of mechanisms, this relation is a same-level instance of causal abstraction, which is the theory the paper borrows and adapts. When no exact map exists they ask for the best approximate one and show that its residual error still yields a certified interval for the target query. The larger goal is to make abstraction error a quantitative modelling quantity with a guarantee attached, rather than a number reported after the fact.
+
+## What they studied
+
+Structural causal models on both sides — a trusted source model and an unobserved or partially observed target — sharing endogenous variables, DAG and intervention semantics, with a designated shifted set and (in the semi-Markovian case) latent confounding through districts. The unit of analysis is the *model-level relation*: a common Markov kernel acting on the joint state, either constructive (a product of per-node factors, block-diagonal setting for districts) or a deterministic map, checked against a query specification family. Nothing is a neural network: the experiments are small linear additive-noise SCMs generated for the purpose (a two-variable semi-Markovian graph, a three-variable one, a six-node Markovian DAG built on the LUCAS lung-cancer dataset) plus one real linear-Gaussian ecological study of riparian canopy cover and stream dissolved oxygen. The abstraction is assumed to be linear and diagonal on the shifted nodes.
+
+## How they did it
+
+They build a five-rung ladder of source–target consistency notions, each implying the one below: observational equality of the two laws; per-intervention consistency, where a separate kernel may be chosen for each intervention; interventional consistency, where one kernel serves the whole family at once; and two constructive versions that require that shared kernel to factorise per variable (or per district, under confounding), with interventions never splitting a district. A query-restricted relaxation runs orthogonally, matching only the marginals a declared query family asks about. They then characterise when the constructive version exists: for Markovian models, alignment proceeds mechanism by mechanism in topological order, each stage choosing a kernel for a shifted node that reproduces the target conditional given the parents as already transported, so that matching the first i variables inductively delivers the whole target joint. This becomes a linear feasibility problem on finite state spaces. The approximate case defines transport error as the gap between "intervene then transport" and "transport then intervene" on the query-relevant marginals, and treats it as a min–max problem: pick the transport map, and let an adversary choose the worst admissible target — a mechanism perturbation inside a declared box around the shifted coefficients plus an environment perturbation inside a ball around the source's exogenous law. In the linear additive-noise case the perturbation algebra is closed form (a resolvent identity), giving stability bounds that control how a local coefficient change propagates globally. Two certificates are then read off the min–max solution: a general one for any Lipschitz query functional, and a directional one that projects onto the scalar readout the query actually uses. Experiments sweep the training radius over a grid, score coverage and interval width, and test whether the radius can be selected without interventional target data — by sweeping and keeping the radius whose transported source law is observationally closest to the target's observed law.
+
+## What counts as an explanation here
+
+An *approximate* abstraction: a single transport map between models, with its error separated into three named terms — residual transport mismatch, mechanism perturbation, and environment shift — and converted into an interval around the transported query value. It is explicitly partial and it predicts in the specific sense we care about: for any admissible target inside the declared ambiguity set, the interval contains the true interventional query, and the claim is falsifiable query by query. The plan for the apparatus: an interval is an explanation only if it is both covering and narrow, and the paper says so outright — a wide interval is trivially covering, so coverage is never reported without width.
+
+## How they judged success
+
+Coverage (does the certified interval contain the true target query, per query and per sampled target), interval width against a vacuity threshold of ten times the query scale, and a utilisation ratio — the distance from interval centre to truth divided by half-width, so that coverage is the value 1 on a common scale and smaller is tighter. Baselines: the identity map (no transport), each trained map at several training radii, symmetric versus offset ambiguity centres, and paired t-tests over 100 perturbation seeds with folds averaged per seed so folds do not inflate the sample. Synthetic targets are drawn from the ambiguity geometry itself, so maps are scored on shifts they were never shown.
+
+## What they found
+
+- The hierarchy separates query-level from model-level transport, and the constructive version is the finite-state-checkable rung; its existence reduces to a linear system.
+- On the non-transportable benchmark the observational radius selector found a covering cell, and the directional prior was decisive: with the offset set to the realised shift the interval covered both queries in every fold, while the symmetric variant missed one by a gap of 0.08.
+- The general certificate becomes vacuous (width past ten times query scale) at moderate radii while the directional one remains informative — on the six-node benchmark the general width crosses that threshold between radius 0.2 and 0.5, and on the real dataset from 0.5 onward.
+- The directional certificate is 2.9× tighter on one benchmark and up to 17× tighter per query on another.
+- A distributionally-robust crossover: at small shifts the identity map is significantly better, and at large shifts a trained map wins — on the three-variable benchmark the best large-shift radius was not the largest but one step down, because the adversary hedges against the single worst perturbation while sampled targets spread across the ball.
+- On the real ecological data the source–target shift sat at Wasserstein distance 1.165, inside the ball only at radius 2 or more; at that radius the directional certificate covered all four canopy interventions, and observational radius selection pointed the wrong way there because the shift was purely environmental.
+
+## Limits and open problems they name
+
+Strictly linear structural models and linear, diagonal transport maps — the closed forms rely on the reduced-form matrix and its resolvent, which do not survive non-linearity. The causal graph is assumed known or well estimated, and it fixes which mechanisms may move and which components are free. The source is treated as a trusted reference, so sampling and estimation error in the source are not charged to the interval; the named next step is a doubly robust version with an ambiguity set on the source too. District-quotient acyclicity is assumed. The shift geometry, the set of moved mechanisms, and the directional offset are all declared by the practitioner rather than learned, and their stated next step is to learn the geometry from whatever partial target information exists.
+
+## What we take from it
+
+A **measure and a report format**. The three-way split of abstraction error — map residual, mechanism perturbation, environment shift — is the cleanest decomposition we have seen for "why does our account miss", and it maps directly onto our situation: a probe or patch account has a fitting residual (map), a sensitivity to which site or coefficient the account is allowed to move (mechanism), and a dependence on the input distribution the account was checked on (environment). The **directional-versus-general pair** is the reusable discipline: the bound for any query and the bound for the query actually asked are different objects, often differing by an order of magnitude, and the tight one can lose coverage exactly when the declared shift was too small for the realised one — which the paper reports as a diagnostic rather than a failure. The **radius sweep with a vacuity bar** gives our batteries a way to publish a bound honestly: state the radius, state the bar, print coverage and width together. Two warnings carry over: a certificate whose source model is unexamined inherits the source's error uncorrected, and observational calibration of the radius can select a cell that misses the truth — which is the folder's own recurring "score on held-out interventions, not on the residual you optimised" rule arriving from the transport side. It does not transfer directly to transformer interpretability (linear SCMs only), so read it as a template for what an error-tolerant abstraction claim looks like when someone bothers to certify it.
+
+## Tags
+
+unit: whole-model, weights
+form: causal-abstraction, replacement-model
+method: other, decomposition
+eval: prediction/simulation, faithfulness
+goal: understanding, evaluation-of-methods
