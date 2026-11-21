@@ -231,9 +231,10 @@ def name_map(g, N, n, gen=None):
     r = fits(t % N, np.ones(n, bool))
     if r and r[0] >= 0.98:
         return f"g(t) = {r[1]}*t + {r[2]} (mod {N})"
-    r = fits((t * t) % N, np.ones(n, bool))
-    if r and r[0] >= 0.98:
-        return f"g(t) = {r[1]}*t^2 + {r[2]} (mod {N}): the input is squared"
+    for e, word in ((2, "squared"), (3, "cubed"), (4, "raised to the 4th power"), (5, "raised to the 5th power")):
+        r = fits(np.array([pow(int(x), e, N) for x in t]), np.ones(n, bool))
+        if r and r[0] >= 0.98:
+            return f"g(t) = {r[1]}*t^{e} + {r[2]} (mod {N}): the input is {word}"
     # discrete logs, base any generator of Z_n^* (n prime), with a shift s
     if N == n - 1:
         def is_gen(x):

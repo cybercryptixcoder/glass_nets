@@ -64,6 +64,18 @@ def table(task, p=113, secret_seed=12345):
         pi = _perm(n, secret_seed); inv = np.argsort(pi)
         T = pi[G[inv[:, None], inv[None, :]]]
         return T, n, n, {"rule": "S4 composition under a secret labelling", "secret_pi": pi.tolist()}
+    if task.startswith("randab"):              # randab<seed>: a random finite abelian group under a random labelling
+        rng = np.random.default_rng(int(task[6:]) + 777)
+        specs = [[2, 2, 30], [3, 36], [4, 28], [2, 6, 6], [2, 2, 2, 12], [5, 20], [2, 50], [3, 3, 12], [6, 18], [2, 4, 12], [7, 14], [2, 2, 26]]
+        d = specs[rng.integers(len(specs))]
+        els = list(itertools.product(*[range(x) for x in d])); m = len(els); idx = {e: i for i, e in enumerate(els)}
+        pi = rng.permutation(m); inv = np.argsort(pi)
+        T = np.zeros((m, m), int)
+        for x in range(m):
+            for y in range(m):
+                ex, ey = els[inv[x]], els[inv[y]]
+                T[x, y] = pi[idx[tuple((u + v) % k for u, v, k in zip(ex, ey, d))]]
+        return T, m, m, {"rule": f"Z_{' x Z_'.join(map(str, d))} under a secret labelling", "group": d, "secret_pi": pi.tolist()}
     if task.startswith("mulmod"):              # a*b mod n for composite n, e.g. mulmod120 (zero divisors, non-cyclic units)
         m = int(task[6:]); a2 = np.arange(m)[:, None]; b2 = np.arange(m)[None, :]
         return (a2 * b2) % m, m, m, {"rule": f"(a*b) mod {m}"}
