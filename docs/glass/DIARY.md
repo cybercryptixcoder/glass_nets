@@ -2031,3 +2031,32 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - 40 states screenshotted at 1600 and 1280, dark and light, with no errors;
   - no paid calls.
 - Rules for the future: "Rule zero" at the top of `docs/design/THEME.md`.
+
+## Nov 21, 14:47 ET (clock): D1, the decompiler: stage 1 and 2 work on group-like networks (branch `decompiler`)
+
+- Shreyas (13:56): a step-change, discovery-grade, built and tested; GPU approved without a cap. Plan and pre-registered rules: `docs/decomp/PLAN.md`; ledger entry D1.
+- Discovery set trained on Colab (L4, session `dc1`, about 25 min of GPU): `scripts/decomp/train_table.py` over `tasks.py` (secret_add, xyxy, secret_z8z14, sqsum, pow, secret_s4; 2 seeds). All generalize (pow 0.9999 and 0.9912; secret_s4 seed 1 did not grok: 0.147 test).
+- Stage 1 (`lab/decomp/circles.py`, `group.py`), from the embedding alone:
+  - radius-uniform circle planes plus balanced order-2 axes;
+  - integer relations among the planes (coherence of products of plane angles);
+  - the relation lattice, whose Smith normal form gives the group the planes see;
+  - a joint decode of every symbol over all planes at once (one plane alone is too noisy: about 2.6° of jitter against 3.2° of lattice spacing).
+- Failures on the way, and their fixes:
+  - **Lattice harmonic test:** too strict, so it was replaced by relations.
+  - **Character matrix:** the rows of V were confused with V^-1.
+  - **Pairs of planes:** these have no short relations, so the search now seeds from triples.
+  - **False relations:** relations are now accepted greedily, only while the decode stays consistent.
+  - **Order-2 characters:** these are 1-D axes, not planes.
+  - **Noisy planes:** these meant more restarts plus an ensemble of three plane-finding variants, chosen by the weights only.
+- Stage 2 (`program.py`, `decompile.py`):
+  - **Is it a group law?** The MLP output is written as characters of G×G in the recovered coordinates; its diagonal share (0.75–0.96) says how far it depends on g(a)+g(b) alone.
+  - **Output classes:** read from W_U along what the MLP writes for each character, then assigned one class per element. Leftover classes plus off-circle symbols give the "absorbing element" rule.
+  - **Outputs:** the program, M1 and M2.
+- Results:
+  - modadd s1: Z113, M1 1.000, M2 1.000 (random 0.000).
+  - secret_add: the secret was recovered exactly (M3 1.0); M1 1.000, M2 0.999.
+  - secret_z8z14: Z2×Z56, M1 1.000, M2 1.000.
+  - modmul: Z112 plus a zero; M1 1.000, M2 0.951.
+  - xyxy: Z112 = log(t+1), M1 1.000, M2 0.922.
+  - Memorizer: no structure.
+- Lead: in the pow (a^b mod 113) embedding, planes cluster b by its quadratic residue class mod 7, and a by the quadratic residue class of dlog(a) mod 7 (`/tmp` analysis, to be rebuilt as a tool). Prior work checked: Africa et al. 2025 (variable modulus, 4-layer encoder-decoder) report nothing like it; Nguyen 2026 covers multiplication only.
