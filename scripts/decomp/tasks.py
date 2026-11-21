@@ -64,6 +64,14 @@ def table(task, p=113, secret_seed=12345):
         pi = _perm(n, secret_seed); inv = np.argsort(pi)
         T = pi[G[inv[:, None], inv[None, :]]]
         return T, n, n, {"rule": "S4 composition under a secret labelling", "secret_pi": pi.tolist()}
+    if task.startswith("mulmod"):              # a*b mod n for composite n, e.g. mulmod120 (zero divisors, non-cyclic units)
+        m = int(task[6:]); a2 = np.arange(m)[:, None]; b2 = np.arange(m)[None, :]
+        return (a2 * b2) % m, m, m, {"rule": f"(a*b) mod {m}"}
+    if task.startswith("addmod"):
+        m = int(task[6:]); a2 = np.arange(m)[:, None]; b2 = np.arange(m)[None, :]
+        return (a2 + b2) % m, m, m, {"rule": f"(a+b) mod {m}"}
+    if task == "cubesum":
+        return (a ** 3 + b ** 3) % p, p, p, {"rule": f"(a^3+b^3) mod {p}"}
     raise ValueError(task)
 
 
