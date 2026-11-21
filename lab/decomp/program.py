@@ -185,3 +185,125 @@ def verify_causal(W, planes, ga, f, n, n_patches=2000, seed=0, center=None, rand
     ok = want >= 0
     changed = A2 != A
     return {"success": float((out[ok & changed] == want[ok & changed]).mean()), "n": int((ok & changed).sum())}
+
+
+def verify_causal_x1(W, planes, side, X_side, f, n, n_patches=2000, seed=0, random_planes=False):
+    """M2 for coordinates found in a side representation (x1 = F(a) + G(b) at the MLP's input): move side `side`
+    ('a' or 'b') onto another symbol inside the recovered planes only, at the last position after attention."""
+    rng = np.random.default_rng(seed)
+    dm = X_side.shape[1]
+    if random_planes:
+        Q = np.linalg.qr(rng.standard_normal((dm, 2 * len(planes))))[0]
+    else:
+        Q = np.linalg.qr(np.concatenate([pl.get("Qo", pl["Q"]) for pl in planes], 1))[0]
+    Pj = Q @ Q.T
+    A = rng.integers(0, n, n_patches); B = rng.integers(0, n, n_patches); S2 = rng.integers(0, n, n_patches)
+    toks = np.stack([A, B, np.full(n_patches, n)], 1)
+    src = A if side == "a" else B
+    delta = (X_side[S2] - X_side[src]) @ Pj
+    out = internals(W, toks, patch1=lambda v: v + delta)["logits"].argmax(-1)
+    if side == "a":
+        want = np.array([(-1 if (r := f(int(s2), int(b))) is None else r) for s2, b in zip(S2, B)])
+    else:
+        want = np.array([(-1 if (r := f(int(a), int(s2))) is None else r) for a, s2 in zip(A, S2)])
+    ok = (want >= 0) & (S2 != src)
+    return {"success": float((out[ok] == want[ok]).mean()) if ok.any() else 0.0, "n": int(ok.sum())}
+
+
+def name_map(g, N, n, gen=None):
+    """Try simple closed forms for the symbol -> Z_N coordinate (naming only; never used to verify):
+    k*t + c, k*t^2 + c, k*log(t + s) + c. Returns a description or None."""
+    t = np.arange(n); g = np.asarray(g)
+    ok = g >= 0
+    def fits(v, mask):
+        m = mask & ok & (v >= 0)
+        if m.sum() < 0.8 * ok.sum():
+            return None
+        best = None
+        for k in range(1, N):
+            if np.gcd(k, N) != 1:
+                continue
+            c = (g[m][0] - k * v[m][0]) % N
+            acc = float(((k * v[m] + c) % N == g[m]).mean())
+            if best is None or acc > best[0]:
+                best = (acc, k, int(c))
+        return best
+    r = fits(t % N, np.ones(n, bool))
+    if r and r[0] >= 0.98:
+        return f"g(t) = {r[1]}*t + {r[2]} (mod {N})"
+    r = fits((t * t) % N, np.ones(n, bool))
+    if r and r[0] >= 0.98:
+        return f"g(t) = {r[1]}*t^2 + {r[2]} (mod {N}): the input is squared"
+    # discrete logs, base any generator of Z_n^* (n prime), with a shift s
+    if N == n - 1:
+        def is_gen(x):
+            return len({pow(int(x), e, n) for e in range(n - 1)}) == n - 1
+        gg = next(x for x in range(2, n) if is_gen(x))
+        dl = np.full(n, -1); y = 1
+        for e in range(n - 1):
+            dl[y] = e; y = y * gg % n
+        for s in range(n):
+            v = dl[(t + s) % n]
+            r = fits(v, v >= 0)
+            if r and r[0] >= 0.98:
+                sh = "" if s == 0 else f" + {s}"
+                return f"g(t) = {r[1]}*log_{gg}(t{sh}) + {r[2]} (mod {N}); the symbol with t{sh} = 0 mod {n} is the absorbing zero"
+    return None
+
+
+def character_subspace(X, g, d, on, frac=0.95, max_chars=24):
+    """Directions in X's space carried by characters of the recovered coordinates: v_u = sum_t conj(chi_u(g(t))) X_t.
+    Keeps the strongest characters up to `frac` of the power they carry. Returns an orthonormal basis (dm x k)."""
+    chi, els = characters(d)
+    idx = element_index(g, d)
+    Xc = X[on] - X[on].mean(0)
+    V = chi[:, idx[on]].conj() @ Xc / on.sum()                         # |G| x dm, complex
+    pw = (np.abs(V) ** 2).sum(1); pw[0] = 0                           # drop the trivial character
+    order = np.argsort(pw)[::-1]
+    cum = np.cumsum(pw[order]) / pw.sum()
+    k = int(min(np.searchsorted(cum, frac) + 1, max_chars))
+    cols = []
+    for u in order[:k]:
+        cols += [V[u].real, V[u].imag]
+    Q, R = np.linalg.qr(np.array(cols).T)
+    keep = np.abs(np.diag(R)) > 1e-8 * np.abs(np.diag(R)).max()
+    return Q[:, keep]
+
+
+def verify_causal_subspace(W, Q, side, X_side, f, n, where="embedding", n_patches=2000, seed=0, random=False):
+    """M2 with an explicit subspace Q (dm x k): move one input onto another symbol inside Q only. where='embedding'
+    patches the token embedding at that position; where='x1' patches the MLP's input at the last position."""
+    rng = np.random.default_rng(seed)
+    if random:
+        Q = np.linalg.qr(rng.standard_normal((Q.shape[0], Q.shape[1])))[0]
+    Pj = Q @ Q.T
+    A = rng.integers(0, n, n_patches); B = rng.integers(0, n, n_patches); S2 = rng.integers(0, n, n_patches)
+    toks = np.stack([A, B, np.full(n_patches, n)], 1)
+    src = A if side == "a" else B
+    delta = (X_side[S2] - X_side[src]) @ Pj
+    pos = 0 if side == "a" else 1
+    if where == "embedding":
+        def patch(x, i0):
+            x = x.copy(); x[:, pos] += delta[i0:i0 + len(x)]; return x
+        out = batched(W, toks, keys=("logits",), patch=patch)["logits"].argmax(-1)
+    else:
+        out = internals(W, toks, patch1=lambda v: v + delta)["logits"].argmax(-1)
+    if side == "a":
+        want = np.array([(-1 if (r := f(int(s2), int(b))) is None else r) for s2, b in zip(S2, B)])
+    else:
+        want = np.array([(-1 if (r := f(int(a), int(s2))) is None else r) for a, s2 in zip(A, S2)])
+    ok = (want >= 0) & (S2 != src)
+    return {"success": float((out[ok] == want[ok]).mean()) if ok.any() else 0.0, "n": int(ok.sum()), "dims": int(Q.shape[1])}
+
+
+def coordinate_subspace(X, g, d, on, frac=0.95, max_dims=24):
+    """The subspace through which X depends on the recovered coordinate: PCA of X's class means grouped by element
+    (symbols sharing an element are averaged), keeping `frac` of their variance. Patching inside it is an interchange
+    intervention on the recovered variable."""
+    idx = element_index(g, d)
+    hs = np.unique(idx[on])
+    C = np.array([X[on][idx[on] == h].mean(0) for h in hs]); C = C - C.mean(0)
+    U, S, Vt = np.linalg.svd(C, full_matrices=False)
+    cum = np.cumsum(S ** 2) / (S ** 2).sum()
+    k = int(min(np.searchsorted(cum, frac) + 1, max_dims))
+    return Vt[:k].T

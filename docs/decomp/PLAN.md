@@ -49,3 +49,14 @@ no supplied vocabulary)? The program should:
 **Prior work:** checked before any claim of novelty (Nanda 2023, Chughtai 2023, Zhong 2023, Doshi 2024 on modular polynomials, and others found in the search).
 
 ## Change log
+- **Nov 21, 15:25 (clock): pre-registration for the pow held-out primes.** This was written before `scripts/decomp/pow_mechanism.py` ran on `dc_pow_p97_s1` (96 = 32·3), `dc_pow_p101_s1` (100 = 4·25) and `dc_pow_p109_s1` (108 = 4·27). The mechanism counts as general across primes only if, for each network, all of the following hold:
+  - **(a) T2:** the CRT split along the prime powers of p−1 explains ≥ 0.90 of each side's representation, and more than every other split.
+  - **(b) T4:** swapping one CRT part (each side, each part) succeeds ≥ 0.80, with the random control ≤ 0.20.
+  - **(c) T5:** swapping one unit-group factor succeeds ≥ 0.80.
+
+  Seeds at p = 113 (s2, s3) are reported against the same lines. The pass lines are the D1 lines (0.8 causal, 0.2 control), not tuned to these runs.
+- **Nov 21, 16:05 (clock): M2 v2.** M2 v1 patched the span of the recovered circle planes. That span depends on which plane-finding variant won, and for a 2-to-1 symbol map (sum of squares) it missed part of what the embedding carries about the coordinate. As a result, a correct program (M1 0.991) failed a causal test that patching the embedding's top PCA subspace passes at 1.0.
+
+  **M2 v2** is an interchange intervention on the recovered variable. One input is moved onto another symbol only inside the subspace through which the representation depends on the recovered coordinate (PCA of its class means grouped by element, 95% of their variance, at most 24 dimensions). It is run in the embedding, and in the side representation when that is where the coordinates came from; the better of the two is reported, with both listed. The random control is a random subspace of the same dimension.
+
+  Pass lines are unchanged (≥ 0.80, control < 0.20). Every network is re-run on v2 (`results/decomp/`); no v1 result is used for claims.

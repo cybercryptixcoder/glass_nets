@@ -105,7 +105,7 @@ def recover(X, planes, center=None, thresh=0.6, min_fit=0.85, max_rels=60):
     Relations are taken in order of coherence and kept only if the decode still explains the symbols (mean fit >= min_fit
     once the group is finite): a relation that is not really there makes the decode fall apart, a real one does not."""
     TH, RAD = plane_angles(X, planes, center)
-    on = (RAD > 0.5 * np.median(RAD, axis=1, keepdims=True)).all(0)
+    on = (RAD > 0.5 * np.median(RAD, axis=1, keepdims=True)).mean(0) > 0.5   # off only if near the centre in most planes (an absorbing element)
     rels, B = find_relations(TH, on, thresh=thresh)
     rels.sort(reverse=True)
     # keep one of each +-v pair, strongest first, at most max_rels
