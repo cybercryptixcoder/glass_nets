@@ -60,3 +60,12 @@ no supplied vocabulary)? The program should:
   **M2 v2** is an interchange intervention on the recovered variable. One input is moved onto another symbol only inside the subspace through which the representation depends on the recovered coordinate (PCA of its class means grouped by element, 95% of their variance, at most 24 dimensions). It is run in the embedding, and in the side representation when that is where the coordinates came from; the better of the two is reported, with both listed. The random control is a random subspace of the same dimension.
 
   Pass lines are unchanged (≥ 0.80, control < 0.20). Every network is re-run on v2 (`results/decomp/`); no v1 result is used for claims.
+- **Nov 21, 16:36 (clock): non-abelian mode (orbit), added after exploration on `dc_secret_s4_s2`.** This entry is written after looking at that network, so the S4 result is a development case, not a held-out one. The held-out non-abelian case is `dc_secret_s4_s3`, being trained now, with a different seed and the same secret.
+  - **Method.** In the whitened representation, at the smallest rank where the symbols sit on a sphere, find every orthogonal map that permutes the points; the regular subgroups of order n give the Cayley table.
+  - **Disclosed selection.** Which symbol is the identity, and left versus right, is not fixed by the orbit. The decompiler picks it by agreement with the network (M1) among the candidates, and reports their number.
+  - **M2.** The interchange test, inside the sphere subspace.
+  - **Pass lines.** Unchanged.
+- **Nov 21, 16:40 (clock): pre-registration, multiplication mod a composite n.** The networks are `dc_mulmod120_s1`, `dc_mulmod120_s2` and `dc_mulmod105_s1`, all trained, none examined yet.
+  - **Hypothesis.** By analogy with a^b, the network multiplies in Z_n by splitting the base ring along the prime powers of n: 120 = 8·3·5 and 105 = 3·5·7. Inside each part it uses that part's multiplicative structure.
+  - **Test.** `scripts/decomp/pow_mechanism.py --mulmod n`, with the same criteria as the pow held-out primes: (a) T2 ≥ 0.90 and the best split; (b) T4 ≥ 0.80 with control ≤ 0.20; (c) T5 ≥ 0.80.
+  - **Also run.** The group decompiler on `dc_addmod120_s1`; the prediction is Z_120 (or an isomorphic product) with M1 and M2 passing. And on `dc_cubesum_s1`: since gcd(3, 112) = 1, cubing is a bijection mod 113, so the prediction is G = Z_113 with the name k·t³. Naming does not test cubes yet; the prediction is only about the group and M1/M2.

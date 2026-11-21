@@ -1,6 +1,8 @@
-"""D1: test the nested-discrete-log mechanism in a network trained on a^b mod p, for any prime p.
+"""D1: test the nested-discrete-log mechanism in a network trained on a^b mod p, for any prime p; and the same
+ring-structure tests for a network trained on a*b mod a composite n.
 
   python3 scripts/decomp/pow_mechanism.py <model_id> [--p P]
+  python3 scripts/decomp/pow_mechanism.py <model_id> --mulmod N
 
 Hypothesis (found on dc_pow_s1; docs/decomp/POW_MECHANISM.md). With g a generator mod p and x = log_g(a) in
 Z_{p-1}, the network computes x*b in Z_{p-1} by splitting it by CRT into prime-power parts Z_q, and inside each part
@@ -70,19 +72,29 @@ def unit_coords(q):
 
 
 def run(model_id, p, n_patch=3000, seed=0):
-    W = dict(np.load(os.path.join(ROOT, "lab", "models", model_id, "weights.npz")))
-    rng = np.random.default_rng(seed)
-    t = np.arange(p); g = generator(p); n1 = p - 1
+    """a^b mod p: x = log_g(a) in Z_{p-1} (a = 0 left out), y = b, the ring is Z_{p-1}, the answer is g^(x*y)."""
+    g = generator(p); n1 = p - 1
     dl = np.full(p, -1); x = 1
     for e in range(n1):
         dl[x] = e; x = x * g % p
     ex = np.array([pow(g, e, p) for e in range(n1)])
+    truth = np.array([[pow(int(a), int(b), p) for b in range(p)] for a in range(p)])
+    rep = run_ring(model_id, p, n1, dl, np.arange(p), lambda z: ex[z], truth, a_min=1, n_patch=n_patch, seed=seed)
+    rep.update({"p": p, "generator": g, "p_minus_1": n1})
+    return rep
+
+
+def run_ring(model_id, n_sym, n1, dl, ycoord, out_of, truth, a_min=0, n_patch=3000, seed=0):
+    """Generic core. The network's inputs are symbols 0..n_sym-1; symbol a carries x = dl[a] in the ring Z_n1 (-1 = no
+    coordinate), symbol b carries y = ycoord[b]; the answer for (a, b) is out_of(x * y mod n1)."""
+    W = dict(np.load(os.path.join(ROOT, "lab", "models", model_id, "weights.npz")))
+    rng = np.random.default_rng(seed)
+    p = n_sym; t = np.asarray(ycoord); ex = None
     qs = [l ** k for l, k in sorted(factor(n1).items())]
     I = pg.internals(W, pg.all_pairs(p)); x1 = I["x1"][:, -1].reshape(p, p, -1); net = I["logits"].argmax(-1).reshape(p, p)
     mu = x1.mean((0, 1)); F = x1.mean(1) - mu; G = x1.mean(0) - mu
     R = x1 - F[:, None] - G[None] - mu
-    rep = {"model": model_id, "p": p, "generator": g, "p_minus_1": n1, "crt_parts": qs,
-           "accuracy": float((net == np.array([[pow(int(a), int(b), p) for b in range(p)] for a in range(p)])).mean()),
+    rep = {"model": model_id, "ring": n1, "crt_parts": qs, "accuracy": float((net == truth).mean()),
            "T1_additive_share": float(1 - (R ** 2).sum() / ((x1 - mu) ** 2).sum())}
 
     def onehot(v, m):
@@ -145,7 +157,7 @@ def run(model_id, p, n_patch=3000, seed=0):
         return z % n1
 
     N = n_patch
-    A = rng.integers(1, p, N); A2 = rng.integers(1, p, N); B = rng.integers(0, p, N); B2 = rng.integers(0, p, N)
+    A = rng.integers(a_min, p, N); A2 = rng.integers(a_min, p, N); B = rng.integers(0, p, N); B2 = rng.integers(0, p, N)
     xa, xa2 = dl[A], dl[A2]
     toks = np.stack([A, B, np.full(N, p)], 1)
 
@@ -164,7 +176,7 @@ def run(model_id, p, n_patch=3000, seed=0):
                     D[i] = PB[q][B2[i] % q] - PB[q][B[i] % q]
                 res = {qq: (xa[i] * B[i]) % qq for qq in qs}
                 res[q] = (xs * bs) % q
-                want[i] = ex[crt(res)]
+                want[i] = out_of(crt(res))
             out = patched(D)
             sel = want != net[A, B]
             # control: same norms, random directions inside the span of all CRT features
@@ -210,7 +222,7 @@ def run(model_id, p, n_patch=3000, seed=0):
                     D[i] = feat(new) - feat(e)
                     res = {qq: (xa[i] * B[i]) % qq for qq in qs}
                     res[q] = (xa[i] * inv[tuple(new)]) % q
-                    want[i] = ex[crt(res)]
+                    want[i] = out_of(crt(res))
                 sel = want >= 0
                 if sel.sum() < 20:
                     continue
@@ -222,14 +234,25 @@ def run(model_id, p, n_patch=3000, seed=0):
     return rep
 
 
+def run_mulmod(model_id, n):
+    """a*b mod n (composite n): the ring is Z_n itself, x = a, y = b, the answer is x*y."""
+    truth = (np.arange(n)[:, None] * np.arange(n)[None, :]) % n
+    return run_ring(model_id, n, n, np.arange(n), np.arange(n), lambda z: z, truth, a_min=0)
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("model"); ap.add_argument("--p", type=int, default=None)
+    ap.add_argument("--mulmod", type=int, default=None, help="the network computes a*b mod this n (composite) instead of a^b mod p")
     a = ap.parse_args()
-    p = a.p or json.load(open(os.path.join(ROOT, "lab", "models", a.model, "train.json"))).get("p", 113)
-    rep = run(a.model, p)
+    if a.mulmod:
+        rep = run_mulmod(a.model, a.mulmod); rep.setdefault("p_minus_1", rep["ring"])
+        out = a.model + "_ring.json"
+    else:
+        p = a.p or json.load(open(os.path.join(ROOT, "lab", "models", a.model, "train.json"))).get("p", 113)
+        rep = run(a.model, p); out = a.model + "_pow.json"
     os.makedirs(os.path.join(ROOT, "results", "decomp"), exist_ok=True)
-    json.dump(rep, open(os.path.join(ROOT, "results", "decomp", a.model + "_pow.json"), "w"), indent=1)
-    print(f"{a.model}: p={p}, p-1 = {rep['p_minus_1']} = {' x '.join(map(str, rep['crt_parts']))}, accuracy {rep['accuracy']:.4f}, additive {rep['T1_additive_share']:.4f}")
+    json.dump(rep, open(os.path.join(ROOT, "results", "decomp", out), "w"), indent=1)
+    print(f"{a.model}: ring Z_{rep['ring']} = {' x '.join(map(str, rep['crt_parts']))}, accuracy {rep['accuracy']:.4f}, additive {rep['T1_additive_share']:.4f}")
     for s, r in rep["T2_split_r2"].items():
         print(f"  T2 side {s}: " + ", ".join(f"{k} {v:.3f}" for k, v in r.items()))
     for s, r in rep["T3_spectra"].items():

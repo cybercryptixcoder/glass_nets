@@ -24,6 +24,7 @@ from decomp.circles import find_planes, find_structure
 from decomp.group import recover_auto, recover
 from decomp import program as pg
 from decomp import deep
+from decomp import orbit
 
 VARIANTS = [("plain", lambda X: find_planes(X, restarts=24, iters=250)),
             ("axes+planes", lambda X: find_structure(X, restarts=24, iters=250)),
@@ -78,8 +79,7 @@ def decompile(model_id, patches=2000, log=print):
     from collections import Counter
     allres = cands["a"] + [c for c in cands["b"] if c[0] != "embedding"]
     if not allres:
-        rep.update({"verdict": "no group structure found", "group": None})
-        return rep, None
+        return nonabelian(W, n, E, F, G, share, net, rep, patches, log)
     cnt = Counter(tuple(c[2][4]["group"]) for c in allres)
     fitm = {gsig: np.mean([c[2][0][1] for c in allres if tuple(c[2][4]["group"]) == gsig]) for gsig in cnt}
     gsig = max(cnt, key=lambda k: (cnt[k], fitm[k]))
@@ -178,6 +178,53 @@ def character_planes(X, pool, g, d, on, min_coh=0.8):
             continue
         keep.append(pl); spans.append(Q)
     return keep
+
+
+def nonabelian(W, n, E, F, G, share, net, rep, patches, log):
+    """No abelian structure: try the symbols as an orbit of an orthogonal group action (lab/decomp/orbit.py)."""
+    reps = ([("side F(a)", F)] if share >= 0.9 else []) + [("embedding", E)]
+    for src, X in reps:
+        sph = orbit.find_sphere(X)
+        if sph is None:
+            log(f"  orbit [{src}]: no sphere"); continue
+        k, Y, basis, cv = sph
+        P = orbit.orbit_symmetries(Y, 0.1)
+        H_all = orbit.regular_subgroups(P, n) if len(P) >= n else []
+        log(f"  orbit [{src}]: sphere in {k} dims (radius cv {cv:.3f}), {len(P)} symmetries, {len(H_all)} regular subgroups of order {n}")
+        if not H_all:
+            continue
+        name, eo = orbit.describe(H_all[0], n)
+        # candidates: identity symbol and handedness are not fixed by the orbit; choose by M1 (disclosed)
+        best = None; ncand = 0
+        for H in H_all:
+            for e, T in orbit.tables(H, n):
+                for T2 in (np.array(T), np.array(T).T):
+                    ncand += 1
+                    agr = float((T2.reshape(-1) == net).mean())
+                    if best is None or agr > best[0]:
+                        best = (agr, e, T2)
+        agr, e, T = best
+        f = lambda a, b, T=T: int(T[a, b])
+        m1 = pg.verify_replacement(f, net, n)
+        Q = basis.T if src == "embedding" else np.linalg.qr(basis.T)[0]
+        where = "embedding" if src == "embedding" else "x1"
+        Xs = E if src == "embedding" else F
+        m2 = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches)
+        m2r = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches, random=True)
+        rep.update({"group": f"non-abelian, order {n}", "group_name": name, "element_orders": {str(k2): v for k2, v in eo.items()},
+                    "a_side": {"representation": src, "variant": f"orbit on a sphere in {k} dims"}, "orbit_symmetries": len(P),
+                    "regular_subgroups": len(H_all), "candidates_selected_by_M1": ncand,
+                    "M1": m1, "M2": dict(m2, where=src), "M2_random_control": m2r,
+                    "cayley_table": T.tolist(), "identity_symbol": int(e)})
+        ok = m1["agreement"] >= 0.9 and m2["success"] >= 0.8 and m2r["success"] < 0.2
+        rep["verdict"] = ("PASS" if ok else "FAIL") + f" (M1 {m1['agreement']:.3f}, M2 {m2['success']:.3f} vs random {m2r['success']:.3f}); identity and handedness chosen by M1 among {ncand} candidates"
+        src_txt = [f"# Decompiled program: a non-abelian group of order {n}" + (f", identified as {name}" if name else "") + f"; element orders {eo}",
+                   "# The table was read from the symmetries of the embedding's orbit; which symbol is the identity (and left vs right)",
+                   f"# was chosen by agreement with the network among {ncand} relabelled candidates.",
+                   "CAYLEY = " + json.dumps(T.tolist()), "def f(a, b):", "    return CAYLEY[a][b]"]
+        return rep, "\n".join(src_txt)
+    rep.update({"verdict": "no group structure found", "group": None})
+    return rep, None
 
 
 def make_program2(ga, gb, dec, d, on_a, on_b):
