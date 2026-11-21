@@ -19,7 +19,7 @@ def plane_angles(X, planes, center=None):
     mu = X.mean(0) if center is None else center
     TH, RAD = [], []
     for pl in planes:
-        Y = (X - mu) @ pl["Q"]
+        Y = pl["Y"] if "Y" in pl else (X - mu) @ pl["Q"]      # spectral planes carry the symbols' coordinates directly
         TH.append(np.arctan2(Y[:, 1], Y[:, 0])); RAD.append(np.hypot(Y[:, 0], Y[:, 1]))
     return np.array(TH), np.array(RAD)
 
@@ -99,7 +99,7 @@ def _in_lattice(v, basis_rows):
     return all(y[0, k] == 0 for k in range(min(D.rows, D.cols), D.cols))
 
 
-def recover(X, planes, center=None, thresh=0.6, min_fit=0.85):
+def recover(X, planes, center=None, thresh=0.6, min_fit=0.85, max_rels=60):
     """Full stage: relations -> group -> per-symbol elements. X = rows are symbols.
 
     Relations are taken in order of coherence and kept only if the decode still explains the symbols (mean fit >= min_fit
@@ -108,17 +108,25 @@ def recover(X, planes, center=None, thresh=0.6, min_fit=0.85):
     on = (RAD > 0.5 * np.median(RAD, axis=1, keepdims=True)).all(0)
     rels, B = find_relations(TH, on, thresh=thresh)
     rels.sort(reverse=True)
-    w = [pl.get("energy", 1.0) for pl in planes]
-    kept, G, dec = [], None, None
+    # keep one of each +-v pair, strongest first, at most max_rels
+    seen, uniq = set(), []
     for c, v in rels:
-        if _in_lattice(v, [list(x) for _, x in kept]):
+        if v in seen or tuple(-x for x in v) in seen:
             continue
+        seen.add(v); uniq.append((c, v))
+    rels_used = uniq[:max_rels]
+    w = [pl.get("energy", 1.0) for pl in planes]
+    kept, G, dec, order = [], None, None, None
+    for c, v in rels_used:
         G2 = group_from_relations(kept + [(c, v)], len(planes))
         if G2["finite"]:
+            o2 = int(np.prod(G2["d"])) if G2["d"] else 1
+            if order is not None and o2 == order:
+                continue                                  # already implied by the kept relations
             d2 = decode(TH, G2["A"], G2["d"], weights=w)
             if float(np.mean(d2["fit"][on])) < min_fit:
                 continue
-            G, dec = G2, d2
+            G, dec, order = G2, d2, o2
         kept.append((c, v))
     out = {"n_relations": len(rels), "kept_relations": kept, "B": B, "on": on}
     if G is None:

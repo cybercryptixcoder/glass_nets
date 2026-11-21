@@ -18,7 +18,12 @@ def _whiten(X, keep=0.999, full=False, ratio=0.2):
     X = X - X.mean(0)
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
     if full:
-        k = int((S / S[0] > ratio).sum())
+        if ratio == "gap":                     # rank at the largest relative gap between consecutive singular values
+            m = int((S / S[0] > 0.08).sum())
+            g = S[:m - 1] / np.maximum(S[1:m], 1e-12) if m > 1 else np.array([1.0])
+            k = int(np.argmax(g) + 1) if m > 2 else m
+        else:
+            k = int((S / S[0] > ratio).sum())
         k = max(2, min(k, 24))
         return U[:, :k] * np.sqrt(len(X)), np.diag(1 / S[:k]) @ Vt[:k] * np.sqrt(len(X)), S
     e = np.cumsum(S ** 2) / (S ** 2).sum()
@@ -215,3 +220,50 @@ def find_structure(X, **kw):
     Xr = R @ basis                                  # remainder, back in the original coordinates (centred)
     planes = find_planes(Xr, **kw)
     return axes + planes
+
+
+def spectral_planes(X, ratio="gap", betas=(1.0, 2.0, 4.0), seed=0, max_planes=24, tol=1e-3, min_frac=0.02):
+    """Character planes by joint diagonalisation of invariant kernels.
+
+    If the symbols are elements of a finite abelian group and X = F B (F: characters over the symbols, B: any mixing),
+    then after full whitening Z Z^T is a function of (s - t) only, and so is any elementwise function of it. Such
+    matrices commute and share the characters as eigenvectors; a random combination of several of them has (generically)
+    distinct eigenvalues except for conjugate pairs, so each eigenspace is one character plane (2-D) or one order-2
+    axis (1-D). This needs no circle-fitting at all, and elementwise products add product characters (more relations,
+    shorter ones)."""
+    Z, basis, S = _whiten(X, full=True, ratio=ratio)
+    r = Z.shape[1]
+    K = Z @ Z.T / r
+    rng = np.random.default_rng(seed)
+    kernels = [K, K * K] + [np.exp(b * K) for b in betas] + [np.cos(np.pi * K)]
+    M = sum(rng.uniform(0.5, 1.5) * (Ki - Ki.mean()) / (np.abs(Ki - Ki.mean()).max() + 1e-12) for Ki in kernels)
+    w, V = np.linalg.eigh(M)
+    order = np.argsort(-np.abs(w)); w, V = w[order], V[:, order]
+    scale = np.abs(w).max(); n = len(w)
+    planes, used = [], np.zeros(n, bool)
+    def cv(Y):
+        r2 = (Y ** 2).sum(1); return float(r2.var() / (r2.mean() ** 2 + 1e-12))
+    cand = [i for i in range(n) if abs(w[i]) >= min_frac * scale][:3 * max_planes]
+    for i in cand:
+        if used[i] or len(planes) >= max_planes:
+            continue
+        # conjugate partner: the nearby eigenvector (by eigenvalue) that makes the most radius-uniform pair
+        best = None
+        for j in cand:
+            if j == i or used[j] or abs(w[j] - w[i]) > 0.15 * abs(w[i]):
+                continue
+            c = cv(np.stack([V[:, i], V[:, j]], 1))
+            if best is None or c < best[0]:
+                best = (c, j)
+        if best is not None and best[0] < 0.1:
+            j = best[1]; used[i] = used[j] = True
+            planes.append({"Y": np.stack([V[:, i], V[:, j]], 1) * np.sqrt(n), "axis": False, "eig": float(w[i]), "dim": 2})
+            continue
+        y = V[:, i]; y2 = y ** 2
+        if y2.var() / (y2.mean() ** 2 + 1e-12) < 0.1:  # two-valued: an order-2 character
+            used[i] = True
+            planes.append({"Y": np.stack([y, np.zeros(n)], 1) * np.sqrt(n), "axis": True, "eig": float(w[i]), "dim": 1})
+    for pl in planes:
+        Y = pl["Y"]; r2 = (Y ** 2).sum(1)
+        pl["cv"] = float(r2.var() / (r2.mean() ** 2 + 1e-12)); pl["energy"] = float(abs(pl["eig"]) / scale)
+    return planes
