@@ -14,7 +14,7 @@ import itertools
 import numpy as np
 
 
-def internals(W, toks, patch=None):
+def internals(W, toks, patch=None, patch1=None):
     """Forward pass of lab's onelayer_transformer (no LayerNorm, no biases). patch(x0) may edit the input residual."""
     x = W["W_E"][toks] + W["W_pos"][None]
     if patch is not None:
@@ -27,6 +27,8 @@ def internals(W, toks, patch=None):
     z = np.einsum("bhpq,bhqe->bhpe", att, v)
     ao = np.einsum("bhpe,hed->bpd", z, W["W_O"])
     x1 = x + ao
+    if patch1 is not None:                  # edit the last position's residual after attention (the MLP's input)
+        x1 = x1.copy(); x1[:, -1] = patch1(x1[:, -1])
     pre = x1[:, -1] @ W["W_in"]; post = np.maximum(pre, 0)
     mlp = post @ W["W_out"]
     x2 = x1[:, -1] + mlp
