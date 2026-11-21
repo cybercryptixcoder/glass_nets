@@ -88,6 +88,27 @@ def _atlas(tid):
     return a
 
 
+DECOMP = LAB.parent / "results" / "decomp"                       # D1: the decompiler's reports (lab/decomp/decompile.py)
+
+
+def _decomp(tid):
+    """The decompiler's report, its program, the answer-key score and (for a^b networks) the mechanism tests."""
+    f = DECOMP / f"{tid}.json"
+    out = {}
+    if f.exists():
+        r = json.loads(f.read_text())
+        for k in ("element_of_symbol_a", "element_of_symbol_b", "element_of_class"):
+            r.pop(k, None)
+        out["report"] = r
+        p = DECOMP / f"{tid}.py"
+        out["program"] = p.read_text() if p.exists() else ""
+    for key, suffix in (("score", "_score.json"), ("pow", "_pow.json")):
+        g = DECOMP / f"{tid}{suffix}"
+        if g.exists():
+            out[key] = json.loads(g.read_text())
+    return out or None
+
+
 def entries():
     cards = []
     for tdir in sorted(CONS.iterdir()):
@@ -112,7 +133,7 @@ def entries():
             "cost": run.get("cost"), "steps": len(run.get("steps", [])),
             "written": "without access to the network (prior-only control: told the task, one submission)" if not run.get("config", {}).get("weights", True)
                        else ("by a blinded reader with the weights" if not run.get("config", {}).get("told") else "by a reader told the task, with the weights"),
-            "unit_map": _unit_map(tdir.name), "atlas": _atlas(tdir.name),
+            "unit_map": _unit_map(tdir.name), "atlas": _atlas(tdir.name), "decomp": _decomp(tdir.name),
         })
     have = {c["target"] for c in cards}
     for f in sorted(MAPS.glob("*.json")) if MAPS.exists() else []:
@@ -124,7 +145,7 @@ def entries():
                       "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
                       "playable": False, "runs": 0, "status": "unit map only", "stages": "–", "behaviour": None,
                       "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
-                      "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid), "atlas": _atlas(tid)})
+                      "cost": None, "steps": 0, "written": "", "unit_map": _unit_map(tid), "atlas": _atlas(tid), "decomp": _decomp(tid)})
     have = {c["target"] for c in cards}
     for f in sorted(ATLASES.glob("*_d4.json")):                 # A45: networks that have only an atlas
         tid = f.name[:-len("_d4.json")]
@@ -135,8 +156,26 @@ def entries():
                       "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
                       "playable": False, "runs": 0, "status": "atlas only", "stages": "–", "behaviour": None,
                       "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
-                      "cost": None, "steps": 0, "written": "", "unit_map": None, "atlas": _atlas(tid)})
-    order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3, "atlas only": 4}
+                      "cost": None, "steps": 0, "written": "", "unit_map": None, "atlas": _atlas(tid), "decomp": _decomp(tid)})
+    have = {c["target"] for c in cards}
+    def _stem(name):
+        b = name[:-len(".json")]
+        for suf in ("_score", "_pow"):
+            if b.endswith(suf):
+                return b[:-len(suf)]
+        return b
+    stems = sorted({_stem(f.name) for f in DECOMP.glob("*.json")}) if DECOMP.exists() else []
+    for tid in stems:                                            # D1: networks that have only a decompiler report
+        if tid in have or not (LAB / "models" / tid / "meta.json").exists():
+            continue
+        m = _meta(tid); dc = _decomp(tid)
+        passed = bool(dc and dc.get("report", {}).get("verdict", "").startswith("PASS"))
+        cards.append({"target": tid, "run": None, "name": m.get("name", tid), "family": m.get("family", ""),
+                      "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
+                      "playable": False, "runs": 0, "status": "decompiled" if passed else "analysed", "stages": "–", "behaviour": None,
+                      "coverage": None, "fails": [], "description": "", "source": "", "report": "", "judged_by": "",
+                      "cost": None, "steps": 0, "written": "", "unit_map": None, "atlas": None, "decomp": dc})
+    order = {"complete": 0, "verified": 1, "not verified": 2, "unit map only": 3, "atlas only": 4, "decompiled": 5, "analysed": 6}
     return sorted(cards, key=lambda c: (order[c["status"]], c["params"] or 0))
 
 

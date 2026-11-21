@@ -699,7 +699,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const pct = v => v == null ? "–" : (100 * v).toFixed(1) + "%";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const conf = x => x.trigger.confidence_clear ?? x.trigger.confidence;
-const stCls = s => ({"complete": "complete", "verified": "verified", "atlas only": "atlas", "unit map only": "umap"}[s] || "notv");
+const stCls = s => ({"complete": "complete", "verified": "verified", "atlas only": "atlas", "unit map only": "umap", "decompiled": "complete", "analysed": "atlas"}[s] || "notv");
 const stBadge = s => ({"complete": "ok", "verified": "info"}[s] || "");
 let E = [], cur = null, filt = "all", shut = new Set(), LIMIT = 30, steps = [];
 
@@ -750,7 +750,7 @@ function drawBrowse() {
       <div class="cgrid" style="--min:250px">${items.map(([e, i]) => `<button class="icard ncard${cur === e ? " sel" : ""}" data-i="${i}">
         <div class="icard-h"><span class="sd ${stCls(e.status)}" style="margin-top:6px"></span><span class="icard-t">${esc(e.name)}</span></div>
         <div class="icard-m">${e.params?.toLocaleString() ?? "?"} parameters</div>
-        <div class="foot">${e.atlas ? '<span class="badge">atlas</span>' : ""}${e.run ? `<span class="badge ${stBadge(e.status)}">${esc(e.status)}</span>` : (e.atlas ? "" : `<span class="badge">${esc(e.status)}</span>`)}</div></button>`).join("")}</div></section>`).join("")
+        <div class="foot">${e.decomp?.report?.verdict?.startsWith("PASS") ? '<span class="badge ok">decompiled</span>' : ""}${e.atlas ? '<span class="badge">atlas</span>' : ""}${e.run ? `<span class="badge ${stBadge(e.status)}">${esc(e.status)}</span>` : (e.atlas || e.status === "decompiled" ? "" : `<span class="badge">${esc(e.status)}</span>`)}</div></button>`).join("")}</div></section>`).join("")
     || '<div class="card"><div class="t-empty"><span class="ei">' + ic("search") + '</span><b>No networks match</b>Try another search or filter.</div></div>';
   $$("#bgrid .ncard").forEach(c => c.onclick = () => show(+c.dataset.i));
   $$("#bgrid [data-tog]").forEach(b => b.onclick = () => { const s = b.closest(".fam"), g = s.dataset.g; shut.has(g) ? shut.delete(g) : shut.add(g); s.classList.toggle("shut"); b.firstChild.textContent = shut.has(g) ? "Show" : "Hide"; });
@@ -759,7 +759,8 @@ function drawBrowse() {
 async function load() {
   E = await (await fetch("/api/catalog")).json();
   const nA = E.filter(e => e.atlas).length, nC = E.filter(e => e.status === "complete" || e.status === "verified").length;
-  $("#ctxT").textContent = `${E.length} networks · ${nA} atlases · ${nC} certified`;
+  const nD = E.filter(e => e.decomp?.report?.verdict?.startsWith("PASS")).length;
+  $("#ctxT").textContent = `${E.length} networks · ${nA} atlases · ${nC} certified · ${nD} decompiled`;
   renderList(); $("#q").oninput = renderList;
   $("#browseBtn").onclick = browse; $("#browseMi").onclick = browse;
   const p = new URLSearchParams(location.search), i = E.findIndex(e => e.target === p.get("t"));
@@ -791,7 +792,9 @@ function show(i) {
   if (a) h += faithCard(a) + findingsCard(a) + mechCard(a) + stepCard();
   if (cur.run) h += consCard(a ? "s7" : "s12");
   if (cur.unit_map) h += partsCard(cur.unit_map);
-  if (!a && !cur.run && !cur.unit_map) h += `<div class="card s5"><div class="t-empty"><span class="ei">${ic("box")}</span><b>Nothing built yet</b>No atlas or construction exists for this network.</div></div>`;
+  if (cur.decomp?.report) h += decompCard(cur.decomp);
+  if (cur.decomp?.pow) h += powCard(cur.decomp.pow);
+  if (!a && !cur.run && !cur.unit_map && !cur.decomp) h += `<div class="card s5"><div class="t-empty"><span class="ei">${ic("box")}</span><b>Nothing built yet</b>No atlas or construction exists for this network.</div></div>`;
   h += `</div></div>`;
   if (a) h += `<div class="view-o" data-v="mechs" hidden>${mechsView(a)}</div>`;
   if (cur.run && cur.playable) h += `<div class="view-o" data-v="play" hidden>${playView()}</div>`;
@@ -814,8 +817,41 @@ function show(i) {
     $("#repBtn").onclick = () => openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "The judge's full report", wide: true, html: `<pre>${esc(cur.report)}</pre>`});
     if (cur.playable) { $("#run").onclick = () => play(); $("#rand").onclick = () => play(true); $("#swap").onclick = () => play(false, true); }
   }
+  if (cur.decomp?.report && $("#progBtn")) $("#progBtn").onclick = () => openSheet({kicker: ic("file-code") + esc(cur.name), title: "The decompiled program (Python)", wide: true,
+    html: `<p class="hint">Every table in this program was read from the network's weights; the network's outputs were used only to check it.</p><pre>${esc(cur.decomp.program || "(no program)")}</pre>`});
+  if (cur.decomp?.report && $("#decRepBtn")) $("#decRepBtn").onclick = () => openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "The decompiler's report", wide: true, html: `<pre>${esc(JSON.stringify(cur.decomp.report, null, 1))}</pre>`});
+  if (cur.decomp?.pow && $("#powRepBtn")) $("#powRepBtn").onclick = () => openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "Mechanism tests (scripts/decomp/pow_mechanism.py)", wide: true, html: `<pre>${esc(JSON.stringify(cur.decomp.pow, null, 1))}</pre>`});
   fitMore($("#detail"));
   $(".content").scrollTop = 0;
+}
+
+/* ---------- D1: the decompiler ---------- */
+function decompCard(dc) {
+  const r = dc.report, sc = dc.score;
+  const row = (l, v, c, b) => `<div class="prog-row"><div class="prog-h"><span class="l">${l}</span><span class="p" ${b ? 'style="color:var(--accent-hi)"' : ""}>${pct(v)}</span></div><div class="track"><i style="width:${v == null ? 0 : (100 * v).toFixed(1)}%;--c:${c}"></i></div></div>`;
+  if (!r.group) return `<div class="card s5">${cardHead("binary", "c", "Decompiler", "Weights in, program out (blind)")}<div class="card-b"><p>${esc(r.verdict)}</p><p class="hint">For a network with no algorithm (the memorizer) this is the right answer.</p></div><div class="card-f"><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
+  const pass = r.verdict.startsWith("PASS");
+  const G = "Z" + r.group.map(x => `<sub>${x}</sub>`).join(" × Z");
+  const nm = r.a_side?.name, nmb = r.b_side?.name;
+  return `<div class="card s7">${cardHead("binary", "g", "Decompiled program", "Read from the weights alone: no task, no symbol meanings, no feature list",
+      `<span class="badge ${pass ? "ok" : ""}">${pass ? "passes" : "fails"}</span>`)}
+    <div class="card-b">
+      <p>The symbols are elements of the group <b>${G}</b>${r.order ? ` (${r.order} elements)` : ""}, and the network adds them there: <span class="mono">c = CLASS_OF[ g(a) + g(b) ]</span>.</p>
+      ${nm ? `<p class="hint">Name found for the symbol map: <span class="mono">${esc(nm)}</span>${nmb && nmb !== nm ? `; second input: <span class="mono">${esc(nmb)}</span>` : ""}</p>` : `<p class="hint">No closed form fits the symbol map: it is an arbitrary relabelling, recovered as a table.</p>`}
+      <div class="prog">${row("Program agrees with the network (all inputs)", r.M1?.agreement, "var(--accent)", 1)}
+        ${row(`Causal: moving one input's coordinates moves the answer as predicted (${r.M2?.where || ""})`, r.M2?.success, "var(--cyan)")}
+        ${row("Same test, random subspace of the same size (control)", r.M2_random_control?.success, "var(--text-3)")}
+        ${sc ? row("Checked afterwards against the hidden answer key", sc.law_vs_truth, "var(--violet)") : ""}</div>
+    </div>
+    <div class="card-f"><button class="btn sm" id="progBtn">${ic("file-code")}Read the program</button><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
+}
+function powCard(pw) {
+  const t4 = Object.entries(pw.T4_crt_swaps || {}), t5 = Object.entries(pw.T5_unit_factor_swaps || {});
+  const row = (l, v) => `<div class="prog-row"><div class="prog-h"><span class="l">${esc(l)}</span><span class="p">${pct(v)}</span></div><div class="track"><i style="width:${v == null ? 0 : (100 * v).toFixed(1)}%;--c:var(--cyan)"></i></div></div>`;
+  return `<div class="card s5">${cardHead("sigma", "c", "How it computes a^b: nested logarithms", `p = ${pw.p}; exponents live in Z<sub>${pw.p_minus_1}</sub> = ${pw.crt_parts.map(q => "Z<sub>" + q + "</sub>").join(" × ")}`)}
+    <div class="card-b"><p class="clamp" style="--lines:4">The network takes x = log(a), splits the exponent ring by the Chinese remainder theorem into its prime-power parts, and inside each part stores a residue by its multiplicative structure (a second logarithm). Swapping one part of one input inside the network moves the answer exactly as that predicts.</p>
+      <div class="prog">${t4.map(([k, v]) => row(`swap ${k}`, v.success)).join("")}${t5.slice(0, 3).map(([k, v]) => row(k.replace("b mod", "second log, b mod"), v.success)).join("")}</div></div>
+    <div class="card-f"><button class="link-btn" id="powRepBtn">All tests</button></div></div>`;
 }
 function sub(k) {
   $$("#detail .view-o").forEach(v => v.hidden = v.dataset.v !== k);
