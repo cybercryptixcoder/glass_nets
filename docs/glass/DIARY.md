@@ -2144,3 +2144,23 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Three still running.
 - **Lost a GPU session (dc7).** Rounds 10 (challenge v3) and 11 (blind non-abelian challenge) are retraining on dg1.
 - **Time error.** From about 00:30 on, I typed entry times by hand that ran up to 2.5 h ahead of the clock (01:40–03:35, when it was 00:32–00:55). They are corrected to commit times, and a correction note is in PLAN. The order of pre-registrations and runs is unchanged and is recorded by the commits. From here on, every time comes from `date`, run in its own call.
+
+## Nov 22, 04:05 ET (clock): wrap-up of the decompiler line for this session
+
+- **Held-out and pre-registered (the numbers that count):**
+  - **Abelian, v3.3.** Challenge v2: 8 / 12 exact. Challenge v3: 3 / 5 completed, exact. In total 11 of 17 fresh secret abelian groups were recovered with a program that equals the secret operation on every pair. Every failure but one is a group with several Z2 factors.
+  - **Non-abelian.** Held-out S4: 2 / 2 exact. Blind set with v3.5: A5 and S3×S3 exact (2 of 5 completed); the first-registered version v3.3 got 0 / 5 there.
+  - **Factor mode on a^b mod p.**
+    - First prime challenge (v1): 2 / 8.
+    - Prime set v2 (v2, with tolerant absorbing symbols): 4 / 8. Here the tool reads the factorisation of p − 1 from the weights: 78 = 6·13, 82 = 2·41, 150 = 3·50, 156 = 4·39.
+    - Earlier: p109 and the composite-modulus multiplications.
+- **Development this session:**
+  - D4, a real bug: the plane leak.
+  - D9: orbit mode for any rank, with commuting generators. It is what turned A5 and S3×S3 from failures into exact recoveries.
+  - D10: tolerant absorbing symbols in factor mode.
+  - D5, D7 and D8 were tried and not adopted. D5 is kept behind a flag.
+- **Not finished:**
+  - Challenge v3: randab55, 56, 57, 60 and 68 were still decompiling when sessions were stopped. randab86 and 116 were never trained.
+  - Non-abelian: SL(2,3) s2 was still decompiling. D12 s2, Z7⋊Z3, Z5⋊Z4 and D10 were never trained (GPU sessions lost).
+- **Compute:** about 5 h of L4 across dc7, dg1–dg4 (three reclaimed mid-run) and about 8 h of CPU sessions.
+- **Write-up:** `docs/decomp/RESULTS.md` (one page), `DECOMPILER.md`, `FACTOR.md`, `POW_MECHANISM.md`. The catalogue shows every decompiled network, including the A5 and S4 tables.

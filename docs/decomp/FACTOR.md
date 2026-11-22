@@ -57,7 +57,20 @@ python3 lab/decomp/factorize.py <model_id>        # -> results/decomp/<id>_facto
 - p107 becomes **Z_2 and Z_53**, the factorisation of p − 1 exactly;
 - p139 and p103 are still unnamed.
 
-A fresh prime set (61, 67, 71, 73, 79, 83, 151, 157) is pre-registered for v2 (PLAN, 01:56).
+### Prime set v2 (pre-registered Nov 22 01:56; factor v2 frozen 02:40 at 5ab894b9): 4 of 8 pass
+
+| p (p − 1) | result | agreement |
+|---|---|---|
+| 79 (2·3·13) | **pass**: multiplication in Z_6 and in Z_13 | 1.000 |
+| 83 (2·41) | **pass**: multiplication in Z_2 and in Z_41 | 1.000 |
+| 151 (2·3·25) | **pass**: multiplication in Z_3 and in Z_50 | 1.000 |
+| 157 (4·3·13) | **pass**: multiplication in Z_4 and in Z_39 | 1.000 |
+| 61 (4·3·5) | split, parts not named | 0.999 |
+| 67 (2·3·11) | split, parts not named | 0.998 |
+| 71 (2·5·7) | split: Z_2 named, the other part not named | 0.999 |
+| 73 (8·9) | does not split cleanly | 0.898 |
+
+Across both prime challenges, factor mode read the factorisation of p − 1 correctly from the weights for 6 of 16 never-seen primes, by the strict naming rule. It found a clean split, named or not, for 13 of 16.
 
 ## What this shows, and what it doesn't
 
