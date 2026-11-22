@@ -109,3 +109,8 @@ no supplied vocabulary)? The program should:
   - **Prediction.** Factor mode SPLITS (argmax ≥ 0.98) into parts whose tables are multiplication in Z_m. The m's multiply to p − 1, and each m is a prime-power factor of p − 1 or a product of several, since merged parts like Z_15 are allowed.
   - **Pass** means all of that. Anything else is reported as a miss.
   - The block-count ceiling was raised from 40 to 60 before training, because p = 107 needs a 53-block part.
+- **Nov 22, 00:10 (clock): the held-out non-abelian case, again.** The networks meant as held-out S4 cases did not learn the task. Seed 3 (60% of pairs) scores 0.64 on all pairs; seeds 4 and 5 (75%) score 0.80 and 0.88. Only the dev network, seed 2, generalized.
+  - Four new seeds, 6 to 9, are trained with one change: 80,000 epochs instead of 40,000.
+  - Every one that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with orbit mode as it stands now.
+  - **Pass:** the recovered group has S4's element-order profile, its table is isomorphic to the secret table (≥ 0.95), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
+  - If none generalize, that is reported, and the S4 result stays a development result only.
