@@ -55,6 +55,16 @@ def run(model_id, log=print):
             for _, qb in cb[:8]:
                 _, ex_, agr_, _ = factor.additive_tables(L, qa, qb, iters=12)
                 tried.append((agr_, ex_, qa, qb))
+        # the embedding is shared by both inputs: its parts, if any, apply to a and b alike
+        pes = [factor.factor_side(W["W_E"][:n], log=lambda s_: log("  embedding: " + s_))]
+        pes.append(factor.factor_side(W["W_E"][:n], max_depth=1))           # also the top-level split alone
+        for pe in pes:
+          if len(pe) >= 2:
+            qa = sorted([P[keep_a] for P in pe], key=lambda P: P.max()); qb = sorted([P[keep_b] for P in pe], key=lambda P: P.max())
+            qa = [np.unique(P, return_inverse=True)[1] for P in qa]; qb = [np.unique(P, return_inverse=True)[1] for P in qb]
+            _, ex_, agr_, _ = factor.additive_tables(L, qa, qb, iters=12)
+            tried.append((agr_ + 1e-9, ex_, qa, qb))
+            log(f"  embedding parts {[int(P.max() + 1) for P in qa]}: argmax agreement {agr_:.3f}")
         if tried:
             agr_, ex_, qa, qb = max(tried, key=lambda z: (z[0], z[1]))
             log(f"  logit test over {len(tried)} candidate splits: best has {[int(P.max() + 1) for P in qa]} x {[int(P.max() + 1) for P in qb]} blocks, argmax agreement {agr_:.3f}")

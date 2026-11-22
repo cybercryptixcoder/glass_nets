@@ -148,7 +148,7 @@ def factor_side(X, min_score=0.8, depth=0, max_depth=3, log=None, whiten=None):
     for P, Q in ((PA, QA), (PB, QB)):
         if depth + 1 < max_depth and P.max() + 1 >= 6:
             C = np.array([(Z @ Q.T)[P == b].mean(0) for b in range(P.max() + 1)])   # the part's block centres
-            sub = factor_side(C, max(min_score, 0.95), depth + 1, max_depth, log, whiten=wh)   # stricter for block centres: few points make grids easily
+            sub = factor_side(C, max(min_score, 0.85), depth + 1, max_depth, log, whiten=wh)   # stricter for block centres; the logit test is the arbiter
             if len(sub) >= 2:
                 parts += [s_[P] for s_ in sub]
                 continue
