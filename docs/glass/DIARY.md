@@ -2120,3 +2120,27 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   Dev re-runs: randab2, 6 and 11 now pass, and randab1, z8z14 and secret_add still pass. randab21 (Z5×Z20) and randab4 still fail under v3.1; v3.2 is running.
 - **Challenge set v2** (12 new groups, pre-registered 23:19) is trained, all generalising, and waits for the final version to be decompiled once.
 - **`lab/decomp/explain.py`:** one command, the whole story, in plain words. Tested on xyxy: "the symbol map is 65·log_3(t + 1) ... the absorbing zero", program 100%, causal 99.9% against 0.9% random.
+
+## Nov 22, 01:21 ET (clock): decompiler v3.3, challenge v2, held-out S4, and the time error
+
+- **D4, a real bug in the plane finder (v3.3).**
+  - **The bug.** Each circle plane was fitted on the residual, but stored with whatever its random start had along the planes already found. Reading the plane on the full representation therefore mixed earlier planes' angles into it.
+  - **The fix and its effect.** With the leak fixed, the v1 networks pass 9 of 10 as development cases: randab21 (Z5×Z20) and randab4 now pass, and randab9 (Z2×Z6×Z6) still fails.
+  - **Also passing:** secret_add s1/s2, z8z14, sqsum, xyxy and S4 s2.
+- **Challenge v2 (pre-registered 23:19; v3.3 frozen at 00:32): 8 of 12 pass.** Each pass is exact: law vs truth 1.000, M1 1.000, M2 1.000 against 0.000. Failures:
+  - Z2×Z2×Z30;
+  - Z2×Z2×Z2×Z12;
+  - Z2×Z4×Z12 (right group, wrong placement);
+  - Z6×Z18 (missed a Z3).
+- **Held-out S4 (pre-registered 00:06): 2 of 2 pass.** Seeds 7 and 9 generalized; seeds 6 and 8 did not. The recovered tables are identical to the secret table. Both networks hold S4 as rotations on a 3-D sphere.
+- **Why the 2-groups fail (dev diagnosis with the answer key, randab46 and randab9).**
+  - When two characters multiply to an order-2 character, a whole family of planes mixing them is radius-uniform. The plane finder lands inside that family, and the mixed planes give wrong relations.
+  - **D7 (wider relation search) and D8 (an angle-lattice term in the plane fit): not adopted.** Neither fixes it.
+  - **D9, orbit mode for abelian groups too.** The orbit fallback already found the right symmetries, but it only built subgroups from two generators, and Z2×Z2×Z30 needs three. A greedy, any-rank search fixes randab46: exact, law vs truth 1.000. It is being checked on the other failures and on S4.
+- **Prime challenge for factor mode (pre-registered 00:02; run with the factor code of that commit).**
+  - p131: **pass** (Z5 and Z26).
+  - p89, p107, p139: split found (agreement ≥ 0.999), but the part tables are not named, so these are misses by the rule.
+  - p149: no clean split.
+  - Three still running.
+- **Lost a GPU session (dc7).** Rounds 10 (challenge v3) and 11 (blind non-abelian challenge) are retraining on dg1.
+- **Time error.** From about 00:30 on, I typed entry times by hand that ran up to 2.5 h ahead of the clock (01:40–03:35, when it was 00:32–00:55). They are corrected to commit times, and a correction note is in PLAN. The order of pre-registrations and runs is unchanged and is recorded by the commits. From here on, every time comes from `date`, run in its own call.
