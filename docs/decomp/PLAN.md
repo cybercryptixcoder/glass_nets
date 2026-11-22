@@ -72,3 +72,21 @@ no supplied vocabulary)? The program should:
 - **Nov 21, 16:55 (clock): pre-registration, blind challenge set.** Ten random finite abelian groups (orders 72–120, invariant factors drawn by seed from a fixed list in `tasks.py`), each under a random secret labelling: `dc_randab{1,2,4,5,6,9,11,13,19,21}`. The seeds were picked to cover different groups by looking only at the group lists, never at networks. Every network is decompiled blind.
   - **Per network, a pass needs:** (1) the recovered group isomorphic to the true one, i.e. equal invariant factors; (2) M1 ≥ 0.90; (3) M2 ≥ 0.80 with the control < 0.20; (4) answer-key isomorphism ≥ 0.95 (`score_known.py`).
   - **Reporting.** The count of passes is reported as it comes out. Networks that fail to generalise (test accuracy < 0.95) are excluded and reported as excluded.
+- **Nov 21, 22:30 (clock): factor mode (`lab/decomp/factorize.py`), and its pre-registered predictions.** The tool was developed on `dc_pow_s1`: it splits into "multiplication in Z_7" and "multiplication in Z_16". It is now run unchanged on networks it was not developed on.
+  - **SPLITS** means argmax agreement ≥ 0.98 and logit share ≥ 0.90.
+  - **Predictions, written before running:**
+
+    | network | prediction |
+    |---|---|
+    | `dc_mulmod120_s1`, `dc_mulmod120_s2` (never examined) | split into parts matching multiplication in Z_8, Z_3 and Z_5 |
+    | `dc_mulmod105_s1` (never examined) | Z_3, Z_5 and Z_7 |
+    | `dc_pow_p97_s1` | Z_32 and Z_3 |
+    | `dc_pow_p101_s1` | Z_4 and Z_25 |
+    | `dc_pow_p109_s1` | Z_4 and Z_27 |
+    | `dc_pow_s2`, `dc_pow_s3` (these use mixed characters) | may not split cleanly; whatever comes out is reported |
+    | `modadd_p113_s1`, `dc_secret_add_s1` (113 is prime, nothing to split) | no split |
+    | `modrand_p113` (memorizer) | no split |
+    | `dc_secret_z8z14_s1` (Z_8 × Z_14 ≅ Z_2 × Z_7 × Z_8) | may split along its prime parts, as addition tables |
+    | `dc_addmod120_s1` | may split as addition in Z_8, Z_3 and Z_5 |
+
+  - **A miss is reported as a miss.** For a part whose number of values matches a prime power, a "match" means the same row and column profiles as Z_m's multiplication or addition table.
