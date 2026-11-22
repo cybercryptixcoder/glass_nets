@@ -44,7 +44,7 @@ def find_planes(X, restarts=24, iters=300, max_planes=12, cv_max=0.08, min_energ
     Z, basis, S = _whiten(X, full=full, ratio=ratio)
     total = (Z ** 2).sum()
     use = np.ones(len(X), bool) if mask is None else mask.copy()
-    planes = []
+    planes, prev = [], []
     R = Z.copy()
     for _ in range(max_planes):
         if (R ** 2).sum() < min_energy * total:
@@ -75,6 +75,10 @@ def find_planes(X, restarts=24, iters=300, max_planes=12, cv_max=0.08, min_energ
         if best is None or best[0] > cv_max:
             break
         cv, en, Qn, M = best
+        if prev:                                   # R has no variance along earlier planes, so the fit leaves whatever the
+            Pv = np.hstack(prev)                   # random start put there; remove it, or the plane leaks earlier planes'
+            Qn, _ = np.linalg.qr(Qn - Pv @ (Pv.T @ Qn))   # angles into its own when read on the full representation
+        prev.append(Qn)
         planes.append({"cv": cv, "energy": en, "Q": basis.T @ Qn @ M, "Qo": basis.T @ Qn})   # back to the original space (d x 2)
         R = R - (R @ Qn) @ Qn.T
     return planes
