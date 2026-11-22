@@ -105,38 +105,38 @@ no supplied vocabulary)? The program should:
     - one set of symbol coordinates for both inputs, since they share an embedding;
     - the result kept is the one under which the MLP depends most on g(a) + g(b) (diagonal share), which uses activations only.
   - **v3 is developed on the v1 failures,** so v1 cannot test it. **Challenge set v2:** 12 new networks, one for each group in the list: randab25, 38, 46, 35, 28, 30, 41, 33, 37, 27, 40, 26. They are trained after this entry and decompiled once with v3. The pass criteria are the same as v1.
-- **Nov 22, 00:05 (clock): pre-registration, factor-mode challenge over primes.** Networks to be trained on a^b mod p for p = 89, 103, 107, 127, 131, 137, 139 and 149, never seen before; p − 1 = 8·11, 2·3·17, 2·53, 2·9·7, 2·5·13, 8·17, 2·3·23 and 4·37.
+- **Nov 22, 00:02 (commit time): pre-registration, factor-mode challenge over primes.** Networks to be trained on a^b mod p for p = 89, 103, 107, 127, 131, 137, 139 and 149, never seen before; p − 1 = 8·11, 2·3·17, 2·53, 2·9·7, 2·5·13, 8·17, 2·3·23 and 4·37.
   - **Prediction.** Factor mode SPLITS (argmax ≥ 0.98) into parts whose tables are multiplication in Z_m. The m's multiply to p − 1, and each m is a prime-power factor of p − 1 or a product of several, since merged parts like Z_15 are allowed.
   - **Pass** means all of that. Anything else is reported as a miss.
   - The block-count ceiling was raised from 40 to 60 before training, because p = 107 needs a 53-block part.
-- **Nov 22, 00:10 (clock): the held-out non-abelian case, again.** The networks meant as held-out S4 cases did not learn the task. Seed 3 (60% of pairs) scores 0.64 on all pairs; seeds 4 and 5 (75%) score 0.80 and 0.88. Only the dev network, seed 2, generalized.
+- **Nov 22, 00:06 (commit time): the held-out non-abelian case, again.** The networks meant as held-out S4 cases did not learn the task. Seed 3 (60% of pairs) scores 0.64 on all pairs; seeds 4 and 5 (75%) score 0.80 and 0.88. Only the dev network, seed 2, generalized.
   - Four new seeds, 6 to 9, are trained with one change: 80,000 epochs instead of 40,000.
   - Every one that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with orbit mode as it stands now.
   - **Pass:** the recovered group has S4's element-order profile, its table is isomorphic to the secret table (≥ 0.95), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
   - If none generalize, that is reported, and the S4 result stays a development result only.
-- **Nov 22, 01:40 (clock): version frozen for challenge set v2.**
+- **Nov 22, 00:32 (commit time): version frozen for challenge set v2.**
   - **v3.3, commit ce3352b2.** It is v3 (one coordinate set for both inputs), plus selection by group-sum R² × coverage (v3.1 and v3.2), plus the circle-plane leak fix (D4). The 23:19 entry said "v3"; this is the version actually run.
   - **Dev results** (all on networks used to build it, so not evidence): v1 networks pass 9 of 10 (randab1 pending at freeze; randab9, Z2×Z6×Z6, fails). Also passing: secret_add s1/s2, z8z14, sqsum, xyxy and S4 s2.
   - **v1's pre-registered count stays 3/10.**
   - Challenge v2 (12 networks) is decompiled once with this commit and scored with `score_known.py` against the 16:55 criteria.
   - A relation-search extension (single planes and pairs with larger coefficients) was tried on randab9 and did not fix it, so it is not in v3.3.
-- **Nov 22, 02:10 (clock): held-out non-abelian result (pre-registered 00:10). PASS on both networks that generalized.**
+- **Nov 22, 00:37 (commit time): held-out non-abelian result (pre-registered 00:06). PASS on both networks that generalized.**
   - Of seeds 6 to 9, seeds 7 and 9 generalized (all pairs 1.0). Seeds 6 and 8 did not (0.87, 0.95) and were not decompiled.
   - **seed 7:** S4 profile (1:1, 2:9, 3:8, 4:6); table identical to the secret table (law vs truth 1.000); M1 1.000; M2 1.000 against random 0.000.
   - **seed 9:** S4 profile; law vs truth 1.000; M1 1.000; M2 0.986 against random 0.000.
   - Both networks hold the 24 symbols on a sphere in 3 dimensions, where they are the orbit of S4 acting by rotations, as on a cube.
   - **Disclosed:** the identity symbol and the handedness (left or right action) are chosen by M1 among 96 and 48 candidates. Everything else is read from the orbit's symmetries.
-- **Nov 22, 02:35 (clock): pre-registration, challenge set v3.** Challenge v2 is partly scored. Its failures so far are groups with several Z_2 factors: randab46 Z2×Z2×Z30, randab25 Z2×Z2×Z2×Z12, randab35 Z2×Z4×Z12. The suspected cause is the circle-plane leak (D4), present unfixed in the axis finder.
+- **Nov 22, 00:45 (commit time): pre-registration, challenge set v3.** Challenge v2 is partly scored. Its failures so far are groups with several Z_2 factors: randab46 Z2×Z2×Z30, randab25 Z2×Z2×Z2×Z12, randab35 Z2×Z4×Z12. The suspected cause is the circle-plane leak (D4), present unfixed in the axis finder.
   - v2 is still scored in full with v3.3, as pre-registered.
   - **Challenge v3:** 12 new networks, one per group in the list, seeds 47, 48, 50, 51, 52, 55, 56, 57, 60, 68, 86, 116. They are trained after this entry and decompiled once, with the version frozen after the dev regression below, and scored on the same criteria.
   - **v3.4 = v3.3 + the leak fix in the axis finder.** It is adopted only if it passes the dev regression: every network v3.3 passes, plus randab9. v2's own failures are not used to tune it. If it is not adopted, v3 runs with v3.3.
-- **Nov 22, 02:55 (clock): v3.4 not adopted.** The axis-finder leak fix (D6) does not fix dev case randab9: it finds Z2×Z2×Z2×Z30 instead of Z2×Z6×Z6. By the 02:35 rule, **challenge v3 runs with v3.3**, the same commit as v2. v2 and v3 together are then 24 fresh pre-registered networks, all run on one frozen version.
-- **Nov 22, 03:25 (clock): pre-registration, blind non-abelian challenge.** Eight non-abelian groups that the decompiler has never seen, each under a secret relabelling (`tasks.py`, `secretg_<name>`): D10 (order 20), Z5⋊Z4 (20), Z7⋊Z3 (21), SL(2,3) (24), D12 (24), A4×Z3 (36), S3×S3 (36), A5 (60).
+- **Nov 22, 00:49 (commit time): v3.4 not adopted.** The axis-finder leak fix (D6) does not fix dev case randab9: it finds Z2×Z2×Z2×Z30 instead of Z2×Z6×Z6. By the 00:45 rule, **challenge v3 runs with v3.3**, the same commit as v2. v2 and v3 together are then 24 fresh pre-registered networks, all run on one frozen version.
+- **Nov 22, 00:53 (commit time): pre-registration, blind non-abelian challenge.** Eight non-abelian groups that the decompiler has never seen, each under a secret relabelling (`tasks.py`, `secretg_<name>`): D10 (order 20), Z5⋊Z4 (20), Z7⋊Z3 (21), SL(2,3) (24), D12 (24), A4×Z3 (36), S3×S3 (36), A5 (60).
   - **Training:** two seeds each, 75% of pairs, 80,000 epochs, the same recipe as the S4 seeds that generalized.
   - **Decompilation:** every network that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with `decompile_any` as it stands at this commit. Orbit mode is unchanged since S4.
   - **Pass:** the recovered table equals the secret table on ≥ 95% of pairs (law vs truth), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
   - **Reported:** how many generalized, and how many of those pass. Naming is not required, since only S4, A4 and A5 are in the name list.
-- **Nov 22, 03:35 (clock): challenge set v2 result (pre-registered 23:19, frozen v3.3 at 01:40). 8 of 12 pass.**
+- **Nov 22, 00:55 (commit time): challenge set v2 result (pre-registered 23:19, frozen v3.3 at 00:32). 8 of 12 pass.**
   - **Pass**, each with M1 1.000, M2 1.000 against random 0.000, and law vs truth 1.000:
     - Z2×Z2×Z26, Z2×Z6×Z6, Z2×Z50, Z3×Z3×Z12, Z3×Z36, Z5×Z20, Z7×Z14;
     - Z4×Z28, with law vs truth 1.000 even though the network itself is 0.9995 accurate.
@@ -147,3 +147,4 @@ no supplied vocabulary)? The program should:
     - Z6×Z18: found Z2×Z18.
   - Three of the four failures are 2-groups of rank ≥ 3 (several order-2 characters, which are 1-D axes). The fourth misses a Z3 factor.
   - Logs: `results/decomp/logs/ch2_*.log`; reports `results/decomp/dc_randab{25,...}.json`; scores `*_score.json`.
+- **Nov 22, 00:56 (clock): correction.** The entries above from 00:32 on were first written with hand-typed times between 01:40 and 03:35. That was wrong: the clock read 00:56 when this was noticed. They now carry their commit times from `git log`. The order of pre-registration and runs is unchanged, and it is recorded by the commits.
