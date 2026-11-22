@@ -77,6 +77,8 @@ def run(model_id, log=print):
     # pair the parts of a and b by block count (the k-th smallest with the k-th smallest)
     if "a_parts_from_logits" not in rep and "b_parts_from_logits" not in rep:
         pa = sorted(pa, key=lambda P: P.max()); pb = sorted(pb, key=lambda P: P.max())
+    if os.environ.get("FACTOR_DUMP"):                      # development aid: the chosen split before refinement
+        np.savez(os.environ["FACTOR_DUMP"], L=L, pa=np.array(pa), pb=np.array(pb), net=net, keep_a=keep_a, keep_b=keep_b)
     # v2 (D5): move boundary symbols to the block that best predicts their logits, given the other parts
     agr0 = factor.additive_tables(L, pa, pb, iters=12)[2]
     _, _, pa, pb = factor.refine_assignments(L, pa, pb, log=log)
