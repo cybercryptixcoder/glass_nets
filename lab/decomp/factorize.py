@@ -35,12 +35,38 @@ def run(model_id, log=print):
     pa = factor.factor_side(F[keep_a], log=lambda s: log("  a: " + s))
     pb = factor.factor_side(G[keep_b], log=lambda s: log("  b: " + s))
     rep["a_parts"] = [int(P.max() + 1) for P in pa]; rep["b_parts"] = [int(P.max() + 1) for P in pb]
+    L = I["logits"].reshape(n, n, -1)[np.ix_(keep_a, keep_b)]; L = L - L.mean(-1, keepdims=True)
+    if len(pb) >= 2 and len(pa) != len(pb):                 # b split, a did not (or differently): read a's parts off the logits
+        pa = factor.transfer_partition(L, pb); rep["a_parts_from_logits"] = [int(P.max() + 1) for P in pa]
+        log(f"  a: parts read from the logits given b's parts: {rep['a_parts_from_logits']}")
+    elif len(pa) >= 2 and len(pb) != len(pa):
+        pb = factor.transfer_partition(L.transpose(1, 0, 2), pa); rep["b_parts_from_logits"] = [int(P.max() + 1) for P in pb]
+        log(f"  b: parts read from the logits given a's parts: {rep['b_parts_from_logits']}")
+    if len(pa) < 2 or len(pa) != len(pb) or True:
+        # candidates on both sides (two parts each), judged by the logit test: the split that best explains the
+        # network's own answers wins; the recursive result above is one of the candidates
+        ca = [(1.0, sorted(pa, key=lambda P: P.max()))] if len(pa) == 2 else []
+        cb = [(1.0, sorted(pb, key=lambda P: P.max()))] if len(pb) == 2 else []
+        for wh in (False, True):
+            ca += [(r[0], sorted([r[1], r[2]], key=lambda P: P.max())) for r in factor.split_candidates(factor._coords(F[keep_a], wh))]
+            cb += [(r[0], sorted([r[1], r[2]], key=lambda P: P.max())) for r in factor.split_candidates(factor._coords(G[keep_b], wh))]
+        tried = []
+        for _, qa in ca[:8]:
+            for _, qb in cb[:8]:
+                _, ex_, agr_, _ = factor.additive_tables(L, qa, qb, iters=12)
+                tried.append((agr_, ex_, qa, qb))
+        if tried:
+            agr_, ex_, qa, qb = max(tried, key=lambda z: (z[0], z[1]))
+            log(f"  logit test over {len(tried)} candidate splits: best has {[int(P.max() + 1) for P in qa]} x {[int(P.max() + 1) for P in qb]} blocks, argmax agreement {agr_:.3f}")
+            if len(pa) != 2 or len(pb) != 2 or agr_ > factor.additive_tables(L, sorted(pa, key=lambda P: P.max()), sorted(pb, key=lambda P: P.max()), iters=12)[2] if len(pa) == len(pb) == 2 else True:
+                pa, pb = qa, qb
+                rep["chosen_by_logit_test"] = True
     if len(pa) < 2 or len(pa) != len(pb):
         rep["verdict"] = "no split into independent parts" if len(pa) < 2 or len(pb) < 2 else f"the sides split differently ({rep['a_parts']} vs {rep['b_parts']})"
         return rep
     # pair the parts of a and b by block count (the k-th smallest with the k-th smallest)
-    pa = sorted(pa, key=lambda P: P.max()); pb = sorted(pb, key=lambda P: P.max())
-    L = I["logits"].reshape(n, n, -1)[np.ix_(keep_a, keep_b)]; L = L - L.mean(-1, keepdims=True)
+    if "a_parts_from_logits" not in rep and "b_parts_from_logits" not in rep:
+        pa = sorted(pa, key=lambda P: P.max()); pb = sorted(pb, key=lambda P: P.max())
     T, ex, agr, Lh = factor.additive_tables(L, pa, pb)
     rep["split_test"] = {"logit_share_explained": ex, "argmax_agreement": agr, "table_entries": int(sum(len(t) for t in T)),
                          "inputs": int(keep_a.sum() * keep_b.sum())}

@@ -34,8 +34,30 @@ def _grid(PA, PB, n):
     return single / max(ka * kb, n)
 
 
-def split_side(Z, kmax_blocks=40, mult_tol=0.1, min_mult=5, seed=0):
-    """Z: symbols x k (centred, unwhitened). Returns (score, PA, PB, QA, QB) for the best two-part split, or None."""
+def split_candidates(Z, kmax_blocks=40, tols=(0.1, 0.15, 0.22, 0.3), seed=0, top=6, min_grid=0.6):
+    """Several two-part splits (different tolerances, subspace dimensions and block counts), best grid score first,
+    one per pair of block counts. The arbiter between them is the logit test, not the grid."""
+    n, k = Z.shape
+    if k < 2 or n < 6:
+        return []
+    A, B = np.triu_indices(n, 1)
+    D = Z[A] - Z[B]
+    scale = np.median(np.linalg.norm(D, axis=1)) + 1e-12
+    tree = cKDTree(np.r_[D, -D])
+    cands = {}
+    for tol in tols:
+        cnt = np.array([len(x) for x in tree.query_ball_point(D, tol * scale)])
+        for r in _split_at(Z, D, cnt >= max(4, 3 * np.median(cnt)), kmax_blocks, seed, collect=True) or []:
+            key = tuple(sorted((r[1].max() + 1, r[2].max() + 1)))
+            if r[0] >= min_grid and (key not in cands or r[0] > cands[key][0]):
+                cands[key] = r
+    return sorted(cands.values(), key=lambda r: -r[0])[:top]
+
+
+def split_side(Z, kmax_blocks=40, tols=(0.1, 0.15, 0.22, 0.3), seed=0):
+    """Z: symbols x k (centred). Returns (score, PA, PB, QA, QB) for the best two-part split over several
+    tolerances for "the same difference vector", or None. A difference counts as repeated when it recurs at least
+    3 times as often as a typical difference does at that tolerance."""
     n, k = Z.shape
     if k < 2 or n < 6:
         return None
@@ -43,13 +65,23 @@ def split_side(Z, kmax_blocks=40, mult_tol=0.1, min_mult=5, seed=0):
     D = Z[A] - Z[B]
     scale = np.median(np.linalg.norm(D, axis=1)) + 1e-12
     tree = cKDTree(np.r_[D, -D])
-    cnt = np.array([len(x) for x in tree.query_ball_point(D, mult_tol * scale)])
-    Dp = D[cnt >= min_mult]
+    best = None
+    for tol in tols:
+        cnt = np.array([len(x) for x in tree.query_ball_point(D, tol * scale)])
+        r = _split_at(Z, D, cnt >= max(4, 3 * np.median(cnt)), kmax_blocks, seed)
+        if r is not None and (best is None or r[0] > best[0]):
+            best = r
+    return best
+
+
+def _split_at(Z, D, sel, kmax_blocks, seed, collect=False):
+    n, k = Z.shape
+    Dp = D[sel]
     if len(Dp) < 10:
         return None
     Dn = Dp / np.linalg.norm(Dp, axis=1, keepdims=True)
     lab = SpectralClustering(2, affinity="precomputed", random_state=seed).fit_predict(np.abs(Dn @ Dn.T) ** 2)
-    best = None
+    best = None; allc = {}
     for c0 in range(2):
         if (lab == c0).sum() < 3:
             continue
@@ -69,16 +101,42 @@ def split_side(Z, kmax_blocks=40, mult_tol=0.1, min_mult=5, seed=0):
                     s = _grid(PA, PB, n)
                     if best is None or s > best[0]:
                         best = (s, PA, PB, QA, QB)
+                    if collect and ((ka, kb) not in allc or s > allc[(ka, kb)][0]):
+                        allc[(ka, kb)] = (s, PA, PB, QA, QB)
+    if collect:
+        return sorted(allc.values(), key=lambda r: -r[0])[:12]
     return best
 
 
-def factor_side(X, min_score=0.8, depth=0, max_depth=3, log=None):
-    """Recursive binary splits. Returns a list of partitions (one per part) of the symbols."""
+def _coords(X, whiten):
+    """Centred coordinates. Rank: the largest drop between consecutive singular values (above 1e-3 of the top one),
+    so that weak but structured directions are kept and the noise floor is not. whiten=True equalises the kept
+    directions (a part carried by small directions then counts as much as one carried by large ones)."""
     Xc = X - X.mean(0)
     U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
-    k = int((S / S[0] > 0.05).sum())
-    Z = U[:, :k] * S[:k]
-    sp = split_side(Z)
+    m = int((S / S[0] > 1e-3).sum())
+    if m <= 2:
+        k = m
+    else:
+        r = S[:m - 1] / np.maximum(S[1:m], 1e-12)
+        k = int(np.argmax(r) + 1)
+        k = max(k, int((S / S[0] > 0.05).sum()))
+    return U[:, :k] * (np.sqrt(len(X)) if whiten else S[:k])
+
+
+def factor_side(X, min_score=0.8, depth=0, max_depth=3, log=None, whiten=None):
+    """Recursive binary splits. Returns a list of partitions (one per part) of the symbols. Both unwhitened and
+    whitened coordinates are tried at the top level; the better product grid wins."""
+    best = None
+    for wh in ([False, True] if whiten is None else [whiten]):
+        Z = _coords(X, wh)
+        sp = split_side(Z)
+        if sp is not None and (best is None or sp[0] > best[0][0]):
+            best = (sp, Z, wh)
+    if best is None:
+        sp, Z, wh = None, None, False
+    else:
+        sp, Z, wh = best
     if sp is None or sp[0] < min_score:
         if log:
             log(f"{'  ' * depth}no further split (grid score {0 if sp is None else sp[0]:.2f})")
@@ -90,7 +148,7 @@ def factor_side(X, min_score=0.8, depth=0, max_depth=3, log=None):
     for P, Q in ((PA, QA), (PB, QB)):
         if depth + 1 < max_depth and P.max() + 1 >= 6:
             C = np.array([(Z @ Q.T)[P == b].mean(0) for b in range(P.max() + 1)])   # the part's block centres
-            sub = factor_side(C, min_score, depth + 1, max_depth, log)
+            sub = factor_side(C, max(min_score, 0.95), depth + 1, max_depth, log, whiten=wh)   # stricter for block centres: few points make grids easily
             if len(sub) >= 2:
                 parts += [s_[P] for s_ in sub]
                 continue
@@ -244,3 +302,36 @@ def ring_fingerprint(T):
         core_info = name_table(core)
     return {"values": m, "row_profile": fp[0], "col_profile": fp[1], "matches": found,
             "invertible_core": {"size": len(units_rows), **(core_info or {})}}
+
+
+def transfer_partition(L, pb, side="a", kmax=40):
+    """One side's parts are known (pb, partitions of the b symbols); find the other side's parts from the network's
+    logits: fit L(a, b) ~ sum_i T_i[a, b_i] with a free, then symbols a whose rows T_i[a, :] agree share part i's
+    block. (side='b' does the mirror image: pass L transposed.) Returns a list of partitions of the a symbols."""
+    na, nb, C = L.shape
+    sizes = [P.max() + 1 for P in pb]
+    T = [np.zeros((na, s, C)) for s in sizes]
+    for _ in range(25):
+        for i in range(len(T)):
+            R = L - sum(T[j][:, pb[j], :] for j in range(len(T)) if j != i)
+            T[i] = np.stack([R[:, pb[i] == u, :].mean(1) for u in range(sizes[i])], 1)
+    # cluster a's rows per part; choose the block counts jointly so that a's blocks form a product grid
+    links = []
+    for i in range(len(T)):
+        V = T[i].reshape(na, -1)
+        Cm = np.corrcoef(V); Dm = np.clip(1 - Cm, 0, None); iu = np.triu_indices(na, 1)
+        links.append(linkage(Dm[iu], "average"))
+    best = None
+    ranges = [range(2, min(na, kmax) + 1) for _ in links]
+    if len(links) == 2:
+        for k1 in ranges[0]:
+            P1 = fcluster(links[0], k1, "maxclust") - 1
+            for k2 in ranges[1]:
+                if k1 * k2 < 0.8 * na:
+                    continue
+                P2 = fcluster(links[1], k2, "maxclust") - 1
+                sc = _grid(P1, P2, na)
+                if best is None or sc > best[0]:
+                    best = (sc, [P1, P2])
+        return best[1]
+    return [fcluster(Lk, max(2, int(round(na ** (1 / len(links))))), "maxclust") - 1 for Lk in links]
