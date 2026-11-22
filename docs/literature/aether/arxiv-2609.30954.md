@@ -1,0 +1,40 @@
+# FTB Graph: Determining and Validating First-token Broadcasters and Language-Identity Head Circuits in Multilingual Language Models
+
+- **Key:** arxiv-2609.30954
+- **Authors / organisation:** Arjun Pillai, Christian Hoang, Anjelo Laroza — affiliations printed in the byline as Irvington High School, Gen4AIE, and Independent Researcher, with no per-author mapping
+- **Date:** 2026-09-25
+- **Link:** https://arxiv.org/abs/2609.30954
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+A multilingual model has to settle on an output language almost immediately: by the time it prints its first token it has, implicitly, already committed. The authors want to know where in the network that commitment is computed, whether the machinery is shared across families and scales, and whether fine-tuning moves it. They frame the object of study as *first-token broadcasting* — a small set of attention heads that compute and propagate a language-identity signal early enough to constrain everything after it — and they want not just the heads but the directed edges between them. The larger goal is the ordinary circuit-analysis one: turn a behavioural asymmetry (same prompt, different target language) into a named subgraph with a causal claim attached.
+
+## What they studied
+Six small open models spanning four families and 124M–2.8B parameters: GPT-2, BLOOM-560M, Pythia-1B, Pythia-2.8B, plus a Qwen2.5-1.5B base/instruct pair. The unit is the attention head and the head-to-layer edge; the readout is target-language log-probability at the first generated token. Data is a 29-item hand-authored multilingual prompt suite over seven languages (English, French, Spanish, Vietnamese, Chinese, Russian, Japanese); only the 21 neutral single-language items are actually used in any reported result, and Vietnamese items were dropped for GPT-2 on tokenizer grounds, leaving it with 16.
+
+## How they did it
+Two prompts per item, a clean one in the target language and a foil in a different language. Step one scores each head by activation patching between them (their LIHA score: how much a head's patched value moves target-language log-probability at the first token). Step two runs edge attribution patching over all head→layer edges — a first-order Taylor term using the clean-vs-foil activation difference times the gradient — which is cheap enough to score every edge (792 for GPT-2 up to 15,872 for Pythia-2.8B). Step three keeps only the top 250 edges per source head with at most 8 destinations each, hitting a hard 2,000-edge verification ceiling on all six models. Step four verifies by exact patching: actually substitute each candidate edge's corrupted activation and measure the real loss change, keeping the edge only if its sign agrees with the EAP score. Step five renders the surviving edges as a DAG. Step six validates by ablating all in-graph heads (necessity/completeness drop) against an equal-sized random set of heads outside the graph (irrelevance drop), on 100 evaluation samples. Everything runs in fp16 with activations clamped to ±10,000 and NaN-scored edges discarded.
+
+## What counts as an explanation here
+A circuit: a pruned, verified directed graph of head→layer edges, plus a named hub per model. It is explicitly partial. The authors state there is no sufficiency check — they show the graph is necessary and that the rest is comparatively irrelevant, not that the graph alone is enough. It predicts that ablating the graph hurts and that ablating comparable heads elsewhere does not, and it predicts hub depth location per architecture.
+
+## How they judged success
+Four statistics, all of them printed per model: coverage (heads scored, edges scored, candidate edges, verified edges); Pearson correlation between EAP scores and exact patching deltas on the same 2,000 candidate edges, as a fidelity check on the screening stage; the in-graph ablation drop versus the out-of-graph ablation drop, as means ± SD over the evaluation split; and node-set Jaccard similarity between the base and instruct Qwen graphs. No sufficiency test, no matched-pair significance test, no bootstrap interval on the necessity difference.
+
+## What they found
+Hubs sit deep: 9 of 12 layers for GPT-2, 21 of 24 for BLOOM, 11 of 16 for Pythia-1B, 27 of 28 for Qwen base and instruct — with Pythia-2.8B the exception at 16 of 32, which the authors note breaks any monotonic depth-vs-scale story. Necessity/irrelevance margins are positive for all four standalone models (Pythia-1B +3.28, GPT-2 +1.19, Pythia-2.8B +0.90, BLOOM +0.63) but negative for both Qwen variants (−1.05, −0.82): out-of-graph ablation hurt *more* than in-graph ablation. The authors read that as pipeline failure rather than architecture, citing the weakest EAP-to-exact correlations of the six (r = −0.08 and −0.06) and proposing an fp32 rerun as the test they did not run. The fidelity table is the most useful number here: EAP and exact patching correlate −0.23 for GPT-2, +0.57 for BLOOM, −0.22 for Pythia-1B, −0.19 for Pythia-2.8B — one positive out of six. Base and instruct graphs overlap at 84.7% Jaccard including the layer-27 hub, read as evidence the routing is laid down in pretraining. Verified edge counts are suspiciously flat (816, 824, 856, 864, 1,016, 984) against a 2,000 ceiling, and the graph grows sparser with scale: 123 in-graph heads at Pythia-1B against 415 at 2.8B.
+
+## Limits and open problems they name
+The prompt set is 21 used items against a 200–500-per-language-pair norm, and the standard deviations are large (Pythia-1B out-of-graph 0.04 ± 0.16; BLOOM 1.85 ± 2.42 against 1.22 ± 3.39), so several out-of-graph SDs are two to four times their means and the PASS/INVERTED labels are not statistically confirmed — their words, not mine. GPT-2 keeps 143 of 144 heads inside the graph and Pythia-1B 123 of 128, so for those two the "in versus out" comparison is nearly everything-versus-nothing and does not demonstrate concentration. No sufficiency check. Nothing above 2.8B. fp16 throughout, with the gradient-underflow concern left open for five of six models.
+
+## What we take from it
+A method and a warning, both about the screening/verification split. **Method:** an attribution sweep is cheap where an exact intervention is not, but the cheap score is only a *screening* instrument — every edge a screen nominates is re-run as a real intervention and kept on sign agreement, not on score magnitude. **Warning:** here the screen and the intervention agree at at most r = 0.57 and are anti-correlated on five of six models, and the authors nonetheless build their headline DAG from screen-ranked edges, which means the verified set is a filtered sample of a bad ranking rather than a search informed by a good one. Mechanical rule for us: **whenever our account screens candidate units with an approximation and confirms a shortlist exactly, we print the screen-vs-exact agreement per model, and if it is not positive we report the exact-confirmed units as the finding and the screened graph as a search artefact — we do not draw topology claims (hub depth, sparsity, node count) from the screened graph.** Second rule, from the coverage table: **a circularity check on any "the circuit is localised" claim — print the in-graph and out-of-graph head counts beside the drops, and refuse the localisation claim when the graph consumes nearly the whole network**, which is exactly what happens to GPT-2 and Pythia-1B here and which the authors themselves flag in their discussion. Third, a free control they had and only partly used: the base/instruct pair is a same-architecture, shared-lineage replicate, so their 84.7% Jaccard is a genitive instrument this folder should copy — the node-set overlap between two models that differ only in post-training names the part of the account that is robust to that difference, and it costs one extra graph.
+
+## Tags
+unit: head | circuit
+form: graph
+method: attribution | patching | ablation
+eval: ablation | patching | faithfulness
+goal: understanding
