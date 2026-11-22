@@ -2092,3 +2092,31 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - This is built as `lab/decomp/orbit.py` plus a decompile fallback. The identity symbol and handedness are chosen by M1, and that selection is disclosed.
 - **Catalogue:** `lab/catalog.py` and `catalog.html` show the decompiled program card (group, name, M1/M2, the answer-key check from `score_known.py`) and the a^b mechanism card. Screenshots are clean, with no JavaScript errors.
 - **GPU spend so far:** about 1 h 15 min of L4 time across sessions dc1–dc3, plus about 30 min of CPU.
+
+## Nov 22, 00:02 ET (clock): D1 factor mode and decompiler v3 (after the 5 h session-limit pause)
+
+- **The pause.** The 5 h session-limit pause (about 17:00–22:15) killed every Colab session and every local job. The held-out S4 seed 3 and the 10-group challenge set were retrained (round 5). Seed 3 did not grok (test 0.11), so it is excluded; seeds 4 and 5 are retraining with 75% of the data.
+- **Factor mode** (`lab/decomp/factor.py`, `factorize.py`; `docs/decomp/FACTOR.md`):
+  - **What it is.** Blind discovery of a hidden split into independent sub-computations, by repeated difference vectors (parallelograms), a product grid of blocks, and the logit test (the sum of part tables reproduces the network's answers), with part tables named by ring fingerprint.
+  - **Failed first approaches:**
+    - clustering neuron read-subspaces;
+    - 1-D level partitions of neuron reads;
+    - ICA with higher-order dependence grouping.
+  - **Results:**
+    - **Development, a^b mod 113 s1:** "multiplication in Z_7 and in Z_16", 100% of answers from 305 table entries.
+    - **Held-out (PLAN 22:30):**
+      - p109: "Z_4 and Z_27", exactly as predicted.
+      - mul mod 120: "Z_8 and Z_15". mul mod 105: "Z_7 and Z_15". The prediction was three parts each; the logit test chose the two-part split (3 and 5 merged), with 1.000 against 0.918 for 105.
+      - p97: partial (0.949). p101: miss (0.866; weak mod-4 part). mul mod 120 s2: miss (0.83). pow s2/s3: no clean split (mixed characters, consistent with the hand analysis).
+    - **Controls:** modadd, the memorizer and secret_add give no clean split, as they should.
+- **Challenge set v1 (pre-registered 16:55): 3/10.** Causes:
+  - a's and b's coordinates were taken from different representations without alignment;
+  - the group vote preferred quotient groups.
+
+  Decompiler v3/v3.1/v3.2, developed on these failures:
+  - shared coordinates (one embedding for both inputs);
+  - selection by the share of the MLP output explained by the group-sum label, times the share of the group's elements that hold a symbol.
+
+  Dev re-runs: randab2, 6 and 11 now pass, and randab1, z8z14 and secret_add still pass. randab21 (Z5×Z20) and randab4 still fail under v3.1; v3.2 is running.
+- **Challenge set v2** (12 new groups, pre-registered 23:19) is trained, all generalising, and waits for the final version to be decompiled once.
+- **`lab/decomp/explain.py`:** one command, the whole story, in plain words. Tested on xyxy: "the symbol map is 65·log_3(t + 1) ... the absorbing zero", program 100%, causal 99.9% against 0.9% random.
