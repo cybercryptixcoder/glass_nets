@@ -33,6 +33,16 @@ def score(mid):
     else:                                       # the older modadd/modmul networks
         p = info["p"]; a = np.arange(p)[:, None]; b = np.arange(p)[None, :]
         T = {"add": (a + b) % p, "sub": (a - b) % p, "mul": (a * b) % p}[task]; n = n_out = p; key = {"rule": task}
+    if rep.get("cayley_table"):                  # non-abelian (orbit mode): the program is a table over the symbols
+        C = np.array(rep["cayley_table"])
+        law = float((C == T[:n, :n]).mean())
+        # the recovered symbol -> element map is the identity on symbols, so it is a homomorphism exactly where the
+        # recovered table agrees with the true one: the isomorphism score equals law_vs_truth here
+        out = {"model": mid, "task": task, "rule": key.get("rule"), "hidden": key.get("hidden"), "law_vs_truth": law,
+               "structure_isomorphism": law, "group_name": rep.get("group_name"), "element_orders": rep.get("element_orders"),
+               "symbols_placed_a": n, "symbols_placed_b": n}
+        json.dump(out, open(os.path.join(DEC, mid + "_score.json"), "w"), indent=1)
+        return out
     d = np.array(rep["group"])
     ga = {int(k): np.array(v) for k, v in rep.get("element_of_symbol_a", rep.get("element_of_symbol", {})).items()}
     gb = {int(k): np.array(v) for k, v in rep.get("element_of_symbol_b", rep.get("element_of_symbol", {})).items()}

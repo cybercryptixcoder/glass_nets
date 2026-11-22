@@ -120,3 +120,9 @@ no supplied vocabulary)? The program should:
   - **v1's pre-registered count stays 3/10.**
   - Challenge v2 (12 networks) is decompiled once with this commit and scored with `score_known.py` against the 16:55 criteria.
   - A relation-search extension (single planes and pairs with larger coefficients) was tried on randab9 and did not fix it, so it is not in v3.3.
+- **Nov 22, 02:10 (clock): held-out non-abelian result (pre-registered 00:10). PASS on both networks that generalized.**
+  - Of seeds 6 to 9, seeds 7 and 9 generalized (all pairs 1.0). Seeds 6 and 8 did not (0.87, 0.95) and were not decompiled.
+  - **seed 7:** S4 profile (1:1, 2:9, 3:8, 4:6); table identical to the secret table (law vs truth 1.000); M1 1.000; M2 1.000 against random 0.000.
+  - **seed 9:** S4 profile; law vs truth 1.000; M1 1.000; M2 0.986 against random 0.000.
+  - Both networks hold the 24 symbols on a sphere in 3 dimensions, where they are the orbit of S4 acting by rotations, as on a cube.
+  - **Disclosed:** the identity symbol and the handedness (left or right action) are chosen by M1 among 96 and 48 candidates. Everything else is read from the orbit's symmetries.

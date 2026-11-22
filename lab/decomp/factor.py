@@ -397,3 +397,41 @@ def refine_assignments(L, pa, pb, rounds=12, log=None):
         if changed == 0:
             break
     return best
+
+
+def parsimony_merge(L, pa, pb, tol=0.002, tries=6, log=None):
+    """Fewest blocks that explain the network as well: repeatedly merge, in any part and on either side, the two blocks
+    whose logit-table rows are closest, if the merge costs at most `tol` of argmax agreement against the best seen;
+    re-assign symbols after each accepted merge. tol is fixed in advance (0.2% of inputs), not fitted."""
+    pa = [_reindex(P) for P in pa]; pb = [_reindex(P) for P in pb]
+    agr0, ex0 = additive_tables(L, pa, pb, iters=12)[2:0:-1]
+    best_agr = agr0
+    while True:
+        T, _, _, _ = additive_tables(L, pa, pb, iters=8)
+        options = []
+        for k in range(len(pa)):
+            Ka, Kb = int(pa[k].max() + 1), int(pb[k].max() + 1)
+            Tk = T[k].reshape(Ka, Kb, -1)
+            for side, K, rows in (("a", Ka, Tk), ("b", Kb, Tk.transpose(1, 0, 2))):
+                if K <= 2:
+                    continue
+                Dm = ((rows[:, None] - rows[None]) ** 2).sum((2, 3)); Dm[np.diag_indices(K)] = np.inf
+                iu = np.dstack(np.unravel_index(np.argsort(Dm, axis=None)[:2 * tries:2], Dm.shape))[0]
+                for x, y in iu:
+                    options.append((k, side, int(x), int(y)))
+        trial = []
+        for k, side, x, y in options:
+            qa = [P.copy() for P in pa]; qb = [P.copy() for P in pb]
+            Q = (qa if side == "a" else qb)[k]; Q[Q == y] = x
+            qa = [_reindex(P) for P in qa]; qb = [_reindex(P) for P in qb]
+            agr = additive_tables(L, qa, qb, iters=8)[2]
+            trial.append((agr, k, side, qa, qb))
+        if not trial:
+            break
+        agr, k, side, qa, qb = max(trial, key=lambda z: z[0])
+        if agr < best_agr - tol:
+            break
+        agr2, ex2, qa, qb = refine_assignments(L, qa, qb, rounds=3)
+        pa, pb = qa, qb; best_agr = max(best_agr, agr2)
+        if log: log(f"  merge: part {k} side {side}, now {[int(P.max() + 1) for P in pa]} x {[int(P.max() + 1) for P in pb]}, argmax agreement {agr2:.4f}")
+    return pa, pb
