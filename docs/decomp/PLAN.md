@@ -155,3 +155,16 @@ no supplied vocabulary)? The program should:
     - randab35, randab40 and dev randab9 still fail. Two have no sphere orbit; one is not faithful in the embedding.
     - Regression: S4 s2, s7 and s9 pass as before. Abelian passes are unaffected, because orbit mode runs only after group mode fails.
   - **Pre-registered use.** Challenge v3 (00:45) and the blind non-abelian challenge (00:53) are each **also** decompiled once with v3.5. Both sets are still training and have not been seen. Results are reported for both versions: v3.3 for v3, the 00:53 commit for non-abelian, and v3.5 for both. Same criteria as before.
+- **Nov 22, 01:56 (clock): prime challenge result (pre-registered 00:02, run with commit 98081655). 2 of 8 pass.**
+  - **Pass:**
+    - p127: multiplication in Z7 and in Z18 (7 · 18 = 126, with the 2 and 9 parts merged);
+    - p131: Z5 and Z26 (5 · 26 = 130).
+  - **Split but not named** (a miss by the rule):
+    - p89 (agreement 1.000);
+    - p103 (0.987; this network is 0.986 accurate);
+    - p107 (1.000);
+    - p139 (0.999).
+  - **No clean split:** p137 (none), p149 (0.948).
+  - **Cause of the unnamed four.** The absorbing symbols (a = 0, 1; b = 0, p−1) are constant on only 97–99% of partners, so the exact-constant test missed them and they polluted the part tables. Fixed as D10, factor mode v2.
+  - **D10 on these networks (dev, the count above stands):** p89 gives Z8 and Z11, and p107 gives Z2 and Z53, both exactly as the CRT predicts. p103 is still unnamed.
+  - Reports: `results/decomp/prime_challenge_v1/`.
