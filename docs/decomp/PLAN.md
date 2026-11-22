@@ -180,3 +180,23 @@ no supplied vocabulary)? The program should:
 - **Same entry: decompile runs.**
   - For challenge v3, v3.5 differs from v3.3 only in the orbit fallback, which runs only when group mode fails. Where v3.3 passes, v3.5 returns the same report (randab47: both pass).
   - So v3.5 is run on the v3 networks that v3.3 fails, and on any whose v3.5 result came first.
+- **Nov 22, 04:02 (clock): results of the three later pre-registered tests.** Three GPU sessions were reclaimed during training. Networks lost that way were never trained and are not counted.
+  - **Prime set v2 for factor mode v2 (01:56; frozen 02:40 at 5ab894b9): 4 of 8 pass.**
+    - p79 → Z6 and Z13;
+    - p83 → Z2 and Z41;
+    - p151 → Z3 and Z50;
+    - p157 → Z4 and Z39.
+
+    Each is the factorisation of p − 1, with some prime-power parts merged. Misses: p61, p67 and p71 split cleanly (agreement ≥ 0.998) but have unnamed parts; p73 does not split cleanly (0.898). Logs: `results/decomp/prime_set_v2/`. Only the four passing networks' JSON reports were written by the parallel runs; the other four verdicts are in their logs.
+  - **Challenge v3 (00:45), v3.3: 3 of 5 completed pass.**
+    - Pass: randab47 Z7×Z14, randab50 Z2×Z2×Z30, randab51 Z4×Z28, each with law vs truth 1.000.
+    - Fail: randab48 Z2×Z2×Z2×Z12 (found Z2×Z2×Z12) and randab52 Z2×Z4×Z12 (right group, placement 0.50). Both are again groups with several Z2 factors.
+    - Not completed: randab55, 56, 57, 60 and 68 were still running at wrap-up; randab86 and 116 were never trained.
+    - v3.5 on the failures: randab48 still fails.
+  - **Blind non-abelian challenge (00:53): of the 9 networks trained, 6 generalized.**
+    - Generalized: A5 s1/s2, S3×S3 s1/s2, A4×Z3 s1, SL(2,3) s2.
+    - Not generalized: A4×Z3 s2 0.81, SL(2,3) s1 0.82, D12 s1 0.89.
+    - Never trained: D12 s2, Z7⋊Z3, Z5⋊Z4, D10.
+    - **v3.3 (code identical to the 00:53 commit): 0 of 5 completed.**
+    - **v3.5: 2 of 5 completed pass, exactly.** A5 s1 (orbit on a 6-D sphere) and S3×S3 s1 (4-D) both have law vs truth 1.000, M1 1.000, and M2 1.000 against 0.000. A5 s2, S3×S3 s2 and A4×Z3 s1 fail. SL(2,3) s2 was still running.
+  - Reports: `results/decomp/challenge_v3/`, `results/decomp/nonabelian_challenge/`.
