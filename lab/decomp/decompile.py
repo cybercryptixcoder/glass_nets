@@ -206,9 +206,11 @@ def nonabelian(W, n, E, F, G, share, net, rep, patches, log):
         agr, e, T = best
         f = lambda a, b, T=T: int(T[a, b])
         m1 = pg.verify_replacement(f, net, n)
-        Q = basis.T if src == "embedding" else np.linalg.qr(basis.T)[0]
         where = "embedding" if src == "embedding" else "x1"
         Xs = E if src == "embedding" else F
+        # interchange on the recovered variable (here the group element itself): the subspace through which the
+        # representation depends on it, as in M2 v2
+        Q = pg.coordinate_subspace(Xs, np.arange(n)[:, None], [n], np.ones(n, bool))
         m2 = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches)
         m2r = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches, random=True)
         rep.update({"group": f"non-abelian, order {n}", "group_name": name, "element_orders": {str(k2): v for k2, v in eo.items()},
@@ -259,12 +261,27 @@ def make_program2(ga, gb, dec, d, on_a, on_b):
     return f, "\n".join(lines)
 
 
+def decompile_any(model_id, patches=2000, log=print):
+    """Abelian mode first; if it finds no structure or its program fails, the non-abelian orbit mode, keeping the better."""
+    rep, src = decompile(model_id, patches, log)
+    if rep.get("verdict", "").startswith("PASS"):
+        return rep, src
+    W = dict(np.load(os.path.join(ROOT, "lab", "models", model_id, "weights.npz")))
+    n = W["W_E"].shape[0] - 1
+    F, G, share, I = deep.side_representations(W, n)
+    rep2, src2 = nonabelian(W, n, W["W_E"][:n], F, G, share, I["logits"].argmax(-1), {"model": model_id, "n_symbols": n, "n_out": W["W_U"].shape[1], "additive_share": share,
+                                                                                       "abelian_attempt": {k: rep.get(k) for k in ("group", "verdict", "group_votes")}}, patches, log)
+    if rep2.get("verdict", "").startswith("PASS") or not rep.get("group"):
+        return rep2, src2
+    return rep, src
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("model"); ap.add_argument("--patches", type=int, default=2000)
     a = ap.parse_args()
     t0 = time.time()
-    rep, src = decompile(a.model, a.patches)
+    rep, src = decompile_any(a.model, a.patches)
     rep["seconds"] = round(time.time() - t0, 1)
     out = os.path.join(ROOT, "results", "decomp"); os.makedirs(out, exist_ok=True)
     json.dump(rep, open(os.path.join(out, a.model + ".json"), "w"), indent=1)

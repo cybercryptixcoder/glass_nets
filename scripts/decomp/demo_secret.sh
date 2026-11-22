@@ -15,7 +15,7 @@ python3 - <<PY
 import sys; sys.path.insert(0, "scripts/decomp"); import tasks
 orig = tasks.table
 tasks.table = lambda task, p=113, secret_seed=12345: orig(task, p, secret_seed=$S)
-sys.argv = ["train_table.py", "--task", "secret_add", "--seed", "1", "--out", "lab/models/$M", "--device", "$DEV"]
+sys.argv = ["train_table.py", "--task", "secret_add", "--seed", "1", "--out", "lab/models/$M", "--device", "$DEV", "--epochs", "${EPOCHS:-8000}"]
 import train_table; train_table.table = tasks.table; train_table.main()
 PY
 echo "== 2. decompile (reads weights.npz only)"
