@@ -136,3 +136,14 @@ no supplied vocabulary)? The program should:
   - **Decompilation:** every network that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with `decompile_any` as it stands at this commit. Orbit mode is unchanged since S4.
   - **Pass:** the recovered table equals the secret table on ≥ 95% of pairs (law vs truth), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
   - **Reported:** how many generalized, and how many of those pass. Naming is not required, since only S4, A4 and A5 are in the name list.
+- **Nov 22, 03:35 (clock): challenge set v2 result (pre-registered 23:19, frozen v3.3 at 01:40). 8 of 12 pass.**
+  - **Pass**, each with M1 1.000, M2 1.000 against random 0.000, and law vs truth 1.000:
+    - Z2×Z2×Z26, Z2×Z6×Z6, Z2×Z50, Z3×Z3×Z12, Z3×Z36, Z5×Z20, Z7×Z14;
+    - Z4×Z28, with law vs truth 1.000 even though the network itself is 0.9995 accurate.
+  - **Fail:**
+    - Z2×Z2×Z30: found Z2×Z30;
+    - Z2×Z2×Z2×Z12: found Z2×Z4×Z12;
+    - Z2×Z4×Z12: right group, but the placement is wrong (M1 0.516);
+    - Z6×Z18: found Z2×Z18.
+  - Three of the four failures are 2-groups of rank ≥ 3 (several order-2 characters, which are 1-D axes). The fourth misses a Z3 factor.
+  - Logs: `results/decomp/logs/ch2_*.log`; reports `results/decomp/dc_randab{25,...}.json`; scores `*_score.json`.
