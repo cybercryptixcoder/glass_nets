@@ -90,3 +90,18 @@ no supplied vocabulary)? The program should:
     | `dc_addmod120_s1` | may split as addition in Z_8, Z_3 and Z_5 |
 
   - **A miss is reported as a miss.** For a part whose number of values matches a prime power, a "match" means the same row and column profiles as Z_m's multiplication or addition table.
+- **Nov 21, 23:19 (clock): challenge set v1 result (pre-registered at 16:55), and the v2 plan.**
+  - **v1 result: 3 of 10 pass** (randab1 Z7×Z14, randab5 Z3×Z36, randab19 Z4×Z28). This is the pre-registered outcome and it stands.
+  - **v1 failures:**
+    - randab2 found Z2×Z18 instead of Z6×Z18.
+    - randab11 found the right group, Z2×Z50, but its program scored 0.02.
+    - randab6 and randab13 each missed a Z2.
+    - randab4 and randab9 found no group.
+    - randab21 found Z140 instead of Z5×Z20.
+  - **Causes found:**
+    1. The two inputs' coordinates were taken from different representations (F for a, G for b). They were aligned only for cyclic groups, which caused randab11 and randab2.
+    2. The group vote picked a group missing a factor, or one made up by a false relation.
+  - **Decompiler v3:**
+    - one set of symbol coordinates for both inputs, since they share an embedding;
+    - the result kept is the one under which the MLP depends most on g(a) + g(b) (diagonal share), which uses activations only.
+  - **v3 is developed on the v1 failures,** so v1 cannot test it. **Challenge set v2:** 12 new networks, one for each group in the list: randab25, 38, 46, 35, 28, 30, 41, 33, 37, 27, 40, 26. They are trained after this entry and decompiled once with v3. The pass criteria are the same as v1.
