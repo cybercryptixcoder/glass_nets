@@ -181,7 +181,10 @@ def nonabelian(W, n, E, F, G, share, net, rep, patches, log):
             H_all = orbit.regular_subgroups(P, n) if len(P) >= n else []
             if len(P) >= 2:                               # D9: subgroups that need more than two generators
                 seen_ = {frozenset(H) for H in H_all}
-                H_all += [H for H in orbit.regular_subgroups_greedy(P, n) if frozenset(H) not in seen_]
+                for cm in (False, True):                  # also with commuting generators (an abelian group's translations)
+                    for H in orbit.regular_subgroups_greedy(P, n, commute=cm):
+                        if frozenset(H) not in seen_:
+                            seen_.add(frozenset(H)); H_all.append(H)
             if H_all:
                 break
         log(f"  orbit [{src}]: sphere in {k} dims (radius cv {cv:.3f}), {len(P)} symmetries, {len(H_all)} regular subgroups of order {n}")

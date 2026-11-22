@@ -95,7 +95,7 @@ def regular_subgroups(P, n):
     return [sorted(H) for H in out]
 
 
-def regular_subgroups_greedy(P, n, trials=30, seed=0):
+def regular_subgroups_greedy(P, n, trials=30, seed=0, commute=False):
     """D9: regular subgroups of any rank (Z2 x Z2 x Z30 needs three generators, so pairs never find it). From the
     identity, add fixed-point-free symmetries in a seeded random order, keeping one only if the closure of the generators
     so far stays fixed-point-free and of size <= n; keep every subgroup that reaches size n."""
@@ -109,6 +109,8 @@ def regular_subgroups_greedy(P, n, trials=30, seed=0):
         for p in order:
             if p in H:
                 continue
+            if commute and any(compose(p, q) != compose(q, p) for q in gens):
+                continue                            # abelian variant: generators must commute (translations do)
             H2 = closure(gens + [p], n, n)
             if H2 is None:
                 continue
