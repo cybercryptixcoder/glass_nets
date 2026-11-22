@@ -173,3 +173,10 @@ no supplied vocabulary)? The program should:
   - **Version:** factor mode v2 is frozen once its controls are confirmed: modadd, the memorizer and secret_add must still not split. Its commit is recorded then. If the controls fail, v2 is not adopted and this set runs with v1 (98081655).
   - **Pass:** the same rule as the first prime challenge. The tool must say SPLITS (agreement ≥ 0.98); every part must be named "multiplication in Z_m"; and the m's must multiply to p − 1, each being a prime-power factor of p − 1 or a product of several.
   - **Reported:** every network, with its accuracy. Networks that do not generalize (all-pairs accuracy < 0.99) are reported but do not count either way.
+- **Nov 22, 02:40 (clock): factor mode v2 frozen at commit 5ab894b9 (D10), for prime set v2.**
+  - **Controls:** modadd, the memorizer and secret_add still do not split (secret_add's best split agrees on only 0.525).
+  - **Regressions pass:** pow s1 (Z7, Z16), p109 (Z4, Z27), mulmod120 (Z8, Z15), mulmod105 (Z7, Z15), p127 (Z7, Z18).
+  - **Prime set v2:** all 8 networks generalized (all-pairs accuracy 0.994–1.000). They were trained on a GPU session, not on CPU as written at 01:56, because CPU training was too slow; nothing else changed.
+- **Same entry: decompile runs.**
+  - For challenge v3, v3.5 differs from v3.3 only in the orbit fallback, which runs only when group mode fails. Where v3.3 passes, v3.5 returns the same report (randab47: both pass).
+  - So v3.5 is run on the v3 networks that v3.3 fails, and on any whose v3.5 result came first.
