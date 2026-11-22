@@ -178,6 +178,9 @@ def nonabelian(W, n, E, F, G, share, net, rep, patches, log):
         k, Y, basis, cv = sph
         P = orbit.orbit_symmetries(Y, 0.1)
         H_all = orbit.regular_subgroups(P, n) if len(P) >= n else []
+        if len(P) >= 2:                                   # D9: subgroups that need more than two generators
+            seen_ = {frozenset(H) for H in H_all}
+            H_all += [H for H in orbit.regular_subgroups_greedy(P, n) if frozenset(H) not in seen_]
         log(f"  orbit [{src}]: sphere in {k} dims (radius cv {cv:.3f}), {len(P)} symmetries, {len(H_all)} regular subgroups of order {n}")
         if not H_all:
             continue
@@ -201,7 +204,12 @@ def nonabelian(W, n, E, F, G, share, net, rep, patches, log):
         Q = pg.coordinate_subspace(Xs, np.arange(n)[:, None], [n], np.ones(n, bool))
         m2 = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches)
         m2r = pg.verify_causal_subspace(W, Q, "a", Xs, f, n, where, patches, random=True)
-        rep.update({"group": f"non-abelian, order {n}", "group_name": name, "element_orders": {str(k2): v for k2, v in eo.items()},
+        abel = bool((T == T.T).all())
+        if abel:                                          # D9: an abelian table is named by its invariant factors
+            Hs = [tuple(int(T[a, b]) for b in range(n)) for a in range(n)]
+            inv_ = orbit.abelian_invariants(orbit.element_orders(Hs, n), n)
+            name = "abelian, " + (" x ".join(f"Z_{x}" for x in inv_) if inv_ else "invariant factors not identified")
+        rep.update({"group": (f"abelian, order {n}" if abel else f"non-abelian, order {n}"), "group_name": name, "element_orders": {str(k2): v for k2, v in eo.items()},
                     "a_side": {"representation": src, "variant": f"orbit on a sphere in {k} dims"}, "orbit_symmetries": len(P),
                     "regular_subgroups": len(H_all), "candidates_selected_by_M1": ncand,
                     "M1": m1, "M2": dict(m2, where=src), "M2_random_control": m2r,

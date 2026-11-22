@@ -95,6 +95,67 @@ def regular_subgroups(P, n):
     return [sorted(H) for H in out]
 
 
+def regular_subgroups_greedy(P, n, trials=30, seed=0):
+    """D9: regular subgroups of any rank (Z2 x Z2 x Z30 needs three generators, so pairs never find it). From the
+    identity, add fixed-point-free symmetries in a seeded random order, keeping one only if the closure of the generators
+    so far stays fixed-point-free and of size <= n; keep every subgroup that reaches size n."""
+    import random
+    idp = tuple(range(n))
+    fpf = [p for p in P if p != idp and all(p[i] != i for i in range(n))]
+    out = set()
+    for t in range(trials):
+        order = fpf[:]; random.Random(seed + t).shuffle(order)
+        gens, H = [], {idp}
+        for p in order:
+            if p in H:
+                continue
+            H2 = closure(gens + [p], n, n)
+            if H2 is None:
+                continue
+            if all(h == idp or all(h[i] != i for i in range(n)) for h in H2):
+                gens.append(p); H = H2
+            if len(H) == n:
+                break
+        if len(H) == n:
+            out.add(frozenset(H))
+    return [sorted(H) for H in out]
+
+
+def abelian_invariants(eo, n):
+    """Invariant factors of the abelian group of order n with element-order counts eo (counts determine it)."""
+    from sympy import factorint
+    from sympy.utilities.iterables import partitions
+    import math
+    f = factorint(n)
+    def groups(items):
+        if not items:
+            yield []
+            return
+        (p, e), rest = items[0], items[1:]
+        for part in partitions(e):
+            pp = [p ** k for k, m in part.items() for _ in range(m)]
+            for g in groups(rest):
+                yield pp + g
+    for prim in groups(sorted(f.items())):
+        els = list(itertools.product(*[range(q) for q in prim]))
+        cnt = {}
+        for x in els:
+            o = 1
+            for xi, q in zip(x, prim):
+                o = o * (q // math.gcd(q, xi)) // math.gcd(o, q // math.gcd(q, xi))
+            cnt[o] = cnt.get(o, 0) + 1
+        if cnt == {int(k): v for k, v in eo.items()}:
+            # primary parts -> invariant factors
+            byp = {}
+            for q in prim:
+                p = min(fp for fp in f if q % fp == 0); byp.setdefault(p, []).append(q)
+            for p in byp: byp[p].sort(reverse=True)
+            m = max(len(v) for v in byp.values())
+            inv = [int(np.prod([v[i] for v in byp.values() if i < len(v)])) for i in range(m)]
+            return sorted(x for x in inv if x > 1)
+    return None
+
+
 def element_orders(H, n):
     idp = tuple(range(n)); cnt = {}
     for h in H:
