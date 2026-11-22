@@ -833,6 +833,20 @@ function decompCard(dc) {
   const row = (l, v, c, b) => `<div class="prog-row"><div class="prog-h"><span class="l">${l}</span><span class="p" ${b ? 'style="color:var(--accent-hi)"' : ""}>${pct(v)}</span></div><div class="track"><i style="width:${v == null ? 0 : (100 * v).toFixed(1)}%;--c:${c}"></i></div></div>`;
   if (!r.group) return `<div class="card s5">${cardHead("binary", "c", "Decompiler", "Weights in, program out (blind)")}<div class="card-b"><p>${esc(r.verdict)}</p><p class="hint">The inputs carry no group law. That is the right answer for a memorizer, and for a task that is not a group law (like a^b, where the split card below shows what the network does instead).</p></div><div class="card-f"><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
   const pass = r.verdict.startsWith("PASS");
+  if (!Array.isArray(r.group)) {          // orbit mode (non-abelian, or abelian via the orbit fallback): a Cayley table
+    const n = r.n_symbols, nm2 = r.group_name || r.group;
+    return `<div class="card s7">${cardHead("binary", "g", "Decompiled program", "Read from the weights alone: no task, no symbol meanings, no feature list",
+        `<span class="badge ${pass ? "ok" : ""}">${pass ? "passes" : "fails"}</span>`)}
+      <div class="card-b">
+        <p>The symbols are the ${n} elements of a group: <b>${esc(String(nm2))}</b>. The program is its ${n} × ${n} composition table, read from the rotations that permute the symbols' orbit (${esc(r.a_side?.variant || "")}).</p>
+        <p class="hint">${r.element_orders ? "Element orders: " + esc(Object.entries(r.element_orders).map(([k, v]) => v + " of order " + k).join(", ")) + ". " : ""}Which symbol is the identity, and left versus right, were chosen by agreement with the network among ${r.candidates_selected_by_M1 ?? "?"} candidates.</p>
+        <div class="prog">${row("Program agrees with the network (all inputs)", r.M1?.agreement, "var(--accent)", 1)}
+          ${row(`Causal: moving one input's coordinates moves the answer as predicted (${r.M2?.where || ""})`, r.M2?.success, "var(--cyan)")}
+          ${row("Same test, random subspace of the same size (control)", r.M2_random_control?.success, "var(--text-3)")}
+          ${sc ? row("Checked afterwards against the hidden answer key", sc.law_vs_truth, "var(--violet)") : ""}</div>
+      </div>
+      <div class="card-f"><button class="btn sm" id="progBtn">${ic("file-code")}Read the program</button><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
+  }
   const G = "Z" + r.group.map(x => `<sub>${x}</sub>`).join(" × Z");
   const nm = r.a_side?.name, nmb = r.b_side?.name;
   return `<div class="card s7">${cardHead("binary", "g", "Decompiled program", "Read from the weights alone: no task, no symbol meanings, no feature list",
