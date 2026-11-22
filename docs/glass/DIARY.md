@@ -2148,7 +2148,7 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 ## Nov 22, 04:05 ET (clock): wrap-up of the decompiler line for this session
 
 - **Held-out and pre-registered (the numbers that count):**
-  - **Abelian, v3.3.** Challenge v2: 8 / 12 exact. Challenge v3: 3 / 5 completed, exact. In total 11 of 17 fresh secret abelian groups were recovered with a program that equals the secret operation on every pair. Every failure but one is a group with several Z2 factors.
+  - **Abelian, v3.3.** Challenge v2: 8 / 12 exact. Challenge v3: 3 / 5 completed, exact. In total 11 of 17 fresh secret abelian groups were recovered with a program that equals the secret operation on every pair. All six failures have several independent Z2 factors (2-rank ≥ 2), though some such groups pass.
   - **Non-abelian.** Held-out S4: 2 / 2 exact. Blind set with v3.5: A5 and S3×S3 exact (2 of 5 completed); the first-registered version v3.3 got 0 / 5 there.
   - **Factor mode on a^b mod p.**
     - First prime challenge (v1): 2 / 8.

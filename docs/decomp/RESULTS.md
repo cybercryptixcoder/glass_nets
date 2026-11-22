@@ -39,7 +39,7 @@ Versions:
 
 | test (pre-registration time) | networks | result |
 |---|---|---|
-| **Random abelian groups, order 72–120, challenge v2** (Nov 21 23:19; v3.3) | 12 | **8 / 12 recovered exactly.** In each pass the program equals the secret operation on every pair (law vs truth 1.000), with M1 1.000 and M2 1.000 against 0.000. Three of the 4 failures have three or more Z2 factors |
+| **Random abelian groups, order 72–120, challenge v2** (Nov 21 23:19; v3.3) | 12 | **8 / 12 recovered exactly.** In each pass the program equals the secret operation on every pair (law vs truth 1.000), with M1 1.000 and M2 1.000 against 0.000. All 4 failures have several independent Z2 factors (some such groups pass) |
 | **Random abelian groups, challenge v3** (00:45; v3.3) | 10 trained (2 lost with a GPU session) | **3 / 5 completed recovered exactly** (Z7×Z14, Z2×Z2×Z30, Z4×Z28). The 2 failures again have several Z2 factors. 5 more were still running at wrap-up |
 | **Held-out S4** (00:06) | 2 generalized | **2 / 2 recovered exactly.** The 24 × 24 table equals the secret one on all 576 pairs; M1 1.000; M2 1.000 and 0.986 against 0.000 |
 | **Blind non-abelian groups never seen by the tool** (00:53): A5, S3×S3, A4×Z3, SL(2,3), D12, Z7⋊Z3, Z5⋊Z4, D10 | 9 trained, 6 generalized | **v3.5: 2 / 5 completed recovered exactly:** **A5** (the 60 × 60 table equals the secret one) and **S3×S3**. Each has law vs truth 1.000, M1 1.000, and M2 1.000 against 0.000. v3.3, the version pre-registered first: 0 / 5. A5 seed 2, S3×S3 seed 2 and A4×Z3 fail; SL(2,3) was still running |
