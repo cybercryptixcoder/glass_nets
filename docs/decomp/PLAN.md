@@ -130,3 +130,4 @@ no supplied vocabulary)? The program should:
   - v2 is still scored in full with v3.3, as pre-registered.
   - **Challenge v3:** 12 new networks, one per group in the list, seeds 47, 48, 50, 51, 52, 55, 56, 57, 60, 68, 86, 116. They are trained after this entry and decompiled once, with the version frozen after the dev regression below, and scored on the same criteria.
   - **v3.4 = v3.3 + the leak fix in the axis finder.** It is adopted only if it passes the dev regression: every network v3.3 passes, plus randab9. v2's own failures are not used to tune it. If it is not adopted, v3 runs with v3.3.
+- **Nov 22, 02:55 (clock): v3.4 not adopted.** The axis-finder leak fix (D6) does not fix dev case randab9: it finds Z2×Z2×Z2×Z30 instead of Z2×Z6×Z6. By the 02:35 rule, **challenge v3 runs with v3.3**, the same commit as v2. v2 and v3 together are then 24 fresh pre-registered networks, all run on one frozen version.
