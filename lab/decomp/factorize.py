@@ -77,6 +77,10 @@ def run(model_id, log=print):
     # pair the parts of a and b by block count (the k-th smallest with the k-th smallest)
     if "a_parts_from_logits" not in rep and "b_parts_from_logits" not in rep:
         pa = sorted(pa, key=lambda P: P.max()); pb = sorted(pb, key=lambda P: P.max())
+    # v2 (D5): move boundary symbols to the block that best predicts their logits, given the other parts
+    agr0 = factor.additive_tables(L, pa, pb, iters=12)[2]
+    _, _, pa, pb = factor.refine_assignments(L, pa, pb, log=log)
+    rep["refine"] = {"agreement_before": agr0, "blocks_a": [int(P.max() + 1) for P in pa], "blocks_b": [int(P.max() + 1) for P in pb]}
     T, ex, agr, Lh = factor.additive_tables(L, pa, pb)
     rep["split_test"] = {"logit_share_explained": ex, "argmax_agreement": agr, "table_entries": int(sum(len(t) for t in T)),
                          "inputs": int(keep_a.sum() * keep_b.sum())}

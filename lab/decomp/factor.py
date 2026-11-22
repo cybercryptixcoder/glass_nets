@@ -348,3 +348,52 @@ def merge_equivalent_blocks(T, P, axis=0):
     rows = [next(u for u in range(M.shape[0]) if new_of_old[u] == g) for g in range(len(keys))]
     M2 = M[rows]
     return new_of_old[P], (M2 if axis == 0 else M2.T)
+
+
+def _reindex(P):
+    return np.unique(P, return_inverse=True)[1]
+
+
+def refine_assignments(L, pa, pb, rounds=12, log=None):
+    """Move symbols between blocks so that the sum of part tables predicts the network's logits better.
+
+    L: centred logits (n_a x n_b x C). pa, pb: paired partitions (lists of int arrays). Each round fits the tables, then
+    for every part and side gives each symbol the block whose table row best predicts its logits over all partners,
+    given the other parts. Returns the best (agreement, share, pa, pb) seen."""
+    pa = [_reindex(P) for P in pa]; pb = [_reindex(P) for P in pb]
+    _, ex, agr, _ = additive_tables(L, pa, pb, iters=12)
+    best = (agr, ex, [P.copy() for P in pa], [P.copy() for P in pb])
+    if log: log(f"  refine: start, argmax agreement {agr:.4f}, share {ex:.4f}, blocks {[int(P.max() + 1) for P in pa]} x {[int(P.max() + 1) for P in pb]}")
+    for r in range(rounds):
+        changed = 0
+        for side in ("a", "b"):
+            for k in range(len(pa)):
+                T, _, _, _ = additive_tables(L, pa, pb, iters=8)
+                Ls = L if side == "a" else L.transpose(1, 0, 2)
+                P_own, P_oth = (pa, pb) if side == "a" else (pb, pa)
+                na_, nb_ = Ls.shape[:2]
+                Ka, Kb = int(pa[k].max() + 1), int(pb[k].max() + 1)
+                Tk = T[k].reshape(Ka, Kb, -1)
+                if side == "b":
+                    Tk = Tk.transpose(1, 0, 2)                       # own blocks first
+                other = np.zeros_like(Ls)
+                for j in range(len(pa)):
+                    if j == k: continue
+                    Kbj = int(pb[j].max() + 1)
+                    A, B = np.meshgrid(np.arange(L.shape[0]), np.arange(L.shape[1]), indexing="ij")
+                    cont = T[j][pa[j][A] * Kbj + pb[j][B]]
+                    other += cont if side == "a" else cont.transpose(1, 0, 2)
+                R = Ls - other
+                G = Tk[:, P_oth[k], :]                                # own block x partner x C
+                cost = -2 * np.einsum("abc,xbc->ax", R, G) + (G ** 2).sum((1, 2))[None, :]
+                new = cost.argmin(1)
+                changed += int((new != P_own[k]).sum())
+                P_own[k][:] = new
+                pa = [_reindex(P) for P in pa]; pb = [_reindex(P) for P in pb]
+        _, ex, agr, _ = additive_tables(L, pa, pb, iters=12)
+        if log: log(f"  refine: round {r + 1}, moved {changed}, argmax agreement {agr:.4f}, share {ex:.4f}, blocks {[int(P.max() + 1) for P in pa]} x {[int(P.max() + 1) for P in pb]}")
+        if (agr, ex) > best[:2]:
+            best = (agr, ex, [P.copy() for P in pa], [P.copy() for P in pb])
+        if changed == 0:
+            break
+    return best
