@@ -168,3 +168,8 @@ no supplied vocabulary)? The program should:
   - **Cause of the unnamed four.** The absorbing symbols (a = 0, 1; b = 0, p−1) are constant on only 97–99% of partners, so the exact-constant test missed them and they polluted the part tables. Fixed as D10, factor mode v2.
   - **D10 on these networks (dev, the count above stands):** p89 gives Z8 and Z11, and p107 gives Z2 and Z53, both exactly as the CRT predicts. p103 is still unnamed.
   - Reports: `results/decomp/prime_challenge_v1/`.
+- **Nov 22, 01:56 (clock), same entry: pre-registration, prime set v2 for factor mode v2 (D10).**
+  - **Networks:** a^b mod p for p = 61, 67, 71, 73, 79, 83, 151 and 157 (p − 1 = 4·3·5, 2·3·11, 2·5·7, 8·9, 2·3·13, 2·41, 2·3·25, 4·3·13). Seed 1, 50% of pairs, 20,000 epochs. They are trained after this entry, on CPU sessions.
+  - **Version:** factor mode v2 is frozen once its controls are confirmed: modadd, the memorizer and secret_add must still not split. Its commit is recorded then. If the controls fail, v2 is not adopted and this set runs with v1 (98081655).
+  - **Pass:** the same rule as the first prime challenge. The tool must say SPLITS (agreement ≥ 0.98); every part must be named "multiplication in Z_m"; and the m's must multiply to p − 1, each being a prime-power factor of p − 1 or a product of several.
+  - **Reported:** every network, with its accuracy. Networks that do not generalize (all-pairs accuracy < 0.99) are reported but do not count either way.
