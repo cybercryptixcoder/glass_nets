@@ -159,15 +159,25 @@ def factor_side(X, min_score=0.8, depth=0, max_depth=3, log=None, whiten=None):
 def additive_tables(L, pa, pb, iters=40):
     """L: logits (n_a x n_b x n_out), centred over classes. pa, pb: lists of partitions (same order, paired parts).
     Fit L ~ sum_i T_i[pair index of part i]. Returns tables, explained share, argmax agreement."""
+    from scipy.sparse import csr_matrix
     na, nb = L.shape[:2]
+    C = L.shape[2]
     A, B = np.meshgrid(np.arange(na), np.arange(nb), indexing="ij")
     idx = [P[A] * (Q.max() + 1) + Q[B] for P, Q in zip(pa, pb)]
-    sizes = [(P.max() + 1) * (Q.max() + 1) for P, Q in zip(pa, pb)]
-    T = [np.zeros((s, L.shape[2])) for s in sizes]
+    sizes = [int((P.max() + 1) * (Q.max() + 1)) for P, Q in zip(pa, pb)]
+    N = na * nb
+    Lf = L.reshape(N, C)
+    # group means as one sparse product per table (same result as averaging R over each entry's inputs)
+    Ms, cnt = [], []
+    for i in range(len(sizes)):
+        f = idx[i].ravel()
+        Ms.append(csr_matrix((np.ones(N), (f, np.arange(N))), shape=(sizes[i], N)))
+        c = np.bincount(f, minlength=sizes[i]).astype(float); cnt.append(np.where(c > 0, c, 1.0))
+    T = [np.zeros((s, C)) for s in sizes]
     for _ in range(iters):
         for i in range(len(T)):
-            R = L - sum(T[j][idx[j]] for j in range(len(T)) if j != i)
-            T[i] = np.array([R[idx[i] == u].mean(0) if (idx[i] == u).any() else np.zeros(L.shape[2]) for u in range(sizes[i])])
+            R = Lf - sum(T[j][idx[j].ravel()] for j in range(len(T)) if j != i) if len(T) > 1 else Lf
+            T[i] = (Ms[i] @ R) / cnt[i][:, None]
     Lh = sum(T[i][idx[i]] for i in range(len(T)))
     return T, float(1 - ((L - Lh) ** 2).sum() / (L ** 2).sum()), float((Lh.argmax(-1) == L.argmax(-1)).mean()), Lh
 

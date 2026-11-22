@@ -126,3 +126,7 @@ no supplied vocabulary)? The program should:
   - **seed 9:** S4 profile; law vs truth 1.000; M1 1.000; M2 0.986 against random 0.000.
   - Both networks hold the 24 symbols on a sphere in 3 dimensions, where they are the orbit of S4 acting by rotations, as on a cube.
   - **Disclosed:** the identity symbol and the handedness (left or right action) are chosen by M1 among 96 and 48 candidates. Everything else is read from the orbit's symmetries.
+- **Nov 22, 02:35 (clock): pre-registration, challenge set v3.** Challenge v2 is partly scored. Its failures so far are groups with several Z_2 factors: randab46 Z2×Z2×Z30, randab25 Z2×Z2×Z2×Z12, randab35 Z2×Z4×Z12. The suspected cause is the circle-plane leak (D4), present unfixed in the axis finder.
+  - v2 is still scored in full with v3.3, as pre-registered.
+  - **Challenge v3:** 12 new networks, one per group in the list, seeds 47, 48, 50, 51, 52, 55, 56, 57, 60, 68, 86, 116. They are trained after this entry and decompiled once, with the version frozen after the dev regression below, and scored on the same criteria.
+  - **v3.4 = v3.3 + the leak fix in the axis finder.** It is adopted only if it passes the dev regression: every network v3.3 passes, plus randab9. v2's own failures are not used to tune it. If it is not adopted, v3 runs with v3.3.
