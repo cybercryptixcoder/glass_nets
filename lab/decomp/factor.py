@@ -34,7 +34,7 @@ def _grid(PA, PB, n):
     return single / max(ka * kb, n)
 
 
-def split_candidates(Z, kmax_blocks=40, tols=(0.1, 0.15, 0.22, 0.3), seed=0, top=6, min_grid=0.6):
+def split_candidates(Z, kmax_blocks=60, tols=(0.1, 0.15, 0.22, 0.3), seed=0, top=6, min_grid=0.6):
     """Several two-part splits (different tolerances, subspace dimensions and block counts), best grid score first,
     one per pair of block counts. The arbiter between them is the logit test, not the grid."""
     n, k = Z.shape
@@ -54,7 +54,7 @@ def split_candidates(Z, kmax_blocks=40, tols=(0.1, 0.15, 0.22, 0.3), seed=0, top
     return sorted(cands.values(), key=lambda r: -r[0])[:top]
 
 
-def split_side(Z, kmax_blocks=40, tols=(0.1, 0.15, 0.22, 0.3), seed=0):
+def split_side(Z, kmax_blocks=60, tols=(0.1, 0.15, 0.22, 0.3), seed=0):
     """Z: symbols x k (centred). Returns (score, PA, PB, QA, QB) for the best two-part split over several
     tolerances for "the same difference vector", or None. A difference counts as repeated when it recurs at least
     3 times as often as a typical difference does at that tolerance."""
@@ -172,7 +172,7 @@ def additive_tables(L, pa, pb, iters=40):
     return T, float(1 - ((L - Lh) ** 2).sum() / (L ** 2).sum()), float((Lh.argmax(-1) == L.argmax(-1)).mean()), Lh
 
 
-def part_table(tab, ka, kb, kmax=40):
+def part_table(tab, ka, kb, kmax=60):
     """A part's composition table: pairs whose logit contributions are near-identical produce the same output value.
     Number of values chosen by silhouette on correlation distance. Returns (table ka x kb, values per class, K)."""
     C = np.corrcoef(tab); Dm = np.clip(1 - C, 0, None); iu = np.triu_indices(len(tab), 1)
@@ -304,7 +304,7 @@ def ring_fingerprint(T):
             "invertible_core": {"size": len(units_rows), **(core_info or {})}}
 
 
-def transfer_partition(L, pb, side="a", kmax=40):
+def transfer_partition(L, pb, side="a", kmax=60):
     """One side's parts are known (pb, partitions of the b symbols); find the other side's parts from the network's
     logits: fit L(a, b) ~ sum_i T_i[a, b_i] with a free, then symbols a whose rows T_i[a, :] agree share part i's
     block. (side='b' does the mirror image: pass L transposed.) Returns a list of partitions of the a symbols."""

@@ -105,3 +105,7 @@ no supplied vocabulary)? The program should:
     - one set of symbol coordinates for both inputs, since they share an embedding;
     - the result kept is the one under which the MLP depends most on g(a) + g(b) (diagonal share), which uses activations only.
   - **v3 is developed on the v1 failures,** so v1 cannot test it. **Challenge set v2:** 12 new networks, one for each group in the list: randab25, 38, 46, 35, 28, 30, 41, 33, 37, 27, 40, 26. They are trained after this entry and decompiled once with v3. The pass criteria are the same as v1.
+- **Nov 22, 00:05 (clock): pre-registration, factor-mode challenge over primes.** Networks to be trained on a^b mod p for p = 89, 103, 107, 127, 131, 137, 139 and 149, never seen before; p − 1 = 8·11, 2·3·17, 2·53, 2·9·7, 2·5·13, 8·17, 2·3·23 and 4·37.
+  - **Prediction.** Factor mode SPLITS (argmax ≥ 0.98) into parts whose tables are multiplication in Z_m. The m's multiply to p − 1, and each m is a prime-power factor of p − 1 or a product of several, since merged parts like Z_15 are allowed.
+  - **Pass** means all of that. Anything else is reported as a miss.
+  - The block-count ceiling was raised from 40 to 60 before training, because p = 107 needs a 53-block part.
