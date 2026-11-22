@@ -28,8 +28,10 @@ def run(model_id, log=print):
     net = I["logits"].argmax(-1).reshape(n, n)
     rep = {"model": model_id, "symbols": n, "additive_share": share}
     log(f"  MLP input additive: {share:.4f}")
-    absorbing_a = [int(a) for a in range(n) if len(set(net[a].tolist())) == 1]
-    absorbing_b = [int(b) for b in range(n) if len(set(net[:, b].tolist())) == 1]
+    # v2 (D10): constant up to the network's own errors (>= 95% of partners give the same answer)
+    def _const(v): return np.bincount(v).max() >= 0.95 * len(v)
+    absorbing_a = [int(a) for a in range(n) if _const(net[a])]
+    absorbing_b = [int(b) for b in range(n) if _const(net[:, b])]
     keep_a = np.array([a not in absorbing_a for a in range(n)]); keep_b = np.array([b not in absorbing_b for b in range(n)])
     rep["absorbing"] = {"a": absorbing_a, "b": absorbing_b}
     pa = factor.factor_side(F[keep_a], log=lambda s: log("  a: " + s))
@@ -80,9 +82,10 @@ def run(model_id, log=print):
     if os.environ.get("FACTOR_DUMP"):                      # development aid: the chosen split before refinement
         np.savez(os.environ["FACTOR_DUMP"], L=L, pa=np.array(pa), pb=np.array(pb), net=net, keep_a=keep_a, keep_b=keep_b)
     # v2 (D5): move boundary symbols to the block that best predicts their logits, given the other parts
-    agr0 = factor.additive_tables(L, pa, pb, iters=12)[2]
-    _, _, pa, pb = factor.refine_assignments(L, pa, pb, log=log)
-    rep["refine"] = {"agreement_before": agr0, "blocks_a": [int(P.max() + 1) for P in pa], "blocks_b": [int(P.max() + 1) for P in pb]}
+    if os.environ.get("FACTOR_REFINE"):                   # D5: experiment, off by default (not validated)
+        agr0 = factor.additive_tables(L, pa, pb, iters=12)[2]
+        _, _, pa, pb = factor.refine_assignments(L, pa, pb, log=log)
+        rep["refine"] = {"agreement_before": agr0, "blocks_a": [int(P.max() + 1) for P in pa], "blocks_b": [int(P.max() + 1) for P in pb]}
     T, ex, agr, Lh = factor.additive_tables(L, pa, pb)
     rep["split_test"] = {"logit_share_explained": ex, "argmax_agreement": agr, "table_entries": int(sum(len(t) for t in T)),
                          "inputs": int(keep_a.sum() * keep_b.sum())}

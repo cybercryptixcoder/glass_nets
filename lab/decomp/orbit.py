@@ -15,7 +15,7 @@ import itertools
 import numpy as np
 
 
-def find_sphere(X, kmax=8, cv_max=0.03):
+def find_sphere(X, kmax=16, cv_max=0.05):
     Xc = X - X.mean(0)
     U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
     for k in range(2, min(kmax, len(S)) + 1):
