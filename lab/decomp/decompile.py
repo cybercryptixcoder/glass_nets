@@ -74,48 +74,32 @@ def decompile(model_id, patches=2000, log=print):
     if share >= 0.9:
         cands["a"] += [("side F(a)", F, x) for x in stage1(F, log, "F(a) ")]
         cands["b"] += [("side G(b)", G, x) for x in stage1(G, log, "G(b) ")]
-    # consensus: the group found most often across representations and variants (a wrong relation gives a different,
-    # usually larger, group in one run; the real group recurs). Ties: higher mean fit.
+    # Selection (v3, Nov 21 23:30). The two inputs share one embedding, so a symbol is the same element on both sides:
+    # g_b = g_a. Among all finite results (every representation and variant), keep the one under which the MLP's
+    # output depends most on g(a) + g(b) (the diagonal share of its characters): a group missing a factor, or one made
+    # up by a false relation, explains less of what the MLP computes. Internal activations only; no outputs.
     from collections import Counter
     allres = cands["a"] + [c for c in cands["b"] if c[0] != "embedding"]
     if not allres:
         return nonabelian(W, n, E, F, G, share, net, rep, patches, log)
     cnt = Counter(tuple(c[2][4]["group"]) for c in allres)
-    fitm = {gsig: np.mean([c[2][0][1] for c in allres if tuple(c[2][4]["group"]) == gsig]) for gsig in cnt}
-    gsig = max(cnt, key=lambda k: (cnt[k], fitm[k]))
     rep["group_votes"] = {str(list(k)): v for k, v in cnt.items()}
-    log(f"  group votes: {rep['group_votes']} -> {list(gsig)}")
-    pick = {}
-    for side in ("a", "b"):
-        ok = [c for c in cands[side] if tuple(c[2][4]["group"]) == gsig]
-        if ok:
-            pick[side] = max(ok, key=lambda c: c[2][0])
-    if "a" not in pick or "b" not in pick:
-        rep.update({"verdict": "no consistent group on both sides", "group": None})
-        return rep, None
-    (src_a, Xa, (_, var_a, used_a, all_a, ra)) = pick["a"]
-    (src_b, Xb, (_, var_b, used_b, all_b, rb)) = pick["b"]
+    scored = []
+    for c in allres:
+        r_ = c[2][4]
+        pw_, _, _ = pg.mlp_characters(I["mlp"], r_["g"], r_["g"], r_["group"], r_["on"], r_["on"])
+        scored.append((pg.diagonal_share(pw_, r_["group"]), c))
+    scored.sort(key=lambda z: -z[0])
+    rep["candidates_by_diagonal_share"] = [{"representation": c[0], "variant": c[2][1], "group": c[2][4]["group"], "diagonal_share": round(float(sc_), 4)} for sc_, c in scored[:8]]
+    log("  candidates by diagonal share: " + "; ".join(f"{c[0]}/{c[2][1]} {c[2][4]['group']} {sc_:.3f}" for sc_, c in scored[:5]))
+    best_c = scored[0][1]
+    (src_a, Xa, (_, var_a, used_a, all_a, ra)) = best_c
+    src_b, var_b, rb = src_a, var_a, ra
+    cands["a"] = [c for c in cands["a"] if c[0] == src_a] or cands["a"]
     d = ra["group"]
-    ga, gb, on_a, on_b = ra["g"], rb["g"], ra["on"], rb["on"]
-    if src_a == src_b == "embedding":
-        gb, on_b = ga, on_a
-    # align b's coordinates to a's when both come from different representations: the law should be addition, so
-    # choose the automorphism of b's coordinates (unit multiplier per cyclic factor) that maximises the MLP's diagonal
+    ga, on_a = ra["g"], ra["on"]
+    gb, on_b = ga, on_a
     power, Mhat, els = pg.mlp_characters(I["mlp"], ga, gb, d, on_a, on_b)
-    if src_b != src_a or src_a != "embedding":
-        best = (pg.diagonal_share(power, d), gb)
-        dd = np.array(d)
-        if len(d) == 1:
-            N = d[0]
-            for k in range(1, N):
-                if np.gcd(k, N) != 1:
-                    continue
-                g2 = (gb * k) % dd
-                pw, Mh, _ = pg.mlp_characters(I["mlp"], ga, g2, d, on_a, on_b)
-                if pg.diagonal_share(pw, d) > best[0]:
-                    best = (pg.diagonal_share(pw, d), g2)
-        gb = best[1]
-        power, Mhat, els = pg.mlp_characters(I["mlp"], ga, gb, d, on_a, on_b)
     dec = pg.decode_outputs(W["W_U"], Mhat, power, d)
     f, src = make_program2(ga, gb, dec, d, on_a, on_b)
     m1 = pg.verify_replacement(f, net, n)
@@ -127,10 +111,13 @@ def decompile(model_id, patches=2000, log=print):
     QE = pg.coordinate_subspace(E, ga, d, on_a)
     tests["embedding"] = (pg.verify_causal_subspace(W, QE, "a", E, f, n, "embedding", patches),
                           pg.verify_causal_subspace(W, QE, "a", E, f, n, "embedding", patches, random=True), QE.shape[1])
-    if src_a != "embedding":
+    if share >= 0.9:                       # the same symbol coordinates hold on both sides (shared embedding)
         QF = pg.coordinate_subspace(F, ga, d, on_a)
         tests["side F(a)"] = (pg.verify_causal_subspace(W, QF, "a", F, f, n, "x1", patches),
                               pg.verify_causal_subspace(W, QF, "a", F, f, n, "x1", patches, random=True), QF.shape[1])
+        QG = pg.coordinate_subspace(G, gb, d, on_b)
+        tests["side G(b)"] = (pg.verify_causal_subspace(W, QG, "b", G, f, n, "x1", patches),
+                              pg.verify_causal_subspace(W, QG, "b", G, f, n, "x1", patches, random=True), QG.shape[1])
     rep["M2_all"] = {k: {"success": v[0]["success"], "random": v[1]["success"], "dims": v[2]} for k, v in tests.items()}
     if tests:
         kbest = max(tests, key=lambda k: tests[k][0]["success"])
