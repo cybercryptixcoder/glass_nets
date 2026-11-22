@@ -74,7 +74,7 @@ def decompile(model_id, patches=2000, log=print):
     if share >= 0.9:
         cands["a"] += [("side F(a)", F, x) for x in stage1(F, log, "F(a) ")]
         cands["b"] += [("side G(b)", G, x) for x in stage1(G, log, "G(b) ")]
-    # Selection (v3, Nov 21 23:30; v3.1 23:55). The two inputs share one embedding, so a symbol is the same element on
+    # Selection (v3, Nov 21 23:30; v3.1 23:55; v3.2 00:25: times the share of the group's elements that hold a symbol). The two inputs share one embedding, so a symbol is the same element on
     # both sides: g_b = g_a. Among all finite results (every representation and variant), keep the one whose group sum
     # g(a) + g(b) explains the most of the MLP's output over all input pairs (times the share of symbols placed): a
     # group missing a factor merges different sums, and one made up by a false relation splits equal ones, so both
@@ -88,7 +88,8 @@ def decompile(model_id, patches=2000, log=print):
     scored = []
     for c in allres:
         r_ = c[2][4]
-        scored.append((pg.sum_label_r2(I["mlp"], r_["g"], r_["group"], r_["on"]), c))
+        cover = min(1.0, r_["distinct"] / max(1, int(np.prod(r_["group"]))))      # a group larger than the symbols it holds is suspect
+        scored.append((pg.sum_label_r2(I["mlp"], r_["g"], r_["group"], r_["on"]) * cover, c))
     scored.sort(key=lambda z: -z[0])
     rep["candidates_by_sum_label_r2"] = [{"representation": c[0], "variant": c[2][1], "group": c[2][4]["group"], "sum_label_r2": round(float(sc_), 4)} for sc_, c in scored[:8]]
     log("  candidates by group-sum R2: " + "; ".join(f"{c[0]}/{c[2][1]} {c[2][4]['group']} {sc_:.3f}" for sc_, c in scored[:5]))
