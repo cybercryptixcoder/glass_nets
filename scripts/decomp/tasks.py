@@ -20,6 +20,49 @@ def _perm(n, seed):
     return np.random.default_rng(seed).permutation(n)
 
 
+def _closure(gens):
+    idp = tuple(range(len(gens[0]))); H = {idp}; fr = [idp]
+    while fr:
+        nx = []
+        for h in fr:
+            for g in gens:
+                c = tuple(g[i] for i in h)
+                if c not in H:
+                    H.add(c); nx.append(c)
+        fr = nx
+    els = sorted(H); idx = {e: i for i, e in enumerate(els)}
+    return np.array([[idx[tuple(a[i] for i in b)] for b in els] for a in els])
+
+
+def _cyc(*cs, n):
+    p = list(range(n))
+    for c in cs:
+        for i, x in enumerate(c):
+            p[x] = c[(i + 1) % len(c)]
+    return tuple(p)
+
+
+def _named_group(name):
+    """Non-abelian groups for the blind challenge (Nov 22): permutation groups from generators."""
+    if name.startswith("D"):                     # dihedral group of the m-gon, order 2m
+        m = int(name[1:]); return _closure([tuple((i + 1) % m for i in range(m)), tuple((-i) % m for i in range(m))]), f"D{m} (dihedral, order {2 * m})"
+    if name == "F20":
+        return _closure([tuple((i + 1) % 5 for i in range(5)), tuple((2 * i) % 5 for i in range(5))]), "Z5 x| Z4 (Frobenius, order 20)"
+    if name == "F21":
+        return _closure([tuple((i + 1) % 7 for i in range(7)), tuple((2 * i) % 7 for i in range(7))]), "Z7 x| Z3 (Frobenius, order 21)"
+    if name == "SL23":                           # SL(2,3) acting on the 8 nonzero vectors of F3^2
+        vecs = [(x, y) for x in range(3) for y in range(3) if (x, y) != (0, 0)]; vi = {v: i for i, v in enumerate(vecs)}
+        def act(M): return tuple(vi[((M[0] * x + M[1] * y) % 3, (M[2] * x + M[3] * y) % 3)] for x, y in vecs)
+        return _closure([act((1, 1, 0, 1)), act((0, 2, 1, 0))]), "SL(2,3) (order 24)"
+    if name == "A4Z3":
+        return _closure([_cyc((0, 1, 2), n=7), _cyc((0, 1), (2, 3), n=7), _cyc((4, 5, 6), n=7)]), "A4 x Z3 (order 36)"
+    if name == "S3S3":
+        return _closure([_cyc((0, 1, 2), n=6), _cyc((0, 1), n=6), _cyc((3, 4, 5), n=6), _cyc((3, 4), n=6)]), "S3 x S3 (order 36)"
+    if name == "A5":
+        return _closure([_cyc((0, 1, 2, 3, 4), n=5), _cyc((0, 1, 2), n=5)]), "A5 (order 60)"
+    raise ValueError(name)
+
+
 def _s4():
     els = list(itertools.permutations(range(4)))
     idx = {e: i for i, e in enumerate(els)}
@@ -64,6 +107,11 @@ def table(task, p=113, secret_seed=12345):
         pi = _perm(n, secret_seed); inv = np.argsort(pi)
         T = pi[G[inv[:, None], inv[None, :]]]
         return T, n, n, {"rule": "S4 composition under a secret labelling", "secret_pi": pi.tolist()}
+    if task.startswith("secretg_"):             # secretg_<name>: a non-abelian group (built from generators) under a secret labelling
+        G, gname = _named_group(task[8:]); n = len(G)
+        pi = _perm(n, secret_seed + sum(map(ord, task))); inv = np.argsort(pi)
+        T = pi[G[inv[:, None], inv[None, :]]]
+        return T, n, n, {"rule": f"{gname} composition under a secret labelling", "secret_pi": pi.tolist(), "group_name": gname}
     if task.startswith("randab"):              # randab<seed>: a random finite abelian group under a random labelling
         rng = np.random.default_rng(int(task[6:]) + 777)
         specs = [[2, 2, 30], [3, 36], [4, 28], [2, 6, 6], [2, 2, 2, 12], [5, 20], [2, 50], [3, 3, 12], [6, 18], [2, 4, 12], [7, 14], [2, 2, 26]]

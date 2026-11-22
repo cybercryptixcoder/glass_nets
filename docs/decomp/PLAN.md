@@ -131,3 +131,8 @@ no supplied vocabulary)? The program should:
   - **Challenge v3:** 12 new networks, one per group in the list, seeds 47, 48, 50, 51, 52, 55, 56, 57, 60, 68, 86, 116. They are trained after this entry and decompiled once, with the version frozen after the dev regression below, and scored on the same criteria.
   - **v3.4 = v3.3 + the leak fix in the axis finder.** It is adopted only if it passes the dev regression: every network v3.3 passes, plus randab9. v2's own failures are not used to tune it. If it is not adopted, v3 runs with v3.3.
 - **Nov 22, 02:55 (clock): v3.4 not adopted.** The axis-finder leak fix (D6) does not fix dev case randab9: it finds Z2×Z2×Z2×Z30 instead of Z2×Z6×Z6. By the 02:35 rule, **challenge v3 runs with v3.3**, the same commit as v2. v2 and v3 together are then 24 fresh pre-registered networks, all run on one frozen version.
+- **Nov 22, 03:25 (clock): pre-registration, blind non-abelian challenge.** Eight non-abelian groups that the decompiler has never seen, each under a secret relabelling (`tasks.py`, `secretg_<name>`): D10 (order 20), Z5⋊Z4 (20), Z7⋊Z3 (21), SL(2,3) (24), D12 (24), A4×Z3 (36), S3×S3 (36), A5 (60).
+  - **Training:** two seeds each, 75% of pairs, 80,000 epochs, the same recipe as the S4 seeds that generalized.
+  - **Decompilation:** every network that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with `decompile_any` as it stands at this commit. Orbit mode is unchanged since S4.
+  - **Pass:** the recovered table equals the secret table on ≥ 95% of pairs (law vs truth), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
+  - **Reported:** how many generalized, and how many of those pass. Naming is not required, since only S4, A4 and A5 are in the name list.
