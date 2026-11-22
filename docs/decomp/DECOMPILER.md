@@ -39,6 +39,16 @@ python3 lab/server.py                               # then open http://localhost
    - The group found most often across runs wins (a false relation gives a different group in one run).
    - Symbols that sit at the centre of most planes are flagged as absorbing elements, such as 0 under multiplication.
 
+### Stage 1b: orbit mode, for non-abelian groups and as a fallback (`orbit.py`)
+
+If the network embeds group element g as ρ(g)u, for an orthogonal representation ρ of any group, then after whitening the symbols lie on a sphere and the group acts on that point set by rotations. Orbit mode works in four steps:
+1. Find the smallest whitened rank at which the symbols sit on a sphere.
+2. Find every orthogonal map that permutes the points.
+3. Find the subgroups that act regularly, one element per symbol, by closure from two generators. Since v3.5 it also builds them greedily from any number of generators, with and without requiring the generators to commute.
+4. Read the Cayley table off each such subgroup.
+
+Which symbol is the identity, and left versus right action, are not fixed by the orbit. They are chosen by M1 among the candidates, and the report says among how many. If the table is abelian, it is named by its invariant factors. Orbit mode runs when the abelian stage finds no group, or finds one whose program fails its checks.
+
 ### Stage 2: the law and the program
 
 1. **Is it a group law?** The MLP's output is written as characters of G × G in the recovered coordinates. Its "diagonal share" says how far it depends on g(a) + g(b) alone.
@@ -68,7 +78,7 @@ M2 is v2 (see the `PLAN.md` change log). The final column is the answer-key chec
 | a²+b² mod 113 (s1) | G = Z_113; name **k·t² ("the input is squared")**, a 2-to-1 symbol map | 0.991 | 0.990 (0.010) | 0.991 |
 | memorizer (random labels) | **no structure**, correctly | — | — | — |
 
-*The regression run on M2 v2 for every network is in progress; this table will be refreshed from `results/decomp/` when it finishes. The values above are from the runs logged in DIARY.*
+*These are development networks. The pre-registered, held-out tests (challenge sets v1 and v2, held-out S4, the blind non-abelian set) are on one page in `RESULTS.md`. The headline there: 8 of 12 fresh secret abelian groups and 2 of 2 held-out S4 networks recovered exactly.*
 
 ## The discovery: a^b mod p
 
@@ -84,7 +94,7 @@ Causal swaps of single parts move the answer exactly as predicted:
 
 ## Limits, plainly
 
-- **Abelian group laws only.** The program form is c = CLASS_OF[g(a) + g(b)]. A non-group composition, such as a^b, is reported as such, not decompiled. Turning the a^b analysis into an automatic program is the next step.
-- **Non-abelian groups are not handled yet.** On S4, a prototype finds a 3-D sphere orbit in the embedding (radius uniformity 0.001), but reading the group off it is not robust yet.
+- **Groups with several Z2 factors are the weak spot.** Their order-2 characters are 1-D axes. When two characters multiply to an order-2 character, a whole family of mixed planes is radius-uniform, and the plane finder can land inside it. Orbit mode (v3.5, D9) rescues some of these cases.
+- **Non-abelian groups go through orbit mode.** The symbols must lie on a sphere, as an orbit of an orthogonal action. The identity symbol and left versus right action are chosen by agreement with the network among the candidates; every report says how many candidates there were.
 - **One architecture.** Everything here is the repo's one-layer transformer. The method uses only the embedding, the MLP's input, the MLP's output and the unembedding, so a deeper network needs these read at the right layer.
 - **Naming covers a few forms only.** The closed-form check tries k·t, k·t² and k·log(t + s). It is a convenience; the program does not depend on it.
