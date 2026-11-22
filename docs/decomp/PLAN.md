@@ -148,3 +148,10 @@ no supplied vocabulary)? The program should:
   - Three of the four failures are 2-groups of rank ≥ 3 (several order-2 characters, which are 1-D axes). The fourth misses a Z3 factor.
   - Logs: `results/decomp/logs/ch2_*.log`; reports `results/decomp/dc_randab{25,...}.json`; scores `*_score.json`.
 - **Nov 22, 00:56 (clock): correction.** The entries above from 00:32 on were first written with hand-typed times between 01:40 and 03:35. That was wrong: the clock read 00:56 when this was noticed. They now carry their commit times from `git log`. The order of pre-registration and runs is unchanged, and it is recorded by the commits.
+- **Nov 22, 01:53 (clock): v3.5 = v3.3 + D9 (orbit mode for any rank), frozen at commit 1a0eaef5, and its pre-registered use.**
+  - **Dev results** (v2 failures, whose count stays 8/12):
+    - randab46 (Z2×Z2×Z30) now passes: law vs truth 1.000, M1 1.000, M2 1.000.
+    - randab25 (Z2×Z2×Z2×Z12) now gets the exact table and group (M1 1.000), but M2 is 0.631 against 0.000. That is a FAIL by the criteria: the 8-D sphere subspace does not carry all of what the network uses.
+    - randab35, randab40 and dev randab9 still fail. Two have no sphere orbit; one is not faithful in the embedding.
+    - Regression: S4 s2, s7 and s9 pass as before. Abelian passes are unaffected, because orbit mode runs only after group mode fails.
+  - **Pre-registered use.** Challenge v3 (00:45) and the blind non-abelian challenge (00:53) are each **also** decompiled once with v3.5. Both sets are still training and have not been seen. Results are reported for both versions: v3.3 for v3, the 00:53 commit for non-abelian, and v3.5 for both. Same criteria as before.
