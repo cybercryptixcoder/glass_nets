@@ -308,3 +308,23 @@ def coordinate_subspace(X, g, d, on, frac=0.95, max_dims=24):
     cum = np.cumsum(S ** 2) / (S ** 2).sum()
     k = int(min(np.searchsorted(cum, frac) + 1, max_dims))
     return Vt[:k].T
+
+
+def sum_label_r2(mlp, g, d, on):
+    """Share of the MLP output's variance (over all input pairs with placed symbols) explained by the single label
+    g(a) + g(b): 1.0 means the MLP output is a function of the group sum alone. Unlike the diagonal share this is not
+    computed on class averages, so a quotient group (a missing factor) that merges different sums explains less."""
+    n = int(np.sqrt(len(mlp)))
+    M = mlp.reshape(n, n, -1)
+    idx = element_index(g, d)
+    A, B = np.meshgrid(np.where(on)[0], np.where(on)[0], indexing="ij"); A, B = A.ravel(), B.ravel()
+    dd = np.array(d)
+    lab = element_index((g[A] + g[B]) % dd, d)
+    X = M[A, B]; mu = X.mean(0)
+    tot = ((X - mu) ** 2).sum()
+    S = np.zeros((int(np.prod(d)), X.shape[1])); C = np.zeros(int(np.prod(d)))
+    np.add.at(S, lab, X); np.add.at(C, lab, 1)
+    means = S / np.maximum(C, 1)[:, None]
+    res = ((X - means[lab]) ** 2).sum()
+    frac_on = on.mean() ** 2
+    return float((1 - res / tot) * frac_on)

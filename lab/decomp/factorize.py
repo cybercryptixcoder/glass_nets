@@ -83,6 +83,12 @@ def run(model_id, log=print):
     log(f"  logits = sum of {len(T)} part tables: {ex:.4f} of the variance, same answer on {agr:.4f} of inputs ({rep['split_test']['table_entries']} pair entries for {rep['split_test']['inputs']} inputs)")
     parts = []
     for i, (Tt, K) in enumerate(factor.part_tables_from_outputs(net[np.ix_(keep_a, keep_b)], pa, pb)):
+        # blocks the network treats identically (identical rows / columns of the part's table) are one block
+        na0, nb0 = Tt.shape
+        pa[i], Tt = factor.merge_equivalent_blocks(Tt, pa[i], axis=0)
+        pb[i], Tt = factor.merge_equivalent_blocks(Tt, pb[i], axis=1)
+        if Tt.shape != (na0, nb0):
+            log(f"  part {i}: merged blocks the network treats identically: {na0}x{nb0} -> {Tt.shape[0]}x{Tt.shape[1]}")
         fp = factor.ring_fingerprint(Tt)
         parts.append({"a_blocks": int(pa[i].max() + 1), "b_blocks": int(pb[i].max() + 1), "values": int(K), "table": Tt.tolist(), "fingerprint": fp})
         log(f"  part {i}: {pa[i].max() + 1} x {pb[i].max() + 1} -> {K} values; matches {fp['matches']}; invertible core: {fp['invertible_core'].get('size')} elements, {fp['invertible_core'].get('group')}")

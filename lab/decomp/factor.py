@@ -335,3 +335,16 @@ def transfer_partition(L, pb, side="a", kmax=40):
                     best = (sc, [P1, P2])
         return best[1]
     return [fcluster(Lk, max(2, int(round(na ** (1 / len(links))))), "maxclust") - 1 for Lk in links]
+
+
+def merge_equivalent_blocks(T, P, axis=0):
+    """Blocks whose rows (axis=0) or columns (axis=1) of a part's composition table are identical are treated
+    identically by the network: merge them. Returns the new partition and table."""
+    T = np.asarray(T); M = T if axis == 0 else T.T
+    keys = {}
+    new_of_old = np.zeros(M.shape[0], int)
+    for u in range(M.shape[0]):
+        new_of_old[u] = keys.setdefault(tuple(M[u].tolist()), len(keys))
+    rows = [next(u for u in range(M.shape[0]) if new_of_old[u] == g) for g in range(len(keys))]
+    M2 = M[rows]
+    return new_of_old[P], (M2 if axis == 0 else M2.T)

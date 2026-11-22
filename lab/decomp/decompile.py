@@ -74,10 +74,11 @@ def decompile(model_id, patches=2000, log=print):
     if share >= 0.9:
         cands["a"] += [("side F(a)", F, x) for x in stage1(F, log, "F(a) ")]
         cands["b"] += [("side G(b)", G, x) for x in stage1(G, log, "G(b) ")]
-    # Selection (v3, Nov 21 23:30). The two inputs share one embedding, so a symbol is the same element on both sides:
-    # g_b = g_a. Among all finite results (every representation and variant), keep the one under which the MLP's
-    # output depends most on g(a) + g(b) (the diagonal share of its characters): a group missing a factor, or one made
-    # up by a false relation, explains less of what the MLP computes. Internal activations only; no outputs.
+    # Selection (v3, Nov 21 23:30; v3.1 23:55). The two inputs share one embedding, so a symbol is the same element on
+    # both sides: g_b = g_a. Among all finite results (every representation and variant), keep the one whose group sum
+    # g(a) + g(b) explains the most of the MLP's output over all input pairs (times the share of symbols placed): a
+    # group missing a factor merges different sums, and one made up by a false relation splits equal ones, so both
+    # explain less. Internal activations only; no outputs.
     from collections import Counter
     allres = cands["a"] + [c for c in cands["b"] if c[0] != "embedding"]
     if not allres:
@@ -87,11 +88,10 @@ def decompile(model_id, patches=2000, log=print):
     scored = []
     for c in allres:
         r_ = c[2][4]
-        pw_, _, _ = pg.mlp_characters(I["mlp"], r_["g"], r_["g"], r_["group"], r_["on"], r_["on"])
-        scored.append((pg.diagonal_share(pw_, r_["group"]), c))
+        scored.append((pg.sum_label_r2(I["mlp"], r_["g"], r_["group"], r_["on"]), c))
     scored.sort(key=lambda z: -z[0])
-    rep["candidates_by_diagonal_share"] = [{"representation": c[0], "variant": c[2][1], "group": c[2][4]["group"], "diagonal_share": round(float(sc_), 4)} for sc_, c in scored[:8]]
-    log("  candidates by diagonal share: " + "; ".join(f"{c[0]}/{c[2][1]} {c[2][4]['group']} {sc_:.3f}" for sc_, c in scored[:5]))
+    rep["candidates_by_sum_label_r2"] = [{"representation": c[0], "variant": c[2][1], "group": c[2][4]["group"], "sum_label_r2": round(float(sc_), 4)} for sc_, c in scored[:8]]
+    log("  candidates by group-sum R2: " + "; ".join(f"{c[0]}/{c[2][1]} {c[2][4]['group']} {sc_:.3f}" for sc_, c in scored[:5]))
     best_c = scored[0][1]
     (src_a, Xa, (_, var_a, used_a, all_a, ra)) = best_c
     src_b, var_b, rb = src_a, var_a, ra
