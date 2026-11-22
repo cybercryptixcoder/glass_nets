@@ -102,10 +102,15 @@ def _decomp(tid):
         out["report"] = r
         p = DECOMP / f"{tid}.py"
         out["program"] = p.read_text() if p.exists() else ""
-    for key, suffix in (("score", "_score.json"), ("pow", "_pow.json")):
+    for key, suffix in (("score", "_score.json"), ("pow", "_pow.json"), ("factor", "_factor.json")):
         g = DECOMP / f"{tid}{suffix}"
         if g.exists():
-            out[key] = json.loads(g.read_text())
+            d = json.loads(g.read_text())
+            for big in ("partition_a", "partition_b", "kept_a", "kept_b"):
+                d.pop(big, None)
+            for part in d.get("parts", []) if isinstance(d.get("parts"), list) else []:
+                part.pop("table", None)
+            out[key] = d
     return out or None
 
 
@@ -160,7 +165,7 @@ def entries():
     have = {c["target"] for c in cards}
     def _stem(name):
         b = name[:-len(".json")]
-        for suf in ("_score", "_pow"):
+        for suf in ("_score", "_pow", "_factor"):
             if b.endswith(suf):
                 return b[:-len(suf)]
         return b
@@ -169,7 +174,7 @@ def entries():
         if tid in have or not (LAB / "models" / tid / "meta.json").exists():
             continue
         m = _meta(tid); dc = _decomp(tid)
-        passed = bool(dc and dc.get("report", {}).get("verdict", "").startswith("PASS"))
+        passed = bool(dc and (dc.get("report", {}).get("verdict", "").startswith("PASS") or dc.get("factor", {}).get("verdict", "").startswith("SPLITS")))
         cards.append({"target": tid, "run": None, "name": m.get("name", tid), "family": m.get("family", ""),
                       "params": m.get("params"), "task": m.get("answer", {}).get("short", ""), "forward": m["forward"],
                       "playable": False, "runs": 0, "status": "decompiled" if passed else "analysed", "stages": "–", "behaviour": None,

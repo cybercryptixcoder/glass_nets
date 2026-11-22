@@ -793,6 +793,7 @@ function show(i) {
   if (cur.run) h += consCard(a ? "s7" : "s12");
   if (cur.unit_map) h += partsCard(cur.unit_map);
   if (cur.decomp?.report) h += decompCard(cur.decomp);
+  if (cur.decomp?.factor) h += factorCard(cur.decomp.factor);
   if (cur.decomp?.pow) h += powCard(cur.decomp.pow);
   if (!a && !cur.run && !cur.unit_map && !cur.decomp) h += `<div class="card s5"><div class="t-empty"><span class="ei">${ic("box")}</span><b>Nothing built yet</b>No atlas or construction exists for this network.</div></div>`;
   h += `</div></div>`;
@@ -820,6 +821,7 @@ function show(i) {
   if (cur.decomp?.report && $("#progBtn")) $("#progBtn").onclick = () => openSheet({kicker: ic("file-code") + esc(cur.name), title: "The decompiled program (Python)", wide: true,
     html: `<p class="hint">Every table in this program was read from the network's weights; the network's outputs were used only to check it.</p><pre>${esc(cur.decomp.program || "(no program)")}</pre>`});
   if (cur.decomp?.report && $("#decRepBtn")) $("#decRepBtn").onclick = () => openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "The decompiler's report", wide: true, html: `<pre>${esc(JSON.stringify(cur.decomp.report, null, 1))}</pre>`});
+  if (cur.decomp?.factor && $("#facRepBtn")) $("#facRepBtn").onclick = () => { const f = Object.assign({}, cur.decomp.factor); delete f.partition_a; delete f.partition_b; delete f.kept_a; delete f.kept_b; openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "Factor mode report (lab/decomp/factorize.py)", wide: true, html: `<pre>${esc(JSON.stringify(f, null, 1))}</pre>`}); };
   if (cur.decomp?.pow && $("#powRepBtn")) $("#powRepBtn").onclick = () => openSheet({kicker: ic("scroll-text") + esc(cur.name), title: "Mechanism tests (scripts/decomp/pow_mechanism.py)", wide: true, html: `<pre>${esc(JSON.stringify(cur.decomp.pow, null, 1))}</pre>`});
   fitMore($("#detail"));
   $(".content").scrollTop = 0;
@@ -829,7 +831,7 @@ function show(i) {
 function decompCard(dc) {
   const r = dc.report, sc = dc.score;
   const row = (l, v, c, b) => `<div class="prog-row"><div class="prog-h"><span class="l">${l}</span><span class="p" ${b ? 'style="color:var(--accent-hi)"' : ""}>${pct(v)}</span></div><div class="track"><i style="width:${v == null ? 0 : (100 * v).toFixed(1)}%;--c:${c}"></i></div></div>`;
-  if (!r.group) return `<div class="card s5">${cardHead("binary", "c", "Decompiler", "Weights in, program out (blind)")}<div class="card-b"><p>${esc(r.verdict)}</p><p class="hint">For a network with no algorithm (the memorizer) this is the right answer.</p></div><div class="card-f"><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
+  if (!r.group) return `<div class="card s5">${cardHead("binary", "c", "Decompiler", "Weights in, program out (blind)")}<div class="card-b"><p>${esc(r.verdict)}</p><p class="hint">The inputs carry no group law. That is the right answer for a memorizer, and for a task that is not a group law (like a^b, where the split card below shows what the network does instead).</p></div><div class="card-f"><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
   const pass = r.verdict.startsWith("PASS");
   const G = "Z" + r.group.map(x => `<sub>${x}</sub>`).join(" × Z");
   const nm = r.a_side?.name, nmb = r.b_side?.name;
@@ -844,6 +846,16 @@ function decompCard(dc) {
         ${sc ? row("Checked afterwards against the hidden answer key", sc.law_vs_truth, "var(--violet)") : ""}</div>
     </div>
     <div class="card-f"><button class="btn sm" id="progBtn">${ic("file-code")}Read the program</button><button class="link-btn" id="decRepBtn">The report</button></div></div>`;
+}
+function factorCard(fc) {
+  const ok = (fc.verdict || "").startsWith("SPLITS"), st = fc.split_test || {};
+  const row = (l, v, c) => `<div class="prog-row"><div class="prog-h"><span class="l">${l}</span><span class="p">${pct(v)}</span></div><div class="track"><i style="width:${v == null ? 0 : (100 * v).toFixed(1)}%;--c:${c}"></i></div></div>`;
+  const parts = (fc.parts || []).map((p, i) => `<li><b>Part ${i + 1}</b>: ${p.a_blocks} × ${p.b_blocks} blocks → ${p.values} values${p.fingerprint?.matches?.length ? `: <b>${esc(p.fingerprint.matches.join(", "))}</b>` : ""}${p.fingerprint?.invertible_core?.group ? `; invertible core: ${esc(p.fingerprint.invertible_core.group)}` : ""}</li>`).join("");
+  return `<div class="card s7">${cardHead("git-branch", "v", "Hidden split into independent sub-computations", "Found blind from the network's activations: no task, no number theory supplied",
+      `<span class="badge ${ok ? "ok" : ""}">${ok ? "splits" : "no clean split"}</span>`)}
+    <div class="card-b"><p>${esc(fc.verdict || "")}</p>${parts ? `<ul class="findings">${parts}</ul>` : ""}
+      ${st.argmax_agreement != null ? `<div class="prog">${row(`The sum of the part tables gives the network's answer (all ${st.inputs} inputs; ${st.table_entries} table entries)`, st.argmax_agreement, "var(--accent)")}${row("Share of the network's logits the part tables explain", st.logit_share_explained, "var(--cyan)")}</div>` : ""}
+    </div><div class="card-f"><button class="link-btn" id="facRepBtn">The report</button></div></div>`;
 }
 function powCard(pw) {
   const t4 = Object.entries(pw.T4_crt_swaps || {}), t5 = Object.entries(pw.T5_unit_factor_swaps || {});
