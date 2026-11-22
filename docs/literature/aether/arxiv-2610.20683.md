@@ -1,0 +1,59 @@
+# Causal Syntax Circuits in CodeLMs: Budget and Probe Decide What Looks Localised
+
+- **Key:** arxiv-2610.20683
+- **Authors / organisation:** Harsh Kumar (Columbia University); Tanmay Shailesh Joshi (BITS Pilani, K. K. Birla Goa Campus); Rahul Maity (Independent researcher); Anusa Saha (National Institute of Technology Agartala). All four marked equal contribution.
+- **Date:** 2026-10-14
+- **Link:** https://arxiv.org/abs/2610.20683
+- **Kind:** paper — workshop paper, NeurIPS 2026 Workshop on Linguistic Principles for Foundation Models (LP4FM)
+- **Read from:** full text (arXiv HTML v1: abstract, §1–§7, references, Appendices A–J)
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+Open code models answer an under-specified programming task in Python, and keep doing so even in a repository context that suggests another language. The authors name this tendency and ask a mechanistic rather than a normative question about it: is the habit carried by a small group of internal components, of the kind an inference-time edit could redirect — the way a refusal direction or a language-identity neuron set has been reported to be redirectable? A yes would make cheap, weight-free language control available to teams whose codebases are not Python; a no would tell practitioners to spend their effort on prompting and fine-tuning instead. The paper is explicitly a second pass: an earlier version of the same study answered no across fifteen model-language settings after observing that patching and steering never changed the generated language. Here the authors revisit their own conclusion by varying three things they had treated as implementation detail, and the framing is as much a study of interpretability methodology as of code models.
+
+## What they studied
+
+Ten open code models across five families and a roughly tenfold size range — CodeLlama-7B, DeepSeek-Coder-1.3B and 6.7B, Qwen2.5-Coder-7B and 14B — each in base and instruction-tuned form, against three target languages (Rust, C#, PHP) with Python as the base language. The unit of analysis is a component addressed uniformly as a kind, layer and head triple: an attention head or an MLP block. Two prompt suites were built or borrowed: 64 structurally aligned function pairs from four templates, each ending in a language tag so that the decision point is known, and 128 naturally occurring parallel function pairs from XLCoST. Formal syntax tasks come from CodeXGLUE. The full grid is fifty-five model-language-probe settings, and the authors release the prompts, pipeline and per-run result files.
+
+## How they did it
+
+A continuous preference signal replaces the discrete generated language, because a discrete label gives an intervention nothing to move. For a given target language they fix a small set of tokens that open target-language syntax and a set that opens Python syntax, drop ids appearing in both, and read the summed target probability minus the summed base probability at the scored position; the separation between a target prompt and its base twin is the headline quantity. Then five operators act on that signal. Necessity: mean-ablate each component on the target prompt, rank by the drop, keep the top k. Sufficiency: transplant the target run's activations of a candidate set into the Python run and ask whether the sign crosses zero. Minimality: rank candidates by their individual patched shift and add them greedily until they reach ninety per cent of the full-set effect, which yields the extracted circuit. Specificity: compare the circuit's per-pair shifts against thirty size-matched random component sets with a Welch test, then control the false-discovery rate with Benjamini-Hochberg within each probe grid, requiring a corrected value below 0.05 — this is the gate every localisation claim must pass. Steering: form the mean target-minus-base direction per circuit component, add it scaled by a coefficient swept over zero, one, two, four and eight, and record the metric, whether the most likely next token is target syntax, and what happens to control prompts. Checks are kept separate from the pairs so that behavioural probing does not contaminate the causal estimates.
+
+## What counts as an explanation here
+
+A circuit in the raw component sense — a small list of attention heads and MLP blocks whose patched shift beats size-matched random sets — plus a single difference-in-means direction per component, offered as the steering handle. It is deliberately partial, and the paper's stated form of understanding is a *curve* rather than a component list: a localisation claim is the count of settings that survive the gate as the search budget and the probe vary. The authors also take care to say what the circuit is not: with a small set of neurons reported to toggle a multilingual model's output language, they find nothing comparably compact for code, because identity there rides on many correlated surface cues rather than a bottleneck.
+
+## How they judged success
+
+Five criteria, each applied uniformly across the grid: does the sign of the preference metric recover the tagged language; does the extracted circuit beat thirty size-matched random component sets under a Benjamini-Hochberg-corrected Welch test; does patching the circuit move the metric across zero; does steering make the target-syntax token the most likely next token; and do downstream generations show the effect while control prompts stay clean. Two negative controls discipline the last of these — an English-to-French translation prompt and a Python completion that a syntax-specific intervention should leave alone — and a separate leave-one-out stress test asks whether any single component is load-bearing. Two CodeXGLUE tasks are cast as zero-shot yes/no decisions with chance at one half, as a probe for whether the steering direction encodes task competence rather than surface syntax. Statistics are reported per rung of the grid, and a table prints every claim under four probes at once.
+
+## What they found
+
+The preference itself is robust and gets stronger with scale and with instruction tuning: the metric's sign recovers the intended language in all forty-five aligned settings, separation rises from 1.49 to 1.57 in the DeepSeek family and from 1.66 to 1.79 in the Qwen family across the two sizes, and every instruction-tuned checkpoint has the larger separation than its base sibling, by about twelve per cent on average and by thirty per cent in the largest case. On ten untagged instruction prompts the Python lean survives in twelve of fifteen settings, with the exceptions all PHP, but at one to two orders of magnitude smaller size.
+
+The measured magnitude, however, belongs to the probe. Rerunning the identical pipeline on XLCoST parallel functions collapses separation from about 1.6 to under 0.012 in all ten settings tested, because neither the target nor the base token vocabulary holds appreciable probability mass where naturally occurring aligned code happens to end — the model is not about to commit to a language there at all. No XLCoST setting yields a specific circuit and no intervention moves anything.
+
+Whether the behaviour looks localised depends on the search budget. At a budget of twelve, one of fifteen aligned settings yields a circuit that clears the gate; at forty, six do, including shifts of +0.61 and +1.25 against random-control means below 0.03. On the instruction-tuned grid at twelve, two clear it. Only one setting is specific at both budgets, the surviving settings share no depth or component pattern across models, and the circuits are mostly MLP-mediated — attention heads appear in the ablation rankings but rarely survive extraction.
+
+The interventions are not uniformly inert. Patching moves the metric across zero in two of forty-five settings, both Qwen2.5-Coder-7B, and both circuits are also specific, so the two instruments agree. Steering makes the target token the argmax in nine of forty-five settings — none at the low budget on base models, which is what the earlier version reported — but only three of those switch at a coefficient of one, and the safe coefficient has to be searched per setting: one model tolerates the largest tested value on Rust, half of it on PHP, and nothing at all on C#. At high coefficients on one model, steering injects over a hundred target-language markers into control prompts that should contain none.
+
+No single component carries the behaviour. Removing any one element of the steering set, including the specific circuit itself, leaves marker accuracy and F1 at 1.000 and moves the metric by less than 0.02. The CodeXGLUE tasks stay at chance under steering, so the direction encodes surface syntax, not task competence.
+
+Finally, every significant but away-pointing circuit is an extraction failure. Transplanting late-layer activations is damaging in every language — the summed damage over all forty candidates is nearly identical for Rust, C#, PHP — so language cannot be what those results separate. What separates them is whether greedy extraction found a compact subset: all five away-pointing results come from settings where extraction returned the full candidate set, and full-set circuits have a median shift near zero against a small positive median for compact ones. For CodeLlama-7B on C#, a single MLP block suffices for Rust and PHP but no compact subset is found for C#.
+
+## Limits and open problems they name
+
+The metric uses a small hand-chosen vocabulary read at one position; the authors bound the effect of vocabulary-set size (a doubling buys a three-and-a-half per cent gap, and set size is unassociated with separation across settings) without removing it, and note that C# and PHP share markers with other C-family languages. Minimality is node-level and only approximates edge attribution patching; steering adds a single difference-in-means direction, so the intervention result bounds these particular methods and not every possible control. Scope is two budgets, one base language, three targets and two sizes per family — enough to show that budget matters, not enough for a scaling law. A fully size-matched vocabulary is flagged as unfinished work. They also decline to claim that the preference and Python's over-representation in training corpora are causally linked, calling a common cause the likelier story.
+
+## What we take from it
+
+Three transfers. First, the methodological one the authors themselves generalise: **a localisation claim is a curve over search budgets, not a number**, and a budget chosen by convention (they use a value matching sparse-feature circuit work as the comparison point) can carry the entire headline. Second, **an away-pointing significant result is a diagnostic for the search**: when the selected set is the whole candidate set, the intervention transplants a state the network never produces and the model falls back to its most generic continuation, so significance with the wrong sign should be read as a failed extraction and reported with the extracted size beside it. Third, **a metric crossing zero is not a switch** — a difference of probability masses can rise by flattening the distribution, so the defensible claim needs the metric shift, the argmax, and clean controls together, and the coefficient window where all three hold is narrow and model-specific. For our own account-keeping the sharpest lesson is about probes: the same pipeline on the same weights read 1.6 on a constructed decision point and 0.01 on natural code, which is a measured instance of a metric manufacturing its own effect.
+
+## Tags
+
+unit: head | circuit | direction
+form: circuit | graph | steering | probe
+method: patching | ablation | steering | attribution | probing
+eval: patching | ablation | completeness | benchmark
+goal: understanding | control/editing | evaluation-of-methods
