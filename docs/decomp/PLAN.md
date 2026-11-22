@@ -114,3 +114,9 @@ no supplied vocabulary)? The program should:
   - Every one that generalizes (all-pairs accuracy ≥ 0.99) is decompiled once with orbit mode as it stands now.
   - **Pass:** the recovered group has S4's element-order profile, its table is isomorphic to the secret table (≥ 0.95), M1 ≥ 0.9, and M2 ≥ 0.8 with the random control < 0.2.
   - If none generalize, that is reported, and the S4 result stays a development result only.
+- **Nov 22, 01:40 (clock): version frozen for challenge set v2.**
+  - **v3.3, commit ce3352b2.** It is v3 (one coordinate set for both inputs), plus selection by group-sum R² × coverage (v3.1 and v3.2), plus the circle-plane leak fix (D4). The 23:19 entry said "v3"; this is the version actually run.
+  - **Dev results** (all on networks used to build it, so not evidence): v1 networks pass 9 of 10 (randab1 pending at freeze; randab9, Z2×Z6×Z6, fails). Also passing: secret_add s1/s2, z8z14, sqsum, xyxy and S4 s2.
+  - **v1's pre-registered count stays 3/10.**
+  - Challenge v2 (12 networks) is decompiled once with this commit and scored with `score_known.py` against the 16:55 criteria.
+  - A relation-search extension (single planes and pairs with larger coefficients) was tried on randab9 and did not fix it, so it is not in v3.3.
