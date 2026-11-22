@@ -35,8 +35,29 @@ python3 lab/decomp/factorize.py <model_id>        # -> results/decomp/<id>_facto
 | a·b mod 105 | held-out, never examined before; pred. Z_3, Z_5, Z_7 | **multiplication in Z_7 and multiplication in Z_15**. The 3-way split [3, 5, 7] is found but explains only 0.918 of the answers, against 1.000 for [7, 15] | 1.000 | 0.995 |
 | a^b mod 97 | held-out; pred. Z_32 and Z_3 | partial: the 3-part is found, but the 32-part is over-split (36–38 blocks) | 0.949 | 0.975 |
 | a^b mod 101 | held-out; pred. Z_4 and Z_25 | miss: the mod-4 part is weakly represented (two of its residues lie 1.07 apart, against about 4 for the others) | 0.866 | 0.920 |
-| a^b mod 113, s2 and s3 | held-out | *(batch running)* | | |
-| add mod 113, secret add, memorizer | controls; pred. no split | *(batch running; the earlier version gave no split for all three)* | | |
+| a^b mod 113, s2 and s3 | held-out | miss: s2 no split; s3 does not split cleanly. By hand, their inputs are only 0.76 and 0.95 CRT-additive, against 0.997 for s1 | 0.756 (s3) | 0.906 (s3) |
+| a·b mod 120, s2 | held-out | miss: right block counts (8 and 15), but boundary symbols are misplaced | 0.830 | 0.954 |
+| add mod 113, secret add, memorizer | controls; pred. no split | **no split**, correctly, for all three | — | — |
+
+### Prime challenge (pre-registered Nov 22 00:02, 8 primes never seen, run with the frozen commit 98081655): 2 of 8 pass
+
+| p (p − 1) | result | agreement |
+|---|---|---|
+| 127 (2·9·7) | **pass**: multiplication in Z_7 and in Z_18 | 1.000 |
+| 131 (2·5·13) | **pass**: multiplication in Z_5 and in Z_26 | 1.000 |
+| 89 (8·11) | split, parts not named | 1.000 |
+| 107 (2·53) | split into 2 × 53 blocks, parts not named | 1.000 |
+| 139 (2·3·23) | split, parts not named | 0.999 |
+| 103 (2·3·17) | split, parts not named (network only 0.986 accurate) | 0.987 |
+| 149 (4·37) | no clean split | 0.948 |
+| 137 (8·17) | no split | — |
+
+**Why four splits went unnamed.** The absorbing symbols (a = 0 and 1; b = 0 and p − 1) answer the same on only 97–99% of partners, because the network makes a few errors on them. The exact-constant test missed them, they entered the parts, and they added stray values to the part tables. Factor mode v2 (D10) treats a symbol as absorbing when 95% of its partners give the same answer. Run on these same networks afterwards (development, so the 2/8 stands):
+- p89 becomes **Z_8 and Z_11**;
+- p107 becomes **Z_2 and Z_53**, the factorisation of p − 1 exactly;
+- p139 and p103 are still unnamed.
+
+A fresh prime set (61, 67, 71, 73, 79, 83, 151, 157) is pre-registered for v2 (PLAN, 01:56).
 
 ## What this shows, and what it doesn't
 
