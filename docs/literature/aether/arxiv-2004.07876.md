@@ -1,0 +1,51 @@
+# Reach-SDP: Reachability Analysis of Closed-Loop Systems with Neural Network Controllers via Semidefinite Programming
+
+- **Key:** arxiv-2004.07876
+- **Authors / organisation:** Haimin Hu, Mahyar Fazlyab, Manfred Morari, George J. Pappas; Department of Electrical and Systems Engineering, University of Pennsylvania
+- **Date:** 2020-04-16
+- **Link:** https://arxiv.org/abs/2004.07876
+- **Kind:** paper
+- **Read from:** full text (arXiv HTML v1, ~52k chars: abstract, §1-§6, Definitions 1-3, Propositions 1-5, Theorem 1 with proof, equations (1)-(44), both numerical examples, Appendix A, references)
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+A neural network in a feedback loop makes the usual robustness guarantee worthless: a small perturbation at one step is amplified by the dynamics before the controller ever sees it again, so a claim about the network's input-output map says little about the trajectory. They want the other object - the set of states the closed loop can actually visit - and specifically they want it from one convex program per step rather than from a search or a symbolic case split. The larger goal is safety certification for learned controllers, notably networks that imitate model-predictive control: the MPC has guarantees, the network that replaces it does not, and the certificate has to be bought back. They also insist on keeping the actuator limit inside the analysis, by placing a projection operator between the network output and the plant, so that the certified set is the set of states reachable under the controller the actuator actually applies.
+
+## What they studied
+Discrete-time linear time-varying plants (state update = A_t x + B_t u + c_t) closed around a fully connected feedforward network with component-wise nonlinearity, in practice ReLU. The unit of analysis is the *set of states*, not a neuron or a direction: at each time step an outer-approximating set is carried forward through the closed loop. The projection onto a box of admissible controls is compiled into the network as two extra ReLU layers, so the map being analysed from state to applied input is a single layered function. Two testbeds: a two-state double integrator driven by a network distilled from a linear MPC (2 hidden layers, 10 and 5 units, 2420 training state-input pairs, horizon 10), and a six-state quadrotor driven by a network distilled from a nonlinear MPC (2x32 units, 4531 pairs, horizon 30, RK4 at 0.1 s).
+
+## How they did it
+1. State the goal precisely: find the minimum-volume set that contains everything reachable in one step, subject to containing the true image of the current set.
+2. Replace each nonlinear ingredient by a *quadratic constraint* rather than by a piecewise-linear case analysis. The initial set is written as a quadratic-inequality family (a polytope gives one family via nonnegative multipliers, an ellipsoid gives another via a single multiplier); the ReLU is written as the conjunction of two affine bounds and a quadratic identity, plus pairwise slope inequalities among units, all merged into one weighted quadratic form with nonnegative weights.
+3. Observe that in a layered network the layer transition is itself affine in the concatenated activations, so the network constraint can be rewritten over the *pre-activation and post-activation vectors only* - the weights enter as fixed off-diagonal blocks. Projection becomes two more such layers.
+4. Unify the bases: initial-set constraint, network constraint and candidate output set are each expressed over one stacked vector of all layer activations plus the constant 1, using congruence transforms.
+5. Pose a single linear matrix inequality: the sum of the three constraint matrices must be negative semidefinite. Multiplying by the stacked basis on both sides, the two nonnegative terms drop out and the output-set inequality follows for every reachable point - so feasibility of the LMI *is* the proof, by elementary algebra, not by induction.
+6. Optimise over the multipliers and the output-set parameters: for a polytope whose facet directions are supplied by hand, minimise each facet offset separately as an SDP; for an ellipsoid, minimise the log-determinant (a convex surrogate for volume) subject to the same LMI, made convex by a Schur complement.
+7. Iterate step (6) one time step at a time, feeding each certified set in as the next initial set, and test the goal set and the avoid sets against the resulting outer sets.
+8. Compare the result against the exact reachable sets of the same closed loop (computed for the pictures rather than as part of the claim) and against the MILP-based set-propagation alternative.
+
+## What counts as an explanation here
+An *outer approximation with a proof of containment*: a family of quadratic or affine inequalities whose feasible set provably contains the true reachable set at each step, together with the multiplier values that discharge the proof. It is deliberately partial - it says nothing about which states are actually reachable, only that everything outside the set is not - and it is meant to predict something specific and checkable: whether a specified trajectory-level property (reach the goal by step N, never enter the avoid sets) holds for *every* initial state in a continuum. The explanation is a certificate in the optimisation sense: one verifiable object that stands in for infinitely many simulations, and whose tightness is a tunable consequence of the multipliers chosen.
+
+## How they judged success
+Two verdicts per example: whether the reach-avoid specification is certified, and how tight the approximate sets are, shown visually against exact reachable sets in the (p_x,p_y) and (p_x,p_z) projections (Figures 2-4). The tightness lever is measured only qualitatively: polytopic sets are reported as "very tight" when the facet directions are chosen well, while the paper notes that finding facet directions in higher dimension is prohibitively difficult and that ellipsoids scale better at the cost of shape. No quantitative bound on conservativeness is reported, no comparison table of set volumes against the MILP method is given, and no runtime is reported - the MILP route is discussed only in terms of scaling limits, not measured.
+
+## What they found
+Both specifications certify. For the double integrator the polytopic sets over six steps are reported as tight enclosures of the exact sets, and the initial box of states reaches the origin region in six steps without touching the state constraint. For the quadrotor, ten ellipsoidal steps over one second of flight (sampling 0.1 s) certify that the ellipsoidal initial set reaches the goal box under pitch/roll/thrust limits, with the approximate sets visibly loose relative to the exact ones in the plotted projections. The structural result is that the certification costs one SDP per time step whose size is set by the total number of neurons plus the state dimension, and that the same LMI covers the plant, the network and the actuator projection because all three were reduced to the same quadratic form. The paper also states that ReLUs, which sit at the boundary of the sector between zero and one, can be tightened either by interval arithmetic or by linear programming over the specific region, and does not do so.
+
+## Limits and open problems they name
+The plant must be linear (possibly time-varying) - the abstraction has no room for a nonlinear plant, which the conclusion names as future work, along with backward reachability for invariance. Only box input constraints are handled; polytopic control constraints are left open. Only ReLU is derived in the paper, with sigmoid and tanh deferred to the cited framework. Polytopic sets need facet directions chosen by hand, and the paper concedes this does not scale in dimension. The relaxation is one quadratic constraint per layer, so it cannot express the piecewise structure that a region-aware method would exploit - the authors cite interval and LP tightening as the remedy without measuring it. And a certified set is only as informative as it is tight: nothing in the method detects when an affirmative verdict is being bought by a set so loose that it excludes nearly everything.
+
+## What we take from it
+- **A framing.** The object our white-box model should predict is not a point prediction but a *certified outer set*, and the honest way to report it is with the containment argument attached - a matrix inequality whose feasibility is the proof. That is a stronger and cheaper standard than an empirical error bar, since it holds for a continuum of inputs at once.
+- **A method.** Reducing heterogeneous nonlinear parts of a system to *different quadratic forms over one shared stacked basis* is the mechanism that lets one convex program cover plant, network and actuator logic. If our account ever wants to certify a claim about a whole loop rather than the network alone, this congruence-transform unification is the move to reuse.
+- **A measure and a warning.** Tightness is where these methods actually compete, and this paper reports it only by eye. Our entries should carry a numeric conservativeness figure (set volume versus sampled reachable volume) beside every verdict, because a certification method that reports verdicts without slack is indistinguishable from one that is trivially conservative.
+- **A contrast to hold.** Against a single certified Lipschitz scalar for the whole network, the set-side of this method pays per-neuron multipliers plus hand-chosen facet directions: many constraints, many freedoms, and a convexity that must be paid for with concessions (linear plant, box inputs, manual facets). Both routes certify; the difference is whether the certificate is one number reused across regions or one program re-solved per region.
+- **An interface precedent.** Compiling an actuator projection into the network as extra rectified layers is the cleanest way this folder has seen to make "the thing analysed" equal "the thing deployed" - the certificate cannot silently describe a controller that the hardware would never apply.
+
+## Tags
+unit: whole-model
+form: causal-abstraction
+method: decomposition
+eval: faithfulness, benchmark
+goal: safety/auditing, control/editing
