@@ -1,0 +1,49 @@
+# Beyond Lipschitz: Data-Driven Robustness via Discrete Modulus of Continuity
+
+- **Key:** arxiv-2510.25130
+- **Authors / organisation:** Jürgen Dölz (Institute for Numerical Simulation, University of Bonn); Michael Multerer, Michele Palma (Dalle Molle Institute for Artificial Intelligence, USI Lugano). Authors listed alphabetically.
+- **Date:** 2026-05 (preprint; arXiv listing 2026-05-27)
+- **Link:** https://arxiv.org/abs/2510.25130
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+
+The Lipschitz constant is the field's default scalar for how much a network's output can move per unit of input movement, and the authors argue it fails in both directions. It can be too restrictive - enforcing it rules out perfectly continuous targets that happen not to be Lipschitz (their example is the square root near zero), so constraining it costs approximation quality - and it can be too coarse, since a globally flat function and a logistic curve both get constant one on a wide interval even though they behave very differently there. What is missing, they say, is a robustness description that is multi-scale, needs no access to the model's internals, and comes with error guarantees that hold for any architecture. Their proposal is a sampled version of a classical object from approximation theory: the modulus of continuity, which records how far outputs can separate as a function of input distance, and which contains the Lipschitz constant as the slope of its tightest linear upper bound.
+
+## What they studied
+
+Feedforward ReLU networks with 3, 20 and 5 layers and widths 50, 100 and 200 neurons per layer - deliberately chosen so that the 3-layer nets fit well, the 20-layer nets underfit, and the 5-layer nets overfit - plus a pretrained AlexNet on ImageNet. Data sets are California housing, Iris, MNIST and ImageNet. The unit of analysis is the whole model as a map from input metric space to output metric space, never a neuron, direction or parameter; even the weights are irrelevant except through the input-output pairs they generate.
+
+## How they did it
+
+They start from the continuous modulus of continuity, defined as the largest output separation achievable by any pair of inputs at most a given distance apart, and note its three classical properties: it starts at zero, it is non-decreasing, and it is subadditive. On a finite sample they define the discrete analogue over pairs of sampled points only, with distance measured by the same metric. The comparison to the continuous object is controlled by two standard quantities from scattered-data approximation - how close the nearest sample pair is and how finely the samples cover the domain - and they prove that the discrete version is always below the continuous one, that it rises monotonically as samples are added, and that the gap to the limit is bounded by how fast the modulus itself grows near zero plus a term in the sample spacing. Computation is a double loop over all point pairs bucketed by their distance into a grid of scales, which they note can be done lazily in linear-plus-quadratic time; for large data they keep only within-batch pairs, which drops the cost to batch size times number of batches, at the price of a coarser and noisier profile near zero. To compare two profiles they introduce two numbers: a relative $\ell_1$ score, one minus the relative difference, and a Pearson correlation. The reference profile in every experiment is the same quantity computed for the labelled data itself, so the network is judged against how regular the task actually is rather than against an absolute constant.
+
+## What counts as an explanation here
+
+A curve, not a scalar: the whole profile of output separation against input distance, on a log-log grid of 10,000 scales, plus two alignment scores that say how close that curve is to the curve the data itself imposes. It is a black-box description of behaviour, partial by construction - it says nothing about mechanism, nothing about which units or features produce the separation - and it is explicitly not predictive in the sense of simulating the network on new inputs. It does predict something weaker and checkable: that a well-fitted network's profile should track the data's profile, and that a poorly fitted one should not.
+
+## How they judged success
+
+Three things. First, an exactness control where the answer is known: a single affine layer, whose true Lipschitz constant is the operator norm of its weight matrix, so the profile's implied slope can be checked against it in closed form over 100 random initialisations. Second, agreement with a competing estimator on the same networks, with the trivial layer-product bound as the third column. Third, the alignment scores between network and data profiles, computed separately for trained and untrained networks on three data sets, and read as a classifier of fitting regime. Verification of the theory is analytic rather than empirical: the convergence rates are proved, with one worked example (a power function on the unit interval with a matching weight function) where the bound reduces to the expected order in the sample spacing.
+
+## What they found
+
+The affine control works: the implied constant came out at 1.11 against a true 1.12, and across 100 initialisations the largest absolute deviation from the exact value was about a hundredth. On the layered networks the picture is more delicate and the entry should not smooth it over. The trivial product bound is astronomic - around a hundred for the smallest net and up to about $10^{18}$ for the deepest - so it is not a comparison, it is a demonstration. Against the competing estimator the picture inverts with depth: on the well-fitting three-layer and five-layer nets the DMOC slope comes out **above** the competing estimate while the paper's text says both estimates are nearly indistinguishable and that the competitor underestimates; on the 20-layer underfitting nets the DMOC slope comes out four to six orders of magnitude **below** the competitor. The authors do not comment on either direction, and there is a second gap in the same table: the profile is a lower estimate of the true constant by the paper's own monotonicity result, so a DMOC number below the competitor's is consistent with both tools being loose rather than with one being right. Speed is comparable and mostly in their favour on a laptop (all computations under nine seconds, faster than the competitor on five of the nine nets). Alignment cleanly separates the regimes on every data set: well-fitted nets score in the 0.6-0.95 range against the data profile, overfitted nets score essentially zero, and underfitted nets score near zero or negative, with the same ordering on Iris and MNIST. The masking is notable in that both overfitting and underfitting collapse to the same alignment value, so the two failures are distinguishable by the curve's shape and not by the score. On classification with one-hot labels the data profile has a closed form - zero below the smallest cross-class distance and the one-hot diameter above it - which gives the curves an interpretable two-regime reading. On ImageNet the minibatch version runs from two hours at the batch size of ten to over seven hours at a thousand, and the reported constant moves from about 0.008 to about 0.011 between those settings. As a diagnostic detail worth wholesale: the training set alone reproduces the union data profile almost exactly on all three tabular/image sets.
+
+## Limits and open problems they name
+
+Two, both stated plainly. The framework has not been tested on latent representations or on transformer-style architectures, so its reach into contemporary models is asserted rather than shown. And the tool is used only as a post-training diagnostic - folding the profile into training as a regulariser is future work. The reliability caveat they attach to their own convergence theorem is the one to keep: the bound depends on the geometric quality of the data, so a badly covered sample or a tight minimum spacing degrades the estimate, and in the classification case the profile is dominated by a single geometric feature - the closest cross-class pair - rather than by anything about the network.
+
+## What we take from it
+
+Several concrete things. (1) **A framing**: the reference profile should be the data's own regularity, not an absolute or a competitor's number; that is a direct template for how we should present what our model predicts - compare the model's behaviour to the behaviour the task demands, on the same axis. (2) **A multi-scale object as first-class output**: a curve over scales carries what a scalar throws away, and run 648's rule about printing the per-layer profile beside the scalar is the same instinct one level up. (3) **A warning about lower estimates**: as in runs 652, 651 and 648, this folder keeps meeting quantities that are only ever bounded on one side. Here the direction is stated openly - the discrete version is provably below the continuous - which makes the paper easier to trust than most, but also means its headline "tight estimates comparable to the state of the art" cannot mean agreement with the true constant; every appearance of that comparison should be read as one lower estimate against another. (4) **A cheap, honest falsifier**: a one-layer network whose constant is known exactly is the cheapest possible end-to-end check of any estimator, and it is what qualified this one before the interesting experiments started. (5) **A taxonomy note**: this paper returns the constant to its input-space meaning (run 649's split) and makes it distribution-relative, which is a third kind of object beside the exact, the limit-approachable and the ensemble-only - a *data-relative* one.
+
+## Tags
+
+unit: whole-model
+form: description
+method: weight-analysis
+eval: benchmark
+goal: understanding
