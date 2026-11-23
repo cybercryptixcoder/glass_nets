@@ -1,0 +1,70 @@
+# Scaling-up Diverse Orthogonal Convolutional Networks with a Paraunitary Framework
+
+- **Key:** arxiv-2106.09121
+- **Authors / organisation:** Jiahao Su (University of Maryland, College Park); Wonmin Byeon (NVIDIA Research); Furong Huang (University of Maryland, College Park)
+- **Date:** 2021-06
+- **Link:** https://arxiv.org/abs/2106.09121
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+
+The paper's complaint is that the orthogonal-convolution literature is a pile of unrelated constructions with no shared theory, so nobody can say which of them is exact, which is complete, or how to move the idea onto the layer types modern architectures actually use. The authors' response is to change the object being constrained: instead of asking for an orthogonal block-circulant matrix over pixels, work in the frequency domain, where the convolution theorem turns the layer into matrix multiplication by a transfer function at each frequency, and orthogonality becomes unitarity of that transfer function everywhere on the unit circle. That object already has a name in signal processing - a paraunitary system - and comes with a classical complete factorisation. The larger goal is to convert a bag of tricks into one parameterisation with a stated completeness property, and then to use the freedom that gives to build *deep* Lipschitz networks, which prior work had not managed beyond shallow stacks.
+
+## What they studied
+
+Orthogonal convolutional layers as mathematical objects - standard, dilated, strided (down and up), and grouped - and then whole networks built from them: KW-Large, ResNet9, WideResNet10-10/22/34, and a shuffling variant, trained on CIFAR-10 for certified and PGD robustness. The unit of analysis is the layer's filter bank viewed as a sequence of matrices indexed by channel pair, equivalently its Z-transform transfer matrix, and the network-level unit is the parameterisation of orthogonal matrices (Q and the U-factors) that the whole construction decomposes into. The paper also treats architecture choices - skip-connection type, initialisation, depth, width, kernel size, down-sampling - as the object of study, not just the layer.
+
+## How they did it
+
+1. Restate the convolution theorem: a convolution layer's output equals matrix multiplication by a transfer matrix H(z) in the Z-domain, and by Parseval's theorem the spatial output norm equals the integrated spectral norm. This makes orthogonality - output norm equal to input norm for every input - equivalent to H(z) being unitary on the unit circle, i.e. paraunitary; the paper proves both directions, with the reverse direction argued via periodic inputs and a contradiction at a single frequency where non-unitarity would let one construct a norm-changing input.
+2. Invoke the classical complete spectral factorisation for finite-length one-dimensional paraunitary systems: any such H(z) factors into a chain of simple building blocks V(z; U) built from column-orthogonal U-matrices, sandwiching a square orthogonal Q. Because multiplication in the spectral domain is convolution in the spatial domain, the factorisation is directly realisable as a cascade of little convolutions parameterised by orthogonal matrices - their "Separable Complete Factorization" (SC-Fac).
+3. Modify the convolution theorem once per layer variant so the same statement survives. Up-sampling and down-sampling are handled with polyphase components, giving a modified transfer matrix for strided layers; dilation is shown to be an up-sampled filter, reindexing the frequency variable; grouped convolution becomes a block-diagonal transfer matrix. For each variant they prove orthogonality is equivalent to the modified transfer matrix being paraunitary, then reuse the same factorisation.
+4. Re-read the prior methods through this lens: singular-value clipping, block-convolution (BCOP) and Cayley convolutional parameterisation are all attempts at building paraunitary systems - clipping flattens the spectrum per frequency, BCOP is a spectral factorisation with each V-factor forced separable, Cayley generalses the Cayley transform to the spectral domain. A separate appendix proposition identifies the "reshaped-kernel orthogonality" penalty as exactly a uniform-weight penalty on the distance of the spectral Gram matrix from identity.
+5. Choose a parameterisation for the orthogonal matrices: they compare Björck orthogonalisation (complete but approximate), the Cayley transform (exact but a bijection only on matrices without eigenvalue -1, and unstable near -1), and the Lie exponential map (surjective onto all orthogonal matrices, computable to machine precision) and pick the exponential.
+6. Measure orthogonality numerically: 64 channels, 16x16 spatial, Gaussian inputs, reporting the relative output/input norm error for six methods on standard convolution and for their own layer across dilation, stride and group settings. Then train networks under an equal recipe and compare certification, PGD robustness, and finally run sweeps over skip-connection, depth, width, kernel size, dilation, down-sampling and initialisation.
+
+## What counts as an explanation here
+
+A reparameterisation theorem plus a resource comparison - not a description of what a trained network does. The understanding offered is the form: "an orthogonal convolution is neither more nor less than a paraunitary system", and the evidence that this is the right form is that (a) it is necessary and sufficient rather than sufficient, (b) it comes with a complete factorisation, so completeness is inherited rather than argued per case, and (c) it classifies the prior methods, telling you exactly which subset each one covers. It is explicitly partial at one point the authors flag: in more than one dimension not every paraunitary system is separable, so the multidimensional parameterisation covers the separable ones, and the entry records that as an admission rather than a completeness claim. It predicts nothing about behaviour under intervention; the measurable prediction it does support is the norm-preservation residual, which the paper prints.
+
+## How they judged success
+
+Layer level: the relative norm error |Conv(x)|/|x| - 1 averaged over Gaussian inputs, compared against five competitors, with the machine epsilon for 32-bit floats as the target and the ± reported as a standard deviation. Network level: clean accuracy, certified accuracy at perturbation radius 36/255 (reported for plain KW-Large without input normalisation), and PGD accuracy at the same radius for the residual architectures (with input normalisation, which the authors note loosens the Lipschitz bound). Hyperparameters are tunnelled on the metric being reported - a nine-value grid search over the hinge-loss margin per model, selecting by robust accuracy - and each model is run with five seeds and the best reported, which the entry notes is a maximum over seeds rather than a mean with a standard deviation. The scaling study uses a controlled ladder: same base channels, same recipe, one factor changed at a time (skip type; depth x width; kernel and dilation; pooling versus strided down-sampling; four initialisations).
+
+## What they found
+
+- Orthogonality residual on standard convolution: their layer sits at a few units of 10^-8 - i.e. at 32-bit machine epsilon (the paper quotes 2^-24 as roughly 5.96e-8) - while the nearest competitor is Cayley at a few units of 10^-4, block-convolution at a few of 10^-3, and the three remaining methods all overshoot the input norm by about 40-65% (the paper reads this as singular-value clipping or reshaped-kernel orthogonality being far from orthogonal, with masking named as the culprit for the clipping method). The same machine-epsilon residual holds across dilation, stride and group settings.
+- On their own layer variants the residual likewise stays in the 10^-8 range across dilation factors, down- and up-striding, and grouping, with one exception where the setting is not available.
+- Certified robustness of plain KW-Large at 36/255 is a near-tie among the exact constructions: their layer 58.68 certified versus 59.03 for the Cayley construction and 58.83 for the block-convolution one, with clean accuracy 74.69, 75.57 and 74.81 respectively; the inexact methods are 2 to 6 points worse certified (55.71 and 52.11).
+- On PGD robustness with residual networks the ordering flips with depth. At the shallow sizes the Cayley construction is slightly ahead (ResNet9 clean/PGD 84.26/73.47 against their 82.19/71.21); at the widest 22-layer setting their layer is ahead of all three competitors on both columns (87.82/76.46 against the Cayley construction's 85.85/74.81, block-convolution's 84.50/75.00, and the reshaped-kernel baseline's 84.55/76.41) - and it is the only one of the four that the authors could scale to a x10 width there.
+- One of the methods with the worst orthogonality residual (about -0.666, i.e. a 67% norm *contraction*) is competitive or better on PGD at shallow depth, reaching 75.03 on ResNet9 and 77.02 certified-adjacent PGD on WideResNet10-10 - which the authors call surprising and leave unexplained.
+- Skip-connection experiment on WideResNet22-10: no skip 69.59/59.22 clean/PGD, concatenation-based 75.21/66.00, additive residual 87.82/76.46. The additive block, which mixes the two branches with a learnable scalar, keeps the Lipschitz bound; so does the concatenation block.
+- Receptive field and down-sampling: average pooling for down-sampling beats strided convolution at matched kernel (84.54/71.71 against 82.36/70.36), a bigger 5x5 kernel beats 3x3 (84.09/74.29 at 5x5 with pooling), and adding dilation hurts rather than helps (81.53/70.07 for 3x3 dilated by 2; 81.28/70.58 for 5x5 dilated by 2). Depth and width both help monotonically up to the memory limit, with the best robust accuracy at 22 layers because a 34-layer net cannot be made wide enough within the GPU budget; permutation initialisation is best at 22 layers and all four initialisations are equivalent at 10 layers.
+- Cost: the paper reports time and memory across width factors up to 10 and states its layer is the cheapest of the four and the only one that scales there; the other three cannot be scaled and their cells are simply missing.
+
+## Limits and open problems they name
+
+- In more than one dimension not every paraunitary system is separable, so the multidimensional construction is complete only over the separable ones - stated in the appendix, not the abstract.
+- Exact orthogonality costs a measurable amount of clean and robust accuracy at shallow depth relative to the Cayley construction, and the authors describe this as a trade-off without explaining it.
+- Deep Lipschitz networks remain memory-hungry; several table cells and figure points are absent because the GPU filled up, so the width comparisons are truncated exactly where they get interesting.
+- Their own layers still cost more than plain convolutions, which the broader-impact section names as a tension between robustness and efficiency.
+
+## What we take from it
+
+Three concrete things, one of them the single most useful artefact in this sub-head so far.
+
+(1) **The residual the head has been asking for, in closed form.** A cheap-reshape orthogonality penalty has a spectrally exact equivalent: the sum over lag i of the squared Frobenius norm of the sum over filters of h[n] h[n-Ri]^T minus a Kronecker delta (the paper's Proposition B.9 shows this equals, by Parseval, the integrated squared distance of the spectral Gram matrix from identity, and four variants of it are all equal). That is exactly the quantity run 665 proved a reshaped-kernel penalty fails to control, and the paper says so: an early work enforcing orthogonality of the flattened kernel does not make the convolution orthogonal. So both numbers that run 665 wanted on one checkpoint - kernel residual and operator residual - can be computed from the filter bank alone, in the spatial domain, without any frequency-grid discretisation choice. Warning attached: it also tells us *why* the penalty is weak, since it weights every frequency equally rather than where the operator actually lives.
+
+(2) **A comparison discipline worth copying.** The paper evaluates orthogonality before evaluating anything downstream, on a layer held fixed in shape, so the exactness claim is separated from the training confound. Then, when it does compare methods in networks, the honest reading of its own tables is that exactness has almost no downstream value at shallow depth and possibly a penalty, and only becomes a *hardware enabler* at depth and width where the inexact-or-expensive alternatives fall over. That is a different kind of benefit from the one the abstract's framing suggests, and it is worth remembering: a construction can win not by being better but by being the only one that fits.
+
+(3) **The completeness ladder, now explicit.** Three parameterisations of the orthogonal group, each missing something different and each deficient in a way we can state in one line: Björck-type iteration reaches everything but only approximately (no exactness); the Cayley transform is exact but blind to rotations with a -1 eigenvalue and numerically unstable as one approaches (no coverage); the exponential map is exact and surjective (both), which is why the paper picks it. This is the same exclusion run 662 named and run 663's Householder sign-factor fixed mechanically - here it is bought by the exponential map instead, and paid for in the cost of computing a matrix exponential and its gradient. For our account the general lesson is unchanged and now triply attested: any parameterisation we adopt carries a statement of the form (exact?, covers what?), and both halves must be printed.
+
+## Tags
+
+unit: layer, weights
+form: replacement-model, dictionary, direction
+method: weight-analysis, decomposition, other
+eval: faithfulness, prediction/simulation, downstream-task, benchmark
+goal: understanding, control/editing, evaluation-of-methods
