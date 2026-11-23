@@ -1,0 +1,40 @@
+# NNV: The Neural Network Verification Tool for Deep Neural Networks and Learning-Enabled Cyber-Physical Systems
+
+- **Key:** arxiv-2004.05519
+- **Authors / organisation:** Hoang-Dung Tran, Xiaodong Yang, Diego Manzanas Lopez, Patrick Musau, Luan Viet Nguyen, Weiming Xiang, Stanley Bak, Taylor T. Johnson; Vanderbilt University (Institute for Software Integrated Systems), with the University of Pennsylvania, and Stony Brook University
+- **Date:** 2020-04-12
+- **Link:** https://arxiv.org/abs/2004.05519
+- **Kind:** tool
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+Several separate lines of work had produced sound reachability algorithms for networks and for loops containing networks, each in its own paper and its own set representation, and none of them shipped as something a control engineer could run. The authors wanted one toolbox that collects those algorithms behind a common object model, so that a practitioner can take a trained network plus a plant description and get back either a proof of safety or a counterexample, using the same code path. The larger goal is the acceptance of learned components in safety-critical control: the paper is written for a verification audience that expects an artifact, not a theorem. Their own framing of the two analysis modes - exact (sound and complete) versus over-approximate (sound only) - is the organising idea of the whole tool.
+
+## What they studied
+Feed-forward networks and convolutional networks with a mix of activations (piecewise-linear ones under exact analysis; smooth ones only under over-approximation), and closed-loop systems in which a feed-forward network controller drives a plant. The unit of analysis is a reachable **set**: the set of all outputs of the network from a bounded input box, or the flow-pipe of all states reachable by the plant under any controller output. The plant comes in two flavours - discrete linear and continuous nonlinear.
+
+## How they did it
+The tool is an object-oriented Matlab library built on the MPT polytope toolbox and on CORA for zonotope reachability of nonlinear plants; network models arrive from Keras/TensorFlow through ONNX, plants through a separate hybrid-system configuration tool. A "computation engine" builds either a network object or a network-plus-plant object and hands it to a reachability solver, whose output goes to an "analyzer" that visualises, checks a safety specification, and falsifies. Five set representations are exposed: polyhedra, star sets, zonotopes, an abstract domain, and an image-shaped variant of the star for convolutional nets. Set propagation through the network is layer by layer, each layer's output set becoming the next layer's input; the exact algorithms split a set at each rectifier and return a union, while the approximate ones collapse the union after each layer. For the loop, the star representation is the interesting choice because the plant state and the control input remain terms in one shared predicate vector, so the composition does not have to re-encode the relationship between them at each step.
+
+## What counts as an explanation here
+A reachable set, plus a verdict drawn from it against a formal specification. The tool's output is therefore an **enclosure plus a decision**, and the decision's strength depends on which solver produced it: a safe or unsafe answer from an exact solver, and safe or unknown from an approximate one (with the falsifier allowed to upgrade unknown to unsafe by finding a witness). The explanation of an unsafe verdict can be a set of inputs - the complete set of unsafe initial states under exact analysis, or sampled traces under the approximate route. Nothing here is a semantic account of why the network behaves as it does; the object is a region and the claim is a containment.
+
+## How they judged success
+Two case studies, both against external tools. First, the ACAS Xu benchmark on two of its properties across all 45 networks, with a timeout ladder (one, two and ten hours) and four baselines - Reluplex, Marabou, Marabou with divide-and-conquer, and ReluVal - plus the tool's own zonotope and abstract-domain solvers; the reported quantities are counts of safe/unsafe/unknown/timeout and total wall-clock time, with the conservative baselines compared on how many networks they can actually resolve. Second, a learning-based adaptive cruise control system, verified once with a discrete linear plant and once with a nonlinear plant containing a friction term, on six initial-speed boxes, reporting verdict and verification time for each.
+
+## What they found
+On ACAS Xu, the exact star solver resolved every network on both properties with no unknowns and no timeouts, and the reported speeds are roughly 21x and 14x faster than Reluplex and Marabou on the first property and 25x and 18x on the second; the approximate star solver never returned unsafe on these properties but proved far more networks safe than the older set methods - 29 versus 2 (zonotope) and 19 (abstract domain) on one property, and 32 versus 1 and 0 on the other - at a few tens of seconds. The polytope solver timed out on most networks and was dropped from the comparison, and the deep-network opponents' totals run into the tens of thousands of seconds. The cruise-control study produced the paper's sharpest empirical result: with the linear plant the system was safe for initial lead-vehicle speeds above about 27 m/s and unsafe below it, but with the nonlinear plant every one of the six cases came back unsafe, at roughly twenty to thirty times the linear-plant cost. The authors read this as a warning about controllers trained on simulation data whose plant model does not match the real one.
+
+## Limits and open problems they name
+The comparison of exact versus approximate is confounded by design - the exact solver is the slow one, the approximate solver is the fast one, and the paper's headline speed numbers come from different columns than its coverage numbers. Nonlinear plants get over-approximation only, so a nonlinear verdict can be unknown and cannot be tightened except by falsification; the falsifier samples random inputs (a thousand of them in this study), which is a search, not a definition of the unsafe region. The image-based star, presented as the route to large perception networks, is explicitly excluded from evaluation because it was unpublished at the time. The polytope route is described as both expensive and prone to conservativeness once it is used in a loop, which is the honest version of "we kept it for completeness". The engineering dependencies - a Matlab licence, MPT, CORA, ONNX, a separate hybrid-system tool - are a real portability cost for anyone reproducing the numbers.
+
+## What we take from it
+Two things. First, a concrete instance of the discipline the folder has been building toward: this tool reports **safe, unsafe and unknown** as three distinct outcomes, and never lets an over-approximate solver's failure to find a violation masquerade as a proof - which is precisely the reporting split our account needs when its own internals are approximate. Second, the cruise-control result is the best available illustration of a mismatch between the model we analyse and the model that exists: the same controller is provably safe against the linearised plant and unsafe against the plant with one small friction term added, and the verification time differs by more than an order of magnitude. A white-box account of a network should therefore say which model version its claim was computed against. Method, measure, and a warning; the star-set-with-shared-predicates trick for composed state-plus-input analysis is also worth keeping, since it is the same idea as run 623's decision to keep a discrete factor as a tag rather than box the product space.
+
+## Tags
+unit: circuit | feature
+form: causal-abstraction
+method: other | ablation
+eval: benchmark | ablation | downstream-task | prediction/simulation
+goal: evaluation-of-methods | safety/auditing
