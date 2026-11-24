@@ -77,8 +77,11 @@ Each candidate had to:
     [0.017, 0.119]). Two independent networks judge it the same way, and 80% of those games ended by play.
   - Against a fallible opponent it adds nothing (+0.01). Humans in real games got nothing measurable from it either.
   - The textbook (web search) says the opposite: when behind, avoid trades, especially of queens.
-  - We found no source stating this rule. Its scope (strong opposition) is suggested, not proven: the difference
-    between opponents is +0.06 [−0.02, 0.13].
+  - We found no source stating this rule.
+  - **Its scope, measured (K11k).** Against the same network made more fallible (sampling at temperature 0, 0.5 and
+    1.0), the trade is worth +0.07, +0.10 and −0.01. The slope is negative under both judges. The trade helps against
+    strong and moderately fallible opponents, and stops mattering against a very weak one. That is one reason human
+    textbooks, written for games against fallible humans, could miss it.
 - **Two different kinds of knowledge** (descriptive, all confirmed on fresh games):
   - **Levers:** humans under-play the networks' levers at almost every rating level.
   - **Queen trades when lost:** the networks invert the textbook rule ("when behind, avoid trades, especially of
@@ -135,5 +138,6 @@ python3 scripts/kepler/chess_rules.py outcomes      # K11g real game results (re
 python3 scripts/kepler/chess_rules.py kingcause     # K11h matched king edits
 python3 scripts/kepler/chess_rules.py transfer2     # K11i powered transfer test on 40,000 positions from new games
 python3 scripts/kepler/chess_rules.py playout       # K11j play-out of 'trade queens when lost', strong vs fallible opponent
+OPPS=t1:0,t1:0.5,t1:1.0 python3 scripts/kepler/chess_rules.py playout   # K11k opponent-fallibility sweep
 ```
 Fluid: `scripts/kepler/fluid_build.py`, `fluid_known_test.py`, `fluid_law.py`, `fluid_mechanism.py`, `dye_law.py`.

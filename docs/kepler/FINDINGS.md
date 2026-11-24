@@ -202,6 +202,11 @@ the last column is explained below):
      and the trade adds nothing measurable (+0.01).
    - So "it pays only against strong opponents" fits, but the difference between the two settings is not significant
      (+0.06 [−0.02, 0.13]).
+   - **Opponent sweep (K11k).** Same network, more and more fallible (it samples its moves at temperature 0, 0.5 and
+     1.0). The trade is worth +0.066, +0.103 and −0.008. The slope is negative under both judges (−0.074 [−0.14, −0.00]
+     and −0.077 [−0.15, −0.01]), so the registered test is SUPPORTED. The shape is flat, then a drop: the trade helps
+     against strong and moderately fallible opponents, and stops helping against a very weak one, where the lost side
+     wins 89% of games either way.
    - In real human games (40,000 new positions), humans who made the network's queen trade did no better than the
      network's other advice there (−0.02 [−0.10, 0.06]). That is consistent with a strategy for strong opposition.
 
@@ -222,7 +227,7 @@ Evidence:
 - `chess/rules/mined_b.json`, `mined_c.json` (main and principle-breaking passes)
 - `confirm_fresh.json`
 - `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
-- `lost_cause_fresh.json`, `king_cause_fresh.json`, `playout_queen_trade.json`
+- `lost_cause_fresh.json`, `king_cause_fresh.json`, `playout_queen_trade.json`, `playout_opponent_sweep.json`
 - `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`, `transfer_controls_fresh.json`,
   `transfer_new_games.json`
 - `examples_fresh.json` (teaching positions with Lichess game links)

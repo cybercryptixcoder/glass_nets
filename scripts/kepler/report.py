@@ -121,6 +121,7 @@ def main():
                 "lost_cause": load("chess/rules/lost_cause_fresh.json"),
                 "trade_cause": (load("chess/rules/trade_when_behind_fresh.json") or {}).get("cause"),
                 "playout": load("chess/rules/playout_queen_trade.json"),
+                "sweep": load("chess/rules/playout_opponent_sweep.json"),
                 "examples": load("chess/rules/examples_fresh.json"),
                 "textbook": [f"{r['condition']} → {r['move_type']}" for r in (load("chess/rules/mined_b.json") or {}).get("passing", [])[:6]],
             }

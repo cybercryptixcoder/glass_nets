@@ -282,3 +282,14 @@ not start from human chess ideas.
   The web search found no source stating it.
 - Written into FINDINGS (section 5, result 3), RESULTS.md, the ledger (K11j) and the page.
 
+## Nov 24, 15:03-15:11: the strategy's scope (K11k)
+
+- Same 146 position pairs, the opponent now t1 itself, made fallible by sampling its moves at temperature 0, 0.5 and
+  1.0.
+- The queen trade is worth +0.066, +0.103 and −0.008 to the lost side.
+- The registered test (negative slope against temperature, under both judges) is SUPPORTED: −0.074 [−0.14, −0.00] and
+  −0.077 [−0.15, −0.01].
+- The shape is flat, then a drop. The trade keeps helping against a moderately fallible opponent and stops mattering
+  against a very weak one, where the lost side wins 89% either way.
+- The 15:00 clock check arrived (delivered at 15:11, after the turn's work). All work was already committed and pushed.
+
