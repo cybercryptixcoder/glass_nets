@@ -623,6 +623,176 @@ def cmd_freshq():
     json.dump(res, open(os.path.join(OUT, "queen_trade_fresh.json"), "w"), indent=1)
 
 
+def cmd_trades():
+    """K11 tests (cause, worth) and the draw mechanism for b1, 'when behind in material, offer like-for-like trades',
+    on the fresh games. Cause uses symmetric pawn edits in positions exactly one pawn down: removing an enemy pawn makes
+    material level (situation off); removing an own pawn makes it two down (situation kept)."""
+    from kepler.targets.chess.concepts import concepts
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    global KEYS, FEATS
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, items, tops, cond, elo = fm["keys"], fm["items"], fm["tops"], fm["cond"], Fz["elo"]
+    KEYS, FEATS = keys, (lambda b, m: {**move_feats(b, m), **move_feats_c(b, m)})
+    mk = "offers a like-for-like trade"
+    mi = keys.index(mk)
+    W = np.load(os.path.join(WORK, "fresh_wdl.npy"))
+    q = W[:, 0] - W[:, 2]
+    mat = np.array([c["material"] for c in cond], dtype=float)
+    T, H, L, R = (Fz[k][:, mi] for k in ("T", "H", "L", "R"))
+    res = {"rule": "material <= -1 -> offers a like-for-like trade (b1)", "split": {}}
+    for lbl, m in (("behind, lost (t1 q <= -0.5)", (mat <= -1) & (q <= -0.5)), ("behind, not lost (q > -0.5)", (mat <= -1) & (q > -0.5)),
+                   ("behind by exactly 1", mat == -1), ("behind by 2-3", (mat <= -2) & (mat >= -3)), ("level", mat == 0),
+                   ("ahead (>= 1)", mat >= 1)):
+        res["split"][lbl] = {"n": int(m.sum()), "t1": float(T[m].mean()), "LD2": float(L[m].mean()), "744706": float(R[m].mean()),
+                             "human": float(H[m].mean())}
+        log(f"{lbl:32s} n={m.sum():5d} t1 {T[m].mean():.4f} LD2 {L[m].mean():.4f} 744706 {R[m].mean():.4f} human {H[m].mean():.4f}")
+    net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    rng = np.random.default_rng(5)
+    # ---- cause: symmetric pawn edits, one pawn down, where t1 offers a trade
+    sel = np.where((mat == -1) & (T > 0.5))[0]
+    eb, meta_e = [], []
+    for i in sel:
+        b = chess.Board(items[i]["fen"])
+        top = chess.Move.from_uci(tops["T"][i])
+        for side, tag in ((not b.turn, "enemy pawn removed (level)"), (b.turn, "own pawn removed (two down)")):
+            sqs = [x for x in b.pieces(chess.PAWN, side) if x not in (top.from_square, top.to_square)]
+            for x in rng.permutation(sqs)[:3]:
+                b2 = b.copy(stack=False)
+                b2.remove_piece_at(int(x))
+                b2.ep_square = None
+                if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
+                    eb.append(b2)
+                    meta_e.append((int(i), tag, concepts(b2)["material"]))
+    base, q0 = mass_on(net, [chess.Board(items[i]["fen"]) for i in sel], mi)
+    base, q0 = dict(zip([int(i) for i in sel], base)), dict(zip([int(i) for i in sel], q0))
+    after, q1 = mass_on(net, eb, mi)
+    before = np.array([base[m[0]] for m in meta_e])
+    drop = (before - after) / np.maximum(before, 1e-6)
+    off = np.array([m[1].startswith("enemy") for m in meta_e])
+    dq = np.array([q1[k] - q0[m[0]] for k, m in enumerate(meta_e)])
+    boots = []
+    for _ in range(2000):
+        a = rng.choice(np.where(off)[0], off.sum())
+        bb = rng.choice(np.where(~off)[0], (~off).sum())
+        boots.append(drop[a].mean() - drop[bb].mean())
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    res["cause"] = {"positions": int(len(sel)), "edits_level": int(off.sum()), "edits_two_down": int((~off).sum()),
+                    "mean_trade_mass_before": float(before.mean()),
+                    "relative_drop_when_level": float(drop[off].mean()), "relative_drop_when_two_down": float(drop[~off].mean()),
+                    "difference_ci95": [float(lo), float(hi)],
+                    "q_change_when_level": float(dq[off].mean()), "q_change_when_two_down": float(dq[~off].mean())}
+    res["cause"]["pass"] = bool(off.sum() >= 20 and drop[off].mean() >= 0.30 and lo > 0)
+    log("cause:", json.dumps(res["cause"]))
+    # ---- worth and mechanism: behind, t1 offers a trade, human played something else
+    fire = np.where((mat <= -1) & (T > 0.5) & (np.array(tops["T"]) != np.array(tops["H"])))[0]
+    bt, bh, kept = [], [], []
+    for i in fire:
+        b1, b2 = chess.Board(items[i]["fen"]), chess.Board(items[i]["fen"])
+        b1.push_uci(tops["T"][i]); b2.push_uci(tops["H"][i])
+        if b1.is_game_over() or b2.is_game_over():
+            continue
+        bt.append(b1); bh.append(b2); kept.append(int(i))
+    Wt, Wh = wdl_eval(net, bt), wdl_eval(net, bh)
+    mt = np.stack([Wt[:, 2], Wt[:, 1], Wt[:, 0]], 1)
+    mh = np.stack([Wh[:, 2], Wh[:, 1], Wh[:, 0]], 1)
+    def ci(x):
+        bs = [x[rng.integers(0, len(x), len(x))].mean() for _ in range(2000)]
+        return [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
+    dd, dl = mt[:, 1] - mh[:, 1], mt[:, 2] - mh[:, 2]
+    dw = mt[:, 0] - mh[:, 0]
+    hm = H[kept] > 0.5
+    regret = (mt[:, 0] - mt[:, 2]) - (mh[:, 0] - mh[:, 2])
+    res["mechanism"] = {"positions": len(kept), "draw_after_t1": float(mt[:, 1].mean()), "draw_after_human": float(mh[:, 1].mean()),
+                        "draw_gain": float(dd.mean()), "draw_gain_ci95": ci(dd), "loss_change": float(dl.mean()),
+                        "loss_change_ci95": ci(dl), "win_change": float(dw.mean()), "win_change_ci95": ci(dw)}
+    res["worth"] = {"positions": len(kept), "human_offered_a_trade_too": int(hm.sum()),
+                    "regret_without_trade": float(regret[~hm].mean()),
+                    "regret_with_other_trade": float(regret[hm].mean()) if hm.any() else None,
+                    "regret_ci95_without_trade": ci(regret[~hm]),
+                    "units": "t1 expected score given up against t1's move (both after one move)"}
+    if hm.sum() >= 10:
+        boots = [regret[~hm][rng.integers(0, (~hm).sum(), (~hm).sum())].mean() - regret[hm][rng.integers(0, hm.sum(), hm.sum())].mean()
+                 for _ in range(2000)]
+        res["worth"]["difference_ci95"] = [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))]
+        res["worth"]["pass"] = bool(np.percentile(boots, 2.5) > 0)
+    log("mechanism:", json.dumps(res["mechanism"]))
+    log("worth:", json.dumps(res["worth"]))
+    order = np.argsort(-dd)
+    res["examples"] = [{"fen": items[kept[j]]["fen"], "t1_move": tops["T"][kept[j]], "human_move": tops["H"][kept[j]],
+                        "human_elo": int(elo[kept[j]]), "material": float(mat[kept[j]]), "t1_q_before": float(q[kept[j]]),
+                        "draw_after_t1": float(mt[j, 1]), "draw_after_human": float(mh[j, 1]), "site": items[kept[j]]["site"]}
+                       for j in order[:10]]
+    json.dump(res, open(os.path.join(OUT, "trade_when_behind_fresh.json"), "w"), indent=1)
+
+
+def cmd_lostcause():
+    """K11f: rescue edits (remove an enemy minor/rook) vs control edits (remove an own pawn) in lost positions where t1
+    trades queens."""
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    global KEYS, FEATS
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, items, tops = fm["keys"], fm["items"], fm["tops"]
+    KEYS, FEATS = keys, (lambda b, m: {**move_feats(b, m), **move_feats_c(b, m)})
+    mi = keys.index("queen trade (captures or offers the queen)")
+    W = np.load(os.path.join(WORK, "fresh_wdl.npy"))
+    q = W[:, 0] - W[:, 2]
+    T = Fz["T"][:, mi]
+    sel = np.where((q <= -0.5) & (T > 0.5))[0]
+    net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    rng = np.random.default_rng(9)
+    eb, meta_e = [], []
+    for i in sel:
+        b = chess.Board(items[i]["fen"])
+        top = chess.Move.from_uci(tops["T"][i])
+        them, us = not b.turn, b.turn
+        rescue = [x for t in (chess.KNIGHT, chess.BISHOP, chess.ROOK) for x in b.pieces(t, them) if x not in (top.from_square, top.to_square)]
+        control = [x for x in b.pieces(chess.PAWN, us) if x not in (top.from_square, top.to_square)]
+        for kind, sqs in (("rescue", rescue), ("control", list(rng.permutation(control)[:3]))):
+            for x in sqs:
+                b2 = b.copy(stack=False)
+                b2.remove_piece_at(int(x))
+                b2.castling_rights = b2.clean_castling_rights()
+                b2.ep_square = None
+                if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
+                    eb.append(b2)
+                    meta_e.append((int(i), kind))
+    base, q0 = mass_on(net, [chess.Board(items[i]["fen"]) for i in sel], mi)
+    base, q0 = dict(zip([int(i) for i in sel], base)), dict(zip([int(i) for i in sel], q0))
+    after, q1 = mass_on(net, eb, mi)
+    before = np.array([base[m[0]] for m in meta_e])
+    qb = np.array([q0[m[0]] for m in meta_e])
+    drop = (before - after) / np.maximum(before, 1e-6)
+    kind = np.array([m[1] for m in meta_e])
+    saved = (kind == "rescue") & (q1 > -0.5)
+    still = (kind == "rescue") & (q1 <= -0.5)
+    ctrl = kind == "control"
+    def boot_diff(a, b):
+        bs = [drop[rng.choice(np.where(a)[0], a.sum())].mean() - drop[rng.choice(np.where(b)[0], b.sum())].mean() for _ in range(2000)]
+        return [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
+    res = {"positions": int(len(sel)), "mass_before": float(before.mean()),
+           "rescued": {"n": int(saved.sum()), "q_after": float(q1[saved].mean()) if saved.any() else None,
+                       "relative_drop": float(drop[saved].mean()) if saved.any() else None},
+           "rescue_still_lost": {"n": int(still.sum()), "relative_drop": float(drop[still].mean()) if still.any() else None},
+           "control": {"n": int(ctrl.sum()), "q_after": float(q1[ctrl].mean()), "relative_drop": float(drop[ctrl].mean())}}
+    if saved.sum() >= 10:
+        res["rescued_minus_control_ci95"] = boot_diff(saved, ctrl)
+        res["pass"] = bool(drop[saved].mean() >= 0.30 and res["rescued_minus_control_ci95"][0] > 0)
+    # dose-response: mass after vs q after, over all edits
+    res["corr_q_after_vs_mass_after"] = float(np.corrcoef(q1, after)[0, 1])
+    # exploratory (not registered): the rescue edits binned by the evaluation they produce
+    bins = [("still lost (q <= -0.5)", q1 <= -0.5), ("balanced (-0.5 < q < 0.3)", (q1 > -0.5) & (q1 < 0.3)),
+            ("winning (q >= 0.3)", q1 >= 0.3)]
+    res["rescue_by_q_after"] = {nm: {"n": int((m & (kind == "rescue")).sum()),
+                                     "relative_drop": float(drop[m & (kind == "rescue")].mean()) if (m & (kind == "rescue")).any() else None,
+                                     "mass_after": float(after[m & (kind == "rescue")].mean()) if (m & (kind == "rescue")).any() else None}
+                                for nm, m in bins}
+    np.savez(os.path.join(WORK, "lostcause_edits.npz"), before=before, after=after, q0=qb, q1=q1, kind=kind)
+    log("K11f:", json.dumps(res))
+    json.dump(res, open(os.path.join(OUT, "lost_cause_fresh.json"), "w"), indent=1)
+
+
 CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
     ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
     ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
@@ -724,4 +894,4 @@ def cmd_confirm():
 
 if __name__ == "__main__":
     {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
-     "confirm": cmd_confirm, "freshq": cmd_freshq}[sys.argv[1]]()
+     "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause}[sys.argv[1]]()
