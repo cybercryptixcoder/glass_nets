@@ -293,3 +293,9 @@ not start from human chess ideas.
   against a very weak one, where the lost side wins 89% either way.
 - The 15:00 clock check arrived (delivered at 15:11, after the turn's work). All work was already committed and pushed.
 
+## Nov 24, 15:41: wrap-up check
+
+- The 15:40 wrap-up check-in fired. Nothing new was started after 15:12.
+- The last open ledger row (K11 as first registered) now carries its outcome.
+- The summary JSON was regenerated, and everything is pushed. The 16:05 check-in will only confirm the push state.
+
