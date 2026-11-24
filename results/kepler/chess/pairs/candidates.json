@@ -1,0 +1,734 @@
+[
+ {
+  "prompt": "noise_control",
+  "name": "fen_hash_noise",
+  "idea": "must fail",
+  "code": "def concept(board):\n    import hashlib\n    h = hashlib.md5(board.fen().encode()).hexdigest()\n    return int(h[:8], 16) / 16 ** 8\n",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.005224016264924293,
+    "ci95": [
+     -0.008789005898743945,
+     -0.0020499741587750773
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7683185617349048
+   },
+   "gain_744706": {
+    "gain": 0.00017095995464709495,
+    "ci95": [
+     -0.00289177002726238,
+     0.0032396653929842646
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7636011087563257
+   },
+   "decodability": {
+    "best_site": 2,
+    "trained": 0.0008319625842283518,
+    "control": -0.0007826081181876443,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "halfmove_clock",
+    -0.02615076430222127
+   ],
+   "nonzero_share": 1.0,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.0055672927166772555,
+  "corr_channel22_residual_quiet": -0.002520545905811858
+ },
+ {
+  "prompt": "value_0",
+  "name": "undefended_advanced_pawns",
+  "idea": "Advanced pawns that are not protected by another pawn are a liability: the opponent can attack them with pieces or pawns, and the side to move must spend time defending or advancing them. A strong player should count such pawns as a positional weakness.",
+  "code": "def concept(board):\n    count = 0\n    turn = board.turn\n    for sq, piece in board.piece_map().items():\n        if piece.color == turn and piece.piece_type == chess.PAWN:\n            r = chess.square_rank(sq)\n            f = chess.square_file(sq)\n            defended = False\n            if turn == chess.WHITE and r >= 3:\n                for df in (-1, 1):\n                    nf = f + df\n                    nr = r - 1\n                    if 0 <= nf < 8 and 0 <= nr < 8:\n                        p = board.piece_at(chess.square(nf, nr))\n                        if p is not None and p.color == turn and p.piece_type == chess.PAWN:\n                            defended = True\n                            break\n                if not defended:\n                    count += 1\n            elif turn == chess.BLACK and r <= 4:\n                for df in (-1, 1):\n                    nf = f + df\n                    nr = r + 1\n                    if 0 <= nf < 8 and 0 <= nr < 8:\n                        p = board.piece_at(chess.square(nf, nr))\n                        if p is not None and p.color == turn and p.piece_type == chess.PAWN:\n                            defended = True\n                            break\n                if not defended:\n                    count += 1\n    return float(count)",
+  "test": {
+   "gain_LD2": {
+    "gain": -3.110616666515802e-06,
+    "ci95": [
+     -0.0024653678911637222,
+     0.002382180652998951
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7735394673831625
+   },
+   "gain_744706": {
+    "gain": 0.002095731504782021,
+    "ci95": [
+     -0.0003537380949743405,
+     0.004839835010141928
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7655258803064606
+   },
+   "decodability": {
+    "best_site": 2,
+    "trained": 0.4914923225873007,
+    "control": 0.507112758125869,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "passed_max_rank_us",
+    0.27759630609672975
+   ],
+   "nonzero_share": 0.5332,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.026340960732445674,
+  "corr_channel22_residual_quiet": -0.0077337275746130986
+ },
+ {
+  "prompt": "value_0",
+  "name": "advanced_pawns_on_king_files",
+  "idea": "Pawns that have advanced beyond their starting rank on the files directly in front of your king can be a source of weakness: they may create holes, open lines towards your king, or become targets. Counting them measures how much the king's pawn cover has been disturbed.",
+  "code": "def concept(board):\n    king = board.king(board.turn)\n    if king is None:\n        return 0.0\n    kf = chess.square_file(king)\n    count = 0\n    turn = board.turn\n    for f in range(max(0, kf-1), min(7, kf+1)+1):\n        for r in range(8):\n            sq = chess.square(f, r)\n            piece = board.piece_at(sq)\n            if piece is not None and piece.color == turn and piece.piece_type == chess.PAWN:\n                if turn == chess.WHITE and r > 1:\n                    count += 1\n                elif turn == chess.BLACK and r < 6:\n                    count += 1\n    return float(count)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0007296010692328446,
+    "ci95": [
+     -0.0035977044988820925,
+     0.002042164972332578
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7728129769305961
+   },
+   "gain_744706": {
+    "gain": 0.0009719679092219622,
+    "ci95": [
+     -0.0021257526911813633,
+     0.003862748928275543
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7644021167109005
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.473237034189416,
+    "control": 0.44872094500295656,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "open_files_near_king_us",
+    -0.2753529802344141
+   ],
+   "nonzero_share": 0.6858,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.021662782511601752,
+  "corr_channel22_residual_quiet": 0.008363477863287064
+ },
+ {
+  "prompt": "value_0",
+  "name": "bad_bishop_pawns",
+  "idea": "A bishop is 'bad' when many of its own pawns stand on squares of the same colour as the bishop, blocking its diagonals. Count the number of such pawns for all your bishops: the higher the count, the more your bishops are restricted by your own pawn structure.",
+  "code": "def concept(board):\n    count = 0\n    turn = board.turn\n    bishops = []\n    for sq, piece in board.piece_map().items():\n        if piece.color == turn and piece.piece_type == chess.BISHOP:\n            parity = (chess.square_file(sq) + chess.square_rank(sq)) % 2\n            bishops.append(parity)\n    if not bishops:\n        return 0.0\n    for sq, piece in board.piece_map().items():\n        if piece.color == turn and piece.piece_type == chess.PAWN:\n            parity = (chess.square_file(sq) + chess.square_rank(sq)) % 2\n            for b in bishops:\n                if parity == b:\n                    count += 1\n                    break\n    return float(count)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0021073650246489794,
+    "ci95": [
+     -0.004999424792796896,
+     0.0007731110180750269
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.77143521297518
+   },
+   "gain_744706": {
+    "gain": -0.0002716832415922228,
+    "ci95": [
+     -0.003725389159291139,
+     0.002890715655141781
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7631584655600864
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.8262011394255938,
+    "control": 0.64085863227474,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "bishop_pair_us",
+    0.8408667536307187
+   ],
+   "nonzero_share": 0.7146,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.013878756016773061,
+  "corr_channel22_residual_quiet": 0.017640576442933657
+ },
+ {
+  "prompt": "value_0",
+  "name": "enemy_knights_near_king",
+  "idea": "Knights are especially dangerous when they are close to your king: they can fork, deliver checks, or join an attack on the king's position. Counting enemy knights within two squares of your king highlights latent tactical danger that static material and mobility do not capture.",
+  "code": "def concept(board):\n    king = board.king(board.turn)\n    if king is None:\n        return 0.0\n    count = 0\n    for sq, piece in board.piece_map().items():\n        if piece.piece_type == chess.KNIGHT and piece.color != board.turn:\n            if chess.square_distance(king, sq) <= 2:\n                count += 1\n    return float(count)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0004746375288986524,
+    "ci95": [
+     -0.0027901191525046254,
+     0.0016589548296122383
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7730679404709304
+   },
+   "gain_744706": {
+    "gain": 0.00039875669959890984,
+    "ci95": [
+     -0.0020351357164707013,
+     0.0026163292431225092
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7638289055012775
+   },
+   "decodability": {
+    "best_site": 6,
+    "trained": 0.13012713782567564,
+    "control": 0.03287277933782329,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "king_zone_attacks_on_us",
+    0.28047349506764374
+   ],
+   "nonzero_share": 0.0431,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.016600576093999942,
+  "corr_channel22_residual_quiet": -0.002424085033977609
+ },
+ {
+  "prompt": "value_0",
+  "name": "unsafe_king_adjacent_squares",
+  "idea": "The number of squares next to your king that are attacked by the opponent indicates how constrained your king is. Even if the king is not in check, many attacked escape squares mean the king is vulnerable and the opponent may soon create threats.",
+  "code": "def concept(board):\n    king = board.king(board.turn)\n    if king is None:\n        return 0.0\n    count = 0\n    for sq in chess.SQUARES:\n        if chess.square_distance(king, sq) != 1:\n            continue\n        piece = board.piece_at(sq)\n        if piece is not None and piece.color == board.turn:\n            continue\n        if board.is_attacked_by(not board.turn, sq):\n            count += 1\n    return float(count)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0011059221389225242,
+    "ci95": [
+     -0.0033936166711467566,
+     0.001212157877107457
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7724366558609065
+   },
+   "gain_744706": {
+    "gain": 0.00012845550943563149,
+    "ci95": [
+     -0.0027306879107521958,
+     0.002998305350871374
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7635586043111142
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.4883389445352123,
+    "control": 0.35158139001930055,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "king_zone_attacks_on_us",
+    0.8845624365539844
+   ],
+   "nonzero_share": 0.3726,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.002988804378579838,
+  "corr_channel22_residual_quiet": 0.005711194119652245
+ },
+ {
+  "prompt": "value_1",
+  "name": "own_undeveloped_minors_on_start",
+  "idea": "A side whose knights and bishops are still sitting on their original squares is effectively playing a piece down for the moment; the network penalizes this passivity even when raw mobility looks similar.",
+  "code": "def concept(board):\n    own = board.turn\n    if own == chess.WHITE:\n        starts = (chess.B1, chess.G1, chess.C1, chess.F1)\n    else:\n        starts = (chess.B8, chess.G8, chess.C8, chess.F8)\n    n = 0\n    for sq in starts:\n        p = board.piece_at(sq)\n        if p is not None and p.color == own and p.piece_type in (chess.KNIGHT, chess.BISHOP):\n            n += 1\n    return float(n)\n",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.00029598480300782083,
+    "ci95": [
+     -0.0041624307283662796,
+     0.003733314393189053
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7732465931968212
+   },
+   "gain_744706": {
+    "gain": 0.0038477744982180293,
+    "ci95": [
+     -5.058655074525462e-05,
+     0.007811690501948217
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7672779232998966
+   },
+   "decodability": {
+    "best_site": 2,
+    "trained": 0.9753300109226728,
+    "control": 0.9453824908559969,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "castling_rights_us",
+    0.5958910742648215
+   ],
+   "nonzero_share": 0.394,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.09068480790004516,
+  "corr_channel22_residual_quiet": 0.08068156748135885
+ },
+ {
+  "prompt": "value_1",
+  "name": "central_pawn_deficit",
+  "idea": "If you have fewer than two pawns on the d/e files, you are conceding the central pawn skeleton. The network treats missing central pawns as a lasting positional liability, not just as space or material.",
+  "code": "def concept(board):\n    own = board.turn\n    cnt = 0\n    for sq in chess.SQUARES:\n        p = board.piece_at(sq)\n        if p is not None and p.color == own and p.piece_type == chess.PAWN:\n            f = chess.square_file(sq)\n            if f == 3 or f == 4:\n                cnt += 1\n    return float(max(0, 2 - cnt))\n",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0028049961908809978,
+    "ci95": [
+     -0.005486477801783853,
+     -0.00039791201657217185
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.770737581808948
+   },
+   "gain_744706": {
+    "gain": 0.00039590982953896444,
+    "ci95": [
+     -0.0027217288977529138,
+     0.0032592133052022952
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7638260586312176
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.7999756562648538,
+    "control": 0.8773038976923888,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "n_pieces",
+    -0.5695724858613708
+   ],
+   "nonzero_share": 0.6824,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.007446475193636372,
+  "corr_channel22_residual_quiet": 0.030816933274001864
+ },
+ {
+  "prompt": "value_1",
+  "name": "own_king_shield_holes",
+  "idea": "A king is not just safe because a pawn shield exists somewhere; the network cares whether the three pawns directly in front of the king are actually present. Missing or advanced shield pawns create entry squares.",
+  "code": "def concept(board):\n    own = board.turn\n    ksq = None\n    for sq in chess.SQUARES:\n        p = board.piece_at(sq)\n        if p is not None and p.color == own and p.piece_type == chess.KING:\n            ksq = sq\n            break\n    if ksq is None:\n        return 0.0\n    f = chess.square_file(ksq)\n    r = chess.square_rank(ksq)\n    dr = 1 if own == chess.WHITE else -1\n    holes = 0\n    for df in (-1, 0, 1):\n        nf = f + df\n        nr = r + dr\n        if 0 <= nf < 8 and 0 <= nr < 8:\n            sq = chess.square(nf, nr)\n            p = board.piece_at(sq)\n            if not (p is not None and p.color == own and p.piece_type == chess.PAWN):\n                holes += 1\n        else:\n            holes += 1\n    return float(holes)\n",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.003192449325653342,
+    "ci95": [
+     -0.0063564832266844,
+     -0.0002609821193551537
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7703501286741756
+   },
+   "gain_744706": {
+    "gain": 0.0016790619807333425,
+    "ci95": [
+     -0.0015482539864918941,
+     0.005157178350286514
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.765109210782412
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.7117126515952101,
+    "control": 0.6624394666349781,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "pawn_shield_us",
+    -0.8334295944783768
+   ],
+   "nonzero_share": 0.8645,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.016153224418264285,
+  "corr_channel22_residual_quiet": 0.015474024219724603
+ },
+ {
+  "prompt": "value_1",
+  "name": "enemy_central_pawn_advantage",
+  "idea": "The dangerous case is not merely having few central pawns yourself, but the opponent having more d/e pawns than you. That gives the opponent a mobile central mass while your pieces lack anchors.",
+  "code": "def concept(board):\n    own = board.turn\n    enemy = not own\n    ownc = 0\n    enemyc = 0\n    for sq in chess.SQUARES:\n        p = board.piece_at(sq)\n        if p is not None and p.piece_type == chess.PAWN:\n            f = chess.square_file(sq)\n            if f == 3 or f == 4:\n                if p.color == own:\n                    ownc += 1\n                else:\n                    enemyc += 1\n    return float(enemyc - ownc)\n",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0006930674530720319,
+    "ci95": [
+     -0.003972533917275476,
+     0.0021155300491627186
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.772849510546757
+   },
+   "gain_744706": {
+    "gain": 0.0018712774433886333,
+    "ci95": [
+     -0.0009858939187670473,
+     0.004708586414009979
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7653014262450673
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.6886264931907435,
+    "control": 0.7345102259026091,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "material_P",
+    -0.3837545209237151
+   ],
+   "nonzero_share": 0.4898,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.03644970909755115,
+  "corr_channel22_residual_quiet": 0.04249828334721636
+ },
+ {
+  "prompt": "value_1",
+  "name": "passive_development_and_center_deficit",
+  "idea": "The network combines two quiet signs of passivity: undeveloped minor pieces plus too few central pawns. Either alone can be masked by mobility, but together they mean the side to move has no real central or piece initiative.",
+  "code": "def concept(board):\n    own = board.turn\n    if own == chess.WHITE:\n        starts = (chess.B1, chess.G1, chess.C1, chess.F1)\n    else:\n        starts = (chess.B8, chess.G8, chess.C8, chess.F8)\n    undeveloped = 0\n    for sq in starts:\n        p = board.piece_at(sq)\n        if p is not None and p.color == own and p.piece_type in (chess.KNIGHT, chess.BISHOP):\n            undeveloped += 1\n    central = 0\n    for sq in chess.SQUARES:\n        p = board.piece_at(sq)\n        if p is not None and p.color == own and p.piece_type == chess.PAWN:\n            f = chess.square_file(sq)\n            if f == 3 or f == 4:\n                central += 1\n    return float(undeveloped + max(0, 2 - central))\n",
+  "test": {
+   "gain_LD2": {
+    "gain": 7.710302412827323e-05,
+    "ci95": [
+     -0.003590080463470269,
+     0.0036853004760953314
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7736196810239573
+   },
+   "gain_744706": {
+    "gain": 0.004629375180006398,
+    "ci95": [
+     0.000504558211885836,
+     0.008548460118629713
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.768059523981685
+   },
+   "decodability": {
+    "best_site": 2,
+    "trained": 0.8466814951581927,
+    "control": 0.8780697293755434,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "castling_rights_us",
+    0.29641459245440055
+   ],
+   "nonzero_share": 0.867,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.09308601059462851,
+  "corr_channel22_residual_quiet": 0.10064989081974957
+ },
+ {
+  "prompt": "channel22_0",
+  "name": "opponent_piece_pressure",
+  "idea": "The network penalizes the side to move when many enemy non-pawn pieces are actively bearing down on our pieces, regardless of material value. It is not just raw mobility; it counts how many distinct enemy pieces are creating pressure.",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    pieces = (board.pieces(chess.KNIGHT, them) | board.pieces(chess.BISHOP, them) |\n              board.pieces(chess.ROOK, them) | board.pieces(chess.QUEEN, them))\n    n = 0\n    for sq in pieces:\n        if board.attacks(sq) & board.occupied_co[us]:\n            n += 1\n    return float(n)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0015460986393634464,
+    "ci95": [
+     -0.004801878112933842,
+     0.0016327521870057875
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7719964793604656
+   },
+   "gain_744706": {
+    "gain": 0.0031628253700305585,
+    "ci95": [
+     -0.0001762283876097955,
+     0.006613293310898043
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7665929741717091
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.47880808656438334,
+    "control": 0.2400624368203651,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "space_them",
+    0.3751822545094983
+   ],
+   "nonzero_share": 0.8419,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.038625809493089476,
+  "corr_channel22_residual_quiet": -0.05502226361776824
+ },
+ {
+  "prompt": "channel22_0",
+  "name": "opponent_king_zone_attackers",
+  "idea": "The network dislikes positions where many different enemy pieces, including pawns, are aiming into our king's immediate 3x3 zone. Two pieces hitting the same square count as two distinct attackers.",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    ksq = board.king(us)\n    if ksq is None:\n        return 0.0\n    kf = chess.square_file(ksq)\n    kr = chess.square_rank(ksq)\n    zone = 0\n    for df in (-1, 0, 1):\n        for dr in (-1, 0, 1):\n            f = kf + df\n            r = kr + dr\n            if 0 <= f < 8 and 0 <= r < 8:\n                zone |= chess.BB_SQUARES[chess.square(f, r)]\n    pieces = (board.pieces(chess.KNIGHT, them) | board.pieces(chess.BISHOP, them) |\n              board.pieces(chess.ROOK, them) | board.pieces(chess.QUEEN, them) |\n              board.pieces(chess.PAWN, them))\n    n = 0\n    for sq in pieces:\n        if board.attacks(sq) & zone:\n            n += 1\n    return float(n)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.001804267217470551,
+    "ci95": [
+     -0.004531348414068799,
+     0.0007459705107937837
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7717383107823584
+   },
+   "gain_744706": {
+    "gain": 0.0018901326465257373,
+    "ci95": [
+     -0.0011477586759968312,
+     0.0048720922483327005
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7653202814482043
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.49110606441703086,
+    "control": 0.2844548604938484,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "king_zone_attacks_on_us",
+    0.8798483529503468
+   ],
+   "nonzero_share": 0.5574,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.011524804129989135,
+  "corr_channel22_residual_quiet": -0.017525750566662338
+ },
+ {
+  "prompt": "channel22_0",
+  "name": "opponent_nonpawn_surplus",
+  "idea": "The network uses a raw count of enemy non-pawn pieces minus our non-pawn pieces, treating every piece as equally threatening rather than weighting by material value. An extra enemy piece matters even if it is only a knight.",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    def count(color):\n        bb = (board.pieces(chess.KNIGHT, color) | board.pieces(chess.BISHOP, color) |\n              board.pieces(chess.ROOK, color) | board.pieces(chess.QUEEN, color))\n        return bb.bit_count()\n    return float(count(them) - count(us))",
+  "error": "ValueError: 10000 errors"
+ },
+ {
+  "prompt": "channel22_0",
+  "name": "opponent_developed_nonpawns",
+  "idea": "The network reacts to how many enemy non-pawn pieces have left their home rank. A large number of developed enemy pieces makes the position feel more dangerous for the side to move, independent of classical activity measures.",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    home = 0 if them == chess.WHITE else 7\n    pieces = (board.pieces(chess.KNIGHT, them) | board.pieces(chess.BISHOP, them) |\n              board.pieces(chess.ROOK, them) | board.pieces(chess.QUEEN, them))\n    n = 0\n    for sq in pieces:\n        if chess.square_rank(sq) != home:\n            n += 1\n    return float(n)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0028414278642006395,
+    "ci95": [
+     -0.005950440381749163,
+     0.00037141427175977514
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7707011501356283
+   },
+   "gain_744706": {
+    "gain": -0.0007918388112663307,
+    "ci95": [
+     -0.004170817246451547,
+     0.0028549662108455958
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7626383099904123
+   },
+   "decodability": {
+    "best_site": 2,
+    "trained": 0.8520542173141792,
+    "control": 0.5798853550012084,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "center_attacks_them",
+    0.532878785298994
+   ],
+   "nonzero_share": 0.9536,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": -0.03420749445013306,
+  "corr_channel22_residual_quiet": 0.024882343389396794
+ },
+ {
+  "prompt": "channel22_0",
+  "name": "opponent_pieces_under_pressure",
+  "idea": "The network counts how many enemy non-pawn pieces are attacked by us, not merely whether a profitable capture exists. Enemy pieces under attack are still a burden because they can be defended, traded, or used to create counterplay.",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    pieces = (board.pieces(chess.KNIGHT, them) | board.pieces(chess.BISHOP, them) |\n              board.pieces(chess.ROOK, them) | board.pieces(chess.QUEEN, them))\n    n = 0\n    for sq in pieces:\n        if board.attackers(us, sq):\n            n += 1\n    return float(n)",
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0016613890730641288,
+    "ci95": [
+     -0.0046961689044370866,
+     0.001213935884687046
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7718811889267649
+   },
+   "gain_744706": {
+    "gain": 0.001675129577736757,
+    "ci95": [
+     -0.0012412852461115096,
+     0.004694670056841071
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7651052783794153
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.34407600574947583,
+    "control": 0.057342970206002764,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "captures_available",
+    0.4717343326688248
+   ],
+   "nonzero_share": 0.4513,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false
+  },
+  "corr_value_residual_quiet": 0.023225328980447896,
+  "corr_channel22_residual_quiet": -0.011482672377151195
+ },
+ {
+  "prompt": "channel22_1",
+  "name": "opponent_central_forward_pieces",
+  "idea": "The opponent has more pieces occupying the advanced central rectangle (files c-f, ranks 4-6). Each such piece adds to a bind, making the side to move feel more cramped and pessimistic.",
+  "code": "def opponent_central_forward_pieces(board):\n    them = not board.turn\n    count = 0\n    for sq, piece in board.piece_map().items():\n        if piece.color == them:\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if 2 <= f <= 5 and 3 <= r <= 5:\n                count += 1\n    return float(count)",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "prompt": "channel22_1",
+  "name": "opponent_central_forward_weighted",
+  "idea": "Pieces in the advanced central rectangle (c4-f6) are more dangerous when they are actual pieces rather than pawns. Weighting non-pawns double captures the extra bind from active enemy pieces.",
+  "code": "def opponent_central_forward_weighted(board):\n    them = not board.turn\n    score = 0.0\n    for sq, piece in board.piece_map().items():\n        if piece.color == them:\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if 2 <= f <= 5 and 3 <= r <= 5:\n                score += 2.0 if piece.piece_type != chess.PAWN else 1.0\n    return score",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "prompt": "channel22_1",
+  "name": "opponent_central_wide_pieces",
+  "idea": "The broader central zone (files c-f, ranks 3-6) collects enemy pieces that control or infiltrate the centre. More such pieces mean the side to move is under central pressure.",
+  "code": "def opponent_central_wide_pieces(board):\n    them = not board.turn\n    count = 0\n    for sq, piece in board.piece_map().items():\n        if piece.color == them:\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if 2 <= f <= 5 and 2 <= r <= 5:\n                count += 1\n    return float(count)",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "prompt": "channel22_1",
+  "name": "opponent_central_forward_plus_advanced",
+  "idea": "Enemy pieces that have reached the central 4th-7th ranks are a direct attacking asset. Counting them highlights a space-grab that the classical terms underrate.",
+  "code": "def opponent_central_forward_plus_advanced(board):\n    them = not board.turn\n    count = 0\n    for sq, piece in board.piece_map().items():\n        if piece.color == them:\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if 2 <= f <= 5 and 3 <= r <= 6:\n                count += 1\n    return float(count)",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "prompt": "channel22_1",
+  "name": "opponent_central_advanced_rank",
+  "idea": "The opponent's advanced rank (6th for Black, 3rd for White) in the central files is a staging square for invasion. More enemy pieces there signal a coming offensive.",
+  "code": "def opponent_central_advanced_rank(board):\n    them = not board.turn\n    target_rank = 5 if them == chess.BLACK else 2\n    count = 0\n    for sq, piece in board.piece_map().items():\n        if piece.color == them:\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if 2 <= f <= 5 and r == target_rank:\n                count += 1\n    return float(count)",
+  "error": "ValueError: no function named concept"
+ }
+]

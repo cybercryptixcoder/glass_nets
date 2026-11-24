@@ -140,7 +140,12 @@ def compile_concept(code):
     exec(code, ns)
     fn = ns.get("concept")
     if not callable(fn):
-        raise ValueError("no function named concept")
+        # K9 fix (translation error): accept a program that defines exactly one function under another name
+        own = [v for k, v in ns.items() if callable(v) and getattr(v, "__module__", None) is None and k not in ("chess", "math")]
+        own = [v for v in own if getattr(v, "__code__", None) is not None]
+        if len(own) != 1:
+            raise ValueError("no function named concept")
+        fn = own[0]
     return fn
 
 
