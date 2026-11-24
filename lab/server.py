@@ -377,6 +377,11 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, (STATIC / "constructor.html").read_bytes(), "text/html; charset=utf-8")
             if p == "/catalog":
                 return self.send(200, (STATIC / "catalog.html").read_bytes(), "text/html; charset=utf-8")
+            if p == "/kepler":
+                return self.send(200, (STATIC / "kepler.html").read_bytes(), "text/html; charset=utf-8")
+            if p == "/api/kepler":
+                f = LAB.parent / "results" / "kepler" / "summary.json"
+                return self.send(200, f.read_bytes() if f.exists() else b"{}", "application/json")
             if p == "/api/catalog":
                 import catalog
                 return self.send(200, catalog.entries())
