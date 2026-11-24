@@ -50,7 +50,9 @@ class Spectral:
         ux = self.ifft(I * self.KX * I * self.KY * psih)          # du/dx = psi_xy
         uy = self.ifft(I * self.KY * I * self.KY * psih)          # du/dy = psi_yy
         vx = self.ifft(-I * self.KX * I * self.KX * psih)         # dv/dx = -psi_xx
-        out["adv"] = out["u"] * out["omega_x"] + out["v"] * out["omega_y"]   # u.grad(omega)
+        # u.grad(omega) as the solver represents it on this grid: the product projected onto the resolved
+        # (2/3-dealiased) modes. The raw product differs by aliased high modes (K1 (a) caught this, 10:0x).
+        out["adv"] = self.ifft(self.fft(out["u"] * out["omega_x"] + out["v"] * out["omega_y"]) * self.mask)
         out["strain_n"] = ux                                       # normal strain (du/dx = -dv/dy)
         out["strain_s"] = 0.5 * (uy + vx)                          # shear strain
         out["okubo_weiss"] = 4 * (ux ** 2 + out["strain_s"] ** 2) - out["omega"] ** 2

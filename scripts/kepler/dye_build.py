@@ -46,7 +46,8 @@ def gen(n_train=int(os.environ.get("N_TRAIN", 384)), n_val=48, frames=32):
     log("done gen")
 
 
-def train(steps=int(os.environ.get("STEPS", 20000)), bs=32, width=int(os.environ.get("WIDTH", 64)), lr=2e-3):
+def train(steps=int(os.environ.get("STEPS", 10000)), bs=32, width=int(os.environ.get("WIDTH", 64)),
+          lr=float(os.environ.get("LR", 6e-4))):
     import torch
     from kepler.targets.fluid.model import FluidNet, save
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -65,6 +66,7 @@ def train(steps=int(os.environ.get("STEPS", 20000)), bs=32, width=int(os.environ
     rand.out_scale.fill_(out_scale)
     save(rand, os.path.join(OUT, "model_random.pt"), {"control": True, "k": K})
     opt = torch.optim.Adam(m.parameters(), lr=lr)
+    scaler = torch.amp.GradScaler("cuda", enabled=(dev == "cuda"))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=lr, total_steps=steps, pct_start=0.05)
     g = torch.Generator(device="cpu").manual_seed(0)
     vi = torch.arange(0, va.shape[0])
@@ -76,10 +78,15 @@ def train(steps=int(os.environ.get("STEPS", 20000)), bs=32, width=int(os.environ
         t = torch.randint(K - 1, T - 1, (bs,), generator=g)
         x = torch.stack([tr[v, t - K + 1 + j] for j in range(K)], 1)
         y = tr[v, t + 1]
-        loss = (((m(x) - y) / out_scale) ** 2).mean()
+        with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=(dev == "cuda")):
+            pred = m(x)
+        loss = (((pred.float() - y) / out_scale) ** 2).mean()
         opt.zero_grad()
-        loss.backward()
-        opt.step()
+        scaler.scale(loss).backward()
+        scaler.unscale_(opt)
+        torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+        scaler.step(opt)
+        scaler.update()
         sched.step()
         if step % 250 == 0 or step == 1:
             with torch.no_grad():

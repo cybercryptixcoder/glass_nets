@@ -39,3 +39,20 @@ was assigned.
   dye frames (3 past frames), never the velocity, like a real video model. Generation and training (20,000 steps)
   launched on the Colab T4 at 09:51.
 - **Fluid video model (K1)** training locally: step 3,800, error on the one-step change 22% and falling.
+
+**10:09 EST. K1 known-answer test: ALL PASS (after one translation fix found by the test).**
+`scripts/kepler/fluid_known_test.py`, result in `results/kepler/fluid/k1_known_test.json`.
+- First run, (a) FAIL: from the simulator's exact derivative the extractor returned the 5 true terms (coefficients
+  within 1.4%) plus two tiny extra terms (omega_x 8e-5, omega*ke -0.0018). Cause, shown by the code: the solver
+  computes advection dealiased (the product projected onto the resolved 2/3 modes) while the library computed the
+  raw product; the extra terms were fitting the aliased difference. A translation error (the library term did not
+  match its intent, "u.grad(omega) as the solver represents it"): the library now projects the product the same
+  way. Also a numerical floor: unexplained error below 1e-9 of the variance counts as round-off.
+- Second run: (a) PASS, exactly {adv, lap, omega, v, sin(4y)} with advection -1.0, nu 0.0100, mu 0.0500,
+  beta 0.600, F 0.500 (R^2 1.0). (a') reported: the two-step (Richardson) estimate on the exact solver gives the true
+  terms within 1.6% plus a negligible hyperdiffusion term (its O(dt^2) bias). (b) PASS: shuffled targets R^2 0.003.
+  (c) PASS: the untrained model is fit to R^2 0.987 but by 9 wrong terms. Lesson kept: R^2 alone would have been
+  fooled by the untrained net; the term-set requirement is what makes the test discriminate.
+- Extractor made fast (Gram matrices; identical least-squares fits): 4 extractions in 100 s.
+- Smoke model on Colab diverged at the learning-rate peak (step 1,000: error on the change 0.15 -> 1.68). Relaunched
+  10:09 with peak lr 6e-4, gradient clipping and fp16 mixed precision (10,000 steps).
