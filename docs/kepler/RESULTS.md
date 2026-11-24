@@ -57,11 +57,11 @@ Each candidate had to:
 
   | Rule | Network vs humans | Do humans who follow it win more? |
   |---|---|---|
-  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | **Yes: +0.08 score** [0.01, 0.15] |
-  | **Enemy king still in the centre: play the lever** | 1.6× | **Yes: +0.13** [0.01, 0.24] |
+  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | **Yes: +0.06 score** [0.01, 0.11] |
+  | **Enemy king still in the centre: play the lever** | 1.6×; partly causal (enemy king moved to a castled square: appetite −13% vs −3% for a matched move) | **Yes: +0.10** [0.02, 0.17] |
   | Quiet position: leave a pushed pawn en prise | 1.6× | +0.19 [−0.00, 0.38], only 21 games |
   | Behind in material: offer trades | 1.6× (all of it in lost positions) | No: −0.02 [−0.13, 0.10] |
-  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | **No: −0.04** [−0.16, 0.09] |
+  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | **No: +0.02** [−0.07, 0.11] |
 
 - **Two different kinds of knowledge.**
   - **Pawn levers:** humans play fewer of the networks' levers at almost every rating level (fewest in the middle and
@@ -69,9 +69,15 @@ Each candidate had to:
   - **Queen trades when lost:** this inverts the textbook rule ("when behind, avoid trades, especially of queens"). It is
     right by the network's own judgement, but in real games it buys humans nothing. This is behaviour that pays only
     against a superhuman opponent.
-- **Cause tests failed for these rules.** Board edits that switch the situation off (material, lostness) do not switch
-  the behaviour off. The rules describe where the networks' choices differ from humans'. They are not a switch inside
-  the network that the situation flips.
+- **Cause tests: mostly negative, one partial.**
+  - Board edits that switch material or lostness off do not switch the behaviour off.
+  - The one matched test (enemy king castled vs moved within the centre) shows a real but modest causal effect on lever
+    appetite: 13% vs 3%, below the 30% bar set beforehand.
+  - The rules mainly describe where the networks' choices differ from humans'.
+- **Numbers.** Real-game scores (1 win, ½ draw, 0 loss) pool both samples and are adjusted for t1's value of the
+  position. Exceptions: the pawn-sacrifice and trade-offer rows use fresh games only.
+- **Teaching positions** for each rule (FEN, t1's move, the human's move, Lichess link):
+  `results/kepler/chess/rules/examples_fresh.json`.
 
 ## What is a first, and what is not
 

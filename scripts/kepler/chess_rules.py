@@ -878,6 +878,67 @@ def cmd_outcomes():
     json.dump(out, open(os.path.join(OUT, "real_outcomes_fresh.json"), "w"), indent=1)
 
 
+def cmd_kingcause():
+    """K11h: matched king edits. Castled (situation off) vs other centre square (situation kept)."""
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    global KEYS, FEATS
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, items, tops, cond = fm["keys"], fm["items"], fm["tops"], fm["cond"]
+    KEYS, FEATS = keys, (lambda b, m: {**move_feats(b, m), **move_feats_c(b, m)})
+    mi = keys.index("pawn lever (push attacks an enemy pawn)")
+    eking = np.array([c["enemy king in the centre (d/e file)"] for c in cond])
+    sel = np.where((eking == 1) & (Fz["T"][:, mi] > 0.5))[0]
+    net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    eb, meta_e, base_boards, base_idx = [], [], [], []
+    for i in sel:
+        b = chess.Board(items[i]["fen"])
+        them = not b.turn
+        k = b.king(them)
+        home = 7 if them == chess.BLACK else 0
+        kr, kf = chess.square_rank(k), chess.square_file(k)
+        if kr not in (home, home + (-1 if them == chess.BLACK else 1)) or kf not in (3, 4):
+            continue
+        top = chess.Move.from_uci(tops["T"][i])
+        targets = {"castled": [chess.square(f, home) for f in (1, 2, 6)],
+                   "centre": [chess.square(7 - kf, kr), chess.square(kf, home + (-1 if them == chess.BLACK else 1)) if kr == home
+                              else chess.square(kf, home)]}
+        got = False
+        for kind, sqs in targets.items():
+            for t in sqs:
+                if b.piece_at(t) is not None or t in (top.from_square, top.to_square):
+                    continue
+                b2 = b.copy(stack=False)
+                kp = b2.remove_piece_at(k)
+                b2.set_piece_at(t, kp)
+                b2.castling_rights = b2.clean_castling_rights()
+                b2.ep_square = None
+                if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
+                    eb.append(b2)
+                    meta_e.append((int(i), kind))
+                    got = True
+        if got:
+            base_boards.append(b)
+            base_idx.append(int(i))
+    base, _ = mass_on(net, base_boards, mi)
+    base = dict(zip(base_idx, base))
+    after, q1 = mass_on(net, eb, mi)
+    before = np.array([base[m[0]] for m in meta_e])
+    drop = (before - after) / np.maximum(before, 1e-6)
+    kind = np.array([m[1] for m in meta_e])
+    off, kept = kind == "castled", kind == "centre"
+    rng = np.random.default_rng(13)
+    bs = [drop[rng.choice(np.where(off)[0], off.sum())].mean() - drop[rng.choice(np.where(kept)[0], kept.sum())].mean()
+          for _ in range(2000)]
+    res = {"positions": len(base_idx), "edits_castled": int(off.sum()), "edits_centre": int(kept.sum()),
+           "mass_before": float(before.mean()), "relative_drop_castled": float(drop[off].mean()),
+           "relative_drop_centre": float(drop[kept].mean()), "difference_ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))],
+           "mass_after_castled": float(after[off].mean()), "mass_after_centre": float(after[kept].mean())}
+    res["pass"] = bool(res["relative_drop_castled"] >= 0.30 and res["difference_ci95"][0] > 0)
+    log("K11h:", json.dumps(res))
+    json.dump(res, open(os.path.join(OUT, "king_cause_fresh.json"), "w"), indent=1)
+
+
 CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
     ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
     ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
@@ -980,4 +1041,4 @@ def cmd_confirm():
 if __name__ == "__main__":
     {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
      "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause,
-     "outcomes": cmd_outcomes}[sys.argv[1]]()
+     "outcomes": cmd_outcomes, "kingcause": cmd_kingcause}[sys.argv[1]]()

@@ -152,11 +152,11 @@ These are known answers, recovered unprompted.
 
 | Rule (situation → move) | t1 | humans | ratio | Real games: humans who also played it |
 |---|---|---|---|---|
-| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | score **+0.08** [0.01, 0.15] (adjusted for the position's value) |
-| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.13** [0.01, 0.24] |
-| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.19 [-0.00, 0.38] (only 21 games) |
-| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | -0.02 [-0.13, 0.10] |
-| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | -0.04 [-0.16, 0.09] |
+| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | score **+0.06** [0.01, 0.11] (both samples, 1,543 games, adjusted for the position's value) |
+| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.10** [0.02, 0.17] (786 games) |
+| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.19 [-0.00, 0.38] (fresh games; only 21 followed) |
+| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | -0.02 [-0.13, 0.10] (fresh games) |
+| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | +0.02 [-0.07, 0.11] (363 games) |
 
 **Three results stand out.**
 
@@ -165,8 +165,12 @@ These are known answers, recovered unprompted.
    - Humans play fewer at every level except the lowest. On the fresh games they fall from 4.3% (under 1300) to 3.3%
      (1900+); on the first sample they range from 3.2% to 4.7%, lowest in the middle bands.
    - The gap is largest for d-pawn levers (1.9×) and a-pawn levers (2.5×).
-   - Humans who did play the lever the network chose scored 8 to 13 points better, after adjusting for how good the
-     position was.
+   - Humans who did play the lever the network chose scored 6 to 10 points better, after adjusting for how good the
+     position was (both samples pooled, CIs above zero; on its own, the first sample gives the same sign but a CI that
+     includes zero).
+   - **Partly causal.** In matched edits (K11h), moving the enemy king from the centre to a castled square lowers t1's
+     appetite for the lever by 13%. Moving it to the other centre square lowers it by only 3% (difference CI 6 to 15
+     points). The effect is real, but under the 30% bar set beforehand, so it is not a pass.
 
    This is a network strategy that transfers.
 2. **A textbook rule inverted, but only where the network is lost.**
@@ -178,8 +182,8 @@ These are known answers, recovered unprompted.
    - In lost positions it trades queens twice as often as humans.
    - By its own value head, each such trade raises its draw chance from 6.0% to 9.9% (+4.0 points [1.9, 6.2]).
 3. **That inverted rule does not help humans.**
-   - In real games, humans in the same lost positions scored the same whether or not they traded: −0.04 [−0.16, 0.09]
-     on fresh games (adjusted for the position's value), +0.04 [−0.06, 0.13] pooled with the first sample (raw).
+   - In real games, humans in the same lost positions scored the same whether or not they traded: +0.02 [−0.07, 0.11],
+     both samples pooled (363 games) and adjusted for the position's value.
    - It is right by the network's judgement, but buys nothing against human opponents.
    - The pipeline can therefore tell "superhuman knowledge humans can use" from "superhuman behaviour that pays only
      against a superhuman opponent". A plausible reason is that self-play opponents do not blunder. That reason is a
@@ -202,8 +206,9 @@ Evidence:
 - `chess/rules/mined_b.json`, `mined_c.json` (main and principle-breaking passes)
 - `confirm_fresh.json`
 - `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
-- `lost_cause_fresh.json`
-- `real_outcomes_fresh.json`
+- `lost_cause_fresh.json`, `king_cause_fresh.json`
+- `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`
+- `examples_fresh.json` (teaching positions with Lichess game links)
 
 ## What is new here (against `RESEARCH.md`)
 
