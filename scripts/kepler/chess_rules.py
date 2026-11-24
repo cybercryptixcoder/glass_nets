@@ -939,6 +939,86 @@ def cmd_kingcause():
     json.dump(res, open(os.path.join(OUT, "king_cause_fresh.json"), "w"), indent=1)
 
 
+def cmd_transfer2():
+    """K11i: powered transfer test on games 21,001 onward."""
+    import random
+    import chess.pgn
+    from kepler.targets.chess.data import _text_stream
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    n = int(os.environ.get("N2", "40000"))
+    path = os.path.join(WORK, "transfer2.npz")
+    if not os.path.exists(path):
+        rng0 = random.Random(23)
+        stream = _text_stream(os.path.join(KDATA, "chess", "lichess_2013-01.pgn.zst"))
+        for _ in range(21000):
+            chess.pgn.skip_game(stream)
+        items = []
+        while len(items) < n:
+            g = chess.pgn.read_game(stream)
+            if g is None:
+                break
+            moves = list(g.mainline_moves())
+            if len(moves) < 14:
+                continue
+            plies = sorted(rng0.sample(range(10, len(moves) - 1), min(2, len(moves) - 11)))
+            b = g.board()
+            k = 0
+            for i, m in enumerate(moves):
+                if k < len(plies) and i == plies[k]:
+                    if not b.is_game_over():
+                        items.append({"fen": b.fen(), "played": m.uci(), "result": g.headers.get("Result", "*")})
+                    k += 1
+                b.push(m)
+        items = items[:n]
+        log(f"{len(items)} new positions")
+        boards = [chess.Board(it["fen"]) for it in items]
+        net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+        tops, q, _ = policy_eval(net, boards)
+        log("t1 done")
+        names = ["pawn lever (push attacks an enemy pawn)", "pawn sacrifice (pushed pawn en prise)", "queen trade (captures or offers the queen)"]
+        T = np.array([[move_feats_c(b, chess.Move.from_uci(t))[k] for k in names] for b, t in zip(boards, tops)], dtype=np.float32)
+        H = np.array([[move_feats_c(b, chess.Move.from_uci(it["played"]))[k] for k in names] for b, it in zip(boards, items)], dtype=np.float32)
+        To = np.array([move_feats(b, chess.Move.from_uci(t))["offers a like-for-like trade"] for b, t in zip(boards, tops)], dtype=np.float32)
+        Ho = np.array([move_feats(b, chess.Move.from_uci(it["played"]))["offers a like-for-like trade"] for b, it in zip(boards, items)], dtype=np.float32)
+        from kepler.targets.chess.concepts import _king_zone  # noqa: F401  (import check only)
+        ek = np.array([king_conditions(b)["enemy king in the centre (d/e file)"] for b in boards], dtype=bool)
+        inc = np.array([b.is_check() for b in boards])
+        VAL = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
+        mat = np.array([sum(v * (len(b.pieces(t, b.turn)) - len(b.pieces(t, not b.turn))) for t, v in VAL.items()) for b in boards])
+        sc = np.array([_score(it["fen"], it["result"]) for it in items])
+        exact = np.array([t == it["played"] for t, it in zip(tops, items)])
+        np.savez(path, T=T, H=H, To=To, Ho=Ho, ek=ek, inc=inc, mat=mat, q=q, sc=sc, exact=exact)
+    Z = dict(np.load(path))
+    q, sc, exact = Z["q"], Z["sc"], Z["exact"]
+    rng = np.random.default_rng(8)
+    def fit(mf, mn):
+        a, b = np.where(mf & ~np.isnan(sc))[0], np.where(mn & ~np.isnan(sc))[0]
+        y = np.r_[sc[a], sc[b]]
+        A = np.c_[np.ones(len(y)), np.r_[q[a], q[b]], np.r_[np.ones(len(a)), np.zeros(len(b))]]
+        return y, A, len(a), len(b)
+    rules = {"c0": (Z["T"][:, 0] > .5, Z["H"][:, 0] > .5, ~Z["inc"]), "c3": (Z["T"][:, 0] > .5, Z["H"][:, 0] > .5, Z["ek"]),
+             "c2": (Z["T"][:, 1] > .5, Z["H"][:, 1] > .5, ~Z["inc"]), "b1": (Z["To"] > .5, Z["Ho"] > .5, Z["mat"] <= -1),
+             "e1": (Z["T"][:, 2] > .5, Z["H"][:, 2] > .5, q <= -0.5)}
+    res = {"n_positions": int(len(q))}
+    for rid, (Tm, Hm, C) in rules.items():
+        y1, A1, na, nb = fit(C & Tm & Hm & exact, C & Tm & ~Hm)
+        y0, A0, ma, mb = fit(C & ~Tm & exact, C & ~Tm & ~exact)
+        e1_ = np.linalg.lstsq(A1, y1, rcond=None)[0][2]
+        e0_ = np.linalg.lstsq(A0, y0, rcond=None)[0][2]
+        bs = []
+        for _ in range(1500):
+            i1 = rng.integers(0, len(y1), len(y1))
+            i0 = rng.integers(0, len(y0), len(y0))
+            bs.append(np.linalg.lstsq(A1[i1], y1[i1], rcond=None)[0][2] - np.linalg.lstsq(A0[i0], y0[i0], rcond=None)[0][2])
+        lo, hi = np.percentile(bs, [2.5, 97.5])
+        res[rid] = {"exact_move_effect": float(e1_), "n_exact": int(na), "n_without_type": int(nb), "baseline_effect": float(e0_),
+                    "difference": float(e1_ - e0_), "difference_ci95": [float(lo), float(hi)]}
+        log(f"{rid}: exact {e1_:+.3f} (n={na}/{nb}) baseline {e0_:+.3f} (n={ma}/{mb}) difference {e1_ - e0_:+.3f} [{lo:+.3f},{hi:+.3f}]")
+    res["c3"]["pass"] = bool(res["c3"]["difference_ci95"][0] > 0)
+    res["e1"]["pass_worse_for_humans"] = bool(res["e1"]["difference_ci95"][1] < 0)
+    json.dump(res, open(os.path.join(OUT, "transfer_new_games.json"), "w"), indent=1)
+
+
 CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
     ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
     ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
@@ -1041,4 +1121,4 @@ def cmd_confirm():
 if __name__ == "__main__":
     {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
      "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause,
-     "outcomes": cmd_outcomes, "kingcause": cmd_kingcause}[sys.argv[1]]()
+     "outcomes": cmd_outcomes, "kingcause": cmd_kingcause, "transfer2": cmd_transfer2}[sys.argv[1]]()
