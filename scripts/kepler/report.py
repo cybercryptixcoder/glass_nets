@@ -93,6 +93,37 @@ def main():
         ch["behaviour"] = load("chess/behaviour.json")
         ch["rook_pawn_context"] = load("chess/rook_pawn_context.json")
         ch["channels"] = load("chess/channel_evidence.json")
+        # K10/K11: the strong network (t1-256x10) against 32,000 human decisions
+        cf = load("chess/rules/confirm_fresh.json") or {}
+        qt = load("chess/rules/queen_trade_fresh.json") or {}
+        po = load("chess/rules/real_outcomes_pooled.json") or {}
+        rf = load("chess/rules/real_outcomes_fresh.json") or {}
+        if cf and qt:
+            def rule(name, detail, conf, out_pooled=None, out_fresh=None, extra=""):
+                o = po.get(out_pooled) if out_pooled else None
+                fr = rf.get(out_fresh) if out_fresh else None
+                t = {"transfer": o["adjusted_diff"], "transfer_ci": o["ci95"], "transfer_n": o["n"], "transfer_scope": "both samples"} if o else \
+                    ({"transfer": fr["diff_adjusted_for_t1_q"], "transfer_ci": fr["adjusted_ci95"], "transfer_n": fr["n_followed"] + fr["n_not"],
+                      "transfer_scope": "fresh games"} if fr else {})
+                return {"name": name, "detail": detail, "t1": conf["t1"], "human": conf["human"], "LD2": conf["LD2"],
+                        "744706": conf["744706"], "z": conf["interaction_z"], "bands": conf["bands"], "note": extra, **t}
+            ch["strong"] = {
+                "check": load("chess/t1_check.json"),
+                "rules": [
+                    rule("Quiet position → pawn lever", "a pawn push that attacks an enemy pawn", cf["c0"], "c0 quiet -> pawn lever"),
+                    rule("Enemy king still in the centre → pawn lever", "strike at the pawns in front of an uncastled king", cf["c3"],
+                         "c3 enemy king in centre -> pawn lever", extra="partly causal"),
+                    rule("Quiet position → pawn sacrifice", "push a pawn where it can be taken for free", cf["c2"], None, "c2 quiet -> pawn sacrifice"),
+                    rule("Behind in material → offer a trade", "all of the excess is in lost positions", cf["b1"], None, "b1 behind -> trade offer"),
+                    rule("Lost → trade queens", "the textbook says the opposite", qt["e1"], "e1 lost -> queen trade"),
+                ],
+                "mechanism": qt.get("mechanism"),
+                "king_cause": load("chess/rules/king_cause_fresh.json"),
+                "lost_cause": load("chess/rules/lost_cause_fresh.json"),
+                "trade_cause": (load("chess/rules/trade_when_behind_fresh.json") or {}).get("cause"),
+                "examples": load("chess/rules/examples_fresh.json"),
+                "textbook": [f"{r['condition']} → {r['move_type']}" for r in (load("chess/rules/mined_b.json") or {}).get("passing", [])[:6]],
+            }
         s["chess"] = ch
     def clean(o):
         if isinstance(o, dict):
