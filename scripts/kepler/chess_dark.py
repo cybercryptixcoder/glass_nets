@@ -302,6 +302,8 @@ def main():
         if os.path.exists(saved):
             d = json.load(open(saved))
             return cid, d["answer"], d.get("usage", {})
+        if os.environ.get("NO_NEW_CALLS"):
+            return cid, "", {}
         try:
             text, usage = ask(prompts[cid], system=SYSTEM, effort="high", max_tokens=16000, log_dir=sdir,
                               tag=f"round{rnd}_cluster{cid}")

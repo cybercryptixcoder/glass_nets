@@ -156,3 +156,7 @@ not start from human chess ideas.
   swapping in flow B's internal velocity matches the law's prediction with B's velocity (0.86) and much less with an
   unrelated flow C's (0.28); at block 1 the same swap changes the output by 1.4% (66% at block 5). The model advects
   with an internal velocity variable formed in its middle layers. Supersedes the confounded random-subspace control.
+- **Scientist round 2: 0 of 15 accepted** (39 total over both rounds). The endpoint was slow (6 of 8 answers in
+  30+ minutes; 2 clusters' answers could not be parsed, 2 never arrived, evaluated without them via NO_NEW_CALLS).
+  Revised ideas are often strongly encoded in the network (unsupported pieces: decodable 0.88) but either restate the
+  library (|corr| 0.88-0.94) or add no held-out gain. The frozen tests keep refusing plausible stories.

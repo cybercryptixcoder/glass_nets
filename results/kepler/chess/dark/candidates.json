@@ -1150,5 +1150,608 @@
    "accepted": false,
    "corr_with_residual_in_cluster": -0.02065372383291103
   }
+ },
+ {
+  "round": 2,
+  "cluster": 10,
+  "name": "development_lag",
+  "idea": "Pieces still sitting on their starting squares represent lost tempo and a passive army. In sharp middlegames the network downgrades the side whose minor pieces are undeveloped more than raw mobility captures, because those pieces take several moves to become useful.",
+  "direction": "+",
+  "code": "import chess\n\ndef development_lag(board):\n    home = {\n        chess.WHITE: (chess.B1, chess.G1, chess.C1, chess.F1),\n        chess.BLACK: (chess.B8, chess.G8, chess.C8, chess.F8),\n    }\n    def home_minors(color):\n        n = 0\n        for sq in home[color]:\n            p = board.piece_at(sq)\n            if p is not None and p.color == color and p.piece_type in (chess.KNIGHT, chess.BISHOP):\n                n += 1\n        return n\n    us = board.turn\n    them = not us\n    return float(home_minors(them) - home_minors(us))\n",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "round": 2,
+  "cluster": 10,
+  "name": "bad_minor_placement",
+  "idea": "A knight on the rim or a bishop that stares at its own pawns is nearly a piece down. The network trusts the side whose knights and bishops stand on purposeful (central, pawn-compatible) squares, an asymmetry that aggregate mobility averages away.",
+  "direction": "+",
+  "code": "import chess\n\ndef bad_minor_placement(board):\n    def quality(color):\n        q = 0.0\n        for sq in chess.SQUARES:\n            p = board.piece_at(sq)\n            if p is None or p.color != color:\n                continue\n            f = chess.square_file(sq)\n            r = chess.square_rank(sq)\n            if p.piece_type == chess.KNIGHT:\n                if f == 0 or f == 7 or r == 0 or r == 7:\n                    q -= 1.0\n            elif p.piece_type == chess.BISHOP:\n                col = chess.square_color(sq)\n                same = 0\n                for psq in board.pieces(chess.PAWN, color):\n                    if chess.square_color(psq) == col:\n                        same += 1\n                q -= 0.1 * same\n        return q\n    us = board.turn\n    them = not us\n    return float(quality(us) - quality(them))\n",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "round": 2,
+  "cluster": 10,
+  "name": "enemy_infiltration",
+  "idea": "Enemy pieces that have crossed into your half (a rook on the second rank, a queen in your camp, an advanced attacker) cramp your play and generate threats, while your own pieces stay home. The network penalizes the side whose opponent has infiltrated territory that its own pieces have not contested.",
+  "direction": "+",
+  "code": "import chess\n\ndef enemy_infiltration(board):\n    def count(color, ranks):\n        c = 0\n        for sq in chess.SQUARES:\n            if chess.square_rank(sq) in ranks:\n                p = board.piece_at(sq)\n                if p is not None and p.color == color and p.piece_type in (chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN):\n                    c += 1\n        return c\n    us = board.turn\n    them = not us\n    if us == chess.WHITE:\n        opp_ranks = range(4, 8)\n        our_ranks = range(0, 4)\n    else:\n        opp_ranks = range(0, 4)\n        our_ranks = range(4, 8)\n    return float(count(us, opp_ranks) - count(them, our_ranks))\n",
+  "error": "ValueError: no function named concept"
+ },
+ {
+  "round": 2,
+  "cluster": 1,
+  "name": "wing_capture_material_gain",
+  "idea": "A capture on a wing file that wins a pawn or piece is worth more than the static estimate suggests, because it can open lines and create a lasting material or space edge. The side to move is more optimistic when such a wing capture is available.",
+  "direction": "+",
+  "code": "def concept(board):\n    turn = board.turn\n    opp = not turn\n    vals = {chess.PAWN:1, chess.KNIGHT:3, chess.BISHOP:3, chess.ROOK:5, chess.QUEEN:9, chess.KING:100}\n    best = 0.0\n    for move in board.legal_moves:\n        if not board.is_capture(move):\n            continue\n        to = move.to_square\n        f = chess.square_file(to)\n        if f > 2 and f < 5:\n            continue\n        target = board.piece_at(to)\n        if target is None or target.color != opp:\n            continue\n        attacker = board.piece_at(move.from_square)\n        if attacker is None:\n            continue\n        tv = vals.get(target.piece_type, 0)\n        av = vals.get(attacker.piece_type, 0)\n        defenders = board.attackers(opp, to)\n        gain = tv if not defenders else tv - av\n        if gain > 0:\n            score = gain + (0.5 if target.piece_type == chess.PAWN else 0.0)\n            if score > best:\n                best = score\n    return float(best)",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.003709314555829238,
+    "ci95": [
+     -0.00664469371539681,
+     -0.0007054269943034333
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7698332634439997
+   },
+   "gain_744706": {
+    "gain": 7.432922622495094e-05,
+    "ci95": [
+     -0.0034111314155473678,
+     0.0038157577948982153
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7635044780279036
+   },
+   "decodability": {
+    "best_site": 10,
+    "trained": 0.27848578797044354,
+    "control": 0.03971132702325242,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "best_free_capture",
+    0.7538737671379578
+   ],
+   "nonzero_share": 0.1873,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.02006108195521616
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 1,
+  "name": "quiet_loose_target_overload",
+  "idea": "A quiet move that attacks an undefended enemy piece or pawn, or simultaneously attacks a defender and the piece it defends, creates a concrete material threat. This is stronger than static evaluation because the opponent must spend time solving the overload.",
+  "direction": "+",
+  "code": "def concept(board):\n    turn = board.turn\n    opp = not turn\n    vals = {chess.PAWN:1, chess.KNIGHT:3, chess.BISHOP:3, chess.ROOK:5, chess.QUEEN:9, chess.KING:100}\n    best = 0.0\n    for move in board.legal_moves:\n        if board.is_capture(move) or board.gives_check(move):\n            continue\n        piece = board.piece_at(move.from_square)\n        if piece is None or piece.piece_type == chess.KING:\n            continue\n        b = board.copy(stack=False)\n        b.push(move)\n        att = b.attacks(move.to_square)\n        targets = {}\n        for sq in att:\n            pc = b.piece_at(sq)\n            if pc is not None and pc.color == opp:\n                targets[sq] = vals.get(pc.piece_type, 0)\n        if not targets:\n            continue\n        loose_sum = 0\n        defenders = {}\n        for sq, v in targets.items():\n            ds = b.attackers(opp, sq)\n            defenders[sq] = ds\n            if not ds:\n                loose_sum += v\n        pair_bonus = 0\n        for sq, v in targets.items():\n            for d in defenders.get(sq, []):\n                if d in targets and d != sq:\n                    pv = min(v, targets[d])\n                    if pv > pair_bonus:\n                        pair_bonus = pv\n        score = loose_sum + pair_bonus\n        if loose_sum > 0 and len(targets) >= 2:\n            score += 1.0\n        if piece.piece_type == chess.PAWN and any(v >= 5 for v in targets.values()):\n            score += 1.0\n        if score > best:\n            best = score\n    return float(best)",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.004106438113598197,
+    "ci95": [
+     -0.0072605592125660635,
+     -0.0011414613246354206
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7694361398862308
+   },
+   "gain_744706": {
+    "gain": 0.0007492510612768226,
+    "ci95": [
+     -0.0024284033921961774,
+     0.004118796204916048
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7641793998629555
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.3358201867707312,
+    "control": 0.09269098667351616,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "forks_available",
+    0.4588401417032797
+   ],
+   "nonzero_share": 0.8708,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.14793597215239654
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 1,
+  "name": "pawn_move_opens_rook_file",
+  "idea": "A pawn move or pawn capture can vacate a file and suddenly give a friendly rook a clear line to an enemy pawn or piece. This discovered rook pressure is easy to miss and often makes the side to move more optimistic than static features imply.",
+  "direction": "+",
+  "code": "def concept(board):\n    turn = board.turn\n    vals = {chess.PAWN:1, chess.KNIGHT:3, chess.BISHOP:3, chess.ROOK:5, chess.QUEEN:9, chess.KING:100}\n    best = 0.0\n    for move in board.legal_moves:\n        piece = board.piece_at(move.from_square)\n        if piece is None or piece.piece_type != chess.PAWN:\n            continue\n        f = chess.square_file(move.from_square)\n        r = chess.square_rank(move.from_square)\n        behind = []\n        for sq in chess.SQUARES:\n            pc = board.piece_at(sq)\n            if pc is not None and pc.color == turn and pc.piece_type == chess.ROOK and chess.square_file(sq) == f:\n                sr = chess.square_rank(sq)\n                if (turn and sr < r) or ((not turn) and sr > r):\n                    behind.append(sq)\n        if not behind:\n            continue\n        b = board.copy(stack=False)\n        b.push(move)\n        capgain = 0\n        if board.is_capture(move):\n            t = board.piece_at(move.to_square)\n            if t is not None:\n                capgain = vals.get(t.piece_type, 0)\n        step = 1 if turn else -1\n        for rsq in behind:\n            sq = rsq + step * 8\n            target_val = 0\n            blocked = False\n            while 0 <= sq < 64:\n                pc = b.piece_at(sq)\n                if pc is not None:\n                    if pc.color == turn:\n                        blocked = True\n                        break\n                    else:\n                        target_val = vals.get(pc.piece_type, 0)\n                        break\n                sq += step * 8\n            if not blocked and target_val > 0:\n                score = target_val + capgain\n                if score > best:\n                    best = score\n    return float(best)",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -2.75410379352177e-05,
+    "ci95": [
+     -0.0018636933247253404,
+     0.0016441726335320664
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7735150369618938
+   },
+   "gain_744706": {
+    "gain": 0.0007643024614126256,
+    "ci95": [
+     -0.0010560436671951951,
+     0.0025948171801989505
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7641944512630913
+   },
+   "decodability": {
+    "best_site": 6,
+    "trained": 0.014543194948706484,
+    "control": 0.002468601272539561,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "attacked_by_lower_them",
+    0.08156433954756424
+   ],
+   "nonzero_share": 0.0183,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.11745371988798875
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 7,
+  "name": "winning_capture_material",
+  "idea": "The side to move can win real material with a capture even after the most obvious recapture. This net swing (captured value minus the value of a captured attacker when the target is defended) is what a static material count misses, distinguishing a sound win from a merely available capture.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        us = board.turn\n        them = not us\n        vals = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}\n        best = 0\n        for m in board.legal_moves:\n            if not board.is_capture(m):\n                continue\n            victim = board.piece_at(m.to_square)\n            if victim is not None:\n                vv = vals.get(victim.piece_type, 0)\n            else:\n                vv = 1\n            attacker = board.piece_at(m.from_square)\n            if attacker is None:\n                continue\n            av = vals.get(attacker.piece_type, 0)\n            if board.is_attacked_by(them, m.to_square):\n                net = vv - av\n            else:\n                net = vv\n            if net > best:\n                best = net\n        return float(best)\n    except Exception:\n        return 0.0\n",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": 0.00042236159882521435,
+    "ci95": [
+     -0.003255112048266426,
+     0.0037587555415303144
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7739649395986542
+   },
+   "gain_744706": {
+    "gain": 0.005626660916001193,
+    "ci95": [
+     0.001210633127169249,
+     0.010520780778672011
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7690568097176798
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.4537356578321109,
+    "control": 0.07190807775671026,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "best_free_capture",
+    0.9442317210205351
+   ],
+   "nonzero_share": 0.2591,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": true
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.026156431142566054
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 7,
+  "name": "overloaded_defenders",
+  "idea": "An enemy piece that is attacked is not really safe if every defender of it is also busy defending another attacked target. Such 'overloaded' defenders cannot hold everything, so the side to move has a fork/deflection win that a plain hanging-piece count never sees because the target is nominally defended.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        us = board.turn\n        them = not us\n        vals = {chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}\n        targets = []\n        for sq in chess.SQUARES:\n            p = board.piece_at(sq)\n            if p is None or p.color != them or p.piece_type == chess.KING:\n                continue\n            v = vals.get(p.piece_type)\n            if v is None:\n                continue\n            if board.is_attacked_by(us, sq):\n                targets.append((sq, v))\n        if not targets:\n            return 0.0\n        dc = {}\n        tdefs = {}\n        for sq, v in targets:\n            defs = board.attackers(them, sq)\n            tdefs[sq] = defs\n            for d in defs:\n                dc[d] = dc.get(d, 0) + 1\n        score = 0\n        for sq, v in targets:\n            defs = tdefs[sq]\n            if not defs:\n                continue\n            ok = True\n            for d in defs:\n                if dc.get(d, 0) < 2:\n                    ok = False\n                    break\n            if ok:\n                score += v\n        return float(score)\n    except Exception:\n        return 0.0\n",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0014008382759112077,
+    "ci95": [
+     -0.003449121612368669,
+     0.0006283661651959686
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7721417397239179
+   },
+   "gain_744706": {
+    "gain": -0.0002627771966326862,
+    "ci95": [
+     -0.002584901226135155,
+     0.001928909447179349
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7631673716050459
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.0038653774375755345,
+    "control": 0.000921081457031736,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "forks_available",
+    0.15205483200115097
+   ],
+   "nonzero_share": 0.015,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.05429804953792196
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 7,
+  "name": "enemy_king_flight_coverage",
+  "idea": "Count how many of the squares right next to the enemy king (excluding ones blocked by its own pieces) are controlled by the side to move. High coverage means the king has no safe flight squares, so ordinary forcing moves become mating threats; this is a finer flight-square measure than raw king-zone attack counts.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        us = board.turn\n        them = not us\n        ksq = board.king(them)\n        if ksq is None:\n            return 0.0\n        kf = chess.square_file(ksq)\n        kr = chess.square_rank(ksq)\n        covered = 0\n        for df in (-1, 0, 1):\n            for dr in (-1, 0, 1):\n                if df == 0 and dr == 0:\n                    continue\n                f = kf + df\n                r = kr + dr\n                if f < 0 or f > 7 or r < 0 or r > 7:\n                    continue\n                sq = chess.square(f, r)\n                p = board.piece_at(sq)\n                if p is not None and p.color == them:\n                    continue\n                if board.is_attacked_by(us, sq):\n                    covered += 1\n        return float(covered)\n    except Exception:\n        return 0.0\n",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0011416704965437276,
+    "ci95": [
+     -0.0036861439031771162,
+     0.0015284200564463818
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7724009075032853
+   },
+   "gain_744706": {
+    "gain": 0.0008096168778099158,
+    "ci95": [
+     -0.0020390030152684807,
+     0.003915139657444531
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7642397656794886
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.4905929723828907,
+    "control": 0.39404419276836455,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "king_zone_attacks_on_them",
+    0.9027721021031688
+   ],
+   "nonzero_share": 0.3541,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": false,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.08581181458759453
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 3,
+  "name": "pawn_tempo_vulnerability",
+  "idea": "Pieces that are on squares where an enemy pawn can attack them (now or after a one- or two-square pawn advance) are liabilities: they can be kicked, losing time and giving the opponent the initiative. The network penalizes this more than a static material count.",
+  "direction": "-",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    values = {chess.QUEEN: 9, chess.ROOK: 5, chess.BISHOP: 3, chess.KNIGHT: 3}\n    our_pieces = []\n    for pt in values:\n        for sq in board.pieces(pt, us):\n            our_pieces.append((sq, pt))\n    enemy_pawns = board.pieces(chess.PAWN, them)\n    attacked_squares = set()\n    for pawn_sq in enemy_pawns:\n        for attack_sq in board.attacks(pawn_sq):\n            attacked_squares.add(attack_sq)\n        forward = pawn_sq + (8 if them == chess.WHITE else -8)\n        if 0 <= forward < 64 and board.piece_at(forward) is None:\n            new_attacks = chess.SquareSet(chess.BB_PAWN_ATTACKS[them][forward])\n            for attack_sq in new_attacks:\n                attacked_squares.add(attack_sq)\n        start_rank = 1 if them == chess.WHITE else 6\n        if chess.square_rank(pawn_sq) == start_rank:\n            forward2 = pawn_sq + (16 if them == chess.WHITE else -16)\n            if 0 <= forward2 < 64 and board.piece_at(forward) is None and board.piece_at(forward2) is None:\n                new_attacks = chess.SquareSet(chess.BB_PAWN_ATTACKS[them][forward2])\n                for attack_sq in new_attacks:\n                    attacked_squares.add(attack_sq)\n    total = 0\n    for sq, pt in our_pieces:\n        if sq in attacked_squares:\n            total += values[pt]\n    return total",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.003699023323590053,
+    "ci95": [
+     -0.006932423287217113,
+     -0.0006908174206200433
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.769843554676239
+   },
+   "gain_744706": {
+    "gain": 0.002541794113025349,
+    "ci95": [
+     -0.0008953245779939569,
+     0.005695975279923127
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7659719429147039
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.26640386211476896,
+    "control": 0.09527936363357759,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "captures_available",
+    0.3455777349054968
+   ],
+   "nonzero_share": 0.4009,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.15973256631018903
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 3,
+  "name": "unsupported_pieces",
+  "idea": "Non-pawn pieces that are not defended by any of your pawns are less stable and more vulnerable to being attacked, even if not currently en prise. The network values pawn support for pieces more highly than classical material and mobility terms.",
+  "direction": "-",
+  "code": "def concept(board):\n    us = board.turn\n    our_pawns = board.pieces(chess.PAWN, us)\n    defended_by_pawns = set()\n    for pawn_sq in our_pawns:\n        for attack_sq in board.attacks(pawn_sq):\n            defended_by_pawns.add(attack_sq)\n    count = 0\n    for pt in [chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN]:\n        for sq in board.pieces(pt, us):\n            if sq not in defended_by_pawns:\n                count += 1\n    return count",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0029500224268572996,
+    "ci95": [
+     -0.005954347567515416,
+     -6.387637654141448e-06
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7705925555729717
+   },
+   "gain_744706": {
+    "gain": 0.0017928553631643962,
+    "ci95": [
+     -0.0013481976122320205,
+     0.004828072163870181
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.765223004164843
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.8834566626808225,
+    "control": 0.7766196521627882,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "phase_nonpawn",
+    0.8767810892584715
+   ],
+   "nonzero_share": 0.96,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.04302532435333181
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 3,
+  "name": "queen_tempo_vulnerability",
+  "idea": "An exposed queen is a major liability: if it can be attacked by an enemy pawn (now or after a pawn advance), it must retreat, losing time. Even without a pawn attack, an unsupported queen off its starting square is a target. The network penalizes this lost tempo heavily.",
+  "direction": "-",
+  "code": "def concept(board):\n    us = board.turn\n    them = not us\n    queens = board.pieces(chess.QUEEN, us)\n    if not queens:\n        return 0\n    queen_sq = next(iter(queens))\n    enemy_pawns = board.pieces(chess.PAWN, them)\n    attacked = False\n    for pawn_sq in enemy_pawns:\n        if queen_sq in board.attacks(pawn_sq):\n            attacked = True\n            break\n        forward = pawn_sq + (8 if them == chess.WHITE else -8)\n        if 0 <= forward < 64 and board.piece_at(forward) is None:\n            if queen_sq in chess.SquareSet(chess.BB_PAWN_ATTACKS[them][forward]):\n                attacked = True\n                break\n        start_rank = 1 if them == chess.WHITE else 6\n        if chess.square_rank(pawn_sq) == start_rank:\n            forward2 = pawn_sq + (16 if them == chess.WHITE else -16)\n            if 0 <= forward2 < 64 and board.piece_at(forward) is None and board.piece_at(forward2) is None:\n                if queen_sq in chess.SquareSet(chess.BB_PAWN_ATTACKS[them][forward2]):\n                    attacked = True\n                    break\n    if attacked:\n        return 5\n    start_sq = chess.E1 if us == chess.WHITE else chess.E8\n    if queen_sq != start_sq:\n        our_pawns = board.pieces(chess.PAWN, us)\n        defended = False\n        for pawn_sq in our_pawns:\n            if queen_sq in board.attacks(pawn_sq):\n                defended = True\n                break\n        if not defended:\n            return 2\n    return 0",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0007084255514675772,
+    "ci95": [
+     -0.0037979046215614095,
+     0.0020799874069940614
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7728341524483614
+   },
+   "gain_744706": {
+    "gain": 0.003090864766475968,
+    "ci95": [
+     5.875930234340165e-05,
+     0.006092140502269959
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7665210135681546
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.45196991704541556,
+    "control": 0.19664768710112657,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "phase_nonpawn",
+    0.5031295855580717
+   ],
+   "nonzero_share": 0.6273,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.11272768141176363
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 8,
+  "name": "protected_double_attack",
+  "idea": "A move by a knight, bishop, or queen is extra valuable when it lands on a defended square and hits at least two enemy units, or gives check while hitting another unit. The protection turns a temporary double attack into a real initiative asset, not just a one-move threat.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        me = board.turn\n        them = not me\n        vals = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}\n        best = 0.0\n        for move in board.legal_moves:\n            p = board.piece_at(move.from_square)\n            if p is None or p.piece_type == chess.KING:\n                continue\n            gives_check = board.gives_check(move)\n            board.push(move)\n            try:\n                mp = board.piece_at(move.to_square)\n                if mp is None:\n                    continue\n                attacked = board.attacks(move.to_square) & board.occupied_co[them]\n                total = 0.0\n                n = 0\n                high = 0.0\n                for sq in attacked:\n                    q = board.piece_at(sq)\n                    if q is not None and q.color == them and q.piece_type != chess.KING:\n                        v = vals.get(q.piece_type, 0)\n                        total += v\n                        if v >= 5:\n                            high += v\n                        n += 1\n                protected = bool(board.attackers(me, move.to_square))\n                if (n >= 2 or (gives_check and n >= 1)) and (protected or gives_check):\n                    score = total + (2.0 if gives_check else 0.0) + (1.0 if high else 0.0)\n                    if score > best:\n                        best = score\n            finally:\n                board.pop()\n        return float(best)\n    except Exception:\n        return 0.0",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.0011335291970124722,
+    "ci95": [
+     -0.003982625709497716,
+     0.0019353932290737264
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7724090488028166
+   },
+   "gain_744706": {
+    "gain": 0.003052458350114129,
+    "ci95": [
+     -0.00013606690943134133,
+     0.0061725055908006116
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7664826071517927
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.43962774296323026,
+    "control": 0.13741692898146163,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "forks_available",
+    0.6860948758478879
+   ],
+   "nonzero_share": 0.7937,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": 0.028198070167963114
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 8,
+  "name": "productive_check",
+  "idea": "A check is worth more than a generic check when the checking piece also attacks a loose enemy unit or is safe from capture. The opponent must solve king safety and material at the same time, so such checks are a concrete tempo gain rather than just a check count.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        me = board.turn\n        them = not me\n        vals = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}\n        best = 0.0\n        for move in board.legal_moves:\n            if not board.gives_check(move):\n                continue\n            board.push(move)\n            try:\n                mp = board.piece_at(move.to_square)\n                if mp is None:\n                    continue\n                attacked = board.attacks(move.to_square) & board.occupied_co[them]\n                total = 0.0\n                n = 0\n                for sq in attacked:\n                    q = board.piece_at(sq)\n                    if q is not None and q.color == them and q.piece_type != chess.KING:\n                        total += vals.get(q.piece_type, 0)\n                        n += 1\n                protected = bool(board.attackers(me, move.to_square))\n                enemy_can_take = bool(board.attackers(them, move.to_square))\n                score = 2.0 + total + (1.0 if n >= 1 else 0.0) + (0.5 if protected else 0.0)\n                if enemy_can_take and not protected:\n                    score -= 1.0\n                if board.is_checkmate():\n                    score += 1.0\n                if score > best:\n                    best = score\n            finally:\n                board.pop()\n        return float(best)\n    except Exception:\n        return 0.0",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.002177360495196387,
+    "ci95": [
+     -0.005356659739522581,
+     0.0009333653830219381
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7713652175046326
+   },
+   "gain_744706": {
+    "gain": 0.0019162362748948744,
+    "ci95": [
+     -0.0015624065996655907,
+     0.005380246375756766
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7653463850765735
+   },
+   "decodability": {
+    "best_site": 8,
+    "trained": 0.37659510084584125,
+    "control": 0.11423014842370538,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "checks_available",
+    0.6656347343581331
+   ],
+   "nonzero_share": 0.5388,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": false,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.1510330602735533
+  }
+ },
+ {
+  "round": 2,
+  "cluster": 8,
+  "name": "enemy_king_escape_limited",
+  "idea": "The network rewards positions where the opposing king has few safe adjacent squares after accounting for our attacks and its own blockers. This is a concrete king-trapping/mating-net signal, distinct from simply counting attacks on the king zone.",
+  "direction": "+",
+  "code": "def concept(board):\n    try:\n        me = board.turn\n        them = not me\n        ksq = board.king(them)\n        if ksq is None:\n            return 0.0\n        safe = 0\n        blocked = 0\n        for df in (-1, 0, 1):\n            for dr in (-1, 0, 1):\n                if df == 0 and dr == 0:\n                    continue\n                f = chess.square_file(ksq) + df\n                r = chess.square_rank(ksq) + dr\n                if f < 0 or f > 7 or r < 0 or r > 7:\n                    continue\n                sq = chess.square(f, r)\n                p = board.piece_at(sq)\n                if p is not None and p.color == them:\n                    blocked += 1\n                    continue\n                if board.is_attacked_by(me, sq):\n                    continue\n                safe += 1\n        in_check = board.is_attacked_by(me, ksq)\n        score = (8.0 - safe) + 0.5 * blocked\n        if in_check:\n            score += 2.0\n            if safe == 0:\n                score += 3.0\n        return float(score)\n    except Exception:\n        return 0.0",
+  "errors": 0,
+  "test": {
+   "gain_LD2": {
+    "gain": -0.001171519164942142,
+    "ci95": [
+     -0.004693227961557835,
+     0.00183846875997186
+    ],
+    "r2_base": 0.7735425779998291,
+    "r2_aug": 0.7723710588348869
+   },
+   "gain_744706": {
+    "gain": 0.0025813246485520626,
+    "ci95": [
+     -0.0006867052405809295,
+     0.005928918916311805
+    ],
+    "r2_base": 0.7634301488016786,
+    "r2_aug": 0.7660114734502307
+   },
+   "decodability": {
+    "best_site": 4,
+    "trained": 0.5794679884908999,
+    "control": 0.46886057712632345,
+    "metric": "r2"
+   },
+   "max_corr_library": [
+    "pawn_shield_them",
+    0.4898100120487824
+   ],
+   "nonzero_share": 0.9959,
+   "criteria": {
+    "1_gain": false,
+    "2_decodable": true,
+    "3_not_restatement": true,
+    "4_replicates": false
+   },
+   "accepted": false,
+   "corr_with_residual_in_cluster": -0.29941710540818905
+  }
  }
 ]
