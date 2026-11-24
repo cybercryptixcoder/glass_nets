@@ -18,15 +18,16 @@ unchecked item. Push after every step.
 7. [x] Fluid mechanism (learned Biot-Savart, advection built in blocks 3-6; velocity swap partly confounded): where velocity lives inside the model, its learned Biot-Savart kernel, law vs. lookup out of
    distribution.
 8. [x] Chess target (LD2 + 744706 ported; 20,000 positions; 61 concepts; K3 known tests: a FAIL as registered, b and c PASS): a strong Leela network loaded in PyTorch, positions from Lichess, chess concept library.
-9. [~] Chess discovery: round 1 0/24, calculation feature accepted, units causal (channel 22: 32%), behaviour (rook pawns), round 2 running: concept atlas, value decomposition into known concepts, the unexplained part, candidate new
-   concepts with causal tests and example positions.
+9. [x] Chess discovery on LD2: round 1 0/24, round 2 0/15, minimal pairs (K9) 0/20; calculation feature accepted (classical
+   search, not new); unit channel 22 causal (32% of the quiet residual); behaviour vs humans (rook pawns: the known
+   AlphaZero idea, recovered).
 10. [x] Lab page `/kepler` and `docs/kepler/FINDINGS.md`.
+11. [x] K10: Leela transformer t1-256x10 ported and verified (all four registered checks pass; the bug was lc0's hidden
+    FFN activation rule).
+12. [~] K11 (14:14-16:09): strategy rules from t1 by contrast with human play: eval, mining with replication and rating
+    bands, cause (board edits), worth (t1 value of human moves), novelty (web search). Hard stop 16:09.
+13. [ ] Wrap-up from 15:40: FINDINGS, DIARY, RESULTS.md (one-page deliverable), summary JSON, push.
 
-## Also running
-- K2 smoke video model (dye only; velocity hidden) on the Colab T4: error on the one-step change 2.0% at step 6,750
-  of 10,000. Analysis script ready: `scripts/kepler/dye_law.py` (known, then verdict).
-
-## Next (if the session continues)
-1. Finish scientist round 2; then a round 3 aimed at channel 22 with its causal and counterfactual evidence.
-2. A cleaner control for the fluid velocity swap (swap at a site before velocity forms; wrong-velocity predictions).
-3. Bigger Leela nets on Colab (transformer T-series) to see if the knowledge gap shrinks or moves.
+## Next (if a later session continues)
+1. Run the K11 tests on more of the mined rules, and on a bigger transformer (BT4) if one can be loaded.
+2. A teaching test: show the rule to people (or to a weaker network via fine-tuning) and measure the improvement.

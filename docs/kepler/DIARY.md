@@ -160,3 +160,34 @@ not start from human chess ideas.
   30+ minutes; 2 clusters' answers could not be parsed, 2 never arrived, evaluated without them via NO_NEW_CALLS).
   Revised ideas are often strongly encoded in the network (unsupported pieces: decodable 0.88) but either restate the
   library (|corr| 0.88-0.94) or add no held-out gain. The frozen tests keep refusing plausible stories.
+
+## Nov 24, 12:04-12:24 (resumed by the safety check-in) and 14:10 (after the session limit)
+
+- **Minimal pairs (K9): 0 of 20 accepted.** Pairs of quiet positions that the 64-feature classical library cannot
+  tell apart (nearest neighbours, classical distance 1.4-1.5) but that differ a lot in LD2's value residual
+  (|difference| 0.96) or in channel 22's unexplained activity. The first attempt returned four empty answers: the
+  model spent the whole token budget (38,000 tokens) reasoning. Second attempt: 6 pairs per prompt, low effort, a
+  brevity instruction; 20 programs. None had a held-out gain with an interval above zero (best +0.0001); the FEN-hash
+  noise program was rejected, as registered. Five programs were never scored because they named their function
+  differently: a reader bug, fixed 14:13 (`compile_concept` accepts one function under any name). Conclusion after
+  59 programs over three rounds: asking an LLM to guess what explains a weak network's value residual does not
+  find new chess knowledge. The residual is mostly not a simple static feature.
+- **Leela transformer t1-256x10 (K10) works.** The port was failing (start position q +0.93 with a flat policy). The
+  cause, found by reading lc0's own C++: the file is an old-format attention network, and lc0's loader silently
+  switches such networks with smolgen to a squared-ReLU FFN and swish smolgen (`src/neural/loader.cc`); the port used
+  Mish everywhere. Everything else (gates, DeepNorm scaling, positional encoding, policy map, promotion offsets,
+  value head) matched lc0 line by line. All four registered checks pass: start position d4 0.24 / Nf3 0.20 / e4 0.10
+  / c4 0.09, q +0.04; mate in one for White (Ra8#) and the mirrored one for Black; queen up +0.998 / -0.986; value
+  correlation with LD2 0.966 and top-move agreement 56.7% on 1,000 game positions (22 s on two CPU threads). The
+  shuffled-encoder copy fails the same checks.
+- **Session limit at about 12:25.** The work had finished but was not yet committed; it was committed and pushed at
+  14:13 (73218fa9). That commit carries an AI co-author line against the repo rule; rewriting it needs a force-push,
+  which was blocked, so it is left for Shreyas. Later commits are clean.
+- **New direction for the last two hours (K11, registered before code):** stop guessing at value residuals; mine what
+  the strong network PLAYS. For the 16,000 human game positions: t1's move against the human's move, conditioned on
+  the situation (each library concept high or low, king placement). A rule "in situation C, play move type M" must
+  replicate on both older networks, hold in every rating band, be causal (board edits that switch C off must lower
+  t1's appetite for M more than edits that keep C), and be worth something (in those positions, human moves without
+  M must lose more of t1's expected score than human moves with M). Novelty is checked by web search afterwards.
+  Hard stop 16:09; clock checks scheduled for 15:00, 15:40 and 16:05.
+

@@ -1,0 +1,398 @@
+"""K11: strategy rules from the strong network (t1-256x10) by contrast with human play.
+
+Registered in docs/glass/CHANGES.md (K11) before this script was written.
+
+    python3 scripts/kepler/chess_rules.py eval        # networks' moves and move-type policy mass on the K8 sample
+    python3 scripts/kepler/chess_rules.py mine        # candidate rules + replication + rating bands + must-fail
+    python3 scripts/kepler/chess_rules.py test K      # cause (board edits) and worth (t1 value of human moves), rule K
+
+A rule is "in situation C, play move type M". All move and situation features are from the mover's point of view.
+"""
+import json
+import os
+import sys
+import time
+
+import numpy as np
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.dirname(__file__))
+import chess  # noqa: E402
+import torch  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+
+from chess_behaviour import feats as k8_feats  # noqa: E402
+from kepler.targets.chess.leela import LeelaNet, encode, move_index  # noqa: E402
+from kepler.targets.chess.leela_t import LeelaTransformer  # noqa: E402
+
+KDATA = os.environ.get("KDATA", os.path.expanduser("~/kdata"))
+WORK = os.path.join(KDATA, "chess", "rules")
+OUT = "results/kepler/chess/rules"
+
+
+def log(*a):
+    print(time.strftime("%H:%M:%S"), *a, flush=True)
+
+
+def rel_rank(sq, us):
+    return chess.square_rank(sq) if us else 7 - chess.square_rank(sq)
+
+
+def move_feats(b, m):
+    """K8's move types plus pawn moves near either king, minor pieces to the rim, trade offers, king walks."""
+    f = k8_feats(b, m)
+    us = b.turn
+    p = b.piece_at(m.from_square)
+    pt = p.piece_type
+    cap = b.is_capture(m)
+    ff, tf = chess.square_file(m.from_square), chess.square_file(m.to_square)
+    ok, ek = b.king(us), b.king(not us)
+    f["pawn push near own king"] = pt == chess.PAWN and not cap and ok is not None and abs(ff - chess.square_file(ok)) <= 1
+    f["pawn push near enemy king"] = pt == chess.PAWN and not cap and ek is not None and abs(ff - chess.square_file(ek)) <= 1
+    f["minor piece to the rim (a/h file)"] = pt in (chess.KNIGHT, chess.BISHOP) and tf in (0, 7)
+    f["piece into enemy half"] = pt not in (chess.PAWN, chess.KING) and rel_rank(m.to_square, us) >= 4 and rel_rank(m.from_square, us) < 4
+    f["king steps forward"] = pt == chess.KING and not b.is_castling(m) and rel_rank(m.to_square, us) > rel_rank(m.from_square, us)
+    f["pawn capture toward centre"] = pt == chess.PAWN and cap and abs(tf - 3.5) < abs(ff - 3.5)
+    f["pawn capture away from centre"] = pt == chess.PAWN and cap and abs(tf - 3.5) > abs(ff - 3.5)
+    trade = False
+    if pt in (chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN) and not cap:
+        b2 = b.copy(stack=False)
+        b2.push(m)
+        trade = any(b2.piece_type_at(a) == pt for a in b2.attackers(not us, m.to_square)) and bool(b2.attackers(us, m.to_square))
+    f["offers a like-for-like trade"] = trade
+    return {k: bool(v) for k, v in f.items()}
+
+
+def king_conditions(b):
+    """Situation conditions about king placement (mover's view)."""
+    us = b.turn
+    out = {}
+    for who, side in (("own", us), ("enemy", not us)):
+        k = b.king(side)
+        f, r = chess.square_file(k), rel_rank(k, side)
+        out[f"{who} king castled short (f-h file, home ranks)"] = f >= 5 and r <= 1
+        out[f"{who} king castled long (a-c file, home ranks)"] = f <= 2 and r <= 1
+        out[f"{who} king in the centre (d/e file)"] = f in (3, 4)
+        out[f"{who} king off its home ranks"] = r >= 2
+    ok, ek = chess.square_file(b.king(us)), chess.square_file(b.king(not us))
+    out["kings on opposite wings"] = (ok >= 5 and ek <= 2) or (ok <= 2 and ek >= 5)
+    out["kings on the same wing"] = (ok >= 5 and ek >= 5) or (ok <= 2 and ek <= 2)
+    out["queens off"] = not b.pieces(chess.QUEEN, us) and not b.pieces(chess.QUEEN, not us)
+    return out
+
+
+def load_sample():
+    meta = json.load(open(os.path.join(KDATA, "chess", "LD2", "meta.json")))
+    idx = [i for i, it in enumerate(meta["items"]) if it["source"] == "game"]
+    items = [meta["items"][i] for i in idx]
+    played = json.load(open(os.path.join(KDATA, "chess", "LD2", "played_moves.json")))
+    return idx, items, played
+
+
+def policy_eval(net, boards, batch=256):
+    """Top move (uci), q, and the per-legal-move probabilities for each board."""
+    tops, qs, probs = [], [], []
+    with torch.no_grad():
+        for i in range(0, len(boards), batch):
+            bs = boards[i:i + batch]
+            logits, wdl = net(torch.tensor(np.stack([encode(b) for b in bs])))
+            for b, lg, w in zip(bs, logits, wdl):
+                mv = list(b.legal_moves)
+                li = torch.stack([lg[move_index(net, b, m)] for m in mv])
+                p = F.softmax(li, 0).numpy()
+                tops.append(mv[int(np.argmax(p))].uci())
+                qs.append(float(w[0] - w[2]))
+                probs.append(p)
+    return tops, np.array(qs, dtype=np.float32), probs
+
+
+def cmd_eval():
+    os.makedirs(WORK, exist_ok=True)
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    idx, items, played = load_sample()
+    boards = [chess.Board(it["fen"]) for it in items]
+    log(f"{len(boards)} positions")
+    t1 = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    t1_top, t1_q, t1_p = policy_eval(t1, boards)
+    log("t1 done")
+    rep = LeelaNet(os.path.join(KDATA, "chess", "744706.pb.gz"))
+    rep_top, rep_q, _ = policy_eval(rep, boards)
+    log("744706 done")
+    keys = None
+    T, H, L, R, MASS, KC = [], [], [], [], [], []
+    for it, b, pm, tt, rt, p in zip(items, boards, played, t1_top, rep_top, t1_p):
+        mv = list(b.legal_moves)
+        mf = [move_feats(b, m) for m in mv]
+        keys = keys or list(mf[0])
+        A = np.array([[f[k] for k in keys] for f in mf], dtype=np.float32)
+        MASS.append(p @ A)
+        uci = [m.uci() for m in mv]
+        T.append(A[uci.index(tt)])
+        H.append(move_feats(b, chess.Move.from_uci(pm)) if pm in uci else {k: False for k in keys})
+        L.append(A[uci.index(it["top_move"])] if it["top_move"] in uci else np.zeros(len(keys)))
+        R.append(A[uci.index(rt)])
+        KC.append(king_conditions(b))
+    H = np.array([[h[k] for k in keys] for h in H], dtype=np.float32)
+    kc_keys = list(KC[0])
+    KCm = np.array([[c[k] for k in kc_keys] for c in KC], dtype=np.float32)
+    elo = np.array([int(e) if str(e).isdigit() else 0 for e in
+                    [it["white_elo"] if b.turn else it["black_elo"] for it, b in zip(items, boards)]])
+    np.savez(os.path.join(WORK, "eval.npz"), T=np.array(T), H=H, L=np.array(L), R=np.array(R), MASS=np.array(MASS),
+             KC=KCm, elo=elo, t1_q=t1_q, rep_q=rep_q, idx=np.array(idx))
+    json.dump({"move_types": keys, "king_conditions": kc_keys, "t1_top": t1_top, "rep_top": rep_top},
+              open(os.path.join(WORK, "eval_meta.json"), "w"))
+    log("saved; t1 plays the human move in", float(np.mean([a == b for a, b in zip(t1_top, played)])))
+
+
+def load_eval():
+    E = dict(np.load(os.path.join(WORK, "eval.npz")))
+    meta = json.load(open(os.path.join(WORK, "eval_meta.json")))
+    return E, meta
+
+
+def concept_conditions(idx):
+    """Binary situations from the 61-concept library: binary concepts at each value, others at the 75th / 25th
+    percentile; plus the king-placement conditions (and their negations)."""
+    cz = np.load(os.path.join(KDATA, "chess", "LD2", "concepts.npz"))
+    X = cz["X"][idx].astype(np.float64)
+    names = [str(n) for n in cz["names"]]
+    conds, cn, spec = [], [], []
+    for j, n in enumerate(names):
+        x = X[:, j]
+        vals = np.unique(x)
+        if len(vals) <= 1:
+            continue
+        if len(vals) == 2:
+            for v in vals:
+                conds.append(x == v); cn.append(f"{n} = {v:g}"); spec.append((n, "eq", float(v)))
+            continue
+        lo, hi = np.percentile(x, [25, 75])
+        conds.append(x >= hi); cn.append(f"{n} high (>= {hi:g})"); spec.append((n, "ge", float(hi)))
+        conds.append(x <= lo); cn.append(f"{n} low (<= {lo:g})"); spec.append((n, "le", float(lo)))
+    return conds, cn, spec
+
+
+def all_conditions(E, meta):
+    conds, cn, spec = concept_conditions(E["idx"])
+    for j, k in enumerate(meta["king_conditions"]):
+        conds.append(E["KC"][:, j] > 0.5); cn.append(k); spec.append((k, "king", 1.0))
+        conds.append(E["KC"][:, j] < 0.5); cn.append("not: " + k); spec.append((k, "king", 0.0))
+    return np.array(conds), cn, spec
+
+
+BANDS = [("< 1500", lambda e: (e > 0) & (e < 1500)), ("1500-1799", lambda e: (e >= 1500) & (e < 1800)),
+         ("1800+", lambda e: e >= 1800)]
+
+
+def mine(T, H, L, R, C, cn, keys, elo):
+    rows = []
+    for ci in range(len(C)):
+        c = C[ci]
+        n, nn = int(c.sum()), int((~c).sum())
+        if n < 300 or nn < 300:
+            continue
+        for mi, mk in enumerate(keys):
+            tc, hc = T[c, mi].mean(), H[c, mi].mean()
+            if tc < 0.05 or tc < 1.5 * hc:
+                continue
+            d = T[:, mi] - H[:, mi]
+            inter = d[c].mean() - d[~c].mean()
+            z = inter / max(np.sqrt(d[c].var() / n + d[~c].var() / nn), 1e-9)
+            rep = {}
+            for nm, A in (("LD2", L), ("744706", R)):
+                da = A[:, mi] - H[:, mi]
+                rep[nm] = {"net_minus_human_in_C": float(da[c].mean()), "interaction": float(da[c].mean() - da[~c].mean()),
+                           "net_rate_in_C": float(A[c, mi].mean())}
+            bands = {}
+            for bn, f in BANDS:
+                m = c & f(elo)
+                bands[bn] = {"n": int(m.sum()), "t1": float(T[m, mi].mean()) if m.sum() else None,
+                             "human": float(H[m, mi].mean()) if m.sum() else None}
+            rep_ok = all(v["net_minus_human_in_C"] > 0 and v["interaction"] > 0 for v in rep.values())
+            band_ok = all(b["n"] >= 30 and b["t1"] > b["human"] for b in bands.values())
+            rows.append({"condition": cn[ci], "cond_index": ci, "move_type": mk, "move_index": mi, "support": n,
+                         "t1_rate_in_C": float(tc), "human_rate_in_C": float(hc), "ratio": float(tc / max(hc, 1e-9)),
+                         "t1_rate_outside_C": float(T[~c, mi].mean()), "human_rate_outside_C": float(H[~c, mi].mean()),
+                         "interaction": float(inter), "z": float(z), "replication": rep, "bands": bands,
+                         "passes_replication": rep_ok, "passes_bands": band_ok})
+    rows.sort(key=lambda r: -r["z"])
+    return rows
+
+
+def cmd_mine():
+    E, meta = load_eval()
+    keys = meta["move_types"]
+    C, cn, spec = all_conditions(E, meta)
+    T, H, L, R, elo = E["T"], E["H"], E["L"], E["R"], E["elo"]
+    log(f"{len(C)} situations x {len(keys)} move types; t1 vs human overall:")
+    for mi, k in enumerate(keys):
+        log(f"   {k:36s} t1 {T[:, mi].mean():.3f}  LD2 {L[:, mi].mean():.3f}  744706 {R[:, mi].mean():.3f}  human {H[:, mi].mean():.3f}")
+    rows = mine(T, H, L, R, C, cn, keys, elo)
+    passing = [r for r in rows if r["passes_replication"] and r["passes_bands"]]
+    log(f"{len(rows)} candidates meet the selection rule; {len(passing)} pass replication and every rating band")
+    for i, r in enumerate(passing[:25]):
+        log(f" #{i:2d} z {r['z']:5.1f} | {r['condition']:52s} -> {r['move_type']:34s} t1 {r['t1_rate_in_C']:.3f} "
+            f"human {r['human_rate_in_C']:.3f} (x{r['ratio']:.1f}; outside C t1 {r['t1_rate_outside_C']:.3f} human "
+            f"{r['human_rate_outside_C']:.3f}) n={r['support']}")
+    # must fail: net and human labels swapped at random per position (jointly for the three networks)
+    rng = np.random.default_rng(0)
+    s = rng.random(len(T)) < 0.5
+    sw = lambda A: np.where(s[:, None], H, A)
+    # each network compared with the human; on swapped positions the two labels trade places
+    Ts, Ls, Rs = sw(T), sw(L), sw(R)
+    HsT, HsL, HsR = np.where(s[:, None], T, H), np.where(s[:, None], L, H), np.where(s[:, None], R, H)
+    null = []
+    for ci in range(len(C)):
+        c = C[ci]
+        if c.sum() < 300 or (~c).sum() < 300:
+            continue
+        for mi in range(len(keys)):
+            tc, hc = Ts[c, mi].mean(), HsT[c, mi].mean()
+            if tc < 0.05 or tc < 1.5 * hc:
+                continue
+            ok = True
+            for A, HA in ((Ls, HsL), (Rs, HsR)):
+                da = A[:, mi] - HA[:, mi]
+                ok &= da[c].mean() > 0 and (da[c].mean() - da[~c].mean()) > 0
+            for bn, f in BANDS:
+                m = c & f(elo)
+                ok &= m.sum() >= 30 and Ts[m, mi].mean() > HsT[m, mi].mean()
+            null.append(bool(ok))
+    log(f"must-fail (labels swapped at random): {len(null)} meet the selection rule, {sum(null)} pass replication+bands")
+    os.makedirs(OUT, exist_ok=True)
+    json.dump({"n_situations": int(len(C)), "move_types": keys, "n_candidates": len(rows), "n_passing": len(passing),
+               "overall": {k: {"t1": float(T[:, i].mean()), "LD2": float(L[:, i].mean()), "744706": float(R[:, i].mean()),
+                               "human": float(H[:, i].mean())} for i, k in enumerate(keys)},
+               "must_fail_swapped": {"candidates": len(null), "passing": int(sum(null))},
+               "passing": passing[:60]}, open(os.path.join(OUT, "mined.json"), "w"), indent=1)
+
+
+def holds(spec, board):
+    from kepler.targets.chess.concepts import concept_names, concepts
+    name, kind, v = spec
+    if kind == "king":
+        return bool(king_conditions(board)[name]) == bool(v)
+    c = concepts(board)
+    x = c[name] if isinstance(c, dict) else c[concept_names().index(name)]
+    return {"eq": x == v, "ge": x >= v, "le": x <= v}[kind]
+
+
+def edits(b, top, rng, k=14):
+    """Single-piece edits that keep the network's chosen move legal and the check status unchanged:
+    remove a piece, or move it to a random empty square."""
+    out = []
+    pieces = [sq for sq, p in b.piece_map().items() if p.piece_type != chess.KING and sq != top.from_square]
+    empties = [sq for sq in chess.SQUARES if b.piece_at(sq) is None and sq != top.to_square]
+    for sq in rng.permutation(pieces):
+        for kind in ("remove", "move"):
+            b2 = b.copy(stack=False)
+            p = b2.remove_piece_at(int(sq))
+            if kind == "move":
+                ok = [e for e in empties if not (p.piece_type == chess.PAWN and chess.square_rank(e) in (0, 7))]
+                b2.set_piece_at(int(rng.choice(ok)), p)
+            b2.castling_rights = b2.clean_castling_rights()
+            b2.ep_square = None
+            if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
+                out.append((kind, chess.square_name(int(sq)), p.symbol(), b2))
+        if len(out) >= k:
+            break
+    return out
+
+
+def mass_on(net, boards, mi):
+    _, qs, probs = policy_eval(net, boards)
+    out = []
+    for b, p in zip(boards, probs):
+        A = np.array([move_feats(b, m)[KEYS[mi]] for m in b.legal_moves], dtype=np.float32)
+        out.append(float(p @ A))
+    return np.array(out), qs
+
+
+KEYS = None
+
+
+def cmd_test():
+    global KEYS
+    K = int(sys.argv[2])
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    E, meta = load_eval()
+    KEYS = meta["move_types"]
+    mined = json.load(open(os.path.join(OUT, "mined.json")))
+    rule = mined["passing"][K]
+    mi = rule["move_index"]
+    C, cn, spec = all_conditions(E, meta)
+    ci = rule["cond_index"]
+    assert cn[ci] == rule["condition"]
+    c = C[ci]
+    _, items, played = load_sample()
+    t1_top = meta["t1_top"]
+    net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    rng = np.random.default_rng(1)
+    res = {"rule": {k: rule[k] for k in ("condition", "move_type", "support", "t1_rate_in_C", "human_rate_in_C", "ratio",
+                                          "interaction", "z")}}
+    log(f"rule {K}: in [{rule['condition']}] play [{rule['move_type']}]")
+    # ---- cause: edits that switch C off vs edits that keep it
+    sel = rng.permutation(np.where(c & (E["T"][:, mi] > 0.5))[0])[:int(os.environ.get("N_CAUSE", "100"))]
+    eb, meta_e = [], []
+    for i in sel:
+        b = chess.Board(items[i]["fen"])
+        for kind, sq, sym, b2 in edits(b, chess.Move.from_uci(t1_top[i]), rng):
+            eb.append(b2)
+            meta_e.append((int(i), kind, sq, sym, bool(holds(spec[ci], b2))))
+    log(f"cause: {len(sel)} positions, {len(eb)} edits ({sum(1 for m in meta_e if not m[4])} switch the situation off)")
+    after, _ = mass_on(net, eb, mi)
+    before = np.array([E["MASS"][m[0], mi] for m in meta_e])
+    drop = (before - after) / np.maximum(before, 1e-6)
+    off = np.array([not m[4] for m in meta_e])
+    boots = []
+    for _ in range(1000):
+        a = rng.choice(np.where(off)[0], off.sum())
+        bb = rng.choice(np.where(~off)[0], (~off).sum())
+        boots.append(drop[a].mean() - drop[bb].mean())
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    res["cause"] = {"positions": int(len(sel)), "edits_switching_off": int(off.sum()), "edits_keeping_C": int((~off).sum()),
+                    "mean_mass_before": float(before.mean()),
+                    "relative_drop_when_switched_off": float(drop[off].mean()) if off.any() else None,
+                    "relative_drop_when_kept": float(drop[~off].mean()) if (~off).any() else None,
+                    "difference_ci95": [float(lo), float(hi)]}
+    res["cause"]["pass"] = bool(off.sum() >= 20 and drop[off].mean() >= 0.30 and lo > 0)
+    log("cause:", json.dumps(res["cause"]))
+    # ---- worth: t1's value of the human's move, with and without M, where t1 plays M
+    sel2 = np.where(c & (E["T"][:, mi] > 0.5))[0]
+    ab, keep = [], []
+    for i in sel2:
+        b = chess.Board(items[i]["fen"])
+        m = chess.Move.from_uci(played[i])
+        if m not in b.legal_moves:
+            continue
+        b.push(m)
+        if b.is_game_over():
+            continue
+        ab.append(b)
+        keep.append(int(i))
+    keep = np.array(keep)
+    _, q_after, _ = policy_eval(net, ab)
+    loss = E["t1_q"][keep] + q_after          # value before (mover) minus value after (mover) = q0 - (-q_after)
+    hm = E["H"][keep, mi] > 0.5
+    boots = []
+    for _ in range(2000):
+        a = rng.choice(np.where(~hm)[0], (~hm).sum())
+        bb = rng.choice(np.where(hm)[0], hm.sum())
+        boots.append(loss[a].mean() - loss[bb].mean())
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    res["worth"] = {"positions": int(len(keep)), "human_played_M": int(hm.sum()),
+                    "mean_loss_without_M": float(loss[~hm].mean()), "mean_loss_with_M": float(loss[hm].mean()) if hm.any() else None,
+                    "difference": float(loss[~hm].mean() - loss[hm].mean()) if hm.any() else None, "ci95": [float(lo), float(hi)],
+                    "units": "t1 expected score (win minus loss, -1..1) lost by the human's move"}
+    res["worth"]["pass"] = bool(hm.sum() >= 20 and lo > 0)
+    log("worth:", json.dumps(res["worth"]))
+    # ---- examples: C holds, t1 plays M, the human did not, largest loss
+    order = np.argsort(-loss * (~hm))
+    res["examples"] = [{"fen": items[keep[j]]["fen"], "t1_move": t1_top[keep[j]], "human_move": played[keep[j]],
+                        "human_elo": int(E["elo"][keep[j]]), "loss": float(loss[j])} for j in order[:6]]
+    os.makedirs(OUT, exist_ok=True)
+    json.dump(res, open(os.path.join(OUT, f"test_{K}.json"), "w"), indent=1)
+
+
+if __name__ == "__main__":
+    {"eval": cmd_eval, "mine": cmd_mine, "test": cmd_test}[sys.argv[1]]()
