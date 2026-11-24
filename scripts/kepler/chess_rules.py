@@ -1067,7 +1067,12 @@ def cmd_playout():
         return out
 
     res = {}
-    for setting, opp, temp in (("strong opponent (t1 greedy)", t1, 0.0), ("fallible opponent (LD2 sampled)", ld2, 1.0)):
+    settings = (("strong opponent (t1 greedy)", t1, 0.0), ("fallible opponent (LD2 sampled)", ld2, 1.0))
+    if os.environ.get("OPPS"):
+        settings = tuple((f"opponent t1 at temperature {t}", t1, float(t)) for t in
+                         (x.split(":")[1] for x in os.environ["OPPS"].split(",")))
+    diffs_by_setting = {}
+    for setting, opp, temp in settings:
         games = [x.copy() for x in starts]
         lost_side = [m[2] for m in meta_]
         for ply in range(int(os.environ.get("PLIES", "80"))):
@@ -1099,12 +1104,29 @@ def cmd_playout():
             B = np.array([scj[k] for k, m in enumerate(meta_) if m[1] == "B"])
             d = A - B
             bs = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(2000)]
+            diffs_by_setting[(setting, judge_name)] = d
             res[f"{setting} | judge {judge_name}"] = {"pairs": int(len(d)), "score_A_queen_trade": float(A.mean()),
                 "score_B_best_other": float(B.mean()), "difference": float(d.mean()),
                 "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))],
                 "finished_games": int(len(games) - len(unfinished)), "diffs": d.tolist()}
             log(f"{setting} | judge {judge_name}: A {A.mean():.3f} vs B {B.mean():.3f}, diff {d.mean():+.3f} "
                 f"[{np.percentile(bs, 2.5):+.3f},{np.percentile(bs, 97.5):+.3f}] ({len(games) - len(unfinished)} of {len(games)} finished)")
+    if os.environ.get("OPPS"):
+        temps = [float(st[2]) for st in settings]
+        for j in ("t1", "LD2"):
+            D = np.stack([diffs_by_setting[(st[0], j)] for st in settings], 1)      # pairs x temperatures
+            tt = np.array(temps) - np.mean(temps)
+            slope = lambda M: float((M.mean(0) * tt).sum() / (tt * tt).sum())
+            bs = [slope(D[rng.integers(0, len(D), len(D))]) for _ in range(2000)]
+            res[f"slope_vs_temperature | judge {j}"] = {"slope": slope(D), "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))],
+                                                         "mean_diff_by_temperature": dict(zip(map(str, temps), D.mean(0).tolist()))}
+            log(f"slope of A-B vs opponent temperature (judge {j}): {slope(D):+.3f} [{np.percentile(bs, 2.5):+.3f},{np.percentile(bs, 97.5):+.3f}]")
+        res["scope_supported"] = bool(all(res[f"slope_vs_temperature | judge {j}"]["ci95"][1] < 0 for j in ("t1", "LD2")))
+        for k in list(res):
+            if isinstance(res[k], dict):
+                res[k].pop("diffs", None)
+        json.dump(res, open(os.path.join(OUT, "playout_opponent_sweep.json"), "w"), indent=1)
+        return
     for j in ("t1", "LD2"):
         ks = [k for k in res if k.endswith(f"judge {j}")]
         dd = np.array(res[ks[0]]["diffs"]) - np.array(res[ks[1]]["diffs"])
