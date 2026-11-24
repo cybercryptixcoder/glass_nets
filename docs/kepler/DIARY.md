@@ -230,3 +230,19 @@ not start from human chess ideas.
 - **K10 results file** re-run and saved (14:39): PASS; t1 solves 49 of 50 mate-in-one puzzles without search (LD2 44).
 - Written: `docs/kepler/RESULTS.md` (the one-page deliverable) and FINDINGS section 5.
 
+## Nov 24, 14:41-14:48: the cause and transfer claims, checked harder
+
+- **Matched cause test (K11h, registered first).** Enemy king moved from the centre to a castled square vs moved to
+  the other centre square, nothing else changed: t1's lever appetite falls 13.4% vs 3.2% (difference CI 0.06 to 0.15).
+  A real causal effect, but under the 30% bar, so FAIL as registered. The first, unmatched cause test had failed for a
+  design reason: its control edits often removed the lever's own pawns.
+- **Transfer, with the controls it needed (and a correction).** My 14:40 reading, "levers transfer to humans
+  (+0.06 to +0.10)", does not survive. Playing t1's exact move helps humans by 4 to 11 points for every move type
+  (knights, bishops, queen moves, captures alike). Playing a different lever than the network's does nothing.
+  Measured against the right baseline (the network's other moves in the same situation), no rule adds a significant
+  amount: levers against an uncastled king +0.16 vs +0.06 and pawn sacrifices +0.21 vs +0.07 lean above; trading
+  when behind (-0.00 vs +0.06) and queen trades when lost (-0.02 vs +0.04) lean below. FINDINGS, RESULTS and the page
+  now say this; the reversal is recorded in K11g.
+- **Page.** `/kepler` has a strong-network card (5 rules, rates, real-game numbers against the baseline) with sheets for
+  the tests and teaching positions; checked in dark and light, no console errors.
+

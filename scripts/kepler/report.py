@@ -99,23 +99,23 @@ def main():
         po = load("chess/rules/real_outcomes_pooled.json") or {}
         rf = load("chess/rules/real_outcomes_fresh.json") or {}
         if cf and qt:
-            def rule(name, detail, conf, out_pooled=None, out_fresh=None, extra=""):
-                o = po.get(out_pooled) if out_pooled else None
-                fr = rf.get(out_fresh) if out_fresh else None
-                t = {"transfer": o["adjusted_diff"], "transfer_ci": o["ci95"], "transfer_n": o["n"], "transfer_scope": "both samples"} if o else \
-                    ({"transfer": fr["diff_adjusted_for_t1_q"], "transfer_ci": fr["adjusted_ci95"], "transfer_n": fr["n_followed"] + fr["n_not"],
-                      "transfer_scope": "fresh games"} if fr else {})
+            tcz = (load("chess/rules/transfer_controls_fresh.json") or {}).get("by_rule", {})
+            def rule(name, detail, conf, rid, extra=""):
+                c = tcz.get(rid, {})
+                t = {"transfer": c["exact_move"]["adjusted"], "transfer_ci": c["exact_move"]["ci95"],
+                     "transfer_n": c["exact_move"]["n_follow"] + c["exact_move"]["n_not"],
+                     "baseline": c["baseline_same_situation_other_types"]["adjusted"]} if c else {}
                 return {"name": name, "detail": detail, "t1": conf["t1"], "human": conf["human"], "LD2": conf["LD2"],
                         "744706": conf["744706"], "z": conf["interaction_z"], "bands": conf["bands"], "note": extra, **t}
             ch["strong"] = {
                 "check": load("chess/t1_check.json"),
                 "rules": [
-                    rule("Quiet position → pawn lever", "a pawn push that attacks an enemy pawn", cf["c0"], "c0 quiet -> pawn lever"),
-                    rule("Enemy king still in the centre → pawn lever", "strike at the pawns in front of an uncastled king", cf["c3"],
-                         "c3 enemy king in centre -> pawn lever", extra="partly causal"),
-                    rule("Quiet position → pawn sacrifice", "push a pawn where it can be taken for free", cf["c2"], None, "c2 quiet -> pawn sacrifice"),
-                    rule("Behind in material → offer a trade", "all of the excess is in lost positions", cf["b1"], None, "b1 behind -> trade offer"),
-                    rule("Lost → trade queens", "the textbook says the opposite", qt["e1"], "e1 lost -> queen trade"),
+                    rule("Quiet position → pawn lever", "a pawn push that attacks an enemy pawn", cf["c0"], "c0"),
+                    rule("Enemy king still in the centre → pawn lever", "strike at the pawns in front of an uncastled king", cf["c3"], "c3",
+                         extra="partly causal"),
+                    rule("Quiet position → pawn sacrifice", "push a pawn where it can be taken for free", cf["c2"], "c2"),
+                    rule("Behind in material → offer a trade", "all of the excess is in lost positions", cf["b1"], "b1"),
+                    rule("Lost → trade queens", "the textbook says the opposite", qt["e1"], "e1"),
                 ],
                 "mechanism": qt.get("mechanism"),
                 "king_cause": load("chess/rules/king_cause_fresh.json"),

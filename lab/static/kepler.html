@@ -489,7 +489,7 @@ pre.code{margin:0;padding:12px;border-radius:var(--r-md);background:var(--card-3
 .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .steps{display:flex;flex-direction:column;gap:10px}
 .srows{display:flex;flex-direction:column}
-.srow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) 190px;gap:18px;align-items:center;padding:12px 0;border-top:1px solid var(--border)}
+.srow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 250px;gap:18px;align-items:center;padding:12px 0;border-top:1px solid var(--border)}
 .srow:first-child{border-top:0;padding-top:2px}
 .srow .nm{font-size:var(--fs-14,14px);color:var(--text-1);font-weight:500}
 .srow .sub{font-size:var(--fs-12);color:var(--text-3);margin-top:2px}
@@ -740,7 +740,7 @@ function chessView() {
   <div class="hero-card k-chess s7"><span class="badge ok"><span class="dot"></span>Leela LD2 · 65% of puzzles at a glance</span>
     <div class="k">${ic("puzzle")}Superhuman-lineage chess network (Leela Chess Zero)</div>
     <h2>Classical chess explains ${pc(k3.K3b?.r2_LD2)} of its evaluation. Kepler located the rest.</h2>
-    <p>Most of what the network knows beyond classical concepts sits in sharp, tactical positions. LLM-proposed ideas did not pass. Mining a far stronger network against human play gives rules that transfer to people (pawn levers) and one that does not (trading queens when lost).</p>
+    <p>Most of what the network knows beyond classical concepts sits in sharp, tactical positions. LLM-proposed ideas did not pass. Mining a far stronger network against 32,000 human moves confirms five rules on fresh games, one of them the inverse of a textbook principle: when lost, trade queens.</p>
     <div class="hc-tags"><span class="hc-tag">quiet games ${pc(lc.r2_game)} explained</span><span class="hc-tag">tactical puzzles ${pc(lc.r2_puzzle)}</span><span class="hc-tag">scientist: ${cands.length} ideas, ${acc.length} accepted</span></div>
     <div class="hc-actions"><button class="btn sm white" data-sheet="chessCands">${ic("flask-conical")}All candidates</button><button class="btn sm" data-sheet="chessTests">${ic("shield-check")}Known tests</button></div></div>
   <div class="card s5">${head("scale", "What classical chess explains", "Held-out share of Leela's evaluation")}
@@ -771,9 +771,8 @@ function chessView() {
 function transferBadge(r) {
   if (r.transfer == null) return `<span class="badge">not measured</span>`;
   const [lo, hi] = r.transfer_ci, pts = v => (v >= 0 ? "+" : "") + Math.round(100 * v);
-  const cls = lo > 0 ? "ok" : (hi < 0 ? "no" : (r.transfer > 0.1 ? "" : "no"));
-  const txt = lo > 0 ? `Helps humans: ${pts(r.transfer)} pts` : (hi < 0 ? `Hurts humans: ${pts(r.transfer)} pts` : (r.transfer > 0.1 ? `Maybe helps: ${pts(r.transfer)} pts` : "No measurable help"));
-  return `<div class="tr"><span class="badge ${cls}">${txt}</span><span class="ci">${pts(lo)} to ${pts(hi)} · ${r.transfer_n.toLocaleString()} games</span></div>`;
+  const cls = r.transfer <= 0 ? "no" : "";
+  return `<div class="tr"><span class="badge ${cls}">Network's move: ${pts(r.transfer)} pts</span><span class="ci">${pts(lo)} to ${pts(hi)} · its other moves here ${pts(r.baseline)}</span></div>`;
 }
 function strongCard(C) {
   const T = C.strong, mx = Math.max(...T.rules.map(r => Math.max(r.t1, r.human)));
@@ -784,7 +783,7 @@ function strongCard(C) {
         <span class="b" style="width:${100 * r.t1 / mx}%;background:var(--accent)"></span><span class="b" style="width:${100 * r.human / mx}%;background:var(--text-3)"></span></div>
       ${transferBadge(r)}</div>`).join("")}</div>
     <div class="legend" style="margin-top:10px"><span><i style="background:var(--accent)"></i>Leela t1</span><span><i style="background:var(--text-3)"></i>Humans (Lichess)</span></div>
-    <p class="note" style="margin-top:8px">Right column: the real game score of humans who played the network's move against those who did not, in the same situations, adjusted for how good the position was (100 pts = a full point). Levers transfer to people; trading queens when lost is right by the network's own judgement (draw chance ${pc(T.mechanism?.draw_prob_after_human_move)} → ${pc(T.mechanism?.draw_prob_after_t1_trade)}) but buys humans nothing.</p></div>
+    <p class="note" style="margin-top:8px">Right column, real games: humans who played the network's exact move against humans whose move lacked that type, adjusted for how good the position was (100 pts = a full point), next to the same measure for the network's other moves in those situations. Playing the network's move helps by 4 to 7 points whatever it is; no rule adds a significant amount beyond that yet. Pawn play sits highest; trading sits at zero, although by the network's own judgement trading queens when lost lifts its draw chance from ${pc(T.mechanism?.draw_prob_after_human_move)} to ${pc(T.mechanism?.draw_prob_after_t1_trade)}.</p></div>
     <div class="card-f"><button class="link-btn" data-sheet="strongHow">How each rule was tested</button><button class="link-btn" data-sheet="strongEx">Teaching positions</button></div></div>`;
 }
 function behaviourCard(C) {
@@ -857,7 +856,7 @@ const SHEETS = {
     <div class="step"><span class="no">3</span><div><b>Three networks, every rating band, fresh games</b><p>t1, LD2 and 744706 must all show the tendency, in every rating band, and again on 16,000 positions from games never looked at. 7 frozen candidates went in; 4 confirmed, plus queen trades in lost positions.</p></div></div>
     <div class="step"><span class="no">4</span><div><b>Cause, by editing the board</b><p>Enemy king moved from the centre to a castled square: lever appetite −${Math.round(100 * kc.relative_drop_castled)}% vs −${Math.round(100 * kc.relative_drop_centre)}% for a matched move (real, but under the 30% bar). Material and lostness: no effect (${Math.round(100 * (tc.relative_drop_when_level || 0))}% vs ${Math.round(100 * (tc.relative_drop_when_two_down || 0))}%; ${Math.round(100 * (lc.rescued?.relative_drop || 0))}% vs ${Math.round(100 * (lc.control?.relative_drop || 0))}%).</p></div></div>
     <div class="step"><span class="no">5</span><div><b>Worth, by the network's own judgement</b><p>When lost, t1's queen trade lifts its draw chance from ${pc(T.mechanism?.draw_prob_after_human_move)} to ${pc(T.mechanism?.draw_prob_after_t1_trade)} compared with the human's move.</p></div></div>
-    <div class="step"><span class="no">6</span><div><b>Transfer, by real game results</b><p>Humans who played the network's move vs those who did not, adjusted for the position's value. This separates lessons people can use from behaviour that pays only against a superhuman opponent.</p></div></div></div>`}; },
+    <div class="step"><span class="no">6</span><div><b>Transfer, by real game results</b><p>Humans who played the network's exact move vs humans whose move lacked the type, adjusted for the position's value, against the same measure for the network's other moves. Playing the network's move helps by 4 to 7 points in every kind of position; levers against an uncastled king (+16) and pawn sacrifices (+21) sit above that and trades (about 0) below, but none differs significantly from the baseline yet.</p></div></div></div>`}; },
   strongEx: () => { const E = S.chess.strong.examples || {}, nm = {c3: "Enemy king in the centre → pawn lever", c0: "Quiet position → pawn lever", e1: "Lost → trade queens"};
     return {kicker: "Chess", title: "Teaching positions (fresh games, players rated 1700+)", wide: true, html: Object.keys(nm).filter(k => E[k]).map(k => `<h4 style="margin:4px 0 10px">${esc(nm[k])}</h4><div class="ex-grid" style="margin-bottom:18px">${E[k].slice(0, 3).map(e => `<div class="ex">${board(e.fen)}<div class="cap">${e.to_move} to move · network <b>${esc(e.t1)}</b> · human (${e.human_elo}) <b>${esc(e.human)}</b> · ${esc(e.result)}${e.game ? ` · <a href="${esc(e.game)}" target="_blank" rel="noopener">game</a>` : ""}</div></div>`).join("")}</div>`).join("")}; },
   chessCands: () => ({kicker: "Chess", title: `Every candidate (${S.chess.candidates.length})`, wide: true, html: `<div style="display:flex;flex-direction:column;gap:10px">${S.chess.candidates.map(c => candRow(c, false)).join("")}</div>`}),

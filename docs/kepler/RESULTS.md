@@ -55,27 +55,33 @@ Each candidate had to:
   centre pawns, push flank pawns in endgames, attack the uncastled king. These are known answers.
 - **Five rules confirmed on fresh games.**
 
-  | Rule | Network vs humans | Do humans who follow it win more? |
+  | Rule | Network vs humans | Real games: playing the network's exact move (its other moves there) |
   |---|---|---|
-  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | **Yes: +0.06 score** [0.01, 0.11] |
-  | **Enemy king still in the centre: play the lever** | 1.6×; partly causal (enemy king moved to a castled square: appetite −13% vs −3% for a matched move) | **Yes: +0.10** [0.02, 0.17] |
-  | Quiet position: leave a pushed pawn en prise | 1.6× | +0.19 [−0.00, 0.38], only 21 games |
-  | Behind in material: offer trades | 1.6× (all of it in lost positions) | No: −0.02 [−0.13, 0.10] |
-  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | **No: +0.02** [−0.07, 0.11] |
+  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | +0.09 (+0.07) |
+  | **Enemy king still in the centre: play the lever** | 1.6×; partly causal (enemy king moved to a castled square: appetite −13% vs −3% for a matched move) | **+0.16** (+0.06) |
+  | Quiet position: leave a pushed pawn en prise | 1.6× | +0.21 (+0.07), 19 games |
+  | Behind in material: offer trades | 1.6× (all of it in lost positions) | −0.00 (+0.06) |
+  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | **−0.02** (+0.04) |
 
-- **Two different kinds of knowledge.**
-  - **Pawn levers:** humans play fewer of the networks' levers at almost every rating level (fewest in the middle and
-    top bands of the fresh games). Those who do play them score better. This is a lesson that transfers to people.
-  - **Queen trades when lost:** this inverts the textbook rule ("when behind, avoid trades, especially of queens"). It is
-    right by the network's own judgement, but in real games it buys humans nothing. This is behaviour that pays only
-    against a superhuman opponent.
+- **What the real games say, read against the right baseline.**
+  - Playing the network's move helps humans by 4 to 7 points whatever kind of move it is.
+  - Pawn play (levers against an uncastled king, pawn sacrifices) sits above that. Trading sits below it, at zero.
+  - None of these differences is significant yet with 16,000 games.
+  - So the double pricing points toward a split: aggressive pawn play would be a lesson for people, and trading down
+    when lost would pay only against a superhuman opponent. **It does not prove that split.**
+  - Correction: my first reading at 14:40 ("levers transfer, +0.06 to +0.10") was the general value of playing the
+    network's move. The exact-move and other-move-type controls added at 14:48 showed it.
+- **Two different kinds of knowledge** (descriptive, all confirmed on fresh games):
+  - **Levers:** humans under-play the networks' levers at almost every rating level.
+  - **Queen trades when lost:** the networks invert the textbook rule ("when behind, avoid trades, especially of
+    queens"). By their own judgement each trade raises the draw chance.
 - **Cause tests: mostly negative, one partial.**
   - Board edits that switch material or lostness off do not switch the behaviour off.
   - The one matched test (enemy king castled vs moved within the centre) shows a real but modest causal effect on lever
     appetite: 13% vs 3%, below the 30% bar set beforehand.
   - The rules mainly describe where the networks' choices differ from humans'.
-- **Numbers.** Real-game scores (1 win, ½ draw, 0 loss) pool both samples and are adjusted for t1's value of the
-  position. Exceptions: the pawn-sacrifice and trade-offer rows use fresh games only.
+- **Numbers.** Real-game scores (1 win, ½ draw, 0 loss) are from the fresh games, adjusted for t1's value of the
+  position (`transfer_controls_fresh.json`). The pooled two-sample estimates are in `real_outcomes_pooled.json`.
 - **Teaching positions** for each rule (FEN, t1's move, the human's move, Lichess link):
   `results/kepler/chess/rules/examples_fresh.json`.
 
@@ -85,9 +91,11 @@ Each candidate had to:
   - reading a governing PDE and a causally verified internal algorithm (learned Biot–Savart) out of a video model, blind
     and pre-registered;
   - an automated pipeline that turns a superhuman network's play into conditional strategy rules confirmed on fresh games
-    across three networks, and **prices each rule twice (the network's value head and real game outcomes)**. That double
-    pricing is what separates transferable lessons from superhuman-only behaviour. Prior work looked inside AlphaZero
-    (McGrath 2022), taught its concepts to grandmasters by hand (Schut 2025), or modelled human moves by rating (Maia).
+    across three networks, and **prices each rule twice**: by the network's value head, and by real game results against
+    the general value of playing the network's move. Prior work looked inside AlphaZero (McGrath 2022), taught its
+    concepts to grandmasters by hand (Schut 2025), or modelled human moves by rating (Maia).
+  - The pipeline found and confirmed a counter-textbook behaviour: trading queens when lost, 2× humans, in three networks
+    and every rating band.
 - **Not new:**
   - the lever (Kmoch, 1959), now measured as under-played by humans and worth points;
   - the networks' extra pawn sacrifices and rook-pawn pushes (known AlphaZero style).

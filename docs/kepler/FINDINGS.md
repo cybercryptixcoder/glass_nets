@@ -148,31 +148,40 @@ principles that separate strong play from amateur play:
 
 These are known answers, recovered unprompted.
 
-**Confirmed on fresh games** (all three networks and every rating band; rates are moves per position in the situation):
+**Confirmed on fresh games** (all three networks and every rating band; rates are moves per position in the situation;
+real-game column explained below):
 
-| Rule (situation → move) | t1 | humans | ratio | Real games: humans who also played it |
-|---|---|---|---|---|
-| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | score **+0.06** [0.01, 0.11] (both samples, 1,543 games, adjusted for the position's value) |
-| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.10** [0.02, 0.17] (786 games) |
-| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.19 [-0.00, 0.38] (fresh games; only 21 followed) |
-| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | -0.02 [-0.13, 0.10] (fresh games) |
-| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | +0.02 [-0.07, 0.11] (363 games) |
+| Rule (situation → move) | t1 | humans | ratio | Real games: humans who played the network's exact move | Same measure, the network's other moves in that situation |
+|---|---|---|---|---|---|
+| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | +0.09 [0.01, 0.17] | +0.07 |
+| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.16** [0.04, 0.28] | +0.06 |
+| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.21 [0.00, 0.41] (19 games) | +0.07 |
+| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | −0.00 [−0.13, 0.12] | +0.06 |
+| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | −0.02 [−0.15, 0.11] | +0.04 |
+
+**How the real-game column is measured.**
+- It compares humans who played the network's exact move with humans whose move lacked that type, in the same
+  situation. Scores are game points (1 win, ½ draw, 0 loss), adjusted for t1's value of the position.
+- **The comparison that matters is with the last column.** Playing the network's move helps humans by 4 to 7 points
+  whatever kind of move it is. A rule adds something only if its own number beats that baseline.
+- **None does significantly yet.** The pawn-play rules sit above the baseline (+0.16 and +0.21 against +0.06 and
+  +0.07). The trading rules sit below it (about 0 against +0.04 to +0.06). The intervals overlap.
+- A different lever than the network's own does nothing (−0.01, 33 games). The value lies in the network's specific
+  move, not in "levers" as a category.
+- **This reverses a reading I first wrote at 14:40** ("levers transfer, +0.06 to +0.10"). The controls for exact-move
+  matching and for other move types were added at 14:48 and showed that number is the general value of playing the
+  network's move.
 
 **Three results stand out.**
 
-1. **Humans move away from the networks' levers as they get stronger.**
+1. **Humans under-play the networks' levers, at almost every rating level.**
    - The networks play about 5% levers in quiet positions at every rating level.
    - Humans play fewer at every level except the lowest. On the fresh games they fall from 4.3% (under 1300) to 3.3%
      (1900+); on the first sample they range from 3.2% to 4.7%, lowest in the middle bands.
    - The gap is largest for d-pawn levers (1.9×) and a-pawn levers (2.5×).
-   - Humans who did play the lever the network chose scored 6 to 10 points better, after adjusting for how good the
-     position was (both samples pooled, CIs above zero; on its own, the first sample gives the same sign but a CI that
-     includes zero).
    - **Partly causal.** In matched edits (K11h), moving the enemy king from the centre to a castled square lowers t1's
      appetite for the lever by 13%. Moving it to the other centre square lowers it by only 3% (difference CI 6 to 15
      points). The effect is real, but under the 30% bar set beforehand, so it is not a pass.
-
-   This is a network strategy that transfers.
 2. **A textbook rule inverted, but only where the network is lost.**
    - The textbook says "when behind in material, avoid exchanges, especially of queens" (checked by web search; it is
      everywhere).
@@ -181,13 +190,12 @@ These are known answers, recovered unprompted.
    - When behind but holding, t1 offers *fewer* trades than humans (0.65% vs 1.62%). That much agrees with the textbook.
    - In lost positions it trades queens twice as often as humans.
    - By its own value head, each such trade raises its draw chance from 6.0% to 9.9% (+4.0 points [1.9, 6.2]).
-3. **That inverted rule does not help humans.**
-   - In real games, humans in the same lost positions scored the same whether or not they traded: +0.02 [−0.07, 0.11],
-     both samples pooled (363 games) and adjusted for the position's value.
-   - It is right by the network's judgement, but buys nothing against human opponents.
-   - The pipeline can therefore tell "superhuman knowledge humans can use" from "superhuman behaviour that pays only
-     against a superhuman opponent". A plausible reason is that self-play opponents do not blunder. That reason is a
-     hypothesis: splitting by opponent rating did not settle it.
+3. **That inverted rule shows no benefit for humans in real games.**
+   - Humans who made the network's queen trade scored −0.02, against +0.04 for the network's other moves in lost
+     positions.
+   - It is right by the network's own judgement. Whether it is wrong for humans is suggested, not shown: the intervals
+     overlap. A plausible reason is that self-play opponents do not blunder; splitting by opponent rating did not
+     settle it.
 
 **What failed, honestly.**
 - **Cause tests.**
@@ -207,7 +215,7 @@ Evidence:
 - `confirm_fresh.json`
 - `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
 - `lost_cause_fresh.json`, `king_cause_fresh.json`
-- `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`
+- `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`, `transfer_controls_fresh.json`
 - `examples_fresh.json` (teaching positions with Lichess game links)
 
 ## What is new here (against `RESEARCH.md`)
@@ -226,6 +234,7 @@ Evidence:
   - Kepler mines the gap between a superhuman network's choices and 32,000 human choices. It confirms rules on fresh
     games across three independently trained networks, prices each rule twice (the network's value head and real game
     results), and tests cause with board edits.
-  - The double pricing is what separates transferable lessons (pawn levers) from superhuman-only behaviour (trading when
-    lost). We found no earlier method that makes that distinction automatically.
+  - The real-game check carries its own control: the general value of playing the network's move. With it, the check
+    can tell a rule that adds to human play from one that merely rides on it. At 16,000 games no rule clears it yet;
+    pawn play leans above, trading below. We found no earlier method that runs this check automatically.
 
