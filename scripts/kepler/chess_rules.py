@@ -1019,6 +1019,108 @@ def cmd_transfer2():
     json.dump(res, open(os.path.join(OUT, "transfer_new_games.json"), "w"), indent=1)
 
 
+def cmd_playout():
+    """K11j: play lost positions out after the queen trade (A) or the best non-trade move (B), against a strong or a
+    fallible opponent."""
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, items, tops = fm["keys"], fm["items"], fm["tops"]
+    mi = keys.index("queen trade (captures or offers the queen)")
+    W = np.load(os.path.join(WORK, "fresh_wdl.npy"))
+    q = W[:, 0] - W[:, 2]
+    sel = np.where((q <= -0.5) & (Fz["T"][:, mi] > 0.5))[0][:int(os.environ.get("N_PLAY", "150"))]
+    t1 = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    ld2 = LeelaNet(os.path.join(KDATA, "chess", "LD2.pb.gz"))
+    rng = np.random.default_rng(17)
+    starts, meta_ = [], []
+    _, _, probs = policy_eval(t1, [chess.Board(items[i]["fen"]) for i in sel])
+    for i, p in zip(sel, probs):
+        b = chess.Board(items[i]["fen"])
+        mv = list(b.legal_moves)
+        qt = np.array([move_feats_c(b, m)["queen trade (captures or offers the queen)"] for m in mv])
+        if qt.all() or not qt.any():
+            continue
+        a = mv[int(np.argmax(np.where(qt, p, -1)))]
+        bb = mv[int(np.argmax(np.where(~qt, p, -1)))]
+        for branch, m in (("A", a), ("B", bb)):
+            x = b.copy()
+            x.push(m)
+            starts.append(x)
+            meta_.append((int(i), branch, b.turn))
+    log(f"{len(sel)} positions, {len(starts)} branch starts")
+
+    def pick(net, boards, temp):
+        out = []
+        with torch.no_grad():
+            for k in range(0, len(boards), 256):
+                bs = boards[k:k + 256]
+                logits, _ = net(torch.tensor(np.stack([encode(x) for x in bs])))
+                for x, lg in zip(bs, logits):
+                    mv = list(x.legal_moves)
+                    li = torch.stack([lg[move_index(net, x, m)] for m in mv]).numpy()
+                    if temp == 0:
+                        out.append(mv[int(np.argmax(li))])
+                    else:
+                        pr = np.exp((li - li.max()) / temp)
+                        out.append(mv[int(rng.choice(len(mv), p=pr / pr.sum()))])
+        return out
+
+    res = {}
+    for setting, opp, temp in (("strong opponent (t1 greedy)", t1, 0.0), ("fallible opponent (LD2 sampled)", ld2, 1.0)):
+        games = [x.copy() for x in starts]
+        lost_side = [m[2] for m in meta_]
+        for ply in range(int(os.environ.get("PLIES", "80"))):
+            live = [k for k, g in enumerate(games) if not g.is_game_over(claim_draw=True)]
+            if not live:
+                break
+            mine = [k for k in live if games[k].turn == lost_side[k]]
+            theirs = [k for k in live if games[k].turn != lost_side[k]]
+            for idx, net, tmp in ((mine, t1, 0.0), (theirs, opp, temp)):
+                if idx:
+                    for k, m in zip(idx, pick(net, [games[k] for k in idx], tmp)):
+                        games[k].push(m)
+        # score for the lost side
+        sc = np.zeros(len(games))
+        unfinished = [k for k, g in enumerate(games) if not g.is_game_over(claim_draw=True)]
+        for k, g in enumerate(games):
+            if g.is_game_over(claim_draw=True):
+                o = g.outcome(claim_draw=True)
+                sc[k] = 0.5 if o.winner is None else (1.0 if o.winner == lost_side[k] else 0.0)
+        for judge_name, judge in (("t1", t1), ("LD2", ld2)):
+            scj = sc.copy()
+            if unfinished:
+                Wd = wdl_eval(judge, [games[k] for k in unfinished])
+                for k, w in zip(unfinished, Wd):
+                    own = games[k].turn == lost_side[k]
+                    win, draw = (w[0], w[1]) if own else (w[2], w[1])
+                    scj[k] = win + draw / 2
+            A = np.array([scj[k] for k, m in enumerate(meta_) if m[1] == "A"])
+            B = np.array([scj[k] for k, m in enumerate(meta_) if m[1] == "B"])
+            d = A - B
+            bs = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(2000)]
+            res[f"{setting} | judge {judge_name}"] = {"pairs": int(len(d)), "score_A_queen_trade": float(A.mean()),
+                "score_B_best_other": float(B.mean()), "difference": float(d.mean()),
+                "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))],
+                "finished_games": int(len(games) - len(unfinished)), "diffs": d.tolist()}
+            log(f"{setting} | judge {judge_name}: A {A.mean():.3f} vs B {B.mean():.3f}, diff {d.mean():+.3f} "
+                f"[{np.percentile(bs, 2.5):+.3f},{np.percentile(bs, 97.5):+.3f}] ({len(games) - len(unfinished)} of {len(games)} finished)")
+    for j in ("t1", "LD2"):
+        ks = [k for k in res if k.endswith(f"judge {j}")]
+        dd = np.array(res[ks[0]]["diffs"]) - np.array(res[ks[1]]["diffs"])
+        bs = [dd[rng.integers(0, len(dd), len(dd))].mean() for _ in range(2000)]
+        res[f"difference_of_differences | judge {j}"] = {"value": float(dd.mean()),
+                                                         "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]}
+    strong = [k for k in res if k.startswith("strong") and "judge" in k]
+    res["works_vs_strong"] = bool(all(res[k]["ci95"][0] > 0 for k in strong))
+    res["opponent_hypothesis_supported"] = bool(all(res[f"difference_of_differences | judge {j}"]["ci95"][0] > 0 for j in ("t1", "LD2")))
+    for k in list(res):
+        if isinstance(res[k], dict):
+            res[k].pop("diffs", None)
+    log("K11j:", json.dumps({k: v for k, v in res.items()}))
+    json.dump(res, open(os.path.join(OUT, "playout_queen_trade.json"), "w"), indent=1)
+
+
 CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
     ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
     ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
@@ -1121,4 +1223,5 @@ def cmd_confirm():
 if __name__ == "__main__":
     {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
      "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause,
-     "outcomes": cmd_outcomes, "kingcause": cmd_kingcause, "transfer2": cmd_transfer2}[sys.argv[1]]()
+     "outcomes": cmd_outcomes, "kingcause": cmd_kingcause, "transfer2": cmd_transfer2,
+     "playout": cmd_playout}[sys.argv[1]]()
