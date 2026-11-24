@@ -113,7 +113,7 @@ def main():
                     rule("Enemy king still in the centre → pawn lever", "strike at the pawns in front of an uncastled king", cf["c3"], "c3",
                          extra="partly causal"),
                     rule("Quiet position → pawn sacrifice", "push a pawn where it can be taken for free", cf["c2"], "c2"),
-                    rule("Behind in material → offer a trade", "all of the excess is in lost positions", cf["b1"], "b1"),
+                    {**rule("Behind in material → offer a trade", "all of the excess is in lost positions", cf["b1"], "b1"), "unconfirmed": True},
                     rule("Lost → trade queens", "the textbook says the opposite", qt["e1"], "e1"),
                 ],
                 "mechanism": qt.get("mechanism"),

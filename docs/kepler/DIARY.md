@@ -246,3 +246,19 @@ not start from human chess ideas.
 - **Page.** `/kepler` has a strong-network card (5 rules, rates, real-game numbers against the baseline) with sheets for
   the tests and teaching positions; checked in dark and light, no console errors.
 
+## Nov 24, 14:50-14:59: the transfer question on new games (K11i), and a play-out test (K11j)
+
+- **K11i, registered before the data (40,000 positions from games 21,001 onward, never used).** For each confirmed
+  rule I took the effect of playing the network's exact move of that type, minus the effect of playing its other moves
+  in the same situation, both adjusted for the position's value.
+  - **Lever against an uncastled king: −0.06 [−0.14, 0.02].** The +0.16 lean on the first 16,000 games was noise. FAIL.
+  - **Queen trade when lost: −0.02 [−0.10, 0.06].** Not shown to be worse for humans. FAIL as registered.
+  - Levers in quiet positions +0.01; pawn sacrifices +0.00.
+  - Trade offers when behind +0.12 [0.02, 0.22]: unregistered, opposite in sign to the earlier reading, 1 of 5 tests.
+    Reported as unconfirmed.
+  - **Conclusion:** the network's moves help humans by about 8 points whatever they are. The rules describe its style
+    but add nothing measurable for human players. The page and docs now show the new-games numbers.
+- **K11j launched (14:57):** play the lost positions out after the queen trade or after t1's best non-trade move. The
+  lost side is played by t1; the opponent is t1 (strong) or LD2 sampled at temperature 1 (fallible). Unfinished games
+  are judged by t1 and, separately, by LD2.
+
