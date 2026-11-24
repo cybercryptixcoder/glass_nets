@@ -149,28 +149,30 @@ principles that separate strong play from amateur play:
 These are known answers, recovered unprompted.
 
 **Confirmed on fresh games** (all three networks and every rating band; rates are moves per position in the situation;
-real-game column explained below):
+the last column is explained below):
 
-| Rule (situation → move) | t1 | humans | ratio | Real games: humans who played the network's exact move | Same measure, the network's other moves in that situation |
-|---|---|---|---|---|---|
-| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | +0.09 [0.01, 0.17] | +0.07 |
-| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.16** [0.04, 0.28] | +0.06 |
-| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.21 [0.00, 0.41] (19 games) | +0.07 |
-| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | −0.00 [−0.13, 0.12] | +0.06 |
-| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | −0.02 [−0.15, 0.11] | +0.04 |
+| Rule (situation → move) | t1 | humans | ratio | Real games, 40,000 new positions: what the rule adds for humans |
+|---|---|---|---|---|
+| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | +0.01 [−0.04, 0.06] |
+| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | −0.06 [−0.14, 0.02] |
+| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.00 [−0.11, 0.12] |
+| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | +0.12 [0.02, 0.22] (see below) |
+| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | −0.02 [−0.10, 0.06] |
 
-**How the real-game column is measured.**
-- It compares humans who played the network's exact move with humans whose move lacked that type, in the same
-  situation. Scores are game points (1 win, ½ draw, 0 loss), adjusted for t1's value of the position.
-- **The comparison that matters is with the last column.** Playing the network's move helps humans by 4 to 7 points
-  whatever kind of move it is. A rule adds something only if its own number beats that baseline.
-- **None does significantly yet.** The pawn-play rules sit above the baseline (+0.16 and +0.21 against +0.06 and
-  +0.07). The trading rules sit below it (about 0 against +0.04 to +0.06). The intervals overlap.
-- A different lever than the network's own does nothing (−0.01, 33 games). The value lies in the network's specific
-  move, not in "levers" as a category.
-- **This reverses a reading I first wrote at 14:40** ("levers transfer, +0.06 to +0.10"). The controls for exact-move
-  matching and for other move types were added at 14:48 and showed that number is the general value of playing the
-  network's move.
+**How the real-game column is measured, and what it says.**
+- **Two measures, with a baseline.** First, humans who played the network's exact move of that type against humans
+  whose move lacked the type, in the same situation. Second, the same measure for the network's other moves in those
+  situations. The column shows the first minus the second: what the rule adds beyond "play the network's move".
+- **Scoring.** Game points (1 win, ½ draw, 0 loss), adjusted for t1's value of the position. Measured on 40,000
+  positions from games 21,001 onward, never used before (K11i, registered first).
+- **Result: no rule adds anything that holds up.** Playing the network's move helps humans by about 8 points whatever
+  kind of move it is.
+- **The earlier leans did not replicate.** On the first 16,000 fresh games, levers against an uncastled king looked like
+  +0.16 against a +0.06 baseline, and trades looked like 0. On the new games it is +0.02 against +0.08.
+  - I had first read the 16,000-game numbers as "levers transfer, trading when lost does not" (14:40). The exact-move
+    and move-type controls (14:48) and the new games (14:57) both undo that reading.
+- **The one positive is unconfirmed.** Trade offers when behind (+0.12) is a reported, unregistered result. It is 1 of 5
+  tests and opposite in sign to the fresh-game reading, so it needs its own replication before anyone believes it.
 
 **Three results stand out.**
 
@@ -190,12 +192,10 @@ real-game column explained below):
    - When behind but holding, t1 offers *fewer* trades than humans (0.65% vs 1.62%). That much agrees with the textbook.
    - In lost positions it trades queens twice as often as humans.
    - By its own value head, each such trade raises its draw chance from 6.0% to 9.9% (+4.0 points [1.9, 6.2]).
-3. **That inverted rule shows no benefit for humans in real games.**
-   - Humans who made the network's queen trade scored −0.02, against +0.04 for the network's other moves in lost
-     positions.
-   - It is right by the network's own judgement. Whether it is wrong for humans is suggested, not shown: the intervals
-     overlap. A plausible reason is that self-play opponents do not blunder; splitting by opponent rating did not
-     settle it.
+3. **Whether that inverted rule helps or hurts humans is not settled by real games.**
+   - On 40,000 new positions, humans who made the network's queen trade in lost positions did 2 points worse than the
+     network's other advice there, with an interval from −10 to +6.
+   - A play-out test against strong and fallible opponents (K11j) asks the question directly; see below.
 
 **What failed, honestly.**
 - **Cause tests.**
@@ -215,7 +215,8 @@ Evidence:
 - `confirm_fresh.json`
 - `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
 - `lost_cause_fresh.json`, `king_cause_fresh.json`
-- `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`, `transfer_controls_fresh.json`
+- `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`, `transfer_controls_fresh.json`,
+  `transfer_new_games.json`
 - `examples_fresh.json` (teaching positions with Lichess game links)
 
 ## What is new here (against `RESEARCH.md`)
@@ -235,6 +236,6 @@ Evidence:
     games across three independently trained networks, prices each rule twice (the network's value head and real game
     results), and tests cause with board edits.
   - The real-game check carries its own control: the general value of playing the network's move. With it, the check
-    can tell a rule that adds to human play from one that merely rides on it. At 16,000 games no rule clears it yet;
-    pawn play leans above, trading below. We found no earlier method that runs this check automatically.
+    can tell a rule that adds to human play from one that merely rides on it. On 40,000 new positions no confirmed rule
+    adds anything that holds up. We found no earlier method that runs this check automatically.
 

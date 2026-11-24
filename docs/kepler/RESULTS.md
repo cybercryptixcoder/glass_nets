@@ -55,22 +55,21 @@ Each candidate had to:
   centre pawns, push flank pawns in endgames, attack the uncastled king. These are known answers.
 - **Five rules confirmed on fresh games.**
 
-  | Rule | Network vs humans | Real games: playing the network's exact move (its other moves there) |
+  | Rule | Network vs humans | Real games, 40,000 new positions: what the rule adds for humans |
   |---|---|---|
-  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | +0.09 (+0.07) |
-  | **Enemy king still in the centre: play the lever** | 1.6×; partly causal (enemy king moved to a castled square: appetite −13% vs −3% for a matched move) | **+0.16** (+0.06) |
-  | Quiet position: leave a pushed pawn en prise | 1.6× | +0.21 (+0.07), 19 games |
-  | Behind in material: offer trades | 1.6× (all of it in lost positions) | −0.00 (+0.06) |
-  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | **−0.02** (+0.04) |
+  | **Quiet position: play the pawn lever** (a pawn push that attacks an enemy pawn) | 1.4× (d-pawn 1.9×, a-pawn 2.5×) | +0.01 [−0.04, 0.06] |
+  | **Enemy king still in the centre: play the lever** | 1.6×; partly causal (enemy king moved to a castled square: appetite −13% vs −3% for a matched move) | −0.06 [−0.14, 0.02] |
+  | Quiet position: leave a pushed pawn en prise | 1.6× | +0.00 [−0.11, 0.12] |
+  | Behind in material: offer trades | 1.6× (all of it in lost positions) | +0.12 [0.02, 0.22], unconfirmed |
+  | **Lost: trade queens** (the textbook says the opposite) | 2.0×; t1's draw chance per trade +4.0 points | −0.02 [−0.10, 0.06] |
 
-- **What the real games say, read against the right baseline.**
-  - Playing the network's move helps humans by 4 to 7 points whatever kind of move it is.
-  - Pawn play (levers against an uncastled king, pawn sacrifices) sits above that. Trading sits below it, at zero.
-  - None of these differences is significant yet with 16,000 games.
-  - So the double pricing points toward a split: aggressive pawn play would be a lesson for people, and trading down
-    when lost would pay only against a superhuman opponent. **It does not prove that split.**
-  - Correction: my first reading at 14:40 ("levers transfer, +0.06 to +0.10") was the general value of playing the
-    network's move. The exact-move and other-move-type controls added at 14:48 showed it.
+- **What real games say.**
+  - Playing the network's move helps humans by about 8 points whatever kind of move it is.
+  - No confirmed rule adds anything to that which holds up on 40,000 positions from new games (K11i, registered first).
+  - The single positive (trade offers when behind) is unregistered, opposite in sign to the earlier reading, and 1 of 5
+    tests, so it needs its own replication.
+  - **Correction, said plainly:** at 14:40 I first wrote "levers transfer to humans (+0.06 to +0.10)". The move-type
+    controls (14:48) and the new games (14:57) showed that number was the general value of playing the network's move.
 - **Two different kinds of knowledge** (descriptive, all confirmed on fresh games):
   - **Levers:** humans under-play the networks' levers at almost every rating level.
   - **Queen trades when lost:** the networks invert the textbook rule ("when behind, avoid trades, especially of
@@ -80,8 +79,9 @@ Each candidate had to:
   - The one matched test (enemy king castled vs moved within the centre) shows a real but modest causal effect on lever
     appetite: 13% vs 3%, below the 30% bar set beforehand.
   - The rules mainly describe where the networks' choices differ from humans'.
-- **Numbers.** Real-game scores (1 win, ½ draw, 0 loss) are from the fresh games, adjusted for t1's value of the
-  position (`transfer_controls_fresh.json`). The pooled two-sample estimates are in `real_outcomes_pooled.json`.
+- **Numbers.** Real-game scores (1 win, ½ draw, 0 loss) are adjusted for t1's value of the position:
+  - `transfer_new_games.json`: 40,000 new positions;
+  - `transfer_controls_fresh.json`: the first 16,000 fresh games.
 - **Teaching positions** for each rule (FEN, t1's move, the human's move, Lichess link):
   `results/kepler/chess/rules/examples_fresh.json`.
 
@@ -93,11 +93,12 @@ Each candidate had to:
   - an automated pipeline that turns a superhuman network's play into conditional strategy rules confirmed on fresh games
     across three networks, and **prices each rule twice**: by the network's value head, and by real game results against
     the general value of playing the network's move. Prior work looked inside AlphaZero (McGrath 2022), taught its
-    concepts to grandmasters by hand (Schut 2025), or modelled human moves by rating (Maia).
+    concepts to grandmasters by hand (Schut 2025), or modelled human moves by rating (Maia). The pipeline's honest answer
+    here is that the rules describe the network's style, while what helps humans is its specific moves.
   - The pipeline found and confirmed a counter-textbook behaviour: trading queens when lost, 2× humans, in three networks
     and every rating band.
 - **Not new:**
-  - the lever (Kmoch, 1959), now measured as under-played by humans and worth points;
+  - the lever (Kmoch, 1959), now measured as under-played by humans relative to three networks;
   - the networks' extra pawn sacrifices and rook-pawn pushes (known AlphaZero style).
   - No chess rule passed the cause test, so no "new strategy the network uses because of X" is claimed.
 - **Negative results kept:**
@@ -118,5 +119,8 @@ python3 scripts/kepler/chess_rules.py confirm       # K11d
 python3 scripts/kepler/chess_rules.py freshq        # K11e (queen trades by evaluation, draw mechanism)
 python3 scripts/kepler/chess_rules.py trades        # b1 cause / worth / mechanism
 python3 scripts/kepler/chess_rules.py lostcause     # K11f
+python3 scripts/kepler/chess_rules.py outcomes      # K11g real game results (recovers the fresh games' results)
+python3 scripts/kepler/chess_rules.py kingcause     # K11h matched king edits
+python3 scripts/kepler/chess_rules.py transfer2     # K11i powered transfer test on 40,000 positions from new games
 ```
 Fluid: `scripts/kepler/fluid_build.py`, `fluid_known_test.py`, `fluid_law.py`, `fluid_mechanism.py`, `dye_law.py`.

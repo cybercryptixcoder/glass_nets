@@ -769,10 +769,11 @@ function chessView() {
       <div class="meta"><span>${c.n} positions</span><span class="badge ${c.mean_residual > 0 ? "ok" : "no"}">${c.mean_residual > 0 ? "more optimistic" : "more pessimistic"} ${f(Math.abs(c.mean_residual), 2)}</span></div></div>`).join("")}</div></div></div>`;
 }
 function transferBadge(r) {
-  if (r.transfer == null) return `<span class="badge">not measured</span>`;
-  const [lo, hi] = r.transfer_ci, pts = v => (v >= 0 ? "+" : "") + Math.round(100 * v);
-  const cls = r.transfer <= 0 ? "no" : "";
-  return `<div class="tr"><span class="badge ${cls}">Network's move: ${pts(r.transfer)} pts</span><span class="ci">${pts(lo)} to ${pts(hi)} · its other moves here ${pts(r.baseline)}</span></div>`;
+  if (r.added == null) return `<span class="badge">not measured</span>`;
+  const [lo, hi] = r.added_ci, pts = v => (v >= 0 ? "+" : "") + Math.round(100 * v);
+  const cls = lo > 0 ? "ok" : (hi < 0 ? "no" : "");
+  const txt = lo > 0 ? `Adds ${pts(r.added)} pts` : (hi < 0 ? `Costs ${pts(r.added)} pts` : "Adds nothing measurable");
+  return `<div class="tr"><span class="badge ${cls}">${txt}</span><span class="ci">${pts(lo)} to ${pts(hi)} · network's move ${pts(r.transfer)}, its other moves ${pts(r.baseline)}</span></div>`;
 }
 function strongCard(C) {
   const T = C.strong, mx = Math.max(...T.rules.map(r => Math.max(r.t1, r.human)));
@@ -783,7 +784,7 @@ function strongCard(C) {
         <span class="b" style="width:${100 * r.t1 / mx}%;background:var(--accent)"></span><span class="b" style="width:${100 * r.human / mx}%;background:var(--text-3)"></span></div>
       ${transferBadge(r)}</div>`).join("")}</div>
     <div class="legend" style="margin-top:10px"><span><i style="background:var(--accent)"></i>Leela t1</span><span><i style="background:var(--text-3)"></i>Humans (Lichess)</span></div>
-    <p class="note" style="margin-top:8px">Right column, real games: humans who played the network's exact move against humans whose move lacked that type, adjusted for how good the position was (100 pts = a full point), next to the same measure for the network's other moves in those situations. Playing the network's move helps by 4 to 7 points whatever it is; no rule adds a significant amount beyond that yet. Pawn play sits highest; trading sits at zero, although by the network's own judgement trading queens when lost lifts its draw chance from ${pc(T.mechanism?.draw_prob_after_human_move)} to ${pc(T.mechanism?.draw_prob_after_t1_trade)}.</p></div>
+    <p class="note" style="margin-top:8px">Right column, real games (40,000 positions from games never used before): how much playing the network's move <i>of this type</i> adds for humans beyond playing its other moves in the same situations (100 pts = a full point), adjusted for how good the position was. Playing the network's move helps humans by about 8 points everywhere; the rules themselves add nothing that holds up. The one positive (trade offers when behind) is opposite in sign to the earlier sample and needs its own replication. By the network's own judgement, trading queens when lost lifts its draw chance from ${pc(T.mechanism?.draw_prob_after_human_move)} to ${pc(T.mechanism?.draw_prob_after_t1_trade)}.</p></div>
     <div class="card-f"><button class="link-btn" data-sheet="strongHow">How each rule was tested</button><button class="link-btn" data-sheet="strongEx">Teaching positions</button></div></div>`;
 }
 function behaviourCard(C) {
@@ -856,7 +857,7 @@ const SHEETS = {
     <div class="step"><span class="no">3</span><div><b>Three networks, every rating band, fresh games</b><p>t1, LD2 and 744706 must all show the tendency, in every rating band, and again on 16,000 positions from games never looked at. 7 frozen candidates went in; 4 confirmed, plus queen trades in lost positions.</p></div></div>
     <div class="step"><span class="no">4</span><div><b>Cause, by editing the board</b><p>Enemy king moved from the centre to a castled square: lever appetite −${Math.round(100 * kc.relative_drop_castled)}% vs −${Math.round(100 * kc.relative_drop_centre)}% for a matched move (real, but under the 30% bar). Material and lostness: no effect (${Math.round(100 * (tc.relative_drop_when_level || 0))}% vs ${Math.round(100 * (tc.relative_drop_when_two_down || 0))}%; ${Math.round(100 * (lc.rescued?.relative_drop || 0))}% vs ${Math.round(100 * (lc.control?.relative_drop || 0))}%).</p></div></div>
     <div class="step"><span class="no">5</span><div><b>Worth, by the network's own judgement</b><p>When lost, t1's queen trade lifts its draw chance from ${pc(T.mechanism?.draw_prob_after_human_move)} to ${pc(T.mechanism?.draw_prob_after_t1_trade)} compared with the human's move.</p></div></div>
-    <div class="step"><span class="no">6</span><div><b>Transfer, by real game results</b><p>Humans who played the network's exact move vs humans whose move lacked the type, adjusted for the position's value, against the same measure for the network's other moves. Playing the network's move helps by 4 to 7 points in every kind of position; levers against an uncastled king (+16) and pawn sacrifices (+21) sit above that and trades (about 0) below, but none differs significantly from the baseline yet.</p></div></div></div>`}; },
+    <div class="step"><span class="no">6</span><div><b>Transfer, by real game results</b><p>On 40,000 positions from new games: what playing the network's move of the rule's type adds for humans beyond playing its other moves there, adjusted for the position's value. The leans seen on the first 16,000 games (levers +16, trades 0) did not hold up: the network's moves help humans by about 8 points whatever they are, and no rule adds to that reliably.</p></div></div></div>`}; },
   strongEx: () => { const E = S.chess.strong.examples || {}, nm = {c3: "Enemy king in the centre → pawn lever", c0: "Quiet position → pawn lever", e1: "Lost → trade queens"};
     return {kicker: "Chess", title: "Teaching positions (fresh games, players rated 1700+)", wide: true, html: Object.keys(nm).filter(k => E[k]).map(k => `<h4 style="margin:4px 0 10px">${esc(nm[k])}</h4><div class="ex-grid" style="margin-bottom:18px">${E[k].slice(0, 3).map(e => `<div class="ex">${board(e.fen)}<div class="cap">${e.to_move} to move · network <b>${esc(e.t1)}</b> · human (${e.human_elo}) <b>${esc(e.human)}</b> · ${esc(e.result)}${e.game ? ` · <a href="${esc(e.game)}" target="_blank" rel="noopener">game</a>` : ""}</div></div>`).join("")}</div>`).join("")}; },
   chessCands: () => ({kicker: "Chess", title: `Every candidate (${S.chess.candidates.length})`, wide: true, html: `<div style="display:flex;flex-direction:column;gap:10px">${S.chess.candidates.map(c => candRow(c, false)).join("")}</div>`}),

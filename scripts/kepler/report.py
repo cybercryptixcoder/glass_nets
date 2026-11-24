@@ -99,12 +99,11 @@ def main():
         po = load("chess/rules/real_outcomes_pooled.json") or {}
         rf = load("chess/rules/real_outcomes_fresh.json") or {}
         if cf and qt:
-            tcz = (load("chess/rules/transfer_controls_fresh.json") or {}).get("by_rule", {})
+            tn = load("chess/rules/transfer_new_games.json") or {}
             def rule(name, detail, conf, rid, extra=""):
-                c = tcz.get(rid, {})
-                t = {"transfer": c["exact_move"]["adjusted"], "transfer_ci": c["exact_move"]["ci95"],
-                     "transfer_n": c["exact_move"]["n_follow"] + c["exact_move"]["n_not"],
-                     "baseline": c["baseline_same_situation_other_types"]["adjusted"]} if c else {}
+                c = tn.get(rid, {})
+                t = {"transfer": c["exact_move_effect"], "baseline": c["baseline_effect"], "added": c["difference"],
+                     "added_ci": c["difference_ci95"], "transfer_n": c["n_exact"] + c["n_without_type"]} if c else {}
                 return {"name": name, "detail": detail, "t1": conf["t1"], "human": conf["human"], "LD2": conf["LD2"],
                         "744706": conf["744706"], "z": conf["interaction_z"], "bands": conf["bands"], "note": extra, **t}
             ch["strong"] = {
