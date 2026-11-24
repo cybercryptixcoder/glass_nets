@@ -262,3 +262,23 @@ not start from human chess ideas.
   lost side is played by t1; the opponent is t1 (strong) or LD2 sampled at temperature 1 (fallible). Unfinished games
   are judged by t1 and, separately, by LD2.
 
+## Nov 24, 15:01-15:02: the play-out result (K11j)
+
+- **"When lost, trade queens" works in play against a strong opponent.** 146 lost positions from the fresh games, each
+  played out twice with t1 on the lost side (after its queen trade, and after its best move that is not a queen
+  trade), up to 80 more plies against t1.
+  - The lost side scores 0.172 vs 0.106: **+0.066 [0.017, 0.119]** judged by t1, +0.067 [0.015, 0.119] judged by LD2.
+    234 of 292 games ended by play. PASS as registered.
+  - Against LD2 sampling its moves (a fallible opponent), the lost side wins most games either way (0.92 vs 0.91), and
+    the trade adds nothing (+0.01).
+  - The difference between opponents (+0.06 [−0.02, 0.13]) is not significant, so "only against strong opponents" is
+    suggested, not shown.
+- **This is the day's strongest chess result.** A strategy the textbook advises against was:
+  1. mined from the network against human play;
+  2. confirmed on fresh games in three networks and every rating band;
+  3. explained by the network's own draw estimate;
+  4. shown to work in play, judged by two networks.
+
+  The web search found no source stating it.
+- Written into FINDINGS (section 5, result 3), RESULTS.md, the ledger (K11j) and the page.
+

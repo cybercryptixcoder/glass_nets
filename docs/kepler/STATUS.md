@@ -24,11 +24,19 @@ unchecked item. Push after every step.
 10. [x] Lab page `/kepler` and `docs/kepler/FINDINGS.md`.
 11. [x] K10: Leela transformer t1-256x10 ported and verified (all four registered checks pass; the bug was lc0's hidden
     FFN activation rule).
-12. [x] K11 (14:14-14:40): strategy rules from t1 vs 32,000 human decisions. Textbook principles recovered; 5 rules
-    confirmed on fresh games across three networks; cause tests failed; real-game transfer: levers help humans,
-    trading when lost does not. `docs/kepler/RESULTS.md` written.
-13. [ ] Wrap-up from 15:40: FINDINGS, DIARY, RESULTS.md (one-page deliverable), summary JSON, push.
+12. [x] K11 (14:14-15:02): strategy rules from t1 against human decisions.
+    - Textbook principles recovered.
+    - 5 rules confirmed on fresh games across three networks.
+    - Cause tests: one partial (enemy king's place and levers).
+    - Real games (40,000 new positions): no rule adds to human play beyond the network's own moves.
+    - **"When lost, trade queens" (counter-textbook) works in play against a strong opponent: +0.066 [0.017, 0.119].**
+    - `docs/kepler/RESULTS.md` written.
+13. [x] Wrap-up (15:02): FINDINGS, DIARY, RESULTS.md, ledger K10-K11j, lab page card and sheets, summary JSON, all pushed.
 
 ## Next (if a later session continues)
-1. Run the K11 tests on more of the mined rules, and on a bigger transformer (BT4) if one can be loaded.
-2. A teaching test: show the rule to people (or to a weaker network via fine-tuning) and measure the improvement.
+1. The queen-trade strategy:
+   - play-outs with search (lc0 with nodes > 1) and more positions;
+   - an opponent-strength sweep (sampling temperature 0, 0.3, 0.6, 1) to test the "only against strong opposition"
+     scope properly.
+2. Replicate the unregistered positive (trade offers when behind, +0.12 in real games) on new games before believing it.
+3. Run the same pipeline on a bigger transformer (BT4) if one can be loaded; a teaching test with people.

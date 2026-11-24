@@ -70,6 +70,15 @@ Each candidate had to:
     tests, so it needs its own replication.
   - **Correction, said plainly:** at 14:40 I first wrote "levers transfer to humans (+0.06 to +0.10)". The move-type
     controls (14:48) and the new games (14:57) showed that number was the general value of playing the network's move.
+- **The strongest chess result: a counter-textbook strategy that works in play.**
+  - **When lost against a strong opponent, trade queens.** The networks do it 2× as often as humans, in all three
+    networks and every rating band, on fresh games.
+  - Played out from 146 lost positions against t1, the trade lifts the lost side's score from 0.106 to 0.172 (+0.066
+    [0.017, 0.119]). Two independent networks judge it the same way, and 80% of those games ended by play.
+  - Against a fallible opponent it adds nothing (+0.01). Humans in real games got nothing measurable from it either.
+  - The textbook (web search) says the opposite: when behind, avoid trades, especially of queens.
+  - We found no source stating this rule. Its scope (strong opposition) is suggested, not proven: the difference
+    between opponents is +0.06 [−0.02, 0.13].
 - **Two different kinds of knowledge** (descriptive, all confirmed on fresh games):
   - **Levers:** humans under-play the networks' levers at almost every rating level.
   - **Queen trades when lost:** the networks invert the textbook rule ("when behind, avoid trades, especially of
@@ -95,12 +104,15 @@ Each candidate had to:
     the general value of playing the network's move. Prior work looked inside AlphaZero (McGrath 2022), taught its
     concepts to grandmasters by hand (Schut 2025), or modelled human moves by rating (Maia). The pipeline's honest answer
     here is that the rules describe the network's style, while what helps humans is its specific moves.
-  - The pipeline found and confirmed a counter-textbook behaviour: trading queens when lost, 2× humans, in three networks
-    and every rating band.
+  - **A counter-textbook chess strategy, found and verified end to end:** when lost against a strong opponent, trade
+    queens. It was mined from the network against humans, confirmed on fresh games in three networks and every rating
+    band, explained by the network's own draw estimate (+4 points), and shown to work in play (+0.066 [0.017, 0.119]
+    expected score, two independent judges).
 - **Not new:**
   - the lever (Kmoch, 1959), now measured as under-played by humans relative to three networks;
   - the networks' extra pawn sacrifices and rook-pawn pushes (known AlphaZero style).
-  - No chess rule passed the cause test, so no "new strategy the network uses because of X" is claimed.
+  - No chess rule passed the board-edit cause test, so no internal "the network does this because of X" switch is
+    claimed. The queen-trade strategy is verified by play, not by a mechanism inside the network.
 - **Negative results kept:**
   - 59 LLM-written concept programs (three scientist rounds, including minimal pairs) explained none of LD2's value
     residual;
@@ -122,5 +134,6 @@ python3 scripts/kepler/chess_rules.py lostcause     # K11f
 python3 scripts/kepler/chess_rules.py outcomes      # K11g real game results (recovers the fresh games' results)
 python3 scripts/kepler/chess_rules.py kingcause     # K11h matched king edits
 python3 scripts/kepler/chess_rules.py transfer2     # K11i powered transfer test on 40,000 positions from new games
+python3 scripts/kepler/chess_rules.py playout       # K11j play-out of 'trade queens when lost', strong vs fallible opponent
 ```
 Fluid: `scripts/kepler/fluid_build.py`, `fluid_known_test.py`, `fluid_law.py`, `fluid_mechanism.py`, `dye_law.py`.

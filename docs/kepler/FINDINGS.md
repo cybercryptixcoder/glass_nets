@@ -192,10 +192,18 @@ the last column is explained below):
    - When behind but holding, t1 offers *fewer* trades than humans (0.65% vs 1.62%). That much agrees with the textbook.
    - In lost positions it trades queens twice as often as humans.
    - By its own value head, each such trade raises its draw chance from 6.0% to 9.9% (+4.0 points [1.9, 6.2]).
-3. **Whether that inverted rule helps or hurts humans is not settled by real games.**
-   - On 40,000 new positions, humans who made the network's queen trade in lost positions did 2 points worse than the
-     network's other advice there, with an interval from −10 to +6.
-   - A play-out test against strong and fallible opponents (K11j) asks the question directly; see below.
+3. **The inverted rule works in play against a strong opponent (K11j, registered first).**
+   - 146 lost positions from the fresh games were played out twice, with the lost side played by t1 each time: once
+     after its queen trade, once after its best move that is not a queen trade.
+   - **Against t1:** the lost side scores **0.172 after the trade vs 0.106 without it: +0.066 [0.017, 0.119]**. That
+     is judged by t1, and +0.067 [0.015, 0.119] judged by LD2, an independent network. 234 of the 292 games ended by
+     play, not by a judge.
+   - **Against a fallible opponent** (LD2 sampling its moves): the lost side wins most games either way (0.92 vs 0.91),
+     and the trade adds nothing measurable (+0.01).
+   - So "it pays only against strong opponents" fits, but the difference between the two settings is not significant
+     (+0.06 [−0.02, 0.13]).
+   - In real human games (40,000 new positions), humans who made the network's queen trade did no better than the
+     network's other advice there (−0.02 [−0.10, 0.06]). That is consistent with a strategy for strong opposition.
 
 **What failed, honestly.**
 - **Cause tests.**
@@ -214,7 +222,7 @@ Evidence:
 - `chess/rules/mined_b.json`, `mined_c.json` (main and principle-breaking passes)
 - `confirm_fresh.json`
 - `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
-- `lost_cause_fresh.json`, `king_cause_fresh.json`
+- `lost_cause_fresh.json`, `king_cause_fresh.json`, `playout_queen_trade.json`
 - `real_outcomes_fresh.json`, `real_outcomes_k8.json`, `real_outcomes_pooled.json`, `transfer_controls_fresh.json`,
   `transfer_new_games.json`
 - `examples_fresh.json` (teaching positions with Lichess game links)
@@ -238,4 +246,9 @@ Evidence:
   - The real-game check carries its own control: the general value of playing the network's move. With it, the check
     can tell a rule that adds to human play from one that merely rides on it. On 40,000 new positions no confirmed rule
     adds anything that holds up. We found no earlier method that runs this check automatically.
+  - **One counter-textbook strategy came through mining, fresh-game confirmation, three networks, every rating band and
+    a play-out test.** When lost against a strong opponent, trade queens: +0.066 expected score in play, judged by two
+    networks. The textbook rule says the opposite ("when behind, avoid trades, especially of queens"). We found no
+    source stating this rule (web search, 14:28-14:32). The nearest are general advice to head for drawable endgames,
+    and Leela's odds-game bot *avoiding* trades against humans.
 
