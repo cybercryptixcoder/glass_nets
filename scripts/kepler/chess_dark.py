@@ -276,6 +276,7 @@ def main():
     log("evaluator ready")
     results_path = os.path.join(OUT, "candidates.json")
     allres = json.load(open(results_path)) if os.path.exists(results_path) else []
+    prompts = {}
     for c in clusters:
         if rnd == 1:
             prompt = cluster_prompt(c, items, q, qhat, names)
@@ -292,17 +293,38 @@ def main():
                       "\n\nRevise: keep what worked, sharpen the ideas (gains need >= 0.005 with the interval above 0 on "
                       "both networks, decodability >= 0.1 above the untrained copy, and |corr| < 0.5 with every library "
                       "concept). Propose 3 improved or new concepts in the same JSON format.")
+        prompts[c["cluster"]] = prompt
+
+    sdir = os.path.join(OUT, "scientist")
+
+    def one(cid):
+        saved = os.path.join(sdir, f"round{rnd}_cluster{cid}.json")
+        if os.path.exists(saved):
+            d = json.load(open(saved))
+            return cid, d["answer"], d.get("usage", {})
         try:
-            text, usage = ask(prompt, system=SYSTEM, effort="high", max_tokens=16000,
-                              log_dir=os.path.join(OUT, "scientist"), tag=f"round{rnd}_cluster{c['cluster']}")
+            text, usage = ask(prompts[cid], system=SYSTEM, effort="high", max_tokens=16000, log_dir=sdir,
+                              tag=f"round{rnd}_cluster{cid}")
+            return cid, text, usage
         except Exception as e:
-            log(f"cluster {c['cluster']}: LLM error {e}")
-            continue
+            log(f"cluster {cid}: LLM error {e}")
+            return cid, "", {}
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        answers = {cid: (t, u) for cid, t, u in ex.map(one, list(prompts))}
+    done_names = {(x["round"], x["cluster"], x["name"]) for x in allres}
+    for c in clusters:
+        text, usage = answers.get(c["cluster"], ("", {}))
         cands = extract_json(text) or []
+        if isinstance(cands, dict):
+            cands = cands.get("concepts") or cands.get("candidates") or [cands]
         log(f"cluster {c['cluster']}: {len(cands)} candidates (tokens in {usage.get('prompt_tokens')}, out {usage.get('completion_tokens')})")
         for cand in cands if isinstance(cands, list) else []:
             rec = {"round": rnd, "cluster": c["cluster"], "name": cand.get("name", "?"), "idea": cand.get("idea", ""),
                    "direction": cand.get("direction", ""), "code": cand.get("code", "")}
+            if (rnd, c["cluster"], rec["name"]) in done_names:
+                continue
             try:
                 fn = compile_concept(rec["code"])
                 vals, errs = run_concept(fn, ev.boards)

@@ -56,3 +56,31 @@ was assigned.
 - Extractor made fast (Gram matrices; identical least-squares fits): 4 extractions in 100 s.
 - Smoke model on Colab diverged at the learning-rate peak (step 1,000: error on the change 0.15 -> 1.68). Relaunched
   10:09 with peak lr 6e-4, gradient clipping and fp16 mixed precision (10,000 steps).
+
+**10:29 EST. Two blind verdicts, both PASS.**
+
+*K1, the vorticity video model* (`results/kepler/fluid/k1_verdict.json`, `law_by_regime.json`). Trained 8,000 steps;
+10.5% error on the one-step change of held-out pairs. From the model alone (no simulator), Kepler picked exactly the
+5 true terms out of 38 (R^2 0.954): advection -0.985, viscosity 0.0105, beta 0.593, forcing 0.415, drag 0.021. Then
+the sealed truth was opened: -1, 0.010, 0.6, 0.5, 0.05. **PASS** (exact term set, R^2 >= 0.9).
+Reading by hand before trusting it: the true law fits the model's dynamics better (R^2 0.988) than the pooled
+extraction, and tracks its rollouts better, so the drag/forcing gaps were not the model's physics. Fitting each
+regime separately settles it: in the forced equilibrium (spin-up 40) the law read from the model is the true law
+within about 2% (advection -1.0009, nu 0.0102, mu 0.0511, beta 0.602, F 0.511, R^2 0.987); in early transients
+(random starts) drag disappears and forcing drops to 0.31, so the model applies forcing and drag only in the regime
+it mostly saw. Two more findings:
+- **Amplitude generalizes:** scaling equilibrium fields up to 3x keeps advection at -1.00 to -1.03.
+- **Scale does not:** on fields whose structure is finer than training (dominant wavenumber 9, 11, 13 vs 2-8), the
+  model's advection falls to -0.91, -0.79, -0.69 (viscosity also drops). Its physics has a resolution limit. The
+  out-of-distribution set (strong and fine) gave advection -0.47 and no forcing, drag or beta: there the model is not
+  applying the law (the law-versus-lookup test, Vafa et al. 2025, answered per regime).
+
+*K2, the smoke video model* (`results/kepler/dye/k2_verdict.json`). Trained on the Colab T4 (10,000 steps, 1.6%
+error on the change). It sees only dye. Velocity read per pixel from its activations: R^2 0.00, 0.25, 0.49, 0.77,
+0.82, 0.87, 0.88, 0.89 from the input to site 7; the untrained copy stays at 0. The model reconstructs the invisible
+velocity field, progressively through its layers. Using only that internal velocity, the law came out with exactly
+the true terms {advection, diffusion}: -0.88, kappa 0.0025 (R^2 0.92). With the true velocity, the model's dynamics
+are the exact law: advection -1.010, kappa 0.00307 (truth -1, 0.003; R^2 0.9996). **PASS** on all three criteria.
+The weaker -0.88 with the internal velocity matches the readout's 89% accuracy (errors in a regressor shrink its
+coefficient). Known test before it: (a) exact, (b) shuffled velocity R^2 0.016. Colab runtime stopped after
+downloading the model (no idle units).

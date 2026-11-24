@@ -22,13 +22,14 @@ def _load_env():
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def ask(prompt, system=None, effort="high", max_tokens=12000, log_dir=None, tag="q"):
+def ask(prompt, system=None, effort="high", max_tokens=12000, log_dir=None, tag="q", timeout=900):
     _load_env()
     sys.path.insert(0, os.path.join(REPO, "lab"))
     import luminal
     msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": prompt}]
     t0 = time.time()
-    r = luminal.complete({"model": luminal.model(), "messages": msgs, "max_tokens": max_tokens}, effort=effort)
+    r = luminal.complete({"model": luminal.model(), "messages": msgs, "max_tokens": max_tokens}, effort=effort,
+                          timeout=timeout)
     msg = r["choices"][0]["message"]
     text = msg.get("content") or ""
     usage = r.get("usage", {})
