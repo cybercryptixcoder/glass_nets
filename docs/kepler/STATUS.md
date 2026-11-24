@@ -10,14 +10,18 @@ unchecked item. Push after every step.
 
 1. [x] Branch, intent, ledger entry K1 (09:27).
 2. [x] Fluid target: exact spectral simulator with hidden parameters (`kepler/targets/fluid/sim.py`).
-3. [ ] Fluid video model trained on its frames (`scripts/kepler/fluid_build.py`, running since 09:30).
-4. [ ] Research: prior work on concept discovery, symbolic distillation, world models, chess interpretability.
-5. [ ] Engine core: concept atlas (probes with controls), law extraction (sparse regression on the model's implied
+3. [~] Fluid video model trained on its frames (`scripts/kepler/fluid_build.py`, running since 09:36; error on the one-step change 15% at step 7,200 of 8,000).
+4. [x] Research (`docs/kepler/RESEARCH.md`): prior work on concept discovery, symbolic distillation, world models, chess interpretability.
+5. [x] Engine core (`kepler/core/`: law.py, probe.py, residual.py, scientist.py): concept atlas (probes with controls), law extraction (sparse regression on the model's implied
    dynamics), causal tests (concept-swap interventions), findings ledger.
-6. [ ] Known-answer test for the law extractor (K1 (a)–(c)), then the held-out verdict on the trained model.
+6. [~] K1 known-answer test ALL PASS (10:09); held-out verdict waits for the trained model (`scripts/kepler/fluid_law.py`).
 7. [ ] Fluid mechanism: where velocity lives inside the model, its learned Biot-Savart kernel, law vs. lookup out of
    distribution.
-8. [ ] Chess target: a strong Leela network loaded in PyTorch, positions from Lichess, chess concept library.
-9. [ ] Chess discovery: concept atlas, value decomposition into known concepts, the unexplained part, candidate new
+8. [x] Chess target (LD2 + 744706 ported; 20,000 positions; 61 concepts; K3 known tests: a FAIL as registered, b and c PASS): a strong Leela network loaded in PyTorch, positions from Lichess, chess concept library.
+9. [~] Chess discovery (`scripts/kepler/chess_dark.py`, round 1 running with the Luminal scientist): concept atlas, value decomposition into known concepts, the unexplained part, candidate new
    concepts with causal tests and example positions.
 10. [ ] Lab page for findings (cards), final report.
+
+## Also running
+- K2 smoke video model (dye only; velocity hidden) on the Colab T4: error on the one-step change 2.0% at step 6,750
+  of 10,000. Analysis script ready: `scripts/kepler/dye_law.py` (known, then verdict).

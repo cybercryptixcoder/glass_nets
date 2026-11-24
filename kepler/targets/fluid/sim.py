@@ -62,8 +62,9 @@ class Spectral:
 
 
 class Flow:
-    def __init__(self, n=64, nu=0.01, mu=0.05, F=0.5, kf=4, beta=0.6, dt=0.0125):
+    def __init__(self, n=64, nu=0.01, mu=0.05, F=0.5, kf=4, beta=0.6, dt=0.0125, adv=1.0):
         self.sp = Spectral(n)
+        self.adv = adv          # advection strength (1 = physical; other values only to replay an extracted law)
         self.nu, self.mu, self.F, self.kf, self.beta, self.dt = nu, mu, F, kf, beta, dt
         self.fh = self.sp.fft(F * np.sin(kf * self.sp.Y)) * self.sp.mask
 
@@ -78,7 +79,7 @@ class Flow:
         u, v = sp.ifft(uh), sp.ifft(vh)
         wx, wy = sp.ifft(1j * sp.KX * wh), sp.ifft(1j * sp.KY * wh)
         advh = sp.fft(u * wx + v * wy) * sp.mask
-        return -advh - (self.nu * sp.K2 + self.mu) * wh + self.fh - self.beta * vh
+        return -self.adv * advh - (self.nu * sp.K2 + self.mu) * wh + self.fh - self.beta * vh
 
     def rhs(self, w):
         """Exact time derivative in physical space (the ground truth the law extractor is tested on)."""
