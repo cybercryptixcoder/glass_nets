@@ -152,3 +152,7 @@ not start from human chess ideas.
 - **Lab page `/kepler` (K5)** done: Fluid, Smoke and Chess as cards, details in sheets, dark and light, 1600 and 1280,
   no JS errors (Playwright). Fixed on the way: NaN in the summary JSON, the missing shell wrapper, chart text
   scaling on wide cards, chess glyphs drawn as emoji.
+- **Velocity swap, cleaner controls** (`results/kepler/fluid/swap_controls.json`): at block 5 the output change after
+  swapping in flow B's internal velocity matches the law's prediction with B's velocity (0.86) and much less with an
+  unrelated flow C's (0.28); at block 1 the same swap changes the output by 1.4% (66% at block 5). The model advects
+  with an internal velocity variable formed in its middle layers. Supersedes the confounded random-subspace control.

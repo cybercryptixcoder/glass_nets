@@ -48,8 +48,11 @@ Evidence: `fluid/k1_known_test.json` (the extractor proven on known cases first)
   0.24 → 0.60 → 0.80 → 0.86 → 0.97; the untrained copy peaks at 0.26). No other quadratic quantity is computed.
 - **Caveat (recorded).** Linear quantities, velocity included, are readable even from random filters, so linear
   probes say nothing about learning there.
-- **Partial result.** The velocity-swap intervention is specific but partly confounded (0.86 against a control at
-  0.69).
+- **The model advects with its own velocity variable (velocity swap).** Swapping in another flow's internal velocity
+  at block 5 changes the model's output as the law predicts with the swapped velocity (correlation 0.86), much more
+  than with an unrelated flow's velocity (0.28). At block 1, before velocity has formed, the same swap barely moves
+  the output (1.4% vs 66%). Evidence: `fluid/swap_controls.json`. (A first random-subspace control, 0.69, was
+  confounded by sharing the same spatial pattern and is superseded.)
 
 Evidence: `fluid/mechanism.json`, `fluid/biot_savart_blobs.json`.
 
