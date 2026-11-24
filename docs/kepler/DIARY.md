@@ -191,3 +191,42 @@ not start from human chess ideas.
   M must lose more of t1's expected score than human moves with M). Novelty is checked by web search afterwards.
   Hard stop 16:09; clock checks scheduled for 15:00, 15:40 and 16:05.
 
+## Nov 24, 14:14-14:40: the strong network against 32,000 human decisions (K11)
+
+- **Evaluation (14:14-14:18).** t1 on the 16,000 K8 positions in 2.5 minutes on two CPU threads; 744706 too. t1 plays
+  the human's move in 39% of positions (LD2 37%).
+- **K11 as registered found nothing (14:18).** Zero of 3,600 situation x move-type pairs met "the network plays M at
+  least 1.5x as often as humans". The networks and humans play every coarse move type at similar base rates, so the
+  1.5x line was a guess that could only catch rare moves. Recorded as an intent error in the selection; the new line
+  (K11b) comes from a control: the largest z in 20 shuffled-label nulls (z > 4.12).
+- **K11b (14:19): the textbook, recovered.** 18 rules pass replication and every rating band: knight development while
+  castling rights remain, centre pawn pushes with many pieces on, flank pawns in endgames, pawns against an uncastled
+  king. These are known answers. Cause tests on three: one FAILED (its situation was a proxy for the opening), two could not
+  be tested (single-piece edits never moved kings). Found two translation errors while testing: the worth loss mixed
+  before/after positions, and t1 rates the side to move about 0.09 low with FEN-only history (its own top move
+  "gained" 0.18 on average); worth is now measured against t1's own move. Edits now move kings too.
+- **K11c (14:24): principle-breaking moves.** A second vocabulary (bishop for knight, own doubled or isolated pawns,
+  pawn pushes in front of the own castled king, king walks, early queen sorties, pawn and exchange sacrifices, declining
+  castling, queen trades, levers...). Everything that passed was "pawn lever in quiet positions": Kmoch's lever, played
+  about 1.45x as often by all three networks.
+- **K11d/e (14:26-14:34): exploration, then confirmation on fresh games.** The 5% firing rate hid rare moves, so I
+  listed the strongest rare-move departures as exploration and froze 7 of them, plus two evaluation-conditioned ones
+  (K11e), before sampling 16,000 fresh positions (games 12,001 onward). Confirmed: levers (two situations), pawn
+  sacrifices, trade offers when behind, and **queen trades when lost** (t1 3.6% vs humans 1.8%; LD2 2.0%, 744706 2.9%;
+  every band). The textbook (web search) says the opposite: when behind, avoid trades, especially of queens. t1's value
+  head says each such trade raises its draw chance from 6.0% to 9.9%.
+- **Cause tests failed (14:34-14:36).** Symmetric pawn edits (one pawn down: remove an enemy pawn, now level, or an own
+  pawn, now two down) change t1's trade appetite equally. Rescuing a lost position (removing an enemy piece, q up to
+  +0.62) barely changes its appetite for the queen trade in front of it. The rules describe where the networks' choices
+  differ from humans'; they are not switches the situation flips inside the network.
+- **Transfer to humans (14:38-14:40), the new measurement.** I recovered the fresh games' results (the sampler is
+  deterministic; all 16,000 FENs matched) and compared humans who played the rule's move with humans who did not, in
+  the positions where t1 plays it. **Levers transfer:** +0.08 [0.01, 0.15] and +0.13 [0.01, 0.24] game score, adjusted for
+  the position's value. **Trading when lost does not:** -0.04 [-0.16, 0.09]; pooled with the first sample +0.04
+  [-0.06, 0.13]; splitting by opponent rating did not show a pattern. So the same pipeline separates a lesson people can
+  use from behaviour that pays only against a superhuman opponent. Humans play fewer levers than the networks at
+  almost every rating level (on the fresh games 4.3% under 1300, 3.3% at 1900+; networks about 5%), most of all with
+  the d-pawn (1.9x) and the a-pawn (2.5x).
+- **K10 results file** re-run and saved (14:39): PASS; t1 solves 49 of 50 mate-in-one puzzles without search (LD2 44).
+- Written: `docs/kepler/RESULTS.md` (the one-page deliverable) and FINDINGS section 5.
+

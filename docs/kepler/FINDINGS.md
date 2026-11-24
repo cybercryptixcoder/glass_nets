@@ -1,6 +1,6 @@
-# Kepler: findings (Nov 24, 2026, as of 10:46 EST)
+# Kepler: findings (Nov 24, 2026, as of 14:39 EST)
 
-Every finding below passed tests that were written down before the result existed (ledger entries K1–K4 in
+Every finding below passed tests that were written down before the result existed (ledger entries K1–K11 in
 `docs/glass/CHANGES.md`). Evidence files are under `results/kepler/`. The lab page `/kepler` shows them as cards.
 
 ## 1. A fluid video model's governing law, read out of the model blind (K1: PASS)
@@ -119,6 +119,92 @@ positions; it solves 65% of 4,000 Lichess puzzles with no search. A second net, 
 Evidence: `chess/atlas_LD2.json`, `chess/k3_known_test.json`, `chess/surrogate_learning_curve.json`,
 `chess/calculation_features.json`, `chess/dark/`, `chess/units/rules.json`.
 
+## 5. A far stronger network against 32,000 human decisions: which of its strategies are real, and which help humans (K10, K11)
+
+**Setup.**
+- **The network.** Leela's transformer t1-256x10, ported to PyTorch and checked against lc0's own code.
+  - The port's one bug: lc0 silently gives old-format transformer files a squared-ReLU feed-forward layer.
+  - It passes every registered check: opening moves, mate in one for both colours, queen-up values, and agreement with
+    LD2 (value correlation 0.97).
+- **The question.** In the same positions, what does t1 play that humans do not? Each candidate is a rule of the form
+  "in situation C, play move type M".
+- **Candidates.** 144 situations (each classical concept high or low, plus king placement) × 42 move types (ordinary
+  ones, plus moves that classical principles advise against). That is about 6,000 rules.
+- **The bar.** Each rule must clear all of these:
+  1. A significance line taken from a control: the largest effect in 20 runs with network and human labels shuffled.
+  2. Replication: the two older, independently trained networks must show the same tendency.
+  3. Every human rating band must show it.
+  4. It must be confirmed on 16,000 fresh positions from games never looked at.
+  5. Cause: board edits that switch the situation off.
+  6. Worth: the network's own value head.
+  7. **Transfer:** the real results of the human games.
+
+**What the miner finds first: the textbook.** The 18 strongest rules in the main pass are opening and endgame
+principles that separate strong play from amateur play:
+- develop knights while castling is still possible;
+- push centre pawns while many pieces are on;
+- push flank pawns in endgames;
+- push pawns against an uncastled king.
+
+These are known answers, recovered unprompted.
+
+**Confirmed on fresh games** (all three networks and every rating band; rates are moves per position in the situation):
+
+| Rule (situation → move) | t1 | humans | ratio | Real games: humans who also played it |
+|---|---|---|---|---|
+| quiet position → **pawn lever** (a pawn push that attacks an enemy pawn) | 5.3% | 3.7% | 1.4× | score **+0.08** [0.01, 0.15] (adjusted for the position's value) |
+| enemy king still in the centre → pawn lever | 6.4% | 4.0% | 1.6× | **+0.13** [0.01, 0.24] |
+| quiet position → pawn sacrifice (pushed pawn left en prise) | 1.0% | 0.6% | 1.6× | +0.19 [-0.00, 0.38] (only 21 games) |
+| behind in material → offer a like-for-like trade | 3.7% | 2.3% | 1.6× | -0.02 [-0.13, 0.10] |
+| **position lost** (t1's own value ≤ −0.5) → **trade queens** | 3.6% | 1.8% | 2.0× | -0.04 [-0.16, 0.09] |
+
+**Three results stand out.**
+
+1. **Humans move away from the networks' levers as they get stronger.**
+   - The networks play about 5% levers in quiet positions at every rating level.
+   - Humans play fewer at every level except the lowest. On the fresh games they fall from 4.3% (under 1300) to 3.3%
+     (1900+); on the first sample they range from 3.2% to 4.7%, lowest in the middle bands.
+   - The gap is largest for d-pawn levers (1.9×) and a-pawn levers (2.5×).
+   - Humans who did play the lever the network chose scored 8 to 13 points better, after adjusting for how good the
+     position was.
+
+   This is a network strategy that transfers.
+2. **A textbook rule inverted, but only where the network is lost.**
+   - The textbook says "when behind in material, avoid exchanges, especially of queens" (checked by web search; it is
+     everywhere).
+   - The networks offer trades 1.6× as often as humans when behind. Split by evaluation, all of the excess is in lost
+     positions (4.8% vs 2.6%).
+   - When behind but holding, t1 offers *fewer* trades than humans (0.65% vs 1.62%). That much agrees with the textbook.
+   - In lost positions it trades queens twice as often as humans.
+   - By its own value head, each such trade raises its draw chance from 6.0% to 9.9% (+4.0 points [1.9, 6.2]).
+3. **That inverted rule does not help humans.**
+   - In real games, humans in the same lost positions scored the same whether or not they traded: −0.04 [−0.16, 0.09]
+     on fresh games (adjusted for the position's value), +0.04 [−0.06, 0.13] pooled with the first sample (raw).
+   - It is right by the network's judgement, but buys nothing against human opponents.
+   - The pipeline can therefore tell "superhuman knowledge humans can use" from "superhuman behaviour that pays only
+     against a superhuman opponent". A plausible reason is that self-play opponents do not blunder. That reason is a
+     hypothesis: splitting by opponent rating did not settle it.
+
+**What failed, honestly.**
+- **Cause tests.**
+  - Being a pawn down is not what makes t1 offer trades. Removing an enemy pawn (now level) or an own pawn (now two
+    down) lowers its appetite equally (15% vs 16%).
+  - Rescuing a lost position barely changes its appetite for a given queen trade (7% vs 11% for control edits). That
+    holds even when the rescue makes it winning.
+  - So these rules describe where the network's choices differ from human choices. They are not a switch inside the
+    network that the situation flips.
+- **Unconfirmed.** Three of the seven exploratory rules did not survive the fresh games.
+- **Not novel.** The lever is Kmoch's classical concept (1959), and the networks' extra pawn sacrifices echo AlphaZero's
+  known style.
+
+Evidence:
+- `chess/t1_check.json`
+- `chess/rules/mined_b.json`, `mined_c.json` (main and principle-breaking passes)
+- `confirm_fresh.json`
+- `queen_trade_fresh.json`, `trade_when_behind_fresh.json`
+- `lost_cause_fresh.json`
+- `real_outcomes_fresh.json`
+
 ## What is new here (against `RESEARCH.md`)
 
 - **Physics.** Video-physics interpretability work in 2026 probes for variables and plausibility. Reading a
@@ -129,3 +215,12 @@ Evidence: `chess/atlas_LD2.json`, `chess/k3_known_test.json`, `chess/surrogate_l
 - **Chess.** Schut et al. found concept vectors and described them by hand. Kepler states candidates as executable
   rules and applies frozen statistical, causal-decodability, non-redundancy and replication tests. So far, this has
   shown mostly what the network's extra knowledge is **not**.
+- **Strong-network strategies, priced twice.**
+  - Prior work looked inside AlphaZero (McGrath et al. 2022; Schut et al. 2025, concept vectors taught to grandmasters)
+    or modelled human moves by rating (Maia, McIlroy-Young et al. 2020).
+  - Kepler mines the gap between a superhuman network's choices and 32,000 human choices. It confirms rules on fresh
+    games across three independently trained networks, prices each rule twice (the network's value head and real game
+    results), and tests cause with board edits.
+  - The double pricing is what separates transferable lessons (pawn levers) from superhuman-only behaviour (trading when
+    lost). We found no earlier method that makes that distinction automatically.
+

@@ -793,6 +793,91 @@ def cmd_lostcause():
     json.dump(res, open(os.path.join(OUT, "lost_cause_fresh.json"), "w"), indent=1)
 
 
+def _score(fen, r):
+    if r == "1/2-1/2":
+        return 0.5
+    if r not in ("1-0", "0-1"):
+        return np.nan
+    return 1.0 if (r == "1-0") == (chess.Board(fen).turn == chess.WHITE) else 0.0
+
+
+def cmd_outcomes():
+    """K11g (reported, not pre-registered): real game results when humans followed the confirmed rules or not.
+    Recovers the fresh games' results from the same deterministic sampler, then compares the mover's actual score
+    where t1 plays the rule's move: human played it too vs not; raw and adjusted for t1's value (linear)."""
+    import random
+    import chess.pgn
+    from kepler.targets.chess.data import _text_stream
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    path = os.path.join(WORK, "fresh_results.json")
+    if not os.path.exists(path):
+        rng0 = random.Random(11)
+        stream = _text_stream(os.path.join(KDATA, "chess", "lichess_2013-01.pgn.zst"))
+        for _ in range(12000):
+            chess.pgn.skip_game(stream)
+        out = []
+        while len(out) < 16000:
+            g = chess.pgn.read_game(stream)
+            if g is None:
+                break
+            moves = list(g.mainline_moves())
+            if len(moves) < 14:
+                continue
+            plies = sorted(rng0.sample(range(10, len(moves) - 1), min(2, len(moves) - 11)))
+            b = g.board()
+            k = 0
+            for i, m in enumerate(moves):
+                if k < len(plies) and i == plies[k]:
+                    if not b.is_game_over():
+                        out.append({"fen": b.fen(), "result": g.headers.get("Result", "*")})
+                    k += 1
+                b.push(m)
+        out = out[:16000]
+        assert all(a["fen"] == b["fen"] for a, b in zip(out, fm["items"])), "sampler not deterministic"
+        json.dump([o["result"] for o in out], open(path, "w"))
+    res_ = json.load(open(path))
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    keys, items, cond = fm["keys"], fm["items"], fm["cond"]
+    W = np.load(os.path.join(WORK, "fresh_wdl.npy"))
+    q = W[:, 0] - W[:, 2]
+    sc = np.array([_score(it["fen"], r) for it, r in zip(items, res_)])
+    incheck = np.array([c["in_check"] for c in cond])
+    eking = np.array([c["enemy king in the centre (d/e file)"] for c in cond])
+    mat = np.array([c["material"] for c in cond])
+    rng = np.random.default_rng(2)
+    rules = [("c0 quiet -> pawn lever", "pawn lever (push attacks an enemy pawn)", incheck == 0),
+             ("c3 enemy king in centre -> pawn lever", "pawn lever (push attacks an enemy pawn)", eking == 1),
+             ("c2 quiet -> pawn sacrifice", "pawn sacrifice (pushed pawn en prise)", incheck == 0),
+             ("b1 behind -> trade offer", "offers a like-for-like trade", mat <= -1),
+             ("e1 lost -> queen trade", "queen trade (captures or offers the queen)", q <= -0.5)]
+    out = {}
+    for rid, mk, cmask in rules:
+        mi = keys.index(mk)
+        T, H = Fz["T"][:, mi], Fz["H"][:, mi]
+        f = cmask & (T > 0.5) & ~np.isnan(sc)
+        a, b = sc[f & (H > 0.5)], sc[f & (H < 0.5)]
+        bs = [a[rng.integers(0, len(a), len(a))].mean() - b[rng.integers(0, len(b), len(b))].mean() for _ in range(2000)]
+        x = np.concatenate([q[f & (H > 0.5)], q[f & (H < 0.5)]])
+        y = np.concatenate([a, b])
+        g = np.r_[np.ones(len(a)), np.zeros(len(b))]
+        A = np.c_[np.ones_like(x), x, g]
+        coef = np.linalg.lstsq(A, y, rcond=None)[0]
+        bs2 = []
+        for _ in range(1000):
+            ii = rng.integers(0, len(y), len(y))
+            bs2.append(np.linalg.lstsq(A[ii], y[ii], rcond=None)[0][2])
+        out[rid] = {"move_type": mk, "n_followed": int(len(a)), "n_not": int(len(b)), "score_followed": float(a.mean()),
+                    "score_not": float(b.mean()), "diff": float(a.mean() - b.mean()),
+                    "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))],
+                    "diff_adjusted_for_t1_q": float(coef[2]),
+                    "adjusted_ci95": [float(np.percentile(bs2, 2.5)), float(np.percentile(bs2, 97.5))]}
+        log(f"{rid:40s} followed {a.mean():.3f} (n={len(a)}) vs not {b.mean():.3f} (n={len(b)}) diff {a.mean() - b.mean():+.3f} "
+            f"adjusted {coef[2]:+.3f} [{np.percentile(bs2, 2.5):+.3f},{np.percentile(bs2, 97.5):+.3f}]")
+    out["note"] = ("score = the mover's actual game result (1 win, 0.5 draw, 0 loss); positions where t1's top move has the "
+                   "rule's move type; 'followed' = the human's move had it too. Observational: who follows a rule is not random.")
+    json.dump(out, open(os.path.join(OUT, "real_outcomes_fresh.json"), "w"), indent=1)
+
+
 CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
     ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
     ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
@@ -894,4 +979,5 @@ def cmd_confirm():
 
 if __name__ == "__main__":
     {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
-     "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause}[sys.argv[1]]()
+     "confirm": cmd_confirm, "freshq": cmd_freshq, "trades": cmd_trades, "lostcause": cmd_lostcause,
+     "outcomes": cmd_outcomes}[sys.argv[1]]()

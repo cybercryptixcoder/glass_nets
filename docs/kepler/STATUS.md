@@ -24,8 +24,9 @@ unchecked item. Push after every step.
 10. [x] Lab page `/kepler` and `docs/kepler/FINDINGS.md`.
 11. [x] K10: Leela transformer t1-256x10 ported and verified (all four registered checks pass; the bug was lc0's hidden
     FFN activation rule).
-12. [~] K11 (14:14-16:09): strategy rules from t1 by contrast with human play: eval, mining with replication and rating
-    bands, cause (board edits), worth (t1 value of human moves), novelty (web search). Hard stop 16:09.
+12. [x] K11 (14:14-14:40): strategy rules from t1 vs 32,000 human decisions. Textbook principles recovered; 5 rules
+    confirmed on fresh games across three networks; cause tests failed; real-game transfer: levers help humans,
+    trading when lost does not. `docs/kepler/RESULTS.md` written.
 13. [ ] Wrap-up from 15:40: FINDINGS, DIARY, RESULTS.md (one-page deliverable), summary JSON, push.
 
 ## Next (if a later session continues)
