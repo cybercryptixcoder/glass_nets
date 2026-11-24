@@ -36,7 +36,8 @@ def game_positions(path, n, seed=0, per_game=2, min_ply=10):
             if k < len(plies) and i == plies[k]:
                 if not b.is_game_over():
                     out.append({"fen": b.fen(), "ply": i, "result": g.headers.get("Result", "*"),
-                                "white_elo": g.headers.get("WhiteElo", "?"), "black_elo": g.headers.get("BlackElo", "?")})
+                                "white_elo": g.headers.get("WhiteElo", "?"), "black_elo": g.headers.get("BlackElo", "?"),
+                                "played": m.uci()})
                 k += 1
             b.push(m)
     return out[:n]

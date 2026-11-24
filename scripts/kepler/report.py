@@ -90,6 +90,9 @@ def main():
                               {"prototypes": chess_boards(meta, c["prototypes"][:4]) if os.path.exists(meta) else []}
                               for c in st["clusters"][:8]]
         ch["unit_rules"] = load("chess/units/rules.json", [])
+        ch["behaviour"] = load("chess/behaviour.json")
+        ch["rook_pawn_context"] = load("chess/rook_pawn_context.json")
+        ch["channels"] = load("chess/channel_evidence.json")
         s["chess"] = ch
     def clean(o):
         if isinstance(o, dict):

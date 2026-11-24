@@ -124,3 +124,31 @@ tactical puzzle positions. The network's knowledge beyond classical concepts sit
 tactical foresight, consistent with the learned look-ahead of Jenner et al. 2024). Next: look for strategic
 (non-tactical) knowledge only in quiet positions, with a data-driven search over the network's own units that does
 not start from human chess ideas.
+
+**10:53 EST. Chess: rules from units (K4), the units' causal role, behaviour against humans; the lab page.**
+
+- **K4 rules from units: 0 of 8 accepted, the noise control correctly rejected** (`results/kepler/chess/units/rules.json`).
+  In 7,287 quiet game positions (no check, no capture resolution, no threat), the library plus calculation explains
+  R^2 0.821 of LD2's value. Single channels at the last site track the rest: channel 22 correlates -0.45 (and -0.41
+  on the other half), channel 15 -0.44/-0.41. Depth-3 trees over 42 per-square descriptors capture only 6-27% of
+  each channel's activity, and the compiled rules add nothing: these units are not simple square predicates.
+- **The units are causal** (`channel_evidence.json`). Resetting channel 22 to its mean moves LD2's value toward the
+  classical estimate (correlation +0.41 with undoing the residual) and **removes 32% of the residual in quiet
+  positions**; channel 15 removes 14%; channels 80 and 122 about 1%. Counterfactual drivers: removing any opponent
+  piece (queen, rook, bishop or knight) lowers channel 22 by about the same amount (about 65), so it responds to
+  the opponent's pieces regardless of their value. Tested as concepts: opponent / own / total piece counts and the
+  count difference are restatements of the library (|corr| 0.82-0.97 with phase and material) and add nothing
+  (`piece_count_tests.json`). The channel's contribution is a nonlinear function of the pieces, not their number.
+- **Behaviour against humans** (`behaviour.json`, `rook_pawn_context.json`). Same 16,000 game positions (the
+  sampler is deterministic: all 16,000 came back identical, now with the human's move): LD2 plays the human's move in
+  37.3% of positions. It pushes **rook pawns 1.5x as often** (7.2% vs 4.7% of moves; interval +0.020..+0.029),
+  in every rating band (the gap grows with rating: 7.7% vs 4.9% at 1800+) and on the second network. This is the
+  famous engine idea (AlphaZero's h-pawn), recovered unprompted: a known answer for behavioural mining. Its extra
+  rook-pawn pushes concentrate **in front of its own castled king: 2.0x humans (323 vs 162)**, against the human rule
+  of keeping that shelter; on the opponent king's wing only 1.4x. Also: fewer captures (25.4% vs 27.2%), more quiet
+  moves. The 'sacrifice-like' excess (4.7% vs 2.6%) does not replicate on 744706 (1.9%), so it is not claimed.
+- **Scientist round 2** (refinement with round-1 scores) is slow on the endpoint: 3 of 8 answers after 30 minutes;
+  still running.
+- **Lab page `/kepler` (K5)** done: Fluid, Smoke and Chess as cards, details in sheets, dark and light, 1600 and 1280,
+  no JS errors (Playwright). Fixed on the way: NaN in the summary JSON, the missing shell wrapper, chart text
+  scaling on wide cards, chess glyphs drawn as emoji.

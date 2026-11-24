@@ -101,6 +101,15 @@ positions; it solves 65% of 4,000 Lichess puzzles with no search. A second net, 
     correctly rejected too.
   - Those channels (22 and 15) track the unexplained part at correlation −0.45, replicated across halves, and respond
     to the opponent's activity (its mobility, space and central control).
+- **The units are causal.** Resetting channel 22 removes 32% of the residual in quiet positions (channel 15: 14%).
+  Channel 22 responds to every opponent piece about equally, regardless of value, but piece counts themselves are
+  restatements of the library: its contribution is nonlinear. Evidence: `chess/channel_evidence.json`.
+- **Behaviour against humans** (same 16,000 game positions):
+  - Leela pushes rook pawns 1.5× as often as humans. This holds in every rating band, the gap grows with rating, and
+    the second network shows it too: the famous engine idea, recovered unprompted.
+  - Its extra pushes sit in front of its **own castled king** (2.0× humans), against the human shelter rule.
+
+  Evidence: `chess/behaviour.json`, `chess/rook_pawn_context.json`.
 - **Honest status.** No new chess strategy has been verified yet. What Kepler established is the size, location and
   character of the knowledge gap, plus a test harness that refuses plausible-sounding explanations.
 

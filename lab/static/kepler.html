@@ -746,9 +746,28 @@ function chessView() {
   ${units.length ? `<div class="card s6">${head("binary", "Rules read from the network's own units", "Quiet positions; a depth-3 tree per unit, compiled to a rule")}
     <div class="card-b" style="display:flex;flex-direction:column;gap:10px">${units.filter(u => u.unit !== "noise_control").slice(0, 3).map(u => `<div class="cand"><div class="t"><span class="nm">${esc(u.unit)}</span>${u.test ? `<span class="badge ${u.test.accepted ? "ok" : "no"}">${u.test.accepted ? "accepted" : "not accepted"}</span>` : ""}</div><div class="rule">${esc(u.rule)}</div><div class="note">tree fidelity R² ${f(u.tree_fidelity_r2, 2)} · on ${pc(u.frequency)} of positions${u.test ? ` · gain ${f(u.test.gain_LD2.gain, 4)}` : ""}</div></div>`).join("")}</div>
     <div class="card-f"><button class="link-btn" data-sheet="chessUnits">All unit rules</button></div></div>` : ""}
+  ${C.behaviour ? behaviourCard(C) : ""}
+  ${C.channels ? channelCard(C) : ""}
   <div class="card s12">${head("target", "Where Leela disagrees with classical chess", "Clusters of the largest disagreements, grouped by the network's own representation")}
     <div class="card-b"><div class="cl-grid">${(C.clusters || []).map((c, i) => `<div class="cl" data-cl="${i}">${c.prototypes[0] ? board(c.prototypes[0].fen) : ""}
       <div class="meta"><span>${c.n} positions</span><span class="badge ${c.mean_residual > 0 ? "ok" : "no"}">${c.mean_residual > 0 ? "more optimistic" : "more pessimistic"} ${f(Math.abs(c.mean_residual), 2)}</span></div></div>`).join("")}</div></div></div>`;
+}
+function behaviourCard(C) {
+  const B = C.behaviour.features, rp = C.rook_pawn_context || {};
+  const rows = [["Rook-pawn push (a- or h-pawn)", "rook-pawn push (a,h)"], ["Quiet move", "quiet move"], ["Capture", "capture"], ["Pawn move", "pawn move"]];
+  const mx = Math.max(...rows.map(([, k]) => Math.max(B[k].leela, B[k].human)));
+  const ownKing = rp["in front of own castled king"];
+  return `<div class="card s6">${head("activity", "What it plays differently from humans", `Same ${C.behaviour.n.toLocaleString()} game positions: Leela's choice vs the human's move`)}
+    <div class="card-b split">${rows.map(([l, k]) => `<div class="bar-row"><div class="top"><span>${l}</span><b>${(100 * B[k].leela).toFixed(1)}% vs ${(100 * B[k].human).toFixed(1)}%</b></div>
+      <div class="bar2" style="flex-direction:column;height:auto;gap:3px;background:none"><span style="height:6px;border-radius:4px;width:${100 * B[k].leela / mx}%;background:var(--accent)"></span><span style="height:6px;border-radius:4px;width:${100 * B[k].human / mx}%;background:var(--text-3)"></span></div></div>`).join("")}
+    <div class="legend"><span><i style="background:var(--accent)"></i>Leela LD2</span><span><i style="background:var(--text-3)"></i>Human (Lichess)</span></div>
+    ${ownKing ? `<p class="note">Leela pushes the rook pawn <b>in front of its own castled king ${(ownKing.leela_count / ownKing.human_count).toFixed(1)}× as often</b> as humans (${ownKing.leela_count} vs ${ownKing.human_count}), against the human rule of keeping that shelter. The rook-pawn tendency holds in every rating band and on the second network: the famous engine idea, recovered without being told.</p>` : ""}</div></div>`;
+}
+function channelCard(C) {
+  const ch = C.channels, k = Object.keys(ch);
+  return `<div class="card s6">${head("brain-circuit", "The units that carry the extra knowledge", "Quiet positions: reset one channel and watch the evaluation")}
+    <div class="card-b split">${k.map(c => `<div class="bar-row"><div class="top"><span>Channel ${c}</span><b>${pc(Math.max(0, ch[c].ablation_share_of_residual_removed))} of the gap undone</b></div><div class="bar2"><span style="width:${100 * Math.max(0, ch[c].ablation_share_of_residual_removed)}%;background:var(--violet)"></span></div></div>`).join("")}
+    <p class="note">Resetting channel 22 moves Leela's evaluation toward the classical one, undoing about a third of their disagreement in quiet positions. It responds to the opponent's pieces regardless of their value; simple piece counts do not explain it (they restate the library).</p></div></div>`;
 }
 function candRow(c, compact) {
   const crit = c.criteria ? Object.entries(c.criteria).map(([k, v]) => `<span class="badge ${v ? "ok" : "no"}">${esc(k.replace(/^\d_/, "").replace(/_/g, " "))}</span>`).join("") : "";
