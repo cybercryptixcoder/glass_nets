@@ -418,12 +418,12 @@ def edits(b, top, rng, k=14):
             continue
         for e in rng.permutation(empties)[:6]:
             b2 = b.copy(stack=False)
-            k = b2.remove_piece_at(b.king(side))
-            b2.set_piece_at(int(e), k)
+            kp = b2.remove_piece_at(b.king(side))
+            b2.set_piece_at(int(e), kp)
             b2.castling_rights = b2.clean_castling_rights()
             b2.ep_square = None
             if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
-                out.append(("king", chess.square_name(b.king(side)), k.symbol(), b2))
+                out.append(("king", chess.square_name(b.king(side)), kp.symbol(), b2))
                 break
     for sq in rng.permutation(pieces):
         for kind in ("remove", "move"):
@@ -544,5 +544,184 @@ def cmd_test():
     json.dump(res, open(os.path.join(OUT, f"test_{tag}{K}.json"), "w"), indent=1)
 
 
+def wdl_eval(net, boards, batch=256):
+    out = []
+    with torch.no_grad():
+        for i in range(0, len(boards), batch):
+            _, w = net(torch.tensor(np.stack([encode(b) for b in boards[i:i + batch]])))
+            out.append(w.numpy())
+    return np.concatenate(out) if out else np.zeros((0, 3), dtype=np.float32)
+
+
+def cmd_freshq():
+    """K11e: t1's WDL on the fresh positions; confirmation of e1/e2; draw probability and regret where the rule fires."""
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, items, tops, elo = fm["keys"], fm["items"], fm["tops"], Fz["elo"]
+    boards = [chess.Board(it["fen"]) for it in items]
+    net = LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))
+    path = os.path.join(WORK, "fresh_wdl.npy")
+    if os.path.exists(path):
+        W = np.load(path)
+    else:
+        W = wdl_eval(net, boards)
+        np.save(path, W)
+    q = W[:, 0] - W[:, 2]
+    mi = keys.index("queen trade (captures or offers the queen)")
+    T, H, L, R = (Fz[k][:, mi] for k in ("T", "H", "L", "R"))
+    res = {}
+    for rid, c, direction in (("e1", q <= -0.5, +1), ("e2", q >= 0.5, -1)):
+        d = T - H
+        n, nn = int(c.sum()), int((~c).sum())
+        z = (d[c].mean() - d[~c].mean()) / np.sqrt(d[c].var() / n + d[~c].var() / nn)
+        bands = {bn: (float(T[c & f(elo)].mean()), float(H[c & f(elo)].mean()), int((c & f(elo)).sum())) for bn, f in BANDS}
+        r = {"situation": "t1 q <= -0.5 (lost)" if rid == "e1" else "t1 q >= +0.5 (winning)", "move_type": keys[mi], "support": n,
+             "t1": float(T[c].mean()), "human": float(H[c].mean()), "LD2": float(L[c].mean()), "744706": float(R[c].mean()),
+             "ratio": float(T[c].mean() / max(H[c].mean(), 1e-9)), "interaction_z": float(z), "bands": bands}
+        if rid == "e1":
+            r["confirmed"] = bool(r["ratio"] >= 1.5 and z > 3 and r["LD2"] > r["human"] and r["744706"] > r["human"]
+                                  and all(t > h for t, h, _ in bands.values()))
+        else:
+            r["confirmed"] = bool(r["ratio"] <= 0.85 and all(t < h for t, h, _ in bands.values()) and r["744706"] < r["human"])
+        res[rid] = r
+        log(f"{rid} {'CONFIRMED' if r['confirmed'] else 'not confirmed'}: {r['situation']} -> queen trade: t1 {r['t1']:.4f} human "
+            f"{r['human']:.4f} (x{r['ratio']:.2f}) LD2 {r['LD2']:.4f} 744706 {r['744706']:.4f} z {z:.1f} n={n} "
+            + " ".join(f"{bn}: {t:.4f}/{h:.4f}" for bn, (t, h, k) in bands.items()))
+    # mechanism and worth where e1 fires: t1 trades queens in a lost position and the human did something else
+    fire = np.where((q <= -0.5) & (T > 0.5) & (np.array(tops["T"]) != np.array(tops["H"])))[0]
+    bt, bh, kept = [], [], []
+    for i in fire:
+        b1, b2 = boards[i].copy(stack=False), boards[i].copy(stack=False)
+        b1.push_uci(tops["T"][i])
+        b2.push_uci(tops["H"][i])
+        if b1.is_game_over() or b2.is_game_over():
+            continue
+        bt.append(b1); bh.append(b2); kept.append(int(i))
+    Wt, Wh = wdl_eval(net, bt), wdl_eval(net, bh)
+    # after a move the opponent is to move: the mover's win = opponent's loss (index 2), draw stays index 1
+    mover_t = np.stack([Wt[:, 2], Wt[:, 1], Wt[:, 0]], 1)
+    mover_h = np.stack([Wh[:, 2], Wh[:, 1], Wh[:, 0]], 1)
+    rng = np.random.default_rng(3)
+    def ci(x):
+        bs = [x[rng.integers(0, len(x), len(x))].mean() for _ in range(2000)]
+        return [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
+    dd = mover_t[:, 1] - mover_h[:, 1]
+    dq = (mover_t[:, 0] - mover_t[:, 2]) - (mover_h[:, 0] - mover_h[:, 2])
+    dl = mover_t[:, 2] - mover_h[:, 2]
+    res["mechanism"] = {"positions": len(kept), "draw_prob_after_t1_trade": float(mover_t[:, 1].mean()),
+                        "draw_prob_after_human_move": float(mover_h[:, 1].mean()), "draw_gain": float(dd.mean()), "draw_gain_ci95": ci(dd),
+                        "loss_prob_change": float(dl.mean()), "loss_prob_change_ci95": ci(dl),
+                        "expected_score_gain": float(dq.mean()), "expected_score_gain_ci95": ci(dq),
+                        "mover_wdl_before": W[kept].mean(0).tolist() if kept else None}
+    log("mechanism:", json.dumps(res["mechanism"]))
+    order = np.argsort(-dd)
+    res["examples"] = [{"fen": items[kept[j]]["fen"], "t1_move": tops["T"][kept[j]], "human_move": tops["H"][kept[j]],
+                        "human_elo": int(elo[kept[j]]), "t1_q_before": float(q[kept[j]]),
+                        "draw_after_t1": float(mover_t[j, 1]), "draw_after_human": float(mover_h[j, 1]), "site": items[kept[j]]["site"]}
+                       for j in order[:8]]
+    json.dump(res, open(os.path.join(OUT, "queen_trade_fresh.json"), "w"), indent=1)
+
+
+CONFIRM = [  # K11d, fixed before the fresh data existed (CHANGES.md)
+    ("c0", "in_check", "eq", 0, "c", "pawn lever (push attacks an enemy pawn)"),
+    ("c1", "material", "le", -1, "c", "queen trade (captures or offers the queen)"),
+    ("c2", "in_check", "eq", 0, "c", "pawn sacrifice (pushed pawn en prise)"),
+    ("c3", "enemy king in the centre (d/e file)", "king", 1, "c", "pawn lever (push attacks an enemy pawn)"),
+    ("c4", "n_pieces", "le", 20, "c", "pawn sacrifice (pushed pawn en prise)"),
+    ("b1", "material", "le", -1, "b", "offers a like-for-like trade"),
+    ("b2", "own king off its home ranks", "king", 1, "b", "offers material (sacrifice-like)"),
+]
+
+
+def fresh_positions(n=16000, skip=12000, seed=11):
+    import random
+    import chess.pgn
+    from kepler.targets.chess.data import _text_stream
+    rng = random.Random(seed)
+    stream = _text_stream(os.path.join(KDATA, "chess", "lichess_2013-01.pgn.zst"))
+    for _ in range(skip):
+        chess.pgn.skip_game(stream)
+    out = []
+    while len(out) < n:
+        g = chess.pgn.read_game(stream)
+        if g is None:
+            break
+        moves = list(g.mainline_moves())
+        if len(moves) < 14:
+            continue
+        plies = sorted(rng.sample(range(10, len(moves) - 1), min(2, len(moves) - 11)))
+        b = g.board()
+        k = 0
+        for i, m in enumerate(moves):
+            if k < len(plies) and i == plies[k]:
+                if not b.is_game_over():
+                    out.append({"fen": b.fen(), "played": m.uci(), "white_elo": g.headers.get("WhiteElo", "?"),
+                                "black_elo": g.headers.get("BlackElo", "?"), "site": g.headers.get("Site", "")})
+                k += 1
+            b.push(m)
+    return out[:n]
+
+
+def cmd_fresh():
+    from kepler.targets.chess.concepts import concepts
+    torch.set_num_threads(int(os.environ.get("THREADS", "2")))
+    items = fresh_positions()
+    log(f"{len(items)} fresh positions from games after the first 12,000")
+    boards = [chess.Board(it["fen"]) for it in items]
+    tops = {}
+    for nm, net in (("T", LeelaTransformer(os.path.join(KDATA, "chess", "t1-256x10.pb.gz"))),
+                    ("L", LeelaNet(os.path.join(KDATA, "chess", "LD2.pb.gz"))),
+                    ("R", LeelaNet(os.path.join(KDATA, "chess", "744706.pb.gz")))):
+        tops[nm], _, _ = policy_eval(net, boards)
+        log(nm, "done")
+    tops["H"] = [it["played"] for it in items]
+    feats = {}
+    for nm, mv in tops.items():
+        fb = [move_feats(b, chess.Move.from_uci(m)) for b, m in zip(boards, mv)]
+        fc = [move_feats_c(b, chess.Move.from_uci(m)) for b, m in zip(boards, mv)]
+        feats[nm] = [{**a, **c} for a, c in zip(fb, fc)]
+    keys = list(feats["T"][0])
+    cond = []
+    for b in boards:
+        c = concepts(b)
+        k = king_conditions(b)
+        cond.append({"material": c["material"], "in_check": c["in_check"], "n_pieces": c["n_pieces"], **k})
+    elo = [int(e) if str(e).isdigit() else 0 for e in [it["white_elo"] if b.turn else it["black_elo"] for it, b in zip(items, boards)]]
+    np.savez(os.path.join(WORK, "fresh.npz"), **{nm: np.array([[f[k] for k in keys] for f in feats[nm]], dtype=np.float32) for nm in feats},
+             elo=np.array(elo))
+    json.dump({"keys": keys, "cond": cond, "items": items, "tops": tops}, open(os.path.join(WORK, "fresh_meta.json"), "w"))
+    log("saved")
+
+
+def cmd_confirm():
+    Fz = dict(np.load(os.path.join(WORK, "fresh.npz")))
+    fm = json.load(open(os.path.join(WORK, "fresh_meta.json")))
+    keys, cond, elo = fm["keys"], fm["cond"], Fz["elo"]
+    res = {}
+    for rid, name, kind, v, vocab, mk in CONFIRM:
+        x = np.array([c[name] for c in cond], dtype=float)
+        c = {"eq": x == v, "le": x <= v, "king": x == v}[kind]
+        mi = keys.index(mk)
+        T, H, L, R = (Fz[k][:, mi] for k in ("T", "H", "L", "R"))
+        d = T - H
+        n, nn = int(c.sum()), int((~c).sum())
+        inter = d[c].mean() - d[~c].mean()
+        z = inter / np.sqrt(d[c].var() / n + d[~c].var() / nn)
+        bands = {bn: (float(T[c & f(elo)].mean()), float(H[c & f(elo)].mean()), int((c & f(elo)).sum())) for bn, f in BANDS}
+        r = {"situation": f"{name} {kind} {v}", "move_type": mk, "support": n, "t1": float(T[c].mean()), "human": float(H[c].mean()),
+             "LD2": float(L[c].mean()), "744706": float(R[c].mean()), "ratio": float(T[c].mean() / max(H[c].mean(), 1e-9)),
+             "outside": {"t1": float(T[~c].mean()), "human": float(H[~c].mean())}, "interaction_z": float(z), "bands": bands}
+        r["confirmed"] = bool(z > 3 and r["ratio"] >= 1.3 and r["LD2"] > r["human"] and r["744706"] > r["human"]
+                              and all(t > h for t, h, _ in bands.values()))
+        res[rid] = r
+        log(f"{rid} {'CONFIRMED' if r['confirmed'] else 'not confirmed'}: [{r['situation']}] -> [{mk}] t1 {r['t1']:.3f} human "
+            f"{r['human']:.3f} (x{r['ratio']:.2f}) LD2 {r['LD2']:.3f} 744706 {r['744706']:.3f} z {z:.1f} n={n} bands "
+            + " ".join(f"{bn}: {t:.3f}/{h:.3f} (n={k})" for bn, (t, h, k) in bands.items()))
+    os.makedirs(OUT, exist_ok=True)
+    json.dump(res, open(os.path.join(OUT, "confirm_fresh.json"), "w"), indent=1)
+
+
 if __name__ == "__main__":
-    {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test}[sys.argv[1]]()
+    {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test, "fresh": cmd_fresh,
+     "confirm": cmd_confirm, "freshq": cmd_freshq}[sys.argv[1]]()
