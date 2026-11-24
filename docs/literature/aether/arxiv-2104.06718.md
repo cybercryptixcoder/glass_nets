@@ -1,0 +1,49 @@
+# Improved Branch and Bound for Neural Network Verification via Lagrangian Decomposition
+
+- **Key:** arxiv-2104.06718
+- **Authors / organisation:** Alessandro De Palma, Rudy Bunel, Alban Desmaison, Philip H. S. Torr, M. Pawan Kumar (University of Oxford); Krishnamurthy Dvijotham, Pushmeet Kohli (DeepMind)
+- **Date:** 2021-04-14
+- **Link:** https://arxiv.org/abs/2104.06718
+- **Kind:** paper
+- **Read from:** full text (v1, 50 pages, main paper and appendices A-E; figures 2-11 are plots and were only read through the prose that describes them)
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+The earlier Lagrangian-decomposition work on bounding had made the dual cheap; this paper asks what happens when that cheap bound routine is actually used everywhere inside a branch-and-bound search, rather than only as a stand-alone incomplete verifier. Two bottlenecks are attacked together: the bound at each node is either an expensive general-purpose LP solve or a propagation shortcut that is much too loose, and the choice of which unit to split the search on is made by a heuristic that is deliberately crude because a better one looked unaffordable. The larger goal is stated in the introduction in the field's own terms: complete verifiers only become useful if they scale to networks where the properties people care about are not all decided in the first second.
+
+## What they studied
+
+ReLU convolutional networks on CIFAR-10 in three settings. For incomplete verification, the Wong-Kolter "Wide" network trained adversarially with projected gradient descent and tested at a perturbation radius larger than training. For complete verification, the OVAL benchmark of three adversarially trained networks with 3,172, 6,244 and 6,756 activations and 100 properties each, plus two larger COLT-trained networks with 16,643 and 49,411 activations. The unit of analysis is the layer-boundary copy of the pre-activation vector: the dual variable is one vector per boundary, indexed by neuron, and the branching heuristic scores individual ReLU units.
+
+## How they did it
+
+The derivation is Lagrangian decomposition applied to the convex-hull relaxation. Constraints are grouped by layer — one group for the input domain with the first affine layer, one per subsequent activation-and-affine pair — the variables shared between neighbouring groups are duplicated, and a multiplier vector per boundary penalises disagreement between the copies. Each group's subproblem then depends only on its own copy, and for ReLU each neuron's subproblem is a minimisation over the three vertices of its hull, so the primal step is closed form per unit. Two dual solvers are built on this: supergradient ascent whose direction is simply the difference between the two copies, and a proximal method where the quadratic consistency penalty makes each group's step an optimal one-dimensional line search, applied block-coordinate-wise per layer, with the dual accelerated by momentum. Both are implemented as the ordinary forward pass and transposed weight multiply the network already uses, so hundreds of bound problems — over neurons for one layer, and over subproblems in the search — are batched onto one GPU. Branching is then redesigned around the fact that a dual bound is now cheap. The existing heuristic is modified by replacing its maximisation over the two children with a minimisation, which rewards splits that improve both children rather than one. This variant picks the best-scoring and a backup candidate per layer, giving a candidate set linear in the depth rather than in the number of units, and each candidate is then evaluated by actually computing bounds for both children with a fast propagation method. Other framework changes: intermediate bounds come from the better of two propagation methods at each layer and are computed only at the search root; the number of dual iterations is adapted per batch by comparing the measured bound improvement from iterating against the average improvement from branching, normalised by the cost ratio; upper bounds are read off the last primal iterate since the dual is not run to convergence.
+
+## What counts as an explanation here
+
+A bound and the dual vector behind it. The paper's own framing is that the dual is a reduction of the earlier relaxation's dual space to the subspace containing the optimum, so the object being optimised is a per-boundary vector whose sign pattern, pushed through the next weight matrix, decides for every unit which relaxation case (passing, blocking, ambiguous) the primal solve picked. The branching scheme then assigns a scalar score per ReLU unit by estimating what splitting that unit would do to the bound. So the per-unit structures this head has been hunting do exist and are used — one as a search direction, the other as a ranking — but nothing here is presented as an account of what the network computes. It is a decision variable throughout.
+
+## How they judged success
+
+For incomplete verification: distribution of optimality gap to the exact relaxation solution across runtime, with a commercial solver run to optimality as the reference and a time-limited version of it as a matched-cost arm, plus pointwise per-image comparisons between methods. Iteration counts are tuned so that each method uses roughly equal wall-clock time, and three budgets are reported. For complete verification: cactus curves of properties verified against seconds with a one-hour limit, and per dataset the average time, the average number of subproblems solved and the percentage of timed-out properties. Component ablations isolate the bounding algorithm, the branching scheme and the intermediate-bound strategy with everything else held fixed, and the final framework is compared against a MIP encoding, the earlier decomposition framework with both a black-box solver and their own bounder, and three competition verifiers.
+
+## What they found
+
+In the bounding comparison, a few iterations of any of the iterative dual methods removes the loose tail of the single-pass bounds, and the proximal arm ends with a heavier tail towards tighter bounds than the supergradient arm; both beat the earlier relaxation-based dual at equal time, which is the practical confirmation of the containment theorem. In complete verification, replacing the LP-solve bounder with the dual bounder cuts average time on the three benchmark networks from roughly 1,352, 1,237 and 783 seconds to about 809, 499 and 207 seconds, and drops average subproblems from 7,014, 2,737 and 848 to the low hundreds. The branching ablation is the largest single effect on the deep network: filtering the candidates and evaluating them takes average time from about 234 seconds to about 32 seconds, with subproblems from 443 to 1,702 — the tree grows because the split choice moves to earlier layers, which makes each node's intermediate-bound work cheaper, and this is the one network where the plain modification on its own is slower than the baseline — whereas the learned branching baseline sits at about 88 seconds and 3,959 subproblems on the same network, so the cheap scheme wins without any offline training. Computing intermediate bounds only at the root, despite deliberately loosening them, is the fastest of the three intermediate-bound strategies on all three networks (about 329, 230 and 11 seconds). The full framework reaches roughly 309, 166 and 11 seconds against 809, 499 and 207 for its own bounder inside the older framework and 2,582, 1,703 and 1,831 for the MIP encoding; on the two larger networks it beats the three competition verifiers on average time and timeout rate in every comparison reported.
+
+## Limits and open problems they name
+
+The relaxation itself is unchanged: this is still the per-unit convex hull, and the paper explicitly declines to address the tighter quadratic-size or exponentially-constrained relaxations. Tanh and sigmoid are handled in an appendix but the evaluation is ReLU throughout. The intermediate-bound choice is a cost compromise, not a tightness result — they loosen it on purpose and justify that only empirically. The iteration-adaptation and branching schemes are heuristics with no guarantee. They note that tighter relaxations could be scaled up by the same decomposition, and that spending more on solvers for the branching and intermediate-bound components might pay, but leave both to future work.
+
+## What we take from it
+
+A method and a warning. The method: a per-boundary multiplier vector whose sign pattern, pushed through the next weight matrix, is a complete per-unit case map (passing / blocking / ambiguous) computed on every iteration — this is the cheapest per-unit reading of a relaxation in the head, it costs one transposed multiply, and it is available for any network on which anyone runs any bound. The paper prints bound quality, subproblem counts and runtimes for this vector and never the vector itself, which is the ninth entry in this head to compute a per-unit structure and report only its effect. The warning: the ablations show the cheap components (filtered branching, root-only intermediate bounds) buying more time than the expensive mechanism they were built around — about seven-fold on the deep network from the branching change alone versus the bounder's own contribution — so a component ablation that only toggles the headline mechanism would have credited the wrong part. Third, the case that intermediate bounds come from a different, looser pass than the headline bound is stated openly and is the reason two bound numbers from two papers are not comparable: our readings need to name the pass that conditioned them.
+
+## Tags
+
+unit: neuron | feature
+form: direction | probe
+method: decomposition | attribution | ablation
+eval: ablation | patching | prediction/simulation | benchmark
+goal: understanding | safety/auditing | evaluation-of-methods
