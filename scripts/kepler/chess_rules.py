@@ -63,6 +63,68 @@ def move_feats(b, m):
     return {k: bool(v) for k, v in f.items()}
 
 
+def _isolated_doubled(b, color):
+    files = [chess.square_file(q) for q in b.pieces(chess.PAWN, color)]
+    doubled = sum(files.count(f) - 1 for f in set(files))
+    iso = sum(1 for f in files if (f - 1) not in files and (f + 1) not in files)
+    return iso, doubled
+
+
+def move_feats_c(b, m):
+    """K11c: moves that classical principles advise against (mover's view)."""
+    us = b.turn
+    p = b.piece_at(m.from_square)
+    pt = p.piece_type
+    cap = b.is_capture(m)
+    victim = b.piece_type_at(m.to_square) if cap else None
+    fr, tr = rel_rank(m.from_square, us), rel_rank(m.to_square, us)
+    ff = chess.square_file(m.from_square)
+    ok = b.king(us)
+    queens_on = bool(b.pieces(chess.QUEEN, us)) and bool(b.pieces(chess.QUEEN, not us))
+    nonpawn = sum(len(b.pieces(t, c)) * v for t, v in ((chess.KNIGHT, 3), (chess.BISHOP, 3), (chess.ROOK, 5), (chess.QUEEN, 9))
+                  for c in (chess.WHITE, chess.BLACK))
+    b2 = b.copy(stack=False)
+    b2.push(m)
+    i0, d0 = _isolated_doubled(b, us)
+    i1, d1 = _isolated_doubled(b2, us)
+    att, dfd = b2.attackers(not us, m.to_square), b2.attackers(us, m.to_square)
+    kf, kr = chess.square_file(ok), rel_rank(ok, us)
+    castled = kr <= 1 and (kf >= 5 or kf <= 2)
+    passed = False
+    if pt == chess.PAWN:
+        step = 1 if us == chess.WHITE else -1
+        r = chess.square_rank(m.from_square)
+        passed = not any(chess.square_file(q) in (ff - 1, ff, ff + 1) and (chess.square_rank(q) - r) * step > 0
+                         for q in b.pieces(chess.PAWN, not us))
+    lever = pt == chess.PAWN and not cap and any(b2.piece_type_at(t) == chess.PAWN and b2.color_at(t) != us
+                                                 for t in b2.attacks(m.to_square))
+    f = {
+        "bishop takes knight": pt == chess.BISHOP and victim == chess.KNIGHT,
+        "gives up the bishop pair": pt == chess.BISHOP and victim == chess.KNIGHT and len(b.pieces(chess.BISHOP, us)) >= 2,
+        "creates own doubled pawns": d1 > d0,
+        "creates own isolated pawn": i1 > i0,
+        "pawn push in front of own castled king": pt == chess.PAWN and not cap and castled and abs(ff - kf) <= 1,
+        "king walk with queens on": pt == chess.KING and not b.is_castling(m) and queens_on and nonpawn >= 40,
+        "early queen sortie (into enemy half, castling rights left)": pt == chess.QUEEN and tr >= 4 and fr < 4
+            and b.has_castling_rights(us),
+        "retreat to the home rank": pt not in (chess.PAWN, chess.KING) and tr == 0 and fr > 0 and not cap,
+        "pawn sacrifice (pushed pawn en prise)": pt == chess.PAWN and not cap and bool(att) and not dfd,
+        "exchange sacrifice (rook takes a defended minor)": pt == chess.ROOK and victim in (chess.KNIGHT, chess.BISHOP) and bool(att),
+        "declines a legal castle": any(b.is_castling(x) for x in b.legal_moves) and not b.is_castling(m),
+        "space push (pawn to the 5th rank or beyond)": pt == chess.PAWN and not cap and tr >= 4,
+        "passed-pawn push": pt == chess.PAWN and not cap and passed,
+        "knight retreat to the back two ranks": pt == chess.KNIGHT and tr <= 1 and fr >= 2,
+        "queen trade (captures or offers the queen)": pt == chess.QUEEN and (victim == chess.QUEEN or
+            any(b2.piece_type_at(a) == chess.QUEEN for a in att) and bool(dfd)),
+        "piece to the 6th/7th rank": pt not in (chess.PAWN, chess.KING) and tr >= 5 and fr < 5,
+        "pawn lever (push attacks an enemy pawn)": lever,
+    }
+    return {k: bool(v) for k, v in f.items()}
+
+
+FEATS = move_feats
+
+
 def king_conditions(b):
     """Situation conditions about king placement (mover's view)."""
     us = b.turn
@@ -144,9 +206,34 @@ def cmd_eval():
     log("saved; t1 plays the human move in", float(np.mean([a == b for a, b in zip(t1_top, played)])))
 
 
+def cmd_evalc():
+    E = dict(np.load(os.path.join(WORK, "eval.npz")))
+    meta = json.load(open(os.path.join(WORK, "eval_meta.json")))
+    _, items, played = load_sample()
+    keys = None
+    out = {"T": [], "H": [], "L": [], "R": []}
+    for i, it in enumerate(items):
+        b = chess.Board(it["fen"])
+        legal = {m.uci() for m in b.legal_moves}
+        for nm, mv in (("T", meta["t1_top"][i]), ("H", played[i]), ("L", it["top_move"]), ("R", meta["rep_top"][i])):
+            f = move_feats_c(b, chess.Move.from_uci(mv)) if mv in legal else None
+            keys = keys or (list(f) if f else None)
+            out[nm].append([f[k] for k in keys] if f else [False] * 17)
+    np.savez(os.path.join(WORK, "eval_c.npz"), **{k: np.array(v, dtype=np.float32) for k, v in out.items()})
+    json.dump({"move_types": keys}, open(os.path.join(WORK, "eval_c_meta.json"), "w"))
+    log("saved", {k: np.array(v).mean(0).round(3).tolist() for k, v in out.items()})
+
+
 def load_eval():
     E = dict(np.load(os.path.join(WORK, "eval.npz")))
     meta = json.load(open(os.path.join(WORK, "eval_meta.json")))
+    if os.environ.get("MOVES") == "c":
+        global FEATS
+        FEATS = move_feats_c
+        Ec = dict(np.load(os.path.join(WORK, "eval_c.npz")))
+        E.update(Ec)
+        E.pop("MASS", None)
+        meta["move_types"] = json.load(open(os.path.join(WORK, "eval_c_meta.json")))["move_types"]
     return E, meta
 
 
@@ -184,6 +271,40 @@ BANDS = [("< 1500", lambda e: (e > 0) & (e < 1500)), ("1500-1799", lambda e: (e 
          ("1800+", lambda e: e >= 1800)]
 
 
+Z_LINE = None   # K11b: set from the label-swap control (MODE=b)
+
+
+def mined_name():
+    if os.environ.get("MOVES") == "c":
+        return "mined_c.json"
+    return "mined_b.json" if os.environ.get("MODE") == "b" else "mined.json"
+
+
+def z_matrix(T, H, C):
+    """Interaction z for every (situation, move type) at once."""
+    d = (T - H).astype(np.float64)
+    Cf = C.astype(np.float64)
+    n = Cf.sum(1)[:, None]
+    nn = len(T) - n
+    s1, s2 = Cf @ d, Cf @ (d * d)
+    t1, t2 = d.sum(0)[None, :], (d * d).sum(0)[None, :]
+    m_in, m_out = s1 / np.maximum(n, 1), (t1 - s1) / np.maximum(nn, 1)
+    v_in = s2 / np.maximum(n, 1) - m_in ** 2
+    v_out = (t2 - s2) / np.maximum(nn, 1) - m_out ** 2
+    z = (m_in - m_out) / np.sqrt(np.maximum(v_in / np.maximum(n, 1) + v_out / np.maximum(nn, 1), 1e-12))
+    ok = (n >= 300) & (nn >= 300)
+    return np.where(ok, z, -np.inf)
+
+
+def null_line(T, H, C, reps=20):
+    rng = np.random.default_rng(7)
+    mx = []
+    for _ in range(reps):
+        s = (rng.random(len(T)) < 0.5)[:, None]
+        mx.append(float(z_matrix(np.where(s, H, T), np.where(s, T, H), C).max()))
+    return max(mx), mx
+
+
 def mine(T, H, L, R, C, cn, keys, elo):
     rows = []
     for ci in range(len(C)):
@@ -193,11 +314,13 @@ def mine(T, H, L, R, C, cn, keys, elo):
             continue
         for mi, mk in enumerate(keys):
             tc, hc = T[c, mi].mean(), H[c, mi].mean()
-            if tc < 0.05 or tc < 1.5 * hc:
+            if tc < 0.05 or tc < (1.5 * hc if Z_LINE is None else hc):
                 continue
             d = T[:, mi] - H[:, mi]
             inter = d[c].mean() - d[~c].mean()
             z = inter / max(np.sqrt(d[c].var() / n + d[~c].var() / nn), 1e-9)
+            if Z_LINE is not None and z <= Z_LINE:
+                continue
             rep = {}
             for nm, A in (("LD2", L), ("744706", R)):
                 da = A[:, mi] - H[:, mi]
@@ -227,6 +350,12 @@ def cmd_mine():
     log(f"{len(C)} situations x {len(keys)} move types; t1 vs human overall:")
     for mi, k in enumerate(keys):
         log(f"   {k:36s} t1 {T[:, mi].mean():.3f}  LD2 {L[:, mi].mean():.3f}  744706 {R[:, mi].mean():.3f}  human {H[:, mi].mean():.3f}")
+    global Z_LINE
+    null_info = None
+    if os.environ.get("MODE") == "b":
+        Z_LINE, mx = null_line(T, H, C)
+        null_info = {"z_line": Z_LINE, "null_max_z": mx}
+        log(f"K11b: line from 20 label-swap nulls: z > {Z_LINE:.2f} (null maxima {min(mx):.2f}-{max(mx):.2f})")
     rows = mine(T, H, L, R, C, cn, keys, elo)
     passing = [r for r in rows if r["passes_replication"] and r["passes_bands"]]
     log(f"{len(rows)} candidates meet the selection rule; {len(passing)} pass replication and every rating band")
@@ -263,8 +392,9 @@ def cmd_mine():
     json.dump({"n_situations": int(len(C)), "move_types": keys, "n_candidates": len(rows), "n_passing": len(passing),
                "overall": {k: {"t1": float(T[:, i].mean()), "LD2": float(L[:, i].mean()), "744706": float(R[:, i].mean()),
                                "human": float(H[:, i].mean())} for i, k in enumerate(keys)},
-               "must_fail_swapped": {"candidates": len(null), "passing": int(sum(null))},
-               "passing": passing[:60]}, open(os.path.join(OUT, "mined.json"), "w"), indent=1)
+               "must_fail_swapped": {"candidates": len(null), "passing": int(sum(null))}, "mode": os.environ.get("MODE", "K11"),
+               "null_line": null_info,
+               "passing": passing[:60]}, open(os.path.join(OUT, mined_name()), "w"), indent=1)
 
 
 def holds(spec, board):
@@ -283,6 +413,18 @@ def edits(b, top, rng, k=14):
     out = []
     pieces = [sq for sq, p in b.piece_map().items() if p.piece_type != chess.KING and sq != top.from_square]
     empties = [sq for sq in chess.SQUARES if b.piece_at(sq) is None and sq != top.to_square]
+    for side in (b.turn, not b.turn):          # king relocations (needed for king-placement situations)
+        if top.from_square == b.king(side):
+            continue
+        for e in rng.permutation(empties)[:6]:
+            b2 = b.copy(stack=False)
+            k = b2.remove_piece_at(b.king(side))
+            b2.set_piece_at(int(e), k)
+            b2.castling_rights = b2.clean_castling_rights()
+            b2.ep_square = None
+            if b2.is_valid() and top in b2.legal_moves and b2.is_check() == b.is_check():
+                out.append(("king", chess.square_name(b.king(side)), k.symbol(), b2))
+                break
     for sq in rng.permutation(pieces):
         for kind in ("remove", "move"):
             b2 = b.copy(stack=False)
@@ -303,7 +445,7 @@ def mass_on(net, boards, mi):
     _, qs, probs = policy_eval(net, boards)
     out = []
     for b, p in zip(boards, probs):
-        A = np.array([move_feats(b, m)[KEYS[mi]] for m in b.legal_moves], dtype=np.float32)
+        A = np.array([FEATS(b, m)[KEYS[mi]] for m in b.legal_moves], dtype=np.float32)
         out.append(float(p @ A))
     return np.array(out), qs
 
@@ -317,7 +459,7 @@ def cmd_test():
     torch.set_num_threads(int(os.environ.get("THREADS", "2")))
     E, meta = load_eval()
     KEYS = meta["move_types"]
-    mined = json.load(open(os.path.join(OUT, "mined.json")))
+    mined = json.load(open(os.path.join(OUT, mined_name())))
     rule = mined["passing"][K]
     mi = rule["move_index"]
     C, cn, spec = all_conditions(E, meta)
@@ -341,7 +483,9 @@ def cmd_test():
             meta_e.append((int(i), kind, sq, sym, bool(holds(spec[ci], b2))))
     log(f"cause: {len(sel)} positions, {len(eb)} edits ({sum(1 for m in meta_e if not m[4])} switch the situation off)")
     after, _ = mass_on(net, eb, mi)
-    before = np.array([E["MASS"][m[0], mi] for m in meta_e])
+    base, _ = mass_on(net, [chess.Board(items[i]["fen"]) for i in sel], mi)
+    base = dict(zip([int(i) for i in sel], base))
+    before = np.array([base[m[0]] for m in meta_e])
     drop = (before - after) / np.maximum(before, 1e-6)
     off = np.array([not m[4] for m in meta_e])
     boots = []
@@ -359,20 +503,24 @@ def cmd_test():
     log("cause:", json.dumps(res["cause"]))
     # ---- worth: t1's value of the human's move, with and without M, where t1 plays M
     sel2 = np.where(c & (E["T"][:, mi] > 0.5))[0]
-    ab, keep = [], []
+    ab, at, keep = [], [], []
     for i in sel2:
         b = chess.Board(items[i]["fen"])
         m = chess.Move.from_uci(played[i])
-        if m not in b.legal_moves:
+        if m not in b.legal_moves or played[i] == t1_top[i]:
             continue
-        b.push(m)
-        if b.is_game_over():
+        bh, bt = b.copy(stack=False), b.copy(stack=False)
+        bh.push(m)
+        bt.push(chess.Move.from_uci(t1_top[i]))
+        if bh.is_game_over() or bt.is_game_over():
             continue
-        ab.append(b)
+        ab.append(bh)
+        at.append(bt)
         keep.append(int(i))
     keep = np.array(keep)
     _, q_after, _ = policy_eval(net, ab)
-    loss = E["t1_q"][keep] + q_after          # value before (mover) minus value after (mover) = q0 - (-q_after)
+    _, q_t1, _ = policy_eval(net, at)
+    loss = q_after - q_t1     # regret: the opponent's value after the human's move minus after t1's move (K11b fix (a))
     hm = E["H"][keep, mi] > 0.5
     boots = []
     for _ in range(2000):
@@ -383,7 +531,8 @@ def cmd_test():
     res["worth"] = {"positions": int(len(keep)), "human_played_M": int(hm.sum()),
                     "mean_loss_without_M": float(loss[~hm].mean()), "mean_loss_with_M": float(loss[hm].mean()) if hm.any() else None,
                     "difference": float(loss[~hm].mean() - loss[hm].mean()) if hm.any() else None, "ci95": [float(lo), float(hi)],
-                    "units": "t1 expected score (win minus loss, -1..1) lost by the human's move"}
+                    "units": "t1 expected score (win minus loss, -1..1) the human's move gives up against t1's own move; "
+                             "positions where the human played t1's move are left out"}
     res["worth"]["pass"] = bool(hm.sum() >= 20 and lo > 0)
     log("worth:", json.dumps(res["worth"]))
     # ---- examples: C holds, t1 plays M, the human did not, largest loss
@@ -391,8 +540,9 @@ def cmd_test():
     res["examples"] = [{"fen": items[keep[j]]["fen"], "t1_move": t1_top[keep[j]], "human_move": played[keep[j]],
                         "human_elo": int(E["elo"][keep[j]]), "loss": float(loss[j])} for j in order[:6]]
     os.makedirs(OUT, exist_ok=True)
-    json.dump(res, open(os.path.join(OUT, f"test_{K}.json"), "w"), indent=1)
+    tag = "c" if os.environ.get("MOVES") == "c" else os.environ.get("MODE", "a")
+    json.dump(res, open(os.path.join(OUT, f"test_{tag}{K}.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":
-    {"eval": cmd_eval, "mine": cmd_mine, "test": cmd_test}[sys.argv[1]]()
+    {"eval": cmd_eval, "evalc": cmd_evalc, "mine": cmd_mine, "test": cmd_test}[sys.argv[1]]()
