@@ -84,3 +84,43 @@ are the exact law: advection -1.010, kappa 0.00307 (truth -1, 0.003; R^2 0.9996)
 The weaker -0.88 with the internal velocity matches the readout's 89% accuracy (errors in a regressor shrink its
 coefficient). Known test before it: (a) exact, (b) shuffled velocity R^2 0.016. Colab runtime stopped after
 downloading the model (no idle units).
+
+**10:35 EST. Fluid mechanism; chess round 1; where the chess network's extra knowledge lives.**
+
+*Fluid mechanism (vorticity model; `results/kepler/fluid/mechanism.json`, `biot_savart_blobs.json`).*
+- Atlas caveat found by the control: every LINEAR quantity (vorticity, its gradients and Laplacian, even velocity,
+  which is a linear function of vorticity) is almost as readable from the untrained copy's random filters (control
+  R^2 up to 0.96-1.00). Linear probes cannot show learning there. The nonlinear advection product u.grad(omega) can:
+  R^2 0.13, 0.20, 0.24, 0.60, 0.80, 0.86, 0.97 from site 0 to site 6, untrained copy at most 0.26. The model
+  assembles advection mostly in blocks 3-6, and computes no other quadratic quantity (energy, Okubo-Weiss: about 0).
+- **Learned Biot-Savart law.** A vortex blob placed at 56 positions (distances 2-24 pixels, 8 angles) on 6 held-out
+  backgrounds: the response of the model's internal velocity (probe at site 5) at the centre matches the exact
+  Biot-Savart response with correlation 0.974 and overall strength 0.98. In the far field (9+ pixels) the trained
+  model keeps 0.972, the untrained copy 0.698: the long-range, nonlocal part of the law is learned. Strength by
+  distance: 1.11, 0.92, 0.87, 0.79, 0.78, 0.90, 1.13 (2 to 24 pixels).
+- First kernel attempt (single-pixel Jacobian) was uninformative (correlation 0.07-0.13): Jacobians are dominated by
+  local spikes; recorded and replaced by the blob test, which measures the physical response directly.
+- Velocity swap (interchange intervention on the 2-D velocity readout at site 5): the output change follows the law
+  with the swapped velocity (correlation 0.86 +/- 0.03), but the random-subspace control is also 0.69 +/- 0.03,
+  because its change shares the same spatial pattern. Specific but partly confounded; a cleaner control is needed.
+
+*Chess round 1 (`results/kepler/chess/dark/`).* The 22% of LD2's value that classical concepts miss was clustered
+on LD2's own last-layer representation (8 clusters, 118-607 positions; e.g. 606 positions where LD2 is more
+pessimistic than the classical estimate by 0.41, 89% consistent). The scientist (DeepSeek V4.1 Flash via Luminal,
+high effort, 8 calls in parallel) proposed 24 concepts as python-chess programs. **0 of 24 accepted.** Several are
+strongly encoded in the network (the opponent's forcing moves: decodable 0.79 vs 0.04 untrained; development deficit
+0.92) but add nothing to the classical surrogate (gains inside the noise). The frozen tests did their job: human
+chess ideas that sound right were not allowed through.
+
+*Calculation (`results/kepler/chess/calculation_features.json`).* A material quiescence search (resolve all captures,
+evade checks, depth <= 6) gives `qs_gain`, which passes all four criteria: gain +0.010 [0.004, 0.017] on LD2,
++0.018 on 744706, decodable 0.29 vs 0.03, max |corr| 0.48. It is classical engine knowledge (search), not a new idea,
+and it closes only about 1 point of the gap.
+
+*Is the gap real? (`surrogate_learning_curve.json`).* The surrogate's held-out R^2 with 1k, 2k, 4k, 8k, 15k training
+positions: 0.712, 0.730, 0.756, 0.770, 0.778, flattening toward about 0.79-0.80. The gap is real, not a starved
+surrogate. **Where it lives:** classical concepts explain 81% of LD2's value in game positions but only 36% in
+tactical puzzle positions. The network's knowledge beyond classical concepts sits mostly in sharp positions (deep
+tactical foresight, consistent with the learned look-ahead of Jenner et al. 2024). Next: look for strategic
+(non-tactical) knowledge only in quiet positions, with a data-driven search over the network's own units that does
+not start from human chess ideas.
