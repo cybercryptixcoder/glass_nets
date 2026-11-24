@@ -123,6 +123,75 @@ class Flow:
         return out
 
 
+class DyeFlow(Flow):
+    """The same flow carrying a passive dye c: d(c)/dt = -u.grad(c) + kappa*lap(c). A smoke video shows only c."""
+
+    def __init__(self, kappa=0.003, **kw):
+        super().__init__(**kw)
+        self.kappa = kappa
+
+    def params(self):
+        p = super().params()
+        p["kappa"] = self.kappa
+        return p
+
+    def rhs2_hat(self, wh, ch):
+        sp = self.sp
+        psih = wh * sp.K2i
+        u, v = sp.ifft(1j * sp.KY * psih), sp.ifft(-1j * sp.KX * psih)
+        wx, wy = sp.ifft(1j * sp.KX * wh), sp.ifft(1j * sp.KY * wh)
+        cx, cy = sp.ifft(1j * sp.KX * ch), sp.ifft(1j * sp.KY * ch)
+        advw = sp.fft(u * wx + v * wy) * sp.mask
+        advc = sp.fft(u * cx + v * cy) * sp.mask
+        dw = -advw - (self.nu * sp.K2 + self.mu) * wh + self.fh - self.beta * (-1j * sp.KX * psih)
+        dc = -advc - self.kappa * sp.K2 * ch
+        return dw, dc
+
+    def dye_rhs(self, w, c):
+        """Exact d(c)/dt in physical space (ground truth for the dye known-answer test)."""
+        sp = self.sp
+        return sp.ifft(self.rhs2_hat(sp.fft(w) * sp.mask, sp.fft(c) * sp.mask)[1])
+
+    def step2(self, wh, ch, nsub):
+        dt = self.dt
+        for _ in range(nsub):
+            a1, b1 = self.rhs2_hat(wh, ch)
+            a2, b2 = self.rhs2_hat(wh + 0.5 * dt * a1, ch + 0.5 * dt * b1)
+            a3, b3 = self.rhs2_hat(wh + 0.5 * dt * a2, ch + 0.5 * dt * b2)
+            a4, b4 = self.rhs2_hat(wh + dt * a3, ch + dt * b3)
+            wh = (wh + dt / 6.0 * (a1 + 2 * a2 + 2 * a3 + a4)) * self.sp.mask
+            ch = (ch + dt / 6.0 * (b1 + 2 * b2 + 2 * b3 + b4)) * self.sp.mask
+        return wh, ch
+
+    def random_dye(self, rng, batch):
+        """Multi-scale dye texture (spectrum ~ k^-1 up to k = 12), rescaled to mean 0.5, std 0.2."""
+        sp = self.sp
+        k = np.sqrt(sp.K2)
+        out = np.empty((batch, sp.n, sp.n))
+        for b in range(batch):
+            amp = np.where((k > 0) & (k <= 12), 1.0 / np.maximum(k, 1.0), 0.0)
+            ph = rng.normal(size=sp.K2.shape) + 1j * rng.normal(size=sp.K2.shape)
+            c = sp.ifft(amp * ph * sp.mask)
+            out[b] = 0.5 + 0.2 * (c - c.mean()) / (c.std() + 1e-12)
+        return out
+
+    def dye_videos(self, rng, batch, frames, frame_dt, spinup=10.0):
+        """Return (dye [batch, frames, n, n], omega [batch, frames, n, n]) as float32. The flow is spun up first."""
+        nsub = int(round(frame_dt / self.dt))
+        wh = self.sp.fft(self.random_init(rng, batch)) * self.sp.mask
+        if spinup > 0:
+            wh = self.step_hat(wh, int(round(spinup / self.dt)))
+        ch = self.sp.fft(self.random_dye(rng, batch)) * self.sp.mask
+        dye = np.empty((batch, frames, self.sp.n, self.sp.n), dtype=np.float32)
+        om = np.empty_like(dye)
+        for t in range(frames):
+            dye[:, t] = self.sp.ifft(ch)
+            om[:, t] = self.sp.ifft(wh)
+            if t < frames - 1:
+                wh, ch = self.step2(wh, ch, nsub)
+        return dye, om
+
+
 def seal(params, path):
     """Write the true parameters. Only tests open this file; the engine never reads it."""
     with open(path, "w") as f:

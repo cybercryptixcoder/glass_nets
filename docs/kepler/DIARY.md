@@ -22,3 +22,20 @@ predicting the next frame. 0.16 s per training step at batch 8 on the 2 cores, s
 Data: 320 training videos of 40 frames (starts from transients to the forced equilibrium), 64 held-out videos, and
 32 out-of-distribution videos (stronger and finer fields than any training start) for the law-versus-lookup test.
 Generation and training launched in the background at 09:30.
+
+**09:52 EST.** Research block done (summary in `docs/kepler/RESEARCH.md`). Shreyas approved LLM spending (Luminal key)
+and Colab; Colab signed in at 09:41 (balance 585 units). L4 and A100 were unavailable ("Service Unavailable"), a T4
+was assigned.
+
+- **Chess target ready.** Two Leela networks downloaded from lczero storage: LD2 and 744706, both 128 filters x 10 SE
+  blocks, classical 112-plane input, convolutional policy, WDL value. Ported to PyTorch from lc0's weight format
+  (batch norm folded as lc0 does). Checks that must hold, and do: opening moves e4/d4/Nf3/c4; mate in one found for
+  White and for Black (board flip right); a queen up gives value +1.00 and, with the other side to move, -1.00;
+  castling in the Italian is the top move (lc0 encodes it king-takes-rook, e1h1). LD2 solves 64.9% of 4,000 Lichess
+  puzzles at top-1 with no search. 16,000 positions from real Lichess games (Jan 2013) and 4,000 puzzles (with
+  human theme labels) evaluated; activations stored at all 11 sites; 61 classical concepts computed per position
+  (`kepler/targets/chess/concepts.py`).
+- **Second fluid target (K2), the smoke video model.** The same hidden flow carries a dye; the model sees only the
+  dye frames (3 past frames), never the velocity, like a real video model. Generation and training (20,000 steps)
+  launched on the Colab T4 at 09:51.
+- **Fluid video model (K1)** training locally: step 3,800, error on the one-step change 22% and falling.

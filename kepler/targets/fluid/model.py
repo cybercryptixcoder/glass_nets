@@ -21,10 +21,10 @@ class Block(nn.Module):
 
 
 class FluidNet(nn.Module):
-    def __init__(self, width=32, dilations=(1, 2, 4, 8, 16, 1)):
+    def __init__(self, width=32, dilations=(1, 2, 4, 8, 16, 1), cin=1):
         super().__init__()
-        self.width, self.dilations = width, tuple(dilations)
-        self.stem = nn.Conv2d(1, width, 3)
+        self.width, self.dilations, self.cin = width, tuple(dilations), cin
+        self.stem = nn.Conv2d(cin, width, 3)
         self.blocks = nn.ModuleList([Block(width, d) for d in dilations])
         self.head = nn.Conv2d(width, 1, 1)
         self.register_buffer("in_scale", torch.tensor(1.0))
@@ -35,9 +35,11 @@ class FluidNet(nn.Module):
         return len(self.blocks) + 1
 
     def forward(self, w, return_acts=False, edit=None):
-        """w: [B, H, W] vorticity. Returns the predicted next frame [B, H, W] (and the site activations).
-        edit(site, h) -> h lets a caller patch or steer a site in the forward pass."""
-        x = (w / self.in_scale).unsqueeze(1)
+        """w: [B, H, W] (one frame) or [B, cin, H, W] (past frames, the last is the current one). Returns the
+        predicted next frame [B, H, W] (and the site activations). edit(site, h) -> h patches or steers a site."""
+        x = w.unsqueeze(1) if w.dim() == 3 else w
+        cur = x[:, -1]
+        x = x / self.in_scale
         h = self.stem(F.pad(x, (1, 1, 1, 1), mode="circular"))
         if edit is not None:
             h = edit(0, h)
@@ -47,18 +49,18 @@ class FluidNet(nn.Module):
             if edit is not None:
                 h = edit(i + 1, h)
             acts.append(h)
-        out = w + self.head(h).squeeze(1) * self.out_scale
+        out = cur + self.head(h).squeeze(1) * self.out_scale
         return (out, acts) if return_acts else out
 
 
 def save(model, path, extra=None):
     torch.save({"state": model.state_dict(), "width": model.width, "dilations": model.dilations,
-                "extra": extra or {}}, path)
+                "cin": model.cin, "extra": extra or {}}, path)
 
 
 def load(path):
     ck = torch.load(path, map_location="cpu", weights_only=False)
-    m = FluidNet(ck["width"], ck["dilations"])
+    m = FluidNet(ck["width"], ck["dilations"], ck.get("cin", 1))
     m.load_state_dict(ck["state"])
     m.eval()
     return m, ck.get("extra", {})
