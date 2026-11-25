@@ -20,10 +20,10 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 
 ## What we did
 
-1. **Exact tables.** Every coefficient for n = 3–18, about 100 million ordered triples at n = 15–18. They were computed from characters and summed modulo three primes, with each value confirmed by the third prime.
+1. **Exact tables.** Every coefficient for n = 3–20: about 100 million ordered triples at n = 15–18, and 364 million more at n = 19 and 20. They were computed from characters and summed modulo three primes, with each value confirmed by the third prime.
    - Checks: symmetry in all three arguments, the conjugation rule, the trivial and standard characters, and Σ_ν g(λ,μ,ν) dim ν = dim λ · dim μ for every pair (λ, μ).
    - Code: scripts/kronecker/kron_tables.py; checks in scripts/kronecker/table_checks.py, results/kronecker/table_checks.json.
-2. **Known necessary conditions (B1):** Dvir's bound ν₁ ≤ |λ ∩ μ| and the length bounds, in every ordering and with conjugates. Alone they reach 97.2–97.9%.
+2. **Known necessary conditions (B1):** Dvir's bound ν₁ ≤ |λ ∩ μ| and the length bounds, in every ordering and with conjugates. Alone they reach 97.2–98.1% at n = 12–20.
 3. **P2, the recursive step.** On the boundary where Dvir's bound is tight, Dvir's theorem rewrites g exactly as a smaller Kronecker problem: g(λ,μ,ν) = ⟨χ^{λ/α} χ^{μ/α}, χ^{ν̄}⟩, with α = λ∩μ and ν̄ = ν without its first row.
    - We checked this identity against the exact tables, with 0 mismatches for n ≤ 10.
    - P2 applies B1 again to every piece of the smaller problem, recursively. It can only say "zero" when a theorem forces it.
