@@ -4,7 +4,7 @@
 
 ## The result in one sentence
 
-On three modern open model families (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00). What it detects, and what transfers across families, is a lying mode set up by the instruction and carried by the few chat-template tokens of the assistant header, not the lie. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.84–0.88), but that trace does not transfer between families (0.52–0.66).
+On three modern open model families (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00). What it detects, and what transfers across families, is a lying mode set up by the instruction, not the lie. In Qwen and Llama, where we localised it, the mode is carried by the few chat-template tokens of the assistant header. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.84–0.88), but that trace does not transfer between families (0.52–0.66).
 
 ## The background
 
