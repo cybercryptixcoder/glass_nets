@@ -57,3 +57,36 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
   1,750 network-scored random systems, split between this workspace and an 8-CPU Colab
   runtime. Fresh verification set made: 800 new systems (population members never used,
   with new random angles), scripts/planets/fresh.py; integrations to 1e6 orbits next.
+
+## 21:07 to 21:21 — the law, and the checks on it
+
+- Short-integration summaries (SPOCK FeatureClassifier, Tamayo et al. 2020 quantities)
+  computed for 1,720 resonant training systems and 1,736 of the 1,750 network-scored
+  random systems (workspace plus Colab, 8 CPUs). Merged by scripts/planets/short_table.py.
+- Final round (scripts/planets/final_law.py, results/planets/final_law.json): six forms,
+  each fit twice on resonant only (unstable only; and censored, stable systems penalised
+  only when predicted below 9). Chosen on the random DEV half: F4, censored fit:
+
+      log10(t/P1) = 5.36 + 4.94 Xh - 0.53 log10(MEGNO - 2) - 1.27 log10(sigma_EM / EM_cross)
+                    - 0.54 min(R, 1) - 0.96 log10(EM_cross,near)
+      (systems that already go unstable inside the 1e4-orbit integration: 4.34)
+
+- All 1,736 test systems, network on identical systems:
+  unstable (pre-registered, n=731): law 1.104, network 1.159, difference -0.055
+  (95% bootstrap CI -0.145 to +0.038); including stable (n=1,736): law 0.880, network
+  0.872, difference +0.008 (CI -0.050 to +0.069). DEV and FINAL halves both within
+  0.05 or better.
+- Controls (scripts/planets/controls.py): shuffling the short-integration summaries
+  across systems wrecks the law (2.37 / 2.07), as it must; the published Lammers, Hadden
+  and Murray 2024 law on the same systems 2.00 / 2.15; a constant 1.46 / 2.80. Constants
+  refit on five disjoint fifths of the training set: the chaos exponent is 0.533 +- 0.035;
+  the two spacing coefficients trade off against each other (4.9 +- 1.0, -0.86 +- 0.56).
+- Information check on the same systems (information_same_systems.json): correlation with
+  the truth 0.46 (initial-condition law), 0.53 (initial-condition tree), 0.66 (final law),
+  0.71 (network). The network's raw score suffers from a +0.33 dex bias on this metric.
+- Hard check (recalibration_check.json): give both the network and the law an affine
+  recalibration fitted on the random DEV half (test-distribution data), score on FINAL:
+  network 1.015, law 1.041. With its bias removed the network edges the law by 0.026 dex,
+  still inside the pre-registered 0.05. Stated plainly in FINDINGS.
+- Fresh N-body set: 800 new systems; integrations to 1e6 orbits running here (items
+  0-399) and on Colab (400-799), with short summaries and network predictions on Colab.

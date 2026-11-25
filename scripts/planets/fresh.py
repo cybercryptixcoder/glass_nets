@@ -41,7 +41,8 @@ def run(W, w, lo, hi, tmax):
     for i in range(lo, hi):
         if i % W != w or i in done: continue
         s = sa[i]; P1 = min(p.P for p in s.particles[1:4])
-        t, stable = nb.predict_instability_time(s, tmax=tmax * P1, n_jobs=1)
+        r = nb.predict_instability_time(s, tmax=tmax * P1, n_jobs=1)
+        t = float(r[0]); stable = t >= 0.999 * tmax * P1          # returns (time, ...); tmax means survived
         with open(out, "a") as f: f.write(f"{i},{t / P1:.6g},{int(stable)}\n")
 if __name__ == "__main__":
     if sys.argv[1] == "make": make()
