@@ -49,11 +49,23 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 - **It depends on whose statement it is.** The same answers were quoted in the user's turn ("Someone was asked ... and told me: ...").
   - The same detector separates them only at 0.746 (Qwen) and 0.566 (Llama).
   - Caveat: that setting also removes the instruction, so part of the drop may be a change of context.
-- **Where the lying mode lives.** We blocked the probe questions from attending to the instruction's tokens, while the rest of the transcript was still encoded under it.
-  - The detector still flags failed lies at 0.979 (Qwen) and 0.972 (Llama).
-  - Deleting the instruction, so that nothing is ever encoded under it, drops this to 0.57–0.59.
-  - So the instruction's effect is written into the later tokens, and the probes read it from there.
-  - It is not a single direction at the end of the transcript: adding the mean failed-lie-minus-truth direction there moved the detector by only 1–5% of the gap (pre-registered line 50%).
+- **Where the lying mode lives.** We blocked the probe questions from attending to chosen parts of the transcript, which was still encoded normally. Each step was pre-registered. The detector's failed-lie-vs-truth score:
+
+  | hidden from the probe questions | Qwen | Llama |
+  |---|---|---|
+  | nothing | 1.000 | 1.000 |
+  | the instruction's tokens | 0.979 | 0.972 |
+  | the whole user turn (instruction + question) | 0.975 | 0.957 |
+  | the answer | 1.000 | 1.000 |
+  | the user turn and the answer | **0.997** | **0.992** |
+  | everything after the user header, including the 4–5 chat-template tokens between the turns | **0.591** | **0.534** |
+  | (instruction deleted from the transcript) | 0.569 | 0.585 |
+
+  - Once the model has read the lie instruction, the few assistant-header template tokens between the question and the answer carry the lying mode on their own. The follow-up questions read it from there:
+    - Qwen: `<|im_end|>`, `<|im_start|>assistant`;
+    - Llama: `<|eot_id|><|start_header_id|>assistant<|end_header_id|>`.
+  - It is not one direction at the end of the transcript either. Adding the mean failed-lie-minus-truth direction there moved the detector by only 1–5% of the gap (pre-registered line 50%).
+- **The real-lie trace needs the answer.** When the probes cannot see the answer, the lie-vs-failed-lie signal falls to chance (0.57 and 0.51). The two signals therefore sit in different tokens.
 - **Robust to labelling.** On arithmetic questions alone, where labels are unambiguous, failed lies vs truths is 1.000 in both families.
 
 ## What this does and does not show
@@ -65,7 +77,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - Two families (a third is being run as a replication).
   - One prompt format.
   - Labels from answer text: ambiguous answers are left out, about 6–14%.
-  - Features from a bfloat16 model with a cached computation. Its agreement with the uncached computation is checked before the claim (ledger LT1-score).
+  - Features from a bfloat16 model with a cached computation. The pre-declared agreement check failed its strict line (median difference 0.25, one bfloat16 step; r = 0.9997). As declared, every test transcript was recomputed without the cache, and the scores did not change (to 3 decimals for Qwen; Llama recompute: see STATUS).
 
 ## Where everything is
 
