@@ -110,3 +110,16 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
   (random_as_if_1e6.json): law 1.034 vs network 1.121 on the 398 unstable systems,
   censored error 0.522 vs 0.549. So the gap on the fresh set is larger than on the held-out
   set; part of it is likely chance in a small sample.
+
+## 21:34 to 21:46 — fresh verification scored
+
+- Literature check before claiming (FINDINGS, What is new): Alford et al. 2026 say no general
+  equations for instability times existed before theirs; Lammers, Hadden and Murray 2024
+  fit idealized systems only; Hussain and Tamayo 2020 set the chaotic limit.
+- Final pull of the fresh set at 21:45: 693 integrated (400 here, 293 on Colab), 659 in the
+  protocol population, 154 unstable before 1e6 orbits. Frozen law against the network:
+  0.973 vs 1.320 on the unstable ones (CI of the difference -0.56 to -0.12), censored error
+  0.486 vs 0.644 on all 659 (CI -0.27 to -0.05), false alarms 3.6% vs 4.8%.
+- Robust view (fresh_robust.json): the network has the smaller median error (0.58 vs 0.66)
+  but misses by more than 2 dex on 12.3% of the unstable systems against the law's 3.2%.
+- Decision at the 21:45 check: no extension needed. Everything registered is delivered.

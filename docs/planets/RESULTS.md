@@ -64,9 +64,30 @@ Refit without one term at a time (censored, resonant only), same 1,736 systems:
 - Chaotic floor (shadow integrations, law.py): 0.467 dex on the random set. Nothing can
   beat it; the law and the network sit about 0.6 dex above it.
 
-## Fresh N-body verification
+## Fresh N-body verification (fresh_verification_F4_censored.json, fresh_robust.json)
 
-See the section at the end (filled when the integrations are scored).
+800 new systems: members of the random population never used in this study, with new
+random angles (pericentres, nodes, mean longitudes; distributions checked against the
+original population). Integrated here with SPOCK's own N-body setup to 1e6 inner orbits,
+scored with the law frozen at 21:25 (FROZEN_LAW.json). 693 were integrated by the stop;
+659 survived the first 1e4 orbits (the protocol's population); 154 went unstable between
+1e4 and 1e6 orbits (exact truth), 505 survived to 1e6 (censored).
+
+| | law | network | law minus network, 95% CI |
+|---|---|---|---|
+| RMSE, the 154 that went unstable | 0.973 | 1.320 | -0.347 (-0.56 to -0.12) |
+| censored RMSE, all 659 (survivors penalised only if predicted below 1e6) | 0.486 | 0.644 | -0.158 (-0.27 to -0.05) |
+| survivors predicted to go unstable before 1e6 (false alarms) | 3.6% | 4.8% | |
+| median absolute error, the 154 | 0.657 | 0.579 | |
+| misses larger than 2 dex, the 154 | 3.2% | 12.3% | |
+
+Reading: on new systems the law beats the network on both registered-style metrics, with
+intervals that exclude zero. The network is slightly better on the typical system (median
+error) but misses by more than 2 dex four times as often (it calls some short-lived systems
+long-lived). For context, the held-out random set scored the same way (as if stopped at 1e6
+orbits; random_as_if_1e6.json) gives law 1.034 vs network 1.121 on its 398 unstable systems
+and censored error 0.522 vs 0.549: same direction, smaller gap, so part of the fresh gap is
+likely sampling luck.
 
 ## How to reproduce
 

@@ -13,12 +13,15 @@ Branch `planets`. Ledger row PL1 in docs/glass/CHANGES.md.
   results/planets/FROZEN_LAW.json: matches the network on 1,736 held-out systems.
 - Controls (controls.py), information table (ic_only_same.py), recalibration check (recal_check.py).
 
-## Running at the last update
+## Fresh N-body verification: done
 
-- Fresh N-body verification set (fresh.py): 800 new systems, integrations to 1e6 inner
-  orbits; items 0-399 in this workspace, 400-799 on Colab (session 'planets');
+- Fresh set (fresh.py): 800 new systems, 693 integrated to 1e6 inner orbits by the stop
+  (items 0-399 here, 293 of 400-799 on Colab, session 'planets', stopped at the end);
   short summaries and network predictions for them on Colab (scripts/planets/colab/, the
   Colab launchers as run). Scored by fresh_eval.py.
+
+Scored at 21:45 (RESULTS.md, fresh section). The 107 unintegrated items can be added by
+rerunning fresh.py on them and rescoring; the law must not be refit.
 
 ## To resume
 

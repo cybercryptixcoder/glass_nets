@@ -21,9 +21,12 @@ and t / P1 = 10^4.34 for the few systems that already go unstable inside the sho
 |---|---|---|---|
 | systems that go unstable (pre-registered), 731 | 1.104 | 1.159 | -0.055 (-0.145 to +0.038) |
 | all systems, stable ones counted at 10^9, 1,736 | 0.880 | 0.872 | +0.008 (-0.050 to +0.069) |
+| new systems integrated here, unstable within 1e6 orbits, 154 | 0.973 | 1.320 | -0.347 (-0.56 to -0.12) |
 
-Errors are in dex (log10 of the instability time). The two are statistically tied; the
-formula is ahead on the pre-registered metric and level on the other. It was fit on a
+Errors are in dex (log10 of the instability time). On the held-out dataset the two are
+statistically tied: the formula is ahead on the pre-registered metric and level on the
+other. On new systems we integrated after freezing the formula, it is ahead, with an
+interval that excludes zero. It was fit on a
 different dataset (the 'resonant' systems); its form was chosen on half of these test
 systems (see 'How sure we are'), and it was then frozen and checked on new systems
 integrated here.
@@ -67,6 +70,12 @@ integrated here.
   bias removed by a recalibration fitted on test-distribution data (which favours the
   network), the network is ahead by 0.026 dex, still inside the pre-registered 0.05 margin.
   The network still ranks systems slightly better (correlation 0.71 against 0.66).
+- Fresh N-body check (new systems integrated here after the formula was frozen; 659 in
+  the protocol's population, 154 of them unstable within 1e6 orbits): formula 0.973 vs
+  network 1.320 on the unstable ones (difference -0.35, CI -0.56 to -0.12); censored error
+  over all 659, 0.486 vs 0.644 (CI -0.27 to -0.05). The network is slightly better on the
+  typical system (median error 0.58 vs 0.66) but misses by more than 2 dex far more often
+  (12% vs 3%).
 - Selection honesty: earlier law rounds were scored on the whole random set, and the final
   form and fit were chosen on its DEV half with the FINAL-half numbers printed in the same
   run. So the random set is held out from fitting, not from our eyes. The strictly untouched
