@@ -429,3 +429,20 @@ Shown: failed_lie vs truth for the K1 detector, test split, when the probes cann
 - **Reading:**
   - The other 52 probes are what kept the real-lie trace from transferring: dropping them leaves the within-family score unchanged (0.870 / 0.870) and lifts the cross-family score from 0.59–0.62 to 0.70–0.86.
   - A cross-family real-lie detector built only from 'judge your previous statement' probes is promising, but the margin is thin and the subset was chosen after looking. It needs a fresh family and fresh questions before it counts as a result.
+
+## Nov 25, 11:47 ET (clock): LT9, LT8's lead does not survive its fresh-family test
+
+- **The test:** LT9 (declared 11:46 ET, before any subset number on Mistral) takes LT8's subset detector (the 13 previous-statement probes, trained on Qwen or on Llama) to Mistral. Mistral was not used to choose the subset. No code change: score_t_subset.py, run on cached features.
+- **Known case:** the all-probe numbers equal the stored t_scores_qwen7b_mistral7b.json and t_scores_llama8b_mistral7b.json exactly.
+- **Scores** (lie vs failed_lie; results/liar/t_prevstmt_qwen7b_mistral7b.json, t_prevstmt_llama8b_mistral7b.json):
+
+  | detector | Qwen → Mistral | Llama → Mistral | Mistral → Qwen | Mistral → Llama |
+  |---|---|---|---|---|
+  | all 65 probes (LT3) | 0.548 | 0.661 | 0.549 | 0.524 |
+  | 13 previous-statement probes | **0.755** | **0.593** | 0.777 | 0.696 |
+
+- **Verdict as pre-registered:** not met. The lead needed both Qwen → Mistral and Llama → Mistral ≥ 0.70; Llama → Mistral is 0.593.
+- **Reading:**
+  - The subset helps in three of four directions with Mistral (by 0.17–0.23) and hurts in one (Llama → Mistral, 0.661 to 0.593).
+  - Mistral's failed lies often announce the lie, which works against any real-lie detector here, so this is a hard test, as declared.
+  - As registered, LT8's cross-family real-lie detector stays a lead that failed its first fresh test, not a result.

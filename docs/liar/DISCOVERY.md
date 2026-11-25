@@ -4,7 +4,7 @@
 
 ## The result in one sentence
 
-On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00), whether the instruction sits in the user's turn or in the system prompt. What it detects, and what transfers across families, is a lying mode set up by the instruction, not the lie. Where we localised it (instruction in the user's turn), that mode is carried by the few chat-template tokens of the assistant header. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.86–0.88). With all 65 probes that trace does not transfer between the two families (0.58–0.62). With only the 13 probes that ask about the previous statement it does, at 0.86 and 0.70, but one direction is right at the pre-registered line and that subset was chosen after looking, so this is a lead rather than a result.
+On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00), whether the instruction sits in the user's turn or in the system prompt. What it detects, and what transfers across families, is a lying mode set up by the instruction, not the lie. Where we localised it (instruction in the user's turn), that mode is carried by the few chat-template tokens of the assistant header. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.86–0.88). With all 65 probes that trace does not transfer between the two families (0.58–0.62). With only the 13 probes that ask about the previous statement it transfers between those two (0.86 and 0.70), but that subset was chosen after looking, and on a fresh family (Mistral) only one of the two transfers (0.755 against 0.593). So there is no cross-family real-lie detector yet.
 
 ## The background
 
@@ -22,7 +22,7 @@ On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie 
   - We then asked the paper's 65 probes and recorded the log-odds of yes against no.
   - Each answer was labelled from its text. Told to lie: *lie* if the answer does not give the correct answer, *failed lie* if it does. Told to answer truthfully: *truth* if it gives the correct answer. Ambiguous answers are left out. Labelling rules: scripts/liar/labels_v2.py, tested on hand-read transcripts.
 - **Pre-registration.**
-  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4, LT5, LT6, LT7, LT8) before the scores it judges existed.
+  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4, LT5, LT6, LT7, LT8, LT9) before the scores it judges existed.
   - Questions were split 50/50 by question; all numbers below are on the held-out half.
 
 ## The numbers
@@ -80,7 +80,8 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 - **A lead for a lie detector that transfers** (pre-registered as LT8, with the subset chosen after LT7). Train the real-lie detector on only the 13 probes that mention the previous statement:
   - it transfers across families at 0.857 (Qwen → Llama) and 0.701 (Llama → Qwen), against 0.62 and 0.59 with all probes;
   - within each family it loses nothing (0.87);
-  - but 0.701 is right at the 0.70 line, and in the system-prompt runs one direction gives 0.65. It needs a fresh family and fresh questions before it counts.
+  - but 0.701 is right at the 0.70 line, and in the system-prompt runs one direction gives 0.65;
+  - **on a fresh family it does not hold up** (pre-registered as LT9). Taken to Mistral, the Qwen-trained version transfers (0.755) but the Llama-trained one does not (0.593, against a 0.70 line). So this stays a lead.
 - **Robust to labelling.** On arithmetic questions alone, where labels are unambiguous, failed lies vs truths is 1.000 in both families.
 - **Every group of probes reads it, even pure nonsense** (pre-registered as LT5). The paper labels its probes by type and stresses that even unrelated, unknowable questions make the detector work. We refit the detector on each group of probes alone:
   - the 13 nonsense probes alone ("Can blob fish dance ballet under diagonally fried cucumbers made of dust storms?") separate failed lies from truths at 0.997 (Qwen) and 0.999 (Llama), and at 0.53 and 0.60 once the instruction is deleted;
@@ -117,7 +118,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - the system-prompt runs (LT4): k_scores_qwen7b_sys.json, k_scores_llama8b_sys.json, t_scores_qwen7b_sys.json, t_scores_llama8b_sys.json, lt4_qwen_failed_vs_truth.json, lt4_llama_failed_vs_truth.json;
   - probe groups (LT5, LT7): groups_full.json, groups_cached.json, groups_t1_full.json and groups_t1_cached.json;
   - instruction wordings (LT6): wording_full.json and wording_cached.json;
-  - previous-statement probes across families (LT8): t_prevstmt_full.json and t_prevstmt_sys_cached.json;
+  - previous-statement probes across families (LT8, LT9): t_prevstmt_full.json, t_prevstmt_sys_cached.json, t_prevstmt_qwen7b_mistral7b.json and t_prevstmt_llama8b_mistral7b.json;
   - probe_table.json and probe_table_3.json.
 - **Story:** docs/liar/DIARY.md and docs/liar/STATUS.md. Technical summary with every verdict: docs/liar/FINDINGS.md.
 - **Raw features and transcripts** stay outside the repo; they are small and can be shared on request. They can also be regenerated from the open weights; the decoding is greedy.

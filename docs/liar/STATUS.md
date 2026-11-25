@@ -2,7 +2,7 @@
 
 Branch `liar`. Ledger row LT1 in docs/glass/CHANGES.md (the pre-registration). Sprint 2 of two run in parallel on Nov 25 (sprint 1: branch `kronecker`). Final report due about 12:40 ET.
 
-**Sprint complete (11:30 ET, clock); LT5–LT8 added and closed at 11:38, 11:41, 11:43 and 11:45.** Every ledger row LT1–LT8 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
+**Sprint complete (11:30 ET, clock); LT5–LT9 added and closed between 11:38 and 11:47.** Every ledger row LT1–LT9 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
 
 ## Goal
 Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two modern open families with cross-family transfer (K1), rule out instruction carryover (K2) and a plain yes-bias (K3), then find the internal 'has-lied' state that causes the tell.
@@ -231,3 +231,9 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   - the subset was chosen after LT7;
   - in the system-prompt runs, one direction gives 0.652.
 - **Next round:** test this lead on a fresh family and fresh questions.
+
+## Update, Nov 25 11:47 ET (clock): LT9, the lead's fresh-family test
+
+- **Not met** (declared 11:46 ET; DIARY 11:47). On Mistral, the Qwen-trained subset detector transfers (0.755), but the Llama-trained one does not (0.593).
+- **So LT8 stays a lead.** There is no cross-family real-lie detector yet.
+- **Sprint closed:** the final report follows. Nothing is running.
