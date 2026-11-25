@@ -64,3 +64,24 @@
   - Hooks: most of the residue at odd n.
   - So KR1b (B), a *new* rule catching ≥ 50% at every held-out n, now looks out of reach. A rule for the hook part would be Blasiak's (2012).
   - The one open seat is the Catalan family g((k,k), μ, ν). Known positive rules (Ballantine–Orellana) need μ₁ ≥ 2p − 1, which fails here.
+
+## Nov 25, 04:02 ET (clock): KR1b (B) rule search on dev n: no short rule reaches the line
+
+- **The search** is in scripts/kronecker/rule_search.py, method declared in ledger row KR1e.
+  - Universe: symmetry orbits that P4 calls nonzero at n = 8–14, about 208k orbits but only 4,497 distinct feature vectors.
+  - Features: 13 symmetric features, 85 atoms. A rule is an OR of up to 3 conjunctions of up to 3 atoms.
+  - Constraint: a false-zero budget of 0.1% of the nonzero triples at every dev n.
+- **First run.** It died from memory: masks for about 100k conjunctions over all orbits. Rebuilt over the distinct feature vectors.
+- **Second run.** It returned an empty rule. No conjunction has positive coverage at every dev n, so all candidates tie at 0.
+  - Declared amendment, dev only: ties are broken by mean coverage.
+- **Best rule found**, an OR of three conjunctions with 9 atoms:
+  - (one Catalan shape, all three two-row, Dvir slack 1);
+  - or (one Catalan shape, two rectangles, Dvir slack 1);
+  - or (one two-row shape, two rectangles, fat-hook slack 2).
+  - It catches 0% of the residue at odd n (9, 11, 13) and 1–26% at even n, mean 7.8%.
+  - It was frozen at 04:01:50 (results/kronecker/FROZEN_RULE.json) and is being scored on n = 15–18 as pre-registered (scripts/kronecker/rule_heldout.py).
+- **Shuffle control** (labels shuffled within n): mean coverage 0.6%. That is far below the real 7.8%, so the search does find some structure, but nowhere near the 50% line.
+- **Reading.**
+  - Within this feature space the known-math residue has no short description that also stays inside the false-zero budget.
+  - That matches the families it lives in: two-row shapes (Catalan) and hooks.
+  - Their known exact formulas are alternating sums of Littlewood–Richardson products, not conditions on simple shape features.
