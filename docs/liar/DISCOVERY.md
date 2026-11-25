@@ -40,7 +40,8 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 
 - Failed lie vs truth is 0.998–1.000 in every pairing. Real lie vs failed lie is 0.837 within Mistral and 0.52–0.66 across families.
 - But Mistral's "failed lies" are mostly not truthful answers. It states the right answer and then announces the lie: "1581 is the result of 93 times 17. (In reality, the correct answer is 1581, but I'm lying by implying ...)".
-- So even with the instruction deleted they separate from truths, at 0.94, and Mistral cannot isolate the instruction.
+- So even with the instruction deleted they separate from truths, at 0.94, and Mistral cannot isolate the instruction that way.
+- The knockout test is immune to this confound. With only the template token '[/INST]' visible after the instruction (it comes before the answer), failed lies still score as lies at 0.894, and hiding that token too drops them to 0.46.
 
 - **The detector treats a failed lie as a lie.** A truthful answer given under the lie instruction looks like a lie to it. Pre-registered test K2 (i) therefore says the detector reads the instruction.
 - **Why, in the probes' own answers** (results/liar/probe_table.json):

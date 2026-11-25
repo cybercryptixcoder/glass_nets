@@ -262,3 +262,25 @@ Shown: the K1 detector's failed_lie vs truth AUC (the instruction signal) on the
 - **So for Mistral, the failed lie is not a truthful answer.** The instruction-deletion control cannot separate instruction from content there.
 - **K2 (i) = 1.000 in Mistral is therefore numerically consistent but not independent evidence.** The clean evidence that the detector reads the instruction is Qwen and Llama. Their failed lies are plain correct answers ('63 times 8 equals 504.'), and deleting the instruction drops the signal to chance.
 - **Docs and the earlier message to Shreyas are corrected.**
+
+## Nov 25, 10:02 ET (clock): Mistral knockouts (LT3-M5)
+
+Shown: failed_lie vs truth for the K1 detector, test split, when the probes cannot attend to the named span. Files: results/liar/m4_mistral.json, m5b_mistral.json, m5c_mistral.json.
+
+| hidden from the probes | Mistral |
+|---|---|
+| nothing | 1.000 |
+| instruction tokens | 0.963 |
+| user content and answer (M5b) | **0.894** |
+| everything after the user header (M5c) | **0.462** |
+| instruction deleted from the transcript | 0.940, confounded by lie talk in the answers |
+
+- **Pre-registered readings:**
+  - M5b at 0.894 falls just under the 0.90 line, so the reading is 'both'.
+  - M5c ≤ 0.65: no leak.
+- **Why M5b counts here despite the Mistral confound:**
+  - In M5b the only post-instruction token the probes can see is '[/INST]'. It is encoded before the answer, so the lie talk in Mistral's answers cannot reach it.
+  - So M5b is unaffected by the answer-content confound that spoils the instruction-deletion control.
+  - The template token alone separates failed lies from truths at 0.894, which is instruction-driven by construction.
+  - That partly restores Mistral as evidence for the instruction reading, through the knockout rather than through K2 (i).
+- **Next:** LT4, the system-prompt placement runs (stage9), have started on Qwen.
