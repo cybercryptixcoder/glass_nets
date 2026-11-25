@@ -137,3 +137,22 @@ The K1 detector on test transcripts (results/liar/m4_scores.json):
 - **Exploratory validity check** (results/liar/t1_by_source.json). Failed lies cluster in arithmetic, so could the real-lie tell just be question type? No: within question type the T1 detector still separates lie from failed_lie.
   - Arithmetic: Qwen 0.992, Llama 0.809.
   - Everything else: Qwen 0.824, Llama 0.895.
+
+## Nov 25, 06:38 ET (clock): the cache agreement check fails its median line; the full-path recompute changes nothing
+
+- **Qwen check** (20 test transcripts, seed 1; results/liar/qwen7b_check_cache.json):
+  - Pearson r = 0.99967 and max |diff| = 1.50.
+  - The median |diff| is 0.25 against a line of 0.1, so the check fails. That median is one bfloat16 step for logits of this size: mean |feature| is 13.9.
+  - Rerunning the cached path reproduces the saved features exactly (max 0.0).
+- **As pre-declared (LT1-score), every Qwen test-split transcript was recomputed on the full path**, with and without the instruction: 478 transcripts in 2,452 s.
+- **Preview of the re-score with full-path test features** (within Qwen):
+
+  | comparison | cached | full path |
+  |---|---|---|
+  | lie vs truth | 1.000 | 1.000 |
+  | failed_lie vs truth | 1.000 | 1.000 |
+  | lie vs truth, instruction deleted | 0.834 | 0.8345 |
+  | failed_lie vs truth, instruction deleted | 0.569 | 0.564 |
+  | T1, lie vs failed_lie | 0.8753 | 0.8759 |
+
+- **Llama's check and recompute** come after the span knockouts. The full re-score (LIAR_FULL=1, both families) follows.
