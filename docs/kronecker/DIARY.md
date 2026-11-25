@@ -85,3 +85,20 @@
   - Within this feature space the known-math residue has no short description that also stays inside the false-zero budget.
   - That matches the families it lives in: two-row shapes (Catalan) and hooks.
   - Their known exact formulas are alternating sums of Littlewood–Richardson products, not conditions on simple shape features.
+
+## Nov 25, 04:39 ET (clock): held-out n = 19; the frozen rule fails; where the leftover zeros live
+
+- **KR1f, n = 19** (Colab `kron`; tables pass every check):
+  - P2 reaches 99.77% on all 117.6M ordered triples and 99.78% on the test triples, with 0 false zeros.
+  - LightGBM on the same test triples: 99.11%.
+  - So the KR1b (A) criteria also hold at n = 19. n = 20 is still running.
+- **KR1b (B): the frozen rule fails as expected.** On held-out n it catches 0% (n = 15), 2.5% (16) and 0% (17) of P4's leftover zeros. n = 18 is being re-run: two local jobs at n = 18 together ran out of memory, so they now run one after the other.
+- **Where P4's leftover zeros live on held-out n** (scripts/kronecker/resid_atlas.py, run after the rule was frozen):
+
+  | n | hook | two-row (Catalan (k,k) or (k+1,k)) | two-row, other | rectangle squared | other |
+  |---|---|---|---|---|---|
+  | 15 | 52% | 14% | 13% | 2% | 19% |
+  | 16 | 36% | 26% | 18% | 0.2% | 21% |
+  | 17 | 46% | 6% | 13% | 0% | 35% |
+
+  - The 'other' part, with no two-row shape, hook or squared rectangle, grows with n. That part is the genuinely open territory.
