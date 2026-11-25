@@ -130,3 +130,17 @@ def instruction_positions(m, msgs, instr):
     end = start + len(instr)
     enc = m.tok(prefix, add_special_tokens=False, return_offsets_mapping=True)
     return [i for i, (a, b) in enumerate(enc["offset_mapping"]) if a < end and b > start]
+
+
+def span_positions(m, msgs, span):
+    """Prefix token positions of the first user turn's content ('user') or of the assistant turn's content
+    ('assistant'), found from character offsets (LT2-M5)."""
+    prefix = chat(m, msgs, gen=False)
+    text = msgs[0]["content"] if span == "user" else msgs[1]["content"]
+    start = prefix.find(text) if span == "user" else prefix.rfind(text)
+    assert start >= 0, "span text not found"
+    end = start + len(text)
+    if span == "assistant":                       # include the end-of-turn tokens after the answer
+        end = len(prefix)
+    enc = m.tok(prefix, add_special_tokens=False, return_offsets_mapping=True)
+    return [i for i, (a, b) in enumerate(enc["offset_mapping"]) if a < end and b > start]

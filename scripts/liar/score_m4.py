@@ -2,7 +2,7 @@
 split, for failed_lie vs truth and lie vs truth, next to the normal and instruction-deleted features.
 Reading (fixed in the ledger): failed_lie vs truth <= 0.65 -> probes read the instruction directly;
 >= 0.90 -> its effect reaches them through the transcript's later tokens; in between -> both.
-Usage: python3 -I score_m4.py DATA_DIR OUT_JSON TAG..."""
+Usage: python3 -I score_m4.py DATA_DIR OUT_JSON TAG...   (env KO_SPAN=user|assistant scores the LT2-M5 span knockouts)"""
 import json, os, sys
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -11,7 +11,8 @@ import score_k as S
 d, outp = sys.argv[1:3]; res = {}
 for tag in sys.argv[3:]:
     D = S.load(d, tag); sc, clf, _ = S.fit(D)
-    Kf = np.load(os.path.join(d, f"{tag}_feats_knockout.npy"), allow_pickle=False).astype(np.float64)[:D["n"]]
+    sp = os.environ.get("KO_SPAN", ""); sp = "_" + sp if sp else ""
+    Kf = np.load(os.path.join(d, f"{tag}_feats_knockout{sp}.npy"), allow_pickle=False).astype(np.float64)[:D["n"]]
     r = {}
     for pos, neg in (("failed_lie", "truth"), ("lie", "truth"), ("lie", "failed_lie")):
         sel = ~D["tr"] & np.isin(D["lab"], [pos, neg]); y = (D["lab"][sel] == pos).astype(int)
