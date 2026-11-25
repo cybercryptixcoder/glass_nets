@@ -29,7 +29,7 @@ Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two mo
   4. Run mech.py for each model, then check_cache.py for each model.
 - **Expected finish times:** Qwen about 04:20 ET, Llama about 05:05 ET.
 
-## Update, Nov 25 05:10 ET (clock): state for the next session
+## Update, Nov 25 05:05 ET (clock; first written with a hand-typed 05:10, corrected): state for the next session
 
 **Scored** (results/liar/k_scores.json, t_scores.json, probe_table.json, t4_qwen.json; DIARY 05:02):
 

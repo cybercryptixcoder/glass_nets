@@ -42,6 +42,11 @@ def load(d, tag):
     F, Fn, rows = F[:m], Fn[:m], rows[:m]
     lab = np.array([str(x) for x in relabel(rows)]); qi = np.array([r["qi"] for r in rows])
     tr = np.array([q in TRAIN for q in qi])
+    if os.environ.get("LIAR_FULL") == "1":                 # ledger LT1-full: full-path features on the test split
+        Ff = np.load(os.path.join(d, f"{tag}_feats_full.npy"), allow_pickle=False).astype(np.float64)[:m]
+        Fnf = np.load(os.path.join(d, f"{tag}_feats_noinstr_full.npy"), allow_pickle=False).astype(np.float64)[:m]
+        assert not np.isnan(Ff[~tr]).any() and not np.isnan(Fnf[~tr]).any(), "full-path features missing on the test split"
+        F, Fn = F.copy(), Fn.copy(); F[~tr] = Ff[~tr]; Fn[~tr] = Fnf[~tr]
     return dict(F=F, Fn=Fn, lab=lab, tr=tr, n=m)
 
 
