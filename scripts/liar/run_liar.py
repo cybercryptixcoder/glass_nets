@@ -107,7 +107,7 @@ def probe_feats_full(base_msgs, bs=24):
     feats = []
     for i in range(0, len(texts), bs):
         enc = tok(texts[i:i + bs], return_tensors="pt", padding=True, add_special_tokens=False).to("cuda")
-        lp = torch.log_softmax(model(**enc).logits[:, -1, :].float(), -1)
+        lp = torch.log_softmax(model(**enc, logits_to_keep=1).logits[:, -1, :].float(), -1)
         y = torch.logsumexp(lp[:, YES], -1); n = torch.logsumexp(lp[:, NO], -1)
         feats += (y - n).tolist()
     return feats
@@ -132,14 +132,13 @@ def probe_feats(base_msgs):
     Ls = max(len(x) for x in suf)
     ids = torch.full((B, Ls), tok.pad_token_id, dtype=torch.long)
     m = torch.zeros((B, Ls), dtype=torch.long)
-    for i, x in enumerate(suf):
-        ids[i, :len(x)] = torch.tensor(x); m[i, :len(x)] = 1
+    for i, x in enumerate(suf):                       # left padding: every probe ends at the last position
+        ids[i, Ls - len(x):] = torch.tensor(x); m[i, Ls - len(x):] = 1
     ids, m = ids.to("cuda"), m.to("cuda")
     att = torch.cat([torch.ones((B, Lp), dtype=torch.long, device="cuda"), m], 1)
-    pos = (Lp + torch.arange(Ls, device="cuda")).unsqueeze(0).expand(B, -1)
-    logits = model(input_ids=ids, attention_mask=att, position_ids=pos, past_key_values=pkv, use_cache=True).logits
-    last = torch.tensor([len(x) - 1 for x in suf], device="cuda")
-    lp = torch.log_softmax(logits[torch.arange(B, device="cuda"), last, :].float(), -1)
+    pos = Lp + (torch.cumsum(m, 1) - 1).clamp(min=0)
+    logits = model(input_ids=ids, attention_mask=att, position_ids=pos, past_key_values=pkv, use_cache=True, logits_to_keep=1).logits
+    lp = torch.log_softmax(logits[:, -1, :].float(), -1)
     y = torch.logsumexp(lp[:, YES], -1); n = torch.logsumexp(lp[:, NO], -1)
     return (y - n).tolist()
 
