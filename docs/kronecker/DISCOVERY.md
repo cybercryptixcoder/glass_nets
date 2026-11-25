@@ -40,6 +40,7 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 | 16 | 99.74% | 99.73% | 99.07% | 0 | 6,560 |
 | 17 | 99.81% | 99.82% | 99.14% | 0 | 6,893 |
 | 18 | 99.74% | 99.75% | 99.07% | 0 | 7,444 |
+| 19 (declared later, KR1f) | 99.77% | 99.78% | 99.11% | 0 | 7,405 |
 
 - **Pre-registered criterion KR1b (A):** P2 at least as accurate as LightGBM and at least 99.0% at every held-out n. **Met at all four n.**
 - **Two more known theorems.** Each was declared before it was run on held-out n:
@@ -52,6 +53,8 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
   | 15 | 99.86% | 99.88% |
   | 16 | 99.79% | 99.82% |
   | 17 | 99.83% | 99.85% |
+  | 18 | 99.77% | 99.80% |
+  | 19 | — | 99.81% |
 
   None of them has any false zeros.
 - **The same procedures on the published n:**
@@ -69,10 +72,15 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 - **It shows** that the accuracy of the learned classifiers, which those papers present as unexplained structure found by machine learning, is already exceeded by classical theorems applied systematically.
 - **It shows** that, unlike the classifiers, the theorems never call a nonzero coefficient zero.
 - **It does not give a new theorem.** Every step is known mathematics; the new part is applying it recursively and benchmarking it exhaustively.
-- **What is left over** (0.12–0.26% of triples) sits almost entirely in families with known exact formulas:
-  - two-row shapes, above all the "Catalan" shape (k, k) at even n;
-  - hooks, at odd n.
-- **The second pre-registered question, KR1b (B)**, asked for a short new rule for that remainder. See the status section below for its outcome.
+- **What is left over** after P4 is 0.12–0.20% of triples at n = 15–18 (results/kronecker/resid_atlas.json):
+  - triples with a hook: 34–52%;
+  - triples with a two-row shape: 19–43% (the Catalan shape (k, k) alone is 13–26% at even n);
+  - triples with none of these special shapes: 19–37%, growing with n. That part is the genuinely open territory.
+- **The second pre-registered question, KR1b (B), was not met.** It asked for a short new rule catching at least 50% of that remainder at every held-out n, with at most 0.1% false zeros.
+  - A declared search over 85 symmetric shape features found nothing near the line even on the development sizes (KR1e; results/kronecker/rule_search.json).
+  - Its best rule was frozen before scoring (results/kronecker/FROZEN_RULE.json). It catches 0%, 2.5%, 0% and 0.9% of the remainder at n = 15, 16, 17, 18.
+  - The shuffled-label control found even less (0.6% mean coverage on the development sizes).
+  - LightGBM catches about half of the same remainder, but only by also calling thousands of nonzero coefficients zero.
 - **Caveats:**
   - The transformer numbers come from the authors' own random test splits, not from our exhaustive scoring.
   - Our LightGBM is a stronger baseline than the published one (99.1–99.3% against about 98%).
@@ -83,4 +91,5 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 - **Held-out scoring:**
   - `python3 scripts/kronecker/p2_heldout.py 18` scores P2 and LightGBM;
   - `python3 scripts/kronecker/p34_heldout.py p4 18` scores P4.
-- **Status of the second question, KR1b (B):** see docs/kronecker/STATUS.md and results/kronecker/.
+- **Second question, KR1b (B):** `python3 scripts/kronecker/rule_search.py` (development sizes) and `python3 scripts/kronecker/rule_heldout.py 15 16 17 18` (frozen rule).
+- **Table checks:** `python3 scripts/kronecker/table_checks.py 3 ... 20`.
