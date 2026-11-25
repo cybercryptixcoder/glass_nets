@@ -41,7 +41,7 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 | 17 | 99.81% | 99.82% | 99.14% | 0 | 6,893 |
 | 18 | 99.74% | 99.75% | 99.07% | 0 | 7,444 |
 | 19 (declared later, KR1f) | 99.77% | 99.78% | 99.11% | 0 | 7,405 |
-| 20 (declared later, KR1f) | 99.74% | 99.74% | 99.06% | 0 | 7,850 |
+| 20 (declared later, KR1f) | 99.74% | 99.74% | 99.05% | 0 | 7,850 |
 
 - **Pre-registered criterion KR1b (A):** P2 at least as accurate as LightGBM and at least 99.0% at every held-out n. **Met at n = 15–18, and again at n = 19 and 20** (declared before those tables existed, ledger KR1f).
 - **Two more known theorems.** Each was declared before it was run on held-out n:

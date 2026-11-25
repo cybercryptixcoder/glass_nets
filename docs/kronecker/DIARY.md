@@ -133,3 +133,9 @@
 - **Reading:**
   - Most of the black box's mistakes are triples that classical theorems decide correctly.
   - About half of the theorems' few misses are ones the black box gets right, so the two are complementary. Known math is the stronger of the two.
+
+## Nov 25, 11:32 ET (clock): final number check against the result files
+
+- **Re-read every headline figure** in FINDINGS.md and DISCOVERY.md from results/kronecker/heldout_n15..20.json, heldout_p4_n15..20.json, KR1b_A.json and lgbm_errors_n15/16.json, at four decimals.
+- **One rounding error, fixed:** LightGBM's test accuracy at n = 20 is 99.0546%, which rounds to 99.05%. FINDINGS and DISCOVERY said 99.06% (rounded twice, via 99.055). No verdict depends on it: P2 is still above LightGBM by 0.68 points at n = 20.
+- **Everything else matches:** P2 on all triples and on test triples, LightGBM on test triples, P4, the false-zero counts, the 0.55–0.68-point margins, the 465,183,748 triples in total, and P2 right on 86.9% / 83.5% of LightGBM's errors at n = 15 / 16.
