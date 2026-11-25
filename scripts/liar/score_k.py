@@ -45,9 +45,9 @@ def load(d, tag):
     return dict(F=F, Fn=Fn, lab=lab, tr=tr, n=m)
 
 
-def fit(D):
-    sel = D["tr"] & np.isin(D["lab"], ["lie", "truth"])
-    X, y = D["F"][sel], (D["lab"][sel] == "lie").astype(int)
+def fit(D, neg="truth", feats="F"):
+    sel = D["tr"] & np.isin(D["lab"], ["lie", neg])
+    X, y = D[feats][sel], (D["lab"][sel] == "lie").astype(int)
     sc = StandardScaler().fit(X)
     clf = LogisticRegression(C=1.0, max_iter=10000).fit(sc.transform(X), y)
     s_mean = 1.0 if roc_auc_score(y, X.mean(1)) >= 0.5 else -1.0
