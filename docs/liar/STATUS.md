@@ -161,3 +161,17 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   2. Read some by hand.
   3. Score all pairs with score_k / score_t (LT3).
   4. Then M2, then the final report at 12:30.
+
+## Update, Nov 25 09:18 ET (clock)
+
+- **Mistral (LT3)** is scored: the main finding replicates (DIARY 09:10).
+- **M2 on Qwen fails.** Closing fractions are 0.12 and 0.06 (line 0.5); random directions give about 0. M2 llama8b is running.
+- **Queue on Colab `liar`:**
+  1. stage7.sh: M2 llama8b, then STAGE7DONE.
+  2. stage8.sh (ledger LT3-M5): knockout spans instruction, both and after on mistral7b; log STAGE8.log, then STAGE8DONE.
+  3. stage9.sh (ledger LT4, instruction in the system prompt): `PLACE=system run_liar.py` for qwen7b_sys, then llama8b_sys; log STAGE9.log, then STAGE9DONE. About 45 min each.
+- **To score LT4:**
+  - `python3 -I scripts/liar/score_k.py ~/ldata/both qwen7b_sys qwen7b results/liar/k_scores_qwen7b_sys.json`. This gives K within the system-prompt run and across to the user-turn run.
+  - The same for llama8b_sys.
+  - score_t.py likewise.
+- **Kronecker KR1g** (descriptive, local): scripts/kronecker/lgbm_errors.py 15 is running; log ~/kdata/lgbm_errors_15.log.
