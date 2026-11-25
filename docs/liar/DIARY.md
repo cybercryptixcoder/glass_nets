@@ -129,3 +129,8 @@ The K1 detector on test transcripts (results/liar/m4_scores.json):
   - So the mode is stored, but not as one direction at the end of the transcript.
 - **Next (ledger LT2-M5):** span knockouts. Hide the whole user turn, or the whole assistant turn, from the probes. These run first in the new chain, /content/stage5.sh (log STAGE5.log).
   - The Qwen cache check is running now. The Llama cache check, Mistral and M2 come after the span knockouts.
+
+- **Exploratory, not pre-registered** (results/liar/t2_exploratory_ownscale.json): each model's features standardised by that model's own train split, instead of the training model's.
+  - The cross-family real-lie tell then reaches 0.678 (Qwen → Llama) and 0.798 (Llama → Qwen), against 0.624 and 0.581 under the pre-registered T2.
+  - Part of the T2 failure is scale mismatch. The verdict stays as pre-registered: T2 fails, and the honest summary is partial transfer at best.
+  - The instruction signal transfers at 0.99–1.00.
