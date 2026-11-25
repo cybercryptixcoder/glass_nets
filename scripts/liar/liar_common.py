@@ -138,6 +138,10 @@ def span_positions(m, msgs, span):
     if span == "both":
         u, a = span_positions(m, msgs, "user"), span_positions(m, msgs, "assistant")
         return sorted(set(u) | set(a))
+    if span == "after":                            # LT2-M5c: from the user-turn content to the end
+        u = span_positions(m, msgs, "user")
+        L_ = len(m.tok(chat(m, msgs, gen=False), add_special_tokens=False).input_ids)
+        return list(range(min(u), L_))
     prefix = chat(m, msgs, gen=False)
     text = msgs[0]["content"] if span == "user" else msgs[1]["content"]
     start = prefix.find(text) if span == "user" else prefix.rfind(text)

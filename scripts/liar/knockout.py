@@ -1,6 +1,6 @@
 """LT2-M4: probe features with the probe tokens' attention to the instruction tokens masked out (the transcript
 itself is encoded normally). Test split, labels lie / failed_lie / truth. Saves <tag>_feats_knockout.npy.
-Usage: python3 knockout.py OUTDIR HF_MODEL TAG [SPAN]   SPAN = instruction (M4, default), user or assistant (M5), both (M5b)"""
+Usage: python3 knockout.py OUTDIR HF_MODEL TAG [SPAN]   SPAN = instruction (M4, default), user or assistant (M5), both (M5b), after (M5c)"""
 import sys, os, json, time
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +23,8 @@ if span != "instruction":
     sp = L.span_positions(m, b0, span); assert set(hp) <= set(sp) or span == "assistant"
     if span == "both":
         assert set(sp) == set(L.span_positions(m, b0, "user")) | set(L.span_positions(m, b0, "assistant"))
+    if span == "after":
+        assert set(L.span_positions(m, b0, "both")) <= set(sp)
     print(span, "span tokens of the first transcript:", len(sp), repr(m.tok.decode(m.tok(L.chat(m, b0, gen=False), add_special_tokens=False).input_ids[sp[0]:sp[-1] + 1])[:200]), flush=True)
 print("empty-mask check: identical; instruction tokens of the first transcript:", len(hp),
       repr(m.tok.decode(m.tok(L.chat(m, b0, gen=False), add_special_tokens=False).input_ids[hp[0]:hp[-1] + 1])), flush=True)
