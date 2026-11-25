@@ -119,3 +119,22 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
 - **Scoring when each lands:**
   - `KO_SPAN=<span> python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m5_<span>.json qwen7b llama8b`, with span = user, assistant or both;
   - after the Llama recompute: `LIAR_FULL=1 python3 -I scripts/liar/score_k.py ~/ldata/both qwen7b llama8b results/liar/k_scores_full.json`, and likewise score_t.py into t_scores_full.json.
+
+## Update, Nov 25 07:23 ET (clock): state for the next session
+
+- **M5 in both families** (results/liar/m5_user.json, m5_assistant.json):
+  - Hiding the user turn leaves the instruction signal (0.975 / 0.957).
+  - Hiding the answer leaves the instruction signal (1.000 / 1.000) but sends the real-lie signal to chance (0.57 / 0.51).
+  - That is a double dissociation.
+- **M5b on Qwen** (results/liar/m5b_both_qwen.json): hiding both spans still gives 0.997. The template tokens between the turns carry the lying mode. Llama M5b is running.
+- **M5c is declared (ledger LT2-M5c)**: hide everything from the user content to the end. If failed vs truth then falls to ≤ 0.65, the localisation is confirmed; if it stays ≥ 0.90, the knockout leaks.
+- **The chain now running is /content/stage7.sh** (log STAGE7.log, marker STAGE7DONE). It starts after the running llama8b 'both' knockout. Steps:
+  1. knockout 'after' for qwen7b, then llama8b;
+  2. check_cache llama8b, with recompute;
+  3. run_liar mistral7b;
+  4. M2 qwen7b, then M2 llama8b.
+- **Scoring:**
+  - `KO_SPAN=both` (and then `KO_SPAN=after`) `python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m5b_both.json qwen7b llama8b` (or m5c_after.json), after downloading <tag>_feats_knockout_<span>.npy into ~/ldata/both.
+  - Then the LIAR_FULL=1 re-score (needs llama8b_feats_full.npy and llama8b_feats_noinstr_full.npy from the Llama check).
+  - Then Mistral (LT3) and M2.
+- **Docs to finish:** docs/liar/DISCOVERY.md (add M5–M5c, full-path re-score, Mistral) and the final report (draft at /home/claude/FINAL_DRAFT.md, outside the repo).
