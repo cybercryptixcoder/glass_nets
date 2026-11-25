@@ -64,3 +64,21 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
 3. If check_cache fails, re-score K and T with the full-path test features: score_k's load would need to read <tag>_feats_full.npy for test rows. Declare that before doing it.
 4. Mistral: score K1–K3 and T1–T3 for all pairs.
 5. DISCOVERY.md for the liar sprint.
+
+## Update, Nov 25 05:21 ET (clock): the Colab chain was replaced
+
+- **M3 on Qwen: fail.** Layer 16, |d| = 18.0. Test closing fractions are 0.050 and 0.040; random directions give 0.023 / 0.009 / 0.013 and 0.022 / 0.010 / 0.001. The line was ≥ 0.5.
+  - Output: /content/liar_out/qwen7b_mech_failed_lie_vs_truth.json.
+- **The chain now running is /content/stage3.sh** (log /content/liar_out/STAGE3.log, one 'step3 done' line per step; DONE marker /content/liar_out/STAGE3DONE). Steps in order:
+  1. M3 llama8b;
+  2. check_cache qwen7b;
+  3. check_cache llama8b;
+  4. knockout qwen7b (LT2-M4);
+  5. knockout llama8b;
+  6. run_liar mistral7b (LT3);
+  7. M2 qwen7b;
+  8. M2 llama8b.
+- **Scoring when they land:**
+  - `python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m4_scores.json qwen7b llama8b`, after downloading <tag>_feats_knockout.npy into ~/ldata/both;
+  - if check_cache fails, re-score with LIAR_FULL=1 (ledger LT1-full);
+  - Mistral: score_k / score_t for every pair.
