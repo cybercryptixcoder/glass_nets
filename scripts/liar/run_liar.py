@@ -98,12 +98,15 @@ def first_ids(words):
             ids.add(t[0])
     return sorted(ids)
 YES, NO = first_ids(["Yes", "yes", " Yes", " yes", "YES"]), first_ids(["No", "no", " No", " no", "NO"])
+def probe_turn(p):
+    """The paper's probe text as written; the yes/no instruction is added only if it is missing (LT1-ops2)."""
+    return p if "yes or no" in p.lower() else p + " Answer yes or no."
 P("yes ids", YES, "no ids", NO)
 
 @torch.no_grad()
 def probe_feats_full(base_msgs, bs=24):
     """Reference implementation: every probe conversation run in full."""
-    texts = [chat(base_msgs + [{"role": "user", "content": p + " Answer yes or no."}]) for p in PROBES]
+    texts = [chat(base_msgs + [{"role": "user", "content": probe_turn(p)}]) for p in PROBES]
     feats = []
     for i in range(0, len(texts), bs):
         enc = tok(texts[i:i + bs], return_tensors="pt", padding=True, add_special_tokens=False).to("cuda")
@@ -118,29 +121,42 @@ def expand_cache(pkv, B):
     raise RuntimeError("cache cannot be expanded")
 
 @torch.no_grad()
-def probe_feats(base_msgs):
-    """Same features, computing the shared transcript once (KV cache) and only the probe turns per probe."""
+def probe_feats(base_msgs, budget=4096):
+    """Same features, computing the shared transcript once (KV cache) and only the probe turns per probe.
+    Probe turns run in length-sorted batches under a token budget, each on a fresh copy of the cache (LT1-ops2)."""
     prefix = chat(base_msgs, gen=False)
-    texts = [chat(base_msgs + [{"role": "user", "content": p + " Answer yes or no."}]) for p in PROBES]
+    texts = [chat(base_msgs + [{"role": "user", "content": probe_turn(p)}]) for p in PROBES]
     if not all(t.startswith(prefix) for t in texts):
         return probe_feats_full(base_msgs)
     pid = tok(prefix, return_tensors="pt", add_special_tokens=False).input_ids.to("cuda")
     suf = [tok(t[len(prefix):], add_special_tokens=False).input_ids for t in texts]
-    B, Lp = len(suf), pid.shape[1]
-    out = model(input_ids=pid, use_cache=True)
-    pkv = expand_cache(out.past_key_values, B)
-    Ls = max(len(x) for x in suf)
-    ids = torch.full((B, Ls), tok.pad_token_id, dtype=torch.long)
-    m = torch.zeros((B, Ls), dtype=torch.long)
-    for i, x in enumerate(suf):                       # left padding: every probe ends at the last position
-        ids[i, Ls - len(x):] = torch.tensor(x); m[i, Ls - len(x):] = 1
-    ids, m = ids.to("cuda"), m.to("cuda")
-    att = torch.cat([torch.ones((B, Lp), dtype=torch.long, device="cuda"), m], 1)
-    pos = Lp + (torch.cumsum(m, 1) - 1).clamp(min=0)
-    logits = model(input_ids=ids, attention_mask=att, position_ids=pos, past_key_values=pkv, use_cache=True, logits_to_keep=1).logits
-    lp = torch.log_softmax(logits[:, -1, :].float(), -1)
-    y = torch.logsumexp(lp[:, YES], -1); n = torch.logsumexp(lp[:, NO], -1)
-    return (y - n).tolist()
+    Lp = pid.shape[1]
+    order = sorted(range(len(suf)), key=lambda i: len(suf[i]))
+    batches, cur = [], []
+    for i in order:
+        if cur and len(suf[i]) * (len(cur) + 1) > budget:
+            batches.append(cur); cur = []
+        cur.append(i)
+    if cur:
+        batches.append(cur)
+    out_feats = [None] * len(suf)
+    for bi in batches:
+        B = len(bi)
+        pkv = expand_cache(model(input_ids=pid, use_cache=True, logits_to_keep=1).past_key_values, B)
+        Ls = max(len(suf[i]) for i in bi)
+        ids = torch.full((B, Ls), tok.pad_token_id, dtype=torch.long)
+        m = torch.zeros((B, Ls), dtype=torch.long)
+        for r, i in enumerate(bi):                      # left padding: every probe ends at the last position
+            x = suf[i]; ids[r, Ls - len(x):] = torch.tensor(x); m[r, Ls - len(x):] = 1
+        ids, m = ids.to("cuda"), m.to("cuda")
+        att = torch.cat([torch.ones((B, Lp), dtype=torch.long, device="cuda"), m], 1)
+        pos = Lp + (torch.cumsum(m, 1) - 1).clamp(min=0)
+        logits = model(input_ids=ids, attention_mask=att, position_ids=pos, past_key_values=pkv, use_cache=True, logits_to_keep=1).logits
+        lp = torch.log_softmax(logits[:, -1, :].float(), -1)
+        f = (torch.logsumexp(lp[:, YES], -1) - torch.logsumexp(lp[:, NO], -1)).tolist()
+        for r, i in enumerate(bi):
+            out_feats[i] = f[r]
+    return out_feats
 
 @torch.no_grad()
 def last_hidden(msgs):
@@ -171,7 +187,8 @@ t0 = time.time()
 # self-check of the cached features against the full computation, first transcript
 _b = [{"role": "user", "content": f"{LIE[kept[0]['k']]} {kept[0]['q']}{SUFFIX}"}, {"role": "assistant", "content": kept[0]["lie_answer"]}]
 _a, _f = np.array(probe_feats(_b)), np.array(probe_feats_full(_b))
-P("cache self-check: max |cached - full| =", float(np.abs(_a - _f).max()), "mean |full| =", float(np.abs(_f).mean()))
+P("cache self-check: max |cached - full| =", float(np.abs(_a - _f).max()), "median =", float(np.median(np.abs(_a - _f))),
+  "pearson r =", float(np.corrcoef(_a, _f)[0, 1]), "mean |full| =", float(np.abs(_f).mean()))
 def save_all(final=False):
     np.save(os.path.join(OUT, f"{TAG}_feats.npy"), np.array(F, dtype=np.float32))
     np.save(os.path.join(OUT, f"{TAG}_feats_noinstr.npy"), np.array(F_noinstr, dtype=np.float32))
