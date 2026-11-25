@@ -83,5 +83,5 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 
 - **Code:** scripts/liar/: run_liar.py (generation and probes), labels_v2.py, score_k.py, score_t.py, score_t4.py, probe_table.py, attrib.py, mech.py, check_cache.py.
 - **Scores:** results/liar/k_scores.json, t_scores.json, t4_scores.json, probe_table.json.
-- **Story:** docs/liar/DIARY.md and docs/liar/STATUS.md.
+- **Story:** docs/liar/DIARY.md and docs/liar/STATUS.md. Technical summary with every verdict: docs/liar/FINDINGS.md.
 - **Raw features and transcripts** stay outside the repo; they are small and can be shared on request. They can also be regenerated from the open weights; the decoding is greedy.
