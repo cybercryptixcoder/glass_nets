@@ -41,3 +41,26 @@
 - **The ledger now carries KR1b, a declared change made before any rule search:**
   - (A) does known math match the black boxes on held-out n = 15–18?
   - (B) is there an explicit rule for the residue?
+
+## Nov 25, 03:44 ET (clock): KR1b (A) met on held-out n = 15–18
+
+- **Known math beats the black box at every held-out n.** P2 (recursive Dvir, frozen at 41549693) against LightGBM trained per n, on the same 2M test triples (results/kronecker/heldout_n15..18.json, summary in KR1b_A.json):
+
+  | n | P2, all ordered triples | P2, test triples | LightGBM, test triples | LightGBM false zeros (test) | P2 false zeros |
+  |---|---|---|---|---|---|
+  | 15 | 99.82% | 99.80% | 99.25% | 2,697 | 0 |
+  | 16 | 99.74% | 99.73% | 99.07% | 6,560 | 0 |
+  | 17 | 99.81% | 99.82% | 99.14% | 6,893 | 0 |
+  | 18 | 99.74% | 99.75% | 99.07% | 7,444 | 0 |
+
+- The Colab tables match the local ones (sha1 of g equal for n = 15–18).
+- **Two more known theorems were added as declared known-math lines** (ledger KR1c, KR1d), before any held-out run of them:
+  - P3r adds GWXZ (two-row rectangles squared);
+  - P4 adds the Berele–Regev fat-hook bound.
+  - Held-out so far: n = 15 P3r 99.86%, P4 99.88%; n = 16 P3r 99.79%, P4 99.82%. No false zeros.
+- **Novelty check for (A).** Butbaia–Lee–Ruehle (arXiv 2502.11774, ATMP 30, 2026) report transformers at 99.42 / 99.65 / 99.06% (n = 12 / 13 / 14) and ~83% for explicit formulas. They do not benchmark against Dvir's theorem or any known vanishing criterion; neither does Lee 2023 (LightGBM ~98%).
+- **The residue after P4 (dev n ≤ 14) sits in families with known exact formulas.**
+  - Two-row shapes: 51–64% of the residue at even n is the Catalan family (k,k).
+  - Hooks: most of the residue at odd n.
+  - So KR1b (B), a *new* rule catching ≥ 50% at every held-out n, now looks out of reach. A rule for the hook part would be Blasiak's (2012).
+  - The one open seat is the Catalan family g((k,k), μ, ν). Known positive rules (Ballantine–Orellana) need μ₁ ≥ 2p − 1, which fails here.

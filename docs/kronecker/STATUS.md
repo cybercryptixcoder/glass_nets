@@ -15,3 +15,9 @@ An explicit, checkable rule for when the Kronecker coefficient g(lam, mu, nu) of
 
 ## Colab
 None yet for this sprint.
+
+## Update, Nov 25 03:44 ET (clock)
+- **KR1b (A) met.** P2 beats per-n LightGBM and is above 99.0% at every held-out n = 15–18 (results/kronecker/KR1b_A.json). It has 0 false zeros everywhere; LightGBM has 2.7k–7.4k on its test triples.
+- **Known-math lines P3r (KR1c) and P4 (KR1d)** are running locally on n = 15–18: `scripts/kronecker/p34_heldout.py`, log in ~/kdata/p34_heldout.log, results in results/kronecker/heldout_p3r_n*.json and heldout_p4_n*.json.
+- **The Colab `kron` session** (CPU, High-RAM) finished all held-out jobs. It can be stopped or reused.
+- **KR1b (B):** the residue after P4 lies in families with known exact formulas (two-row, hooks). The open seat is the Catalan family. See DIARY 03:44.
