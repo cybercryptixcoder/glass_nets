@@ -156,3 +156,27 @@ The K1 detector on test transcripts (results/liar/m4_scores.json):
   | T1, lie vs failed_lie | 0.8753 | 0.8759 |
 
 - **Llama's check and recompute** come after the span knockouts. The full re-score (LIAR_FULL=1, both families) follows.
+
+## Nov 25, 07:11 ET (clock): span knockouts (M5) in both families: a double dissociation
+
+Shown: the K1 detector's AUC on the test split when the probe tokens cannot attend to the named span. The transcript itself is always encoded normally. Files: results/liar/m5_user.json, m5_assistant.json.
+
+| family | hidden from the probes | failed_lie vs truth (instruction signal) | lie vs failed_lie (real-lie signal) |
+|---|---|---|---|
+| Qwen | nothing | 1.000 | 0.631 |
+| Qwen | instruction tokens (M4) | 0.979 | 0.781 |
+| Qwen | whole user turn | 0.975 | 0.841 |
+| Qwen | whole answer | **1.000** | **0.569** |
+| Qwen | instruction deleted from the transcript | 0.569 | 0.776 |
+| Llama | nothing | 1.000 | 0.792 |
+| Llama | instruction tokens (M4) | 0.972 | 0.729 |
+| Llama | whole user turn | 0.957 | 0.824 |
+| Llama | whole answer | **1.000** | **0.515** |
+| Llama | instruction deleted from the transcript | 0.585 | 0.721 |
+
+- **Pre-registered M5 reading:** neither span alone carries the lying mode, since both stay ≥ 0.90.
+  - M5b (both spans hidden at once) runs now and decides between two options: the mode is stored redundantly in both spans, or it sits in the template tokens between the turns.
+- **Unplanned but clear:**
+  - Hiding the answer leaves the instruction signal intact and removes the real-lie signal, which drops to chance in both families.
+  - Hiding the user turn or the instruction removes the instruction's direct visibility, and the real-lie signal gets stronger.
+  - The two signals are carried by different tokens.
