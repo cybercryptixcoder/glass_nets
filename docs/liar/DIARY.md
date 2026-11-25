@@ -180,3 +180,28 @@ Shown: the K1 detector's AUC on the test split when the probe tokens cannot atte
   - Hiding the answer leaves the instruction signal intact and removes the real-lie signal, which drops to chance in both families.
   - Hiding the user turn or the instruction removes the instruction's direct visibility, and the real-lie signal gets stronger.
   - The two signals are carried by different tokens.
+
+## Nov 25, 07:53 ET (clock): the lying mode is localised to the chat-template tokens between the turns (M5b, M5c, both families)
+
+Shown: the K1 detector's failed_lie vs truth AUC (the instruction signal) on the test split, when the probe tokens cannot attend to the named span.
+
+| hidden from the probes | Qwen | Llama |
+|---|---|---|
+| nothing | 1.000 | 1.000 |
+| user-turn content (instruction + question) | 0.975 | 0.957 |
+| assistant-turn content (the answer) | 1.000 | 1.000 |
+| both of these (M5b) | **0.997** | **0.992** |
+| everything from the user content to the end, template tokens included (M5c) | **0.591** | **0.534** |
+| instruction deleted from the transcript | 0.569 | 0.585 |
+
+- **Pre-registered readings:**
+  - M5b ≥ 0.90: the template tokens between the turns carry the mode.
+  - M5c ≤ 0.65: confirmed. The knockout does not leak; hiding those few tokens as well removes the signal.
+- **The tokens in question:**
+  - Qwen: '<|im_end|>', newline, '<|im_start|>assistant', newline.
+  - Llama: '<|eot_id|><|start_header_id|>assistant<|end_header_id|>' and the blank line.
+  - These are the assistant-header tokens, where the model prepares its reply.
+  - Once the lie instruction has been read, they hold enough of it that the follow-up questions read the lying mode from them alone.
+- **Files:** results/liar/m5b_both.json, m5c_after.json.
+
+**Chain:** /content/stage7.sh (pid 68347) is running check_cache llama8b. The check fails as expected, and the full recompute of 438 test transcripts is at about 6 s each. Mistral (LT3) and M2 follow.
