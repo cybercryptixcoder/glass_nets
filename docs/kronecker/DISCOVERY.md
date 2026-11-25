@@ -69,6 +69,8 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 
   P2 was built while looking at n ≤ 12, so these are not held-out numbers.
 
+- **Where the black box goes wrong.** Re-trained exactly, LightGBM reproduces its recorded accuracy. Of its mistakes on the test triples, 84–87% are triples that P2 decides correctly (89–91% with P4) (results/kronecker/lgbm_errors_n15.json, n16.json).
+
 ## What this does and does not show
 
 - **It shows** that the accuracy of the learned classifiers, which those papers present as unexplained structure found by machine learning, is already exceeded by classical theorems applied systematically.

@@ -118,3 +118,18 @@
   - P4: 99.773%.
 - Both added sizes meet the KR1b (A) criteria (results/kronecker/KR1f.json).
 - In total, over n = 15–20 the frozen known-math procedure has been scored on 465.2M ordered triples, never called a nonzero coefficient zero, and beat per-n LightGBM at every n by 0.55–0.68 points.
+
+## Nov 25, 09:41 ET (clock): KR1g, where the black box's errors fall (descriptive)
+
+- **Method** (scripts/kronecker/lgbm_errors.py): LightGBM was re-trained exactly as in p2_heldout.py. It reproduces the recorded test accuracy exactly: 0.9925092 at n = 15 and 0.9907065 at n = 16.
+- **Results** (results/kronecker/lgbm_errors_n15.json, lgbm_errors_n16.json):
+
+  | n | LightGBM errors | P2 right on those | P4 right on those | P2 errors | LightGBM right on P2's errors |
+  |---|---|---|---|---|---|
+  | 15 | 8,166 | 86.9% | 91.3% | 2,202 | 51.3% |
+  | 16 | 18,587 | 83.5% | 88.7% | 5,429 | 43.5% |
+
+  LightGBM's errors at n = 15 are 2,697 false zeros and 5,469 missed zeros; at n = 16, 6,560 and 12,027.
+- **Reading:**
+  - Most of the black box's mistakes are triples that classical theorems decide correctly.
+  - About half of the theorems' few misses are ones the black box gets right, so the two are complementary. Known math is the stronger of the two.

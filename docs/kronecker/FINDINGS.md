@@ -34,6 +34,12 @@
   - the trivial and standard characters;
   - Σ_ν g·dim ν = dim λ·dim μ for every pair.
 
+## Where the black box's errors fall (KR1g, descriptive; results/kronecker/lgbm_errors_n15.json, n16.json)
+
+- LightGBM re-trained exactly reproduces its recorded test accuracy.
+- Of its test errors, P2 is right on 86.9% (n = 15) and 83.5% (n = 16); P4 on 91.3% and 88.7%.
+- LightGBM is right on 51.3% and 43.5% of P2's errors.
+
 ## Residue after P4 (held-out n = 15–18; results/kronecker/resid_atlas.json)
 
 - **Size:** 0.12–0.20% of ordered triples.
