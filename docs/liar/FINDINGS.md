@@ -1,6 +1,6 @@
 # Liar's tell sprint: findings (technical)
 
-*Nov 25, 2026. Branch `liar`. Plain-language version: docs/liar/DISCOVERY.md. Story: DIARY.md. Ledger: docs/glass/CHANGES.md rows LT1, LT1-ops, LT1-ops2, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3.*
+*Nov 25, 2026. Branch `liar`. Plain-language version: docs/liar/DISCOVERY.md. Story: DIARY.md. Ledger: docs/glass/CHANGES.md rows LT1, LT1-ops, LT1-ops2, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4.*
 
 ## Setup
 
@@ -37,7 +37,7 @@
 | LT2-M5c | probes cannot see anything after the user header | 0.591, 0.534 | localisation confirmed (no leak) |
 | LT3-M5 | Mistral knockouts: instruction tokens / user content + answer (M5b) / everything after the user header (M5c) | 0.963 / **0.894** / 0.462 | M5b: only '[/INST]' is visible after the instruction, and it is encoded before the answer, so this is unaffected by Mistral's lie-announcing answers. The instruction's effect sits in the template token (just under the 0.90 line: reading 'both'); no leak |
 | LT1-score / LT1-full | cached vs full features, 20 transcripts; then all test transcripts recomputed | Qwen r 0.9997, median 0.25; Llama r 0.9995, median 0.125 | check fails; on full-path test features every K and T verdict is unchanged, AUCs within 0.007 (results/liar/k_scores_full.json, t_scores_full.json) |
-| LT3 | Mistral-7B as a third family: K1 1.000 all directions; **K2 (i) 0.998–1.000**; K2 (ii) 0.94–0.96; T1 0.837; T2 0.52–0.66; T3 text baseline 0.845 | K1 pass; K2 (i) numerically the same, but **not independent evidence**: Mistral's 'failed lies' mostly still announce or contain a lie ('... I'm lying by implying ...'). With the instruction deleted they still separate from truths at 0.940 (Qwen and Llama: 0.57 and 0.59). T1 pass, T2 fail, Mistral's real-lie tell not shown beyond wording; within Mistral the mean feature alone reaches 0.984 |
+| LT3 | Mistral-7B as a third family (all K and T tests) | K1 1.000 in all directions; **K2 (i) 0.998–1.000**; K2 (ii) 0.94–0.96; T1 0.837; T2 0.52–0.66; T3 text baseline 0.845; within-model mean feature 0.984 | K1 pass. K2 (i) is numerically the same but **not independent evidence**: Mistral's 'failed lies' mostly still announce or contain a lie ('... I'm lying by implying ...'), and with the instruction deleted they still separate from truths at 0.940 (Qwen and Llama: 0.57 and 0.59). T1 pass, T2 fail; Mistral's real-lie tell is not shown beyond the wording |
 
 The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Llama→Llama.
 
