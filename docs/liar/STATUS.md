@@ -2,7 +2,7 @@
 
 Branch `liar`. Ledger row LT1 in docs/glass/CHANGES.md (the pre-registration). Sprint 2 of two run in parallel on Nov 25 (sprint 1: branch `kronecker`). Final report due about 12:40 ET.
 
-**Sprint complete (11:30 ET, clock); LT5–LT7 added and closed at 11:38, 11:41 and 11:43.** Every ledger row LT1–LT7 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
+**Sprint complete (11:30 ET, clock); LT5–LT8 added and closed at 11:38, 11:41, 11:43 and 11:45.** Every ledger row LT1–LT8 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
 
 ## Goal
 Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two modern open families with cross-family transfer (K1), rule out instruction carryover (K2) and a plain yes-bias (K3), then find the internal 'has-lied' state that causes the tell.
@@ -222,3 +222,12 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
 - **The lying-feelings probes** (Psychological) read the instruction at 1.000 but carry no real-lie trace (0.54 / 0.62).
 - **The nonsense probes** are in between (0.77 / 0.72), so that expectation was only half right.
 - **Files:** results/liar/groups_t1_full.json and groups_t1_cached.json; score_groups.py with GROUP_T=1.
+
+## Update, Nov 25 11:45 ET (clock): LT8, a lead for a transferable real-lie detector
+
+- **A free re-score** (declared 11:44 ET; DIARY 11:45): with only the 13 probes that mention the previous statement, the real-lie detector transfers across families at 0.857 and 0.701. With all probes it was 0.623 and 0.588.
+- **Not robust yet:**
+  - 0.701 is at the 0.70 line;
+  - the subset was chosen after LT7;
+  - in the system-prompt runs, one direction gives 0.652.
+- **Next round:** test this lead on a fresh family and fresh questions.

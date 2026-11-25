@@ -407,3 +407,25 @@ Shown: failed_lie vs truth for the K1 detector, test split, when the probes cann
   - This fits M5: hiding the answer removes the real-lie trace, and these probes are the ones that look back at it.
 - **One prediction failed:** the pre-registration's sentence 'the nonsense probes should carry the instruction but not the real lie' is only half right. They carry some of the real-lie trace (0.770 / 0.718), between the lines, at about the level of the text-only baseline (0.667 / 0.741).
 - **The system-prompt runs** show the same order (results/liar/groups_t1_cached.json, descriptive): Confession 0.875 / 0.887, Logic 0.836 / 0.895. One difference: Psychological is 0.805 in llama8b_sys.
+
+## Nov 25, 11:45 ET (clock): LT8, with only the probes that judge the previous statement, the real-lie trace transfers across families (one direction at the line)
+
+- **Why:** T2 failed with all 65 probes (0.624 / 0.581), and LT7 put the real-lie trace in the probes that judge the previous statement.
+- **The test:** LT8 (declared 11:44 ET, before any cross-family number for a subset) reruns T2 exactly, but on the 13 probes whose text contains 'previous statement' (Confession 6, Logic 4, Confusion 3).
+  - Disclosed in the row: the subset was chosen after LT7, which used both families' test splits within family.
+- **Code:** scripts/liar/score_t_subset.py. The known case passes: with all 65 probes it reproduces t_scores_full.json exactly.
+- **Scores** (full-path test features, results/liar/t_prevstmt_full.json; lie vs failed_lie):
+
+  | detector | Qwen → Qwen | Qwen → Llama | Llama → Qwen | Llama → Llama |
+  |---|---|---|---|---|
+  | all 65 probes (T1 / T2 as before) | 0.876 | 0.623 | 0.588 | 0.865 |
+  | **13 previous-statement probes** | 0.870 | **0.857** | **0.701** | 0.870 |
+  | the same, each family standardised by its own data (exploratory) | 0.870 | 0.831 | 0.820 | 0.870 |
+
+- **Verdict as pre-registered:** transfers (≥ 0.70 in both directions). Llama → Qwen is 0.70125, right at the line.
+- **Not robust yet:**
+  - In the system-prompt runs (descriptive, results/liar/t_prevstmt_sys_cached.json) the same subset gives 0.856 and 0.652. So one direction falls below the line there.
+  - With each family standardised by its own data, it gives 0.742 and 0.779.
+- **Reading:**
+  - The other 52 probes are what kept the real-lie trace from transferring: dropping them leaves the within-family score unchanged (0.870 / 0.870) and lifts the cross-family score from 0.59–0.62 to 0.70–0.86.
+  - A cross-family real-lie detector built only from 'judge your previous statement' probes is promising, but the margin is thin and the subset was chosen after looking. It needs a fresh family and fresh questions before it counts as a result.
