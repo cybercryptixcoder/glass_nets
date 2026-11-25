@@ -18,7 +18,8 @@ n = min(len(rows), len(F), len(H)); rows, F = rows[:n], F[:n]
 det = json.load(open(detp))
 mu, sd, w = np.array(det["mean"]), np.array(det["scale"]), np.array(det["coef"]); b0 = det["intercept"]
 def score(f): return float(((np.asarray(f) - mu) / sd) @ w + b0)
-lab = np.array([r["label"] for r in rows]); tr = np.array([r["qi"] in L.TRAIN for r in rows])
+import score_k
+lab = np.array(score_k.relabel(rows)); tr = np.array([r["qi"] in L.TRAIN for r in rows])
 lie_tr, tru_tr = np.flatnonzero(tr & (lab == "lie")), np.flatnonzero(tr & (lab == "truth"))
 lie_te, tru_te = np.flatnonzero(~tr & (lab == "lie")), np.flatnonzero(~tr & (lab == "truth"))
 nL = H.shape[1] - 1

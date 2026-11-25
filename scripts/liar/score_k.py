@@ -24,13 +24,23 @@ perm = np.random.default_rng(0).permutation(NQ)
 TRAIN = set(int(x) for x in perm[:NQ // 2])
 
 
+def relabel(rows):
+    """Ledger LT1-labels: v2 labels when the transcripts carry gold and answer (real runs); else as given."""
+    if not rows or "gold" not in rows[0] or "answer" not in rows[0]:
+        return [r["label"] for r in rows]
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from labels_v2 import label
+    truth = {r["qi"]: r["answer"] for r in rows if r["cond"] == "truth"}
+    return [label(r["cond"], r["gold"], r["answer"], truth.get(r["qi"], "")) or "excluded" for r in rows]
+
+
 def load(d, tag):
     F = np.load(os.path.join(d, f"{tag}_feats.npy"), allow_pickle=False).astype(np.float64)
     Fn = np.load(os.path.join(d, f"{tag}_feats_noinstr.npy"), allow_pickle=False).astype(np.float64)
     rows = [json.loads(l) for l in open(os.path.join(d, f"{tag}_transcripts.jsonl"))]
     m = min(len(F), len(Fn), len(rows))
     F, Fn, rows = F[:m], Fn[:m], rows[:m]
-    lab = np.array([r["label"] for r in rows]); qi = np.array([r["qi"] for r in rows])
+    lab = np.array([str(x) for x in relabel(rows)]); qi = np.array([r["qi"] for r in rows])
     tr = np.array([q in TRAIN for q in qi])
     return dict(F=F, Fn=Fn, lab=lab, tr=tr, n=m)
 
