@@ -2,7 +2,7 @@
 
 Branch `liar`. Ledger row LT1 in docs/glass/CHANGES.md (the pre-registration). Sprint 2 of two run in parallel on Nov 25 (sprint 1: branch `kronecker`). Final report due about 12:40 ET.
 
-**Sprint complete (11:30 ET, clock).** Every ledger row LT1–LT4 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
+**Sprint complete (11:30 ET, clock); LT5 added and closed at 11:38.** Every ledger row LT1–LT5 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
 
 ## Goal
 Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two modern open families with cross-family transfer (K1), rule out instruction carryover (K2) and a plain yes-bias (K3), then find the internal 'has-lied' state that causes the tell.
@@ -203,3 +203,8 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   - The LT4 Llama features and transcripts are in ~/ldata/both, as for every other run.
 - **Nothing is left to run.** Natural next steps: larger models, other probe sets, and lies that come with no instruction at all. FINDINGS.md (Caveats) lists the current limits.
 
+## Update, Nov 25 11:39 ET (clock): LT5, probe groups
+
+- **A free re-score of saved features** (declared 11:37 ET; DIARY 11:38): each of the paper's nine probe groups alone reads the instruction, at 0.911 or more in both clean families.
+- **The 13 nonsense probes alone:** 0.997 / 0.999, falling to 0.533 / 0.603 with the instruction deleted.
+- **Files:** results/liar/groups_full.json and groups_cached.json; scripts/liar/score_groups.py.
