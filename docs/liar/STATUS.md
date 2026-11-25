@@ -218,7 +218,7 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
 
 ## Update, Nov 25 11:43 ET (clock): LT7, the real-lie trace by probe group
 
-- **A free re-score** (declared 11:42 ET; DIARY 11:43): the real-lie trace (T1) is carried by the probes that judge the previous statement, at 0.76–0.90 (Confession, Logic, Confusion).
+- **A free re-score** (declared 11:42 ET; DIARY 11:43): the real-lie trace (T1) is carried by the probes that judge the previous statement, at 0.75–0.89 (Confession, Logic, Confusion).
 - **The lying-feelings probes** (Psychological) read the instruction at 1.000 but carry no real-lie trace (0.54 / 0.62).
 - **The nonsense probes** are in between (0.77 / 0.72), so that expectation was only half right.
 - **Files:** results/liar/groups_t1_full.json and groups_t1_cached.json; score_groups.py with GROUP_T=1.

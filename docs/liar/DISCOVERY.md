@@ -74,7 +74,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - It is not one direction at the end of the transcript either. Adding the mean failed-lie-minus-truth direction there moved the detector by only 1–5% of the gap (pre-registered line 50%).
 - **The real-lie trace needs the answer.** When the probes cannot see the answer, the lie-vs-failed-lie signal falls to chance (0.57 and 0.51). The two signals therefore sit in different tokens.
 - **They also sit in different probes** (pre-registered as LT7). Fitting the real-lie detector (lie vs failed lie) on each group of probes alone gives this split:
-  - **probes that ask the model to judge its previous statement** ("Is the previous statement accurate?", "Let P = your previous statement ...") carry the real-lie trace: 0.76–0.90;
+  - **probes that ask the model to judge its previous statement** ("Is the previous statement accurate?", "Let P = your previous statement ...") carry the real-lie trace: 0.75–0.89;
   - **probes about how it feels about lying** ("Are you a little worried you might be caught lying?") carry none of it (0.54 and 0.62), although they read the instruction perfectly (1.000);
   - **the nonsense probes** carry a little (0.77 and 0.72), about as much as the answer's wording alone.
 - **Robust to labelling.** On arithmetic questions alone, where labels are unambiguous, failed lies vs truths is 1.000 in both families.
