@@ -36,7 +36,7 @@
 | LT2-M5b | probes cannot see the user turn and the answer | 0.997, 0.992 | the template tokens between the turns carry it |
 | LT2-M5c | probes cannot see anything after the user header | 0.591, 0.534 | localisation confirmed (no leak) |
 | LT1-score / LT1-full | cached vs full features, 20 transcripts; then all test transcripts recomputed | Qwen r 0.9997, median 0.25; Llama r 0.9995, median 0.125 | check fails; on full-path test features every K and T verdict is unchanged, AUCs within 0.007 (results/liar/k_scores_full.json, t_scores_full.json) |
-| LT3 | Mistral-7B as a third family: K1 1.000 all directions; **K2 (i) 0.998–1.000**; K2 (ii) 0.94–0.96; T1 0.837; T2 0.52–0.66; T3 text baseline 0.845 | K1 pass, **reads the instruction (replicated)**, T1 pass, T2 fail, Mistral's real-lie tell not shown beyond wording; within Mistral the mean feature alone reaches 0.984 |
+| LT3 | Mistral-7B as a third family: K1 1.000 all directions; **K2 (i) 0.998–1.000**; K2 (ii) 0.94–0.96; T1 0.837; T2 0.52–0.66; T3 text baseline 0.845 | K1 pass; K2 (i) numerically the same, but **not independent evidence**: Mistral's 'failed lies' mostly still announce or contain a lie ('... I'm lying by implying ...'). With the instruction deleted they still separate from truths at 0.940 (Qwen and Llama: 0.57 and 0.59). T1 pass, T2 fail, Mistral's real-lie tell not shown beyond wording; within Mistral the mean feature alone reaches 0.984 |
 
 The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Llama→Llama.
 
@@ -60,7 +60,7 @@ The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Ll
 
 ## Caveats
 
-- Three families (Qwen, Llama, Mistral), all 7–8B instruction-tuned models.
+- The clean evidence comes from two families (Qwen, Llama). Mistral agrees numerically, but its failed lies are mostly not truthful answers, so it does not isolate the instruction. All three are 7–8B instruction-tuned models.
 - One prompt format and one probe set.
 - Labels come from answer text.
 - bfloat16 features: the strict agreement line failed, and the full-path recompute of every test transcript leaves all verdicts unchanged.

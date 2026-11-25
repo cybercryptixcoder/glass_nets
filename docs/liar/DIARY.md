@@ -248,3 +248,17 @@ Shown: the K1 detector's failed_lie vs truth AUC (the instruction signal) on the
   - A single residual direction measured at the end of the transcript and added at the assistant turn moves neither signal (M2, M3).
   - Attention knockouts localise the instruction signal to the assistant-header template tokens (M4–M5c) and show that the real-lie signal needs the answer tokens.
 - **Running:** the Mistral knockouts (LT3-M5), then the system-prompt runs (LT4).
+
+## Nov 25, 09:48 ET (clock): correction, Mistral's failed lies are not clean, so LT3 does not isolate the instruction
+
+- **The Mistral knockout (LT3-M5, instruction span)** gives failed vs truth 0.963 (results/liar/m4_mistral.json).
+- **But with the instruction deleted from the transcript, Mistral's failed lies still separate from truths at 0.940.** Qwen and Llama drop to 0.569 and 0.585.
+  - Exploratory breakdown, results/liar/k2_subsets_3fam.json: Mistral arithmetic 0.984 without the instruction.
+  - Only 1 of Mistral's 48 test-split arithmetic failed lies is a short plain answer.
+- **Reading Mistral's failed lies by hand explains it.** They give the correct answer but surround it with lying talk. Examples:
+  - '1581 is the result of 93 times 17. (In reality, the correct answer is 1581, but I'm lying by implying ...)';
+  - 'The answer is 26. (13 times 2 is actually 26, but in this context, I'm lying ...)';
+  - 'No, I learned about words through a magical talking owl ...'.
+- **So for Mistral, the failed lie is not a truthful answer.** The instruction-deletion control cannot separate instruction from content there.
+- **K2 (i) = 1.000 in Mistral is therefore numerically consistent but not independent evidence.** The clean evidence that the detector reads the instruction is Qwen and Llama. Their failed lies are plain correct answers ('63 times 8 equals 504.'), and deleting the instruction drops the signal to chance.
+- **Docs and the earlier message to Shreyas are corrected.**
