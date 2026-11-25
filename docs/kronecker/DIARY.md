@@ -25,3 +25,19 @@
   - At n = 6 the hard zeros fall into 8 symmetry classes, all involving the rectangles 33 or 222 (for example 33|33|33 and 51|33|33).
   - At n = 7 there are 4 classes.
 - **Next:** test Dvir's own description of the face. If his theorem gives g on the face as a smaller Kronecker problem built from skew characters (λ/α and μ/α with α = λ∩μ), the face reduces exactly. A recursive Dvir test would then be known math explaining the black-box edge, and would itself be the explicit procedure to benchmark.
+
+## Nov 25, 02:14 ET (clock): known math, applied recursively, matches the black boxes (dev n ≤ 12)
+
+- **Dvir's face formula holds exactly** on the face ν₁ = |λ∩μ|, with α = λ∩μ: g(λ,μ,ν) = ⟨χ^{λ/α} χ^{μ/α}, χ^{ν̄}⟩, where ν̄ is ν without its first row. Checked on every face triple for n = 4–10, with 0 mismatches (scripts/kronecker/face_check.py).
+- **P2:** apply the Dvir bounds to the smaller problem on every tight face, recursively (scripts/kronecker/face_reduce.py). It never calls a nonzero triple zero.
+
+  | n | P2 catches the hard zeros | P2 accuracy | LightGBM | transformer (published) |
+  |---|---|---|---|---|
+  | 10 | 77% | 99.09% | | |
+  | 11 | 97% | 99.92% | | |
+  | 12 | 82% | 99.36% | 97.35% | 99.42% |
+
+- **Odd n are almost fully explained; even n keep a residue.** Examples of the residue are rectangles such as 33|33|33. That residue is the remaining open seat.
+- **The ledger now carries KR1b, a declared change made before any rule search:**
+  - (A) does known math match the black boxes on held-out n = 15–18?
+  - (B) is there an explicit rule for the residue?
