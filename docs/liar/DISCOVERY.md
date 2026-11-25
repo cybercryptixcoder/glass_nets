@@ -45,9 +45,16 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - This beats a baseline that sees only the answer's wording (TF-IDF on the answer text: 0.667 and 0.741).
   - The probes that carry it ask the model to judge its own last statement ("Is the previous statement accurate?").
   - It does not transfer between families: 0.624 and 0.581, against a pre-registered line of 0.70.
+- **The cross-family figure is partly a scale effect.** If each model's features are standardised by that model's own data (exploratory, not pre-registered), the cross-family lie-vs-failed-lie figures become 0.68 and 0.80. That is partial transfer at best, and still far from the instruction signal's 0.99–1.00.
 - **It depends on whose statement it is.** The same answers were quoted in the user's turn ("Someone was asked ... and told me: ...").
   - The same detector separates them only at 0.746 (Qwen) and 0.566 (Llama).
   - Caveat: that setting also removes the instruction, so part of the drop may be a change of context.
+- **Where the lying mode lives.** We blocked the probe questions from attending to the instruction's tokens, while the rest of the transcript was still encoded under it.
+  - The detector still flags failed lies at 0.979 (Qwen) and 0.972 (Llama).
+  - Deleting the instruction, so that nothing is ever encoded under it, drops this to 0.57–0.59.
+  - So the instruction's effect is written into the later tokens, and the probes read it from there.
+  - It is not a single direction at the end of the transcript: adding the mean failed-lie-minus-truth direction there moved the detector by only 1–5% of the gap (pre-registered line 50%).
+- **Robust to labelling.** On arithmetic questions alone, where labels are unambiguous, failed lies vs truths is 1.000 in both families.
 
 ## What this does and does not show
 
