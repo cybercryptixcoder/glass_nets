@@ -284,3 +284,24 @@ Shown: failed_lie vs truth for the K1 detector, test split, when the probes cann
   - The template token alone separates failed lies from truths at 0.894, which is instruction-driven by construction.
   - That partly restores Mistral as evidence for the instruction reading, through the knockout rather than through K2 (i).
 - **Next:** LT4, the system-prompt placement runs (stage9), have started on Qwen.
+
+## Nov 25, 10:43 ET (clock): LT4 on Qwen, instruction in the system prompt: the finding holds, cleanly
+
+- **Run qwen7b_sys:** 940 transcripts in 2,173 s.
+- **Labels:** truth 450, lie 199, failed_lie 239, left out 52.
+- **Hand-read failed lies are plain correct answers**, for example '86 times 17 is 1462.'.
+- **Scores** (results/liar/k_scores_qwen7b_sys.json, t_scores_qwen7b_sys.json, lt4_qwen_failed_vs_truth.json):
+
+  | test | result | verdict |
+  |---|---|---|
+  | **failed_lie vs truth** | **1.000** within the system-prompt run, and 1.000 across formats in both directions (system ↔ user turn) | reads the instruction (K2 i) in this placement too |
+  | the same with the instruction deleted | 0.516 | chance, a clean control |
+  | lie vs truth | 1.000 within and across formats | K1-style pass |
+  | instruction deleted, lie vs truth | 0.817–0.834 | — |
+  | mean feature | 0.987 for lie vs truth and 0.993 for failed vs truth within the system-prompt run | here the lying mode is almost a uniform shift of the yes/no answers |
+  | T1, lie vs failed_lie within the system-prompt run | 0.864 | — |
+  | T1 across formats, same model | 0.759 (system → user) and 0.660 (user → system) | — |
+  | T3, text-only baseline | 0.649 | — |
+
+  - On mean feature: the pre-registered two-way K3 still says no (0.594 the other way).
+- **Llama (llama8b_sys) is running.**
