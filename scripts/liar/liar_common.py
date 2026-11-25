@@ -73,9 +73,10 @@ def probe_feats_full(m, msgs, budget=6144):
     return feats
 
 @torch.no_grad()
-def probe_feats(m, msgs, budget=4096, steer=None):
+def probe_feats(m, msgs, budget=4096, steer=None, hide=None):
     """Cached path exactly as run_liar.py (LT1-ops2). steer = (layer, vector, positions) adds vector to the
-    output of decoder layer `layer` at the given prefix positions while the transcript is encoded."""
+    output of decoder layer `layer` at the given prefix positions while the transcript is encoded.
+    hide = prefix token positions the probe tokens may not attend to (LT2-M4); the transcript is encoded normally."""
     prefix = chat(m, msgs, gen=False)
     texts = [chat(m, msgs + [{"role": "user", "content": probe_turn(p)}]) for p in m.PROBES]
     assert all(t.startswith(prefix) for t in texts)
@@ -101,7 +102,10 @@ def probe_feats(m, msgs, budget=4096, steer=None):
         for r, i in enumerate(bi):
             x = suf[i]; ids[r, Ls - len(x):] = torch.tensor(x); msk[r, Ls - len(x):] = 1
         ids, msk = ids.to("cuda"), msk.to("cuda")
-        att = torch.cat([torch.ones((B, Lp), dtype=torch.long, device="cuda"), msk], 1)
+        pre = torch.ones((B, Lp), dtype=torch.long, device="cuda")
+        if hide:
+            pre[:, hide] = 0
+        att = torch.cat([pre, msk], 1)
         pos_ids = Lp + (torch.cumsum(msk, 1) - 1).clamp(min=0)
         logits = m.model(input_ids=ids, attention_mask=att, position_ids=pos_ids, past_key_values=pkv, use_cache=True, logits_to_keep=1).logits
         lp = torch.log_softmax(logits[:, -1, :].float(), -1)
@@ -116,3 +120,13 @@ def answer_positions(m, msgs):
     assert full.startswith(pre_user)
     a = len(m.tok(pre_user, add_special_tokens=False).input_ids); L = len(m.tok(full, add_special_tokens=False).input_ids)
     return list(range(a, L))
+
+
+def instruction_positions(m, msgs, instr):
+    """Prefix token positions whose characters overlap the instruction text inside the first user turn."""
+    prefix = chat(m, msgs, gen=False)
+    start = prefix.find(instr)
+    assert start >= 0, "instruction text not found in the prefix"
+    end = start + len(instr)
+    enc = m.tok(prefix, add_special_tokens=False, return_offsets_mapping=True)
+    return [i for i, (a, b) in enumerate(enc["offset_mapping"]) if a < end and b > start]
