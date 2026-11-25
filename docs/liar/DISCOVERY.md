@@ -74,6 +74,10 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - It is not one direction at the end of the transcript either. Adding the mean failed-lie-minus-truth direction there moved the detector by only 1–5% of the gap (pre-registered line 50%).
 - **The real-lie trace needs the answer.** When the probes cannot see the answer, the lie-vs-failed-lie signal falls to chance (0.57 and 0.51). The two signals therefore sit in different tokens.
 - **Robust to labelling.** On arithmetic questions alone, where labels are unambiguous, failed lies vs truths is 1.000 in both families.
+- **Robust to where the instruction sits.** With the lie instruction in the system prompt instead of the user turn (Qwen, pre-registered as LT4):
+  - failed lies still score as lies at 1.000;
+  - the detector transfers between the two formats at 1.000;
+  - deleting the instruction drops the score to 0.516.
 
 ## What this does and does not show
 
@@ -82,7 +86,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 - **It does not show** that black-box lie detection is impossible. A within-model trace of the real lie exists, and it is stronger when the statement is the model's own.
 - **Caveats:**
   - Two clean families, both 7–8B instruction-tuned. In the third (Mistral), failed lies often announce the lie in their text, so it does not isolate the instruction. Its real-lie trace is not shown to go beyond the answer's wording either: a text-only baseline reaches 0.845 against the probes' 0.837.
-  - One prompt format.
+  - Two instruction placements tested: user turn in all families, system prompt so far in Qwen.
   - Labels from answer text: ambiguous answers are left out, about 6–14%.
   - Features from a bfloat16 model with a cached computation. The pre-declared agreement check failed its strict line (median difference 0.25, one bfloat16 step; r = 0.9997). As declared, every test transcript was recomputed without the cache, and every pre-registered verdict stayed the same (AUCs moved by at most 0.007).
 
