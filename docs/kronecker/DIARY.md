@@ -109,3 +109,12 @@
   - It ran in parallel with the n = 19 jobs. The most likely cause is memory: n = 20 has 246M ordered triples and the orbit computation holds several arrays of that size.
 - The P4 job for n = 20 is running alone.
 - A solo rerun of `p2_heldout.py 20` is queued behind it: /content/p2_20.sh, log /content/kdata/heldout_20b.log, marker /content/kdata/P2_20_DONE. Same frozen code, no change.
+
+## Nov 25, 06:15 ET (clock): KR1f met at n = 19 and 20
+
+- **n = 20** (246.5M ordered triples, table sha1 24459d7d…, all table checks pass):
+  - P2 reaches 99.735% on all triples and 99.739% on the test triples, with 0 false zeros.
+  - LightGBM on the same test triples: 99.055%, with 7,850 false zeros.
+  - P4: 99.773%.
+- Both added sizes meet the KR1b (A) criteria (results/kronecker/KR1f.json).
+- In total, over n = 15–20 the frozen known-math procedure has been scored on 465.5M ordered triples, never called a nonzero coefficient zero, and beat per-n LightGBM at every n by 0.55–0.75 points.

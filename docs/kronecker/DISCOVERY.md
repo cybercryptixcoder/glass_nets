@@ -4,7 +4,7 @@
 
 ## The result in one sentence
 
-Dvir's 1993 theorem, applied recursively by a short procedure with no learning at all, decides whether a Kronecker coefficient is zero for 99.7–99.8% of all ordered triples at n = 15–18, with no false zeros. That beats a gradient-boosted classifier trained separately at each n (99.1–99.3%) and the best published neural results (transformers, 99.1–99.7% at n = 12–14). The machine-learning papers on this problem never compared against these classical theorems.
+Dvir's 1993 theorem, applied recursively by a short procedure with no learning at all, decides whether a Kronecker coefficient is zero for 99.7–99.8% of all ordered triples at n = 15–20 (more than 465 million triples), with no false zeros. That beats a gradient-boosted classifier trained separately at each n (99.1–99.3%) and the best published neural results (transformers, 99.1–99.7% at n = 12–14). The machine-learning papers on this problem never compared against these classical theorems.
 
 ## What the question is
 
@@ -41,8 +41,9 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
 | 17 | 99.81% | 99.82% | 99.14% | 0 | 6,893 |
 | 18 | 99.74% | 99.75% | 99.07% | 0 | 7,444 |
 | 19 (declared later, KR1f) | 99.77% | 99.78% | 99.11% | 0 | 7,405 |
+| 20 (declared later, KR1f) | 99.74% | 99.74% | 99.06% | 0 | 7,850 |
 
-- **Pre-registered criterion KR1b (A):** P2 at least as accurate as LightGBM and at least 99.0% at every held-out n. **Met at all four n.**
+- **Pre-registered criterion KR1b (A):** P2 at least as accurate as LightGBM and at least 99.0% at every held-out n. **Met at n = 15–18, and again at n = 19 and 20** (declared before those tables existed, ledger KR1f).
 - **Two more known theorems.** Each was declared before it was run on held-out n:
   - P3r adds Garsia–Wallach–Xin–Zabrocki 2012 (two-row rectangles squared);
   - P4 adds the Berele–Regev 1987 hook theorem.
@@ -55,6 +56,7 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
   | 17 | 99.83% | 99.85% |
   | 18 | 99.77% | 99.80% |
   | 19 | — | 99.81% |
+  | 20 | — | 99.77% |
 
   None of them has any false zeros.
 - **The same procedures on the published n:**
