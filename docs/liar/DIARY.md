@@ -97,3 +97,13 @@
   - New chain: /content/stage4.sh, log /content/liar_out/STAGE4.log, marker STAGE4DONE.
   - Order: knockout qwen7b, knockout llama8b, check_cache qwen7b, check_cache llama8b, run_liar mistral7b, M2 qwen7b, M2 llama8b.
   - It starts when the running M3 llama8b job ends.
+
+## Nov 25, 05:37 ET (clock): M3 fails in both families
+
+- **M3 in Llama** (/content/liar_out/llama8b_mech_M3.stdout): the chosen layer is 12, with |d| = 2.25.
+  - Test closing fractions: 0.021 and 0.009. Random directions: −0.001 to 0.008 and −0.011 to −0.015.
+- **M3 in Qwen:** 0.050 and 0.040.
+- **Verdict:** a single direction measured at the transcript's last token and added to the assistant turn does not carry the lying mode in either family (line 0.5). **M3 fails.**
+- **The knockout test (LT2-M4) is running on Qwen.**
+  - The empty-mask known case reproduces the features exactly.
+  - The instruction is found as 12 tokens in the first transcript.
