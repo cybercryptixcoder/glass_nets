@@ -82,5 +82,38 @@ def main():
     print("headline_new_unknowable", res.get("headline_new_unknowable"))
 
 
+def main_t():
+    """Ledger LT7 (GROUP_T=1): the T1 detector (lie vs failed_lie, score_t.py's procedure) fit per probe group,
+    within each family. Reading: carries the real-lie trace if T1 >= 0.75 in both families; none if <= 0.65 in both."""
+    d, out, ta, tb = sys.argv[1:5]
+    rest = sys.argv[5:]
+    probes = pd.read_csv(os.path.join(d, "probes.csv"))
+    types = probes["probe_type"].astype(str).tolist()
+    groups = {t: [j for j, x in enumerate(types) if x == t] for t in sorted(set(types))}
+    groups = {t: c for t, c in groups.items() if len(c) >= 3}
+    groups["all"] = list(range(len(types)))
+    D = {t: S.load(d, t) for t in [ta, tb] + rest}
+
+    def t1(t, cols):
+        M = S.fit(sub(D[t], cols), neg="failed_lie")
+        a, n = S.auc(M, sub(D[t], cols), "lie", "failed_lie")
+        return dict(T1_lie_vs_failed=a, n=n)
+
+    # known case: all 65 probes reproduce score_t's within-family T1 exactly (same fit and AUC calls)
+    for t in [ta, tb]:
+        M = S.fit(D[t], neg="failed_lie")
+        assert t1(t, groups["all"])["T1_lie_vs_failed"] == S.auc(M, D[t], "lie", "failed_lie")[0]
+    print("known case: all-probe group reproduces score_t's T1 exactly", flush=True)
+    res = {"full_path": os.environ.get("LIAR_FULL") == "1", "T1_within": {g: {t: t1(t, c) for t in D} for g, c in groups.items()}}
+    v = lambda g, t: res["T1_within"][g][t]["T1_lie_vs_failed"]
+    res["carries_real_lie"] = {g: all(v(g, t) >= 0.75 for t in [ta, tb]) for g in groups}
+    res["carries_none"] = {g: all(v(g, t) <= 0.65 for t in [ta, tb]) for g in groups}
+    json.dump(res, open(out, "w"), indent=1)
+    for g in groups:
+        print(f"{g:16s} n={len(groups[g]):2d} " + " | ".join(f"{t}: T1 {v(g, t):.3f}" for t in D))
+    print("carries_real_lie", res["carries_real_lie"])
+    print("carries_none", res["carries_none"])
+
+
 if __name__ == "__main__":
-    main()
+    main_t() if os.environ.get("GROUP_T") == "1" else main()

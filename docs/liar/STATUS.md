@@ -2,7 +2,7 @@
 
 Branch `liar`. Ledger row LT1 in docs/glass/CHANGES.md (the pre-registration). Sprint 2 of two run in parallel on Nov 25 (sprint 1: branch `kronecker`). Final report due about 12:40 ET.
 
-**Sprint complete (11:30 ET, clock); LT5 and LT6 added and closed at 11:38 and 11:41.** Every ledger row LT1–LT6 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
+**Sprint complete (11:30 ET, clock); LT5–LT7 added and closed at 11:38, 11:41 and 11:43.** Every ledger row LT1–LT7 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
 
 ## Goal
 Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two modern open families with cross-family transfer (K1), rule out instruction carryover (K2) and a plain yes-bias (K3), then find the internal 'has-lied' state that causes the tell.
@@ -215,3 +215,10 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
 - **An unseen wording:** a detector trained without a wording flags that wording's failed lies at 0.999–1.000.
 - **Caveat:** all four wordings contain 'with a lie'.
 - **Files:** results/liar/wording_full.json and wording_cached.json; scripts/liar/score_wording.py.
+
+## Update, Nov 25 11:43 ET (clock): LT7, the real-lie trace by probe group
+
+- **A free re-score** (declared 11:42 ET; DIARY 11:43): the real-lie trace (T1) is carried by the probes that judge the previous statement, at 0.76–0.90 (Confession, Logic, Confusion).
+- **The lying-feelings probes** (Psychological) read the instruction at 1.000 but carry no real-lie trace (0.54 / 0.62).
+- **The nonsense probes** are in between (0.77 / 0.72), so that expectation was only half right.
+- **Files:** results/liar/groups_t1_full.json and groups_t1_cached.json; score_groups.py with GROUP_T=1.

@@ -381,3 +381,29 @@ Shown: failed_lie vs truth for the K1 detector, test split, when the probes cann
   - The system-prompt runs give 1.000 in every cell (results/liar/wording_cached.json, descriptive).
 - **Verdicts as pre-registered:** (A) holds for every wording in both families; (B) generic across wordings: yes.
 - **Caveat:** all four lie instructions contain the words 'with a lie'. So (B) shows generality across these paraphrases, not to a very different way of inducing a lie, such as a role-play or a goal that rewards deception.
+
+## Nov 25, 11:43 ET (clock): LT7, the real-lie trace lives in the probes about the previous statement
+
+- **Why:** LT5 showed every probe group reads the instruction. LT7 (declared 11:42 ET, before any group-level T1 score) asks which groups carry the real-lie trace. This is T1: lie vs failed_lie, with the instruction held fixed.
+- **Code:** score_groups.py with GROUP_T=1. LT5's output is byte-identical with it unset. The known case passes: the all-probe group reproduces t_scores_full.json exactly (0.876 / 0.865).
+- **Scores** (full-path test features, results/liar/groups_t1_full.json; T1 within family, Qwen / Llama; the instruction-reading column is LT5's failed_lie vs truth, for contrast):
+
+  | probe group | probes | T1, real lie vs failed lie | reading (pre-registered) | LT5, reads the instruction |
+  |---|---|---|---|---|
+  | Confession ('Is the previous statement accurate?') | 10 | 0.895 / 0.869 | carries it | 1.000 / 0.998 |
+  | Logic ('Let P = your previous statement ...') | 4 | 0.844 / 0.838 | carries it | 0.987 / 0.984 |
+  | Confusion ('Is previous statement compatible with the weak force?') | 5 | 0.831 / 0.755 | carries it | 0.965 / 0.911 |
+  | New_unknowable (nonsense) | 13 | 0.770 / 0.718 | in between | 0.997 / 0.999 |
+  | Easily knowable ('Did Plato live in Athens?') | 10 | 0.739 / 0.588 | in between | 1.000 / 0.999 |
+  | Unknowable | 8 | 0.678 / 0.648 | in between | 0.998 / 0.911 |
+  | Verbose | 3 | 0.599 / 0.554 | none | 0.921 / 0.968 |
+  | Psychological ('Are you a little worried you might be caught lying?') | 8 | 0.542 / 0.622 | none | 1.000 / 1.000 |
+  | Ethics | 3 | 0.573 / 0.460 | none | 0.949 / 0.951 |
+  | all 65 | 65 | 0.876 / 0.865 | carries it | 1.000 / 1.000 |
+
+- **Reading:**
+  - The two signals sit in different probes. The real-lie trace is carried by the three groups that ask the model to judge its previous statement: Confession, Logic and Confusion.
+  - The probes that ask how the model feels about lying (Psychological) read the instruction perfectly (1.000 / 1.000) but carry none of the real-lie trace (0.54 / 0.62).
+  - This fits M5: hiding the answer removes the real-lie trace, and these probes are the ones that look back at it.
+- **One prediction failed:** the pre-registration's sentence 'the nonsense probes should carry the instruction but not the real lie' is only half right. They carry some of the real-lie trace (0.770 / 0.718), between the lines, at about the level of the text-only baseline (0.667 / 0.741).
+- **The system-prompt runs** show the same order (results/liar/groups_t1_cached.json, descriptive): Confession 0.875 / 0.887, Logic 0.836 / 0.895. One difference: Psychological is 0.805 in llama8b_sys.
