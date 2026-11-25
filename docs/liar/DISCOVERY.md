@@ -4,7 +4,7 @@
 
 ## The result in one sentence
 
-On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00), whether the instruction sits in the user's turn or in the system prompt. What it detects, and what transfers across families, is a lying mode set up by the instruction, not the lie. That mode is carried by the few chat-template tokens of the assistant header. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.86–0.88), but that trace does not transfer between the two families (0.58–0.62).
+On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00), whether the instruction sits in the user's turn or in the system prompt. What it detects, and what transfers across families, is a lying mode set up by the instruction, not the lie. Where we localised it (instruction in the user's turn), that mode is carried by the few chat-template tokens of the assistant header. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.86–0.88), but that trace does not transfer between the two families (0.58–0.62).
 
 ## The background
 
@@ -20,7 +20,7 @@ On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie 
 - **The data.**
   - For each of 744 factual questions (the paper's datasets plus 150 multiplications), each model answered twice: once under a lie instruction and once under a matched truth instruction.
   - We then asked the paper's 65 probes and recorded the log-odds of yes against no.
-  - Each answer was labelled from its text: *lie* if it does not give the correct answer, *failed lie* if the model was told to lie but gave the correct answer, *truth* otherwise. Labelling rules: scripts/liar/labels_v2.py, tested on hand-read transcripts.
+  - Each answer was labelled from its text. Told to lie: *lie* if the answer does not give the correct answer, *failed lie* if it does. Told to answer truthfully: *truth* if it gives the correct answer. Ambiguous answers are left out. Labelling rules: scripts/liar/labels_v2.py, tested on hand-read transcripts.
 - **Pre-registration.**
   - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4) before the scores it judges existed.
   - Questions were split 50/50 by question; all numbers below are on the held-out half.
