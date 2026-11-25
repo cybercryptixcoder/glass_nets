@@ -151,3 +151,13 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   1. Download mistral7b_feats.npy, mistral7b_feats_noinstr.npy, mistral7b_transcripts.jsonl and mistral7b_log.txt.
   2. Read some transcripts by hand.
   3. Score every pair with score_k.py and score_t.py (LT3).
+
+## Update, Nov 25 08:49 ET (clock)
+
+- **The full-path re-score is done.** Every K and T verdict is unchanged (results/liar/k_scores_full.json, t_scores_full.json).
+- **Running** (/content/stage7.sh): run_liar mistral7b, at 175 of 455 questions probed (about 4.5 s each). Its self-check reads median 6e-5 and r = 0.9993. Then M2 qwen7b and M2 llama8b.
+- **Next:**
+  1. Download the Mistral features and transcripts.
+  2. Read some by hand.
+  3. Score all pairs with score_k / score_t (LT3).
+  4. Then M2, then the final report at 12:30.
