@@ -2,6 +2,8 @@
 
 Branch `liar`. Ledger row LT1 in docs/glass/CHANGES.md (the pre-registration). Sprint 2 of two run in parallel on Nov 25 (sprint 1: branch `kronecker`). Final report due about 12:40 ET.
 
+**Sprint complete (11:30 ET, clock).** Every ledger row LT1–LT4 is closed with its verdict, the Colab session is stopped, and everything it held is saved locally. Results: docs/liar/FINDINGS.md (technical) and docs/liar/DISCOVERY.md (plain language). The sections below are the running log, oldest first.
+
 ## Goal
 Replicate the follow-up-question lie detector (Pacchiardi et al. 2023) on two modern open families with cross-family transfer (K1), rule out instruction carryover (K2) and a plain yes-bias (K3), then find the internal 'has-lied' state that causes the tell.
 
@@ -189,3 +191,15 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   3. Compute the failed-vs-truth control as for Qwen (results/liar/lt4_qwen_failed_vs_truth.json).
   4. Update FINDINGS and DISCOVERY.
 - **At 12:30:** the final report, and stop the Colab `liar` session.
+
+## Update, Nov 25 11:30 ET (clock): sprint complete
+
+- **LT4 on Llama** (DIARY 11:27): with the lie instruction in the system prompt, failed lies score as lies at 1.000 within the run and across formats; deleting the instruction gives 0.573. Hand-read failed lies are plain correct answers. LT4 therefore holds in both clean families (Qwen 1.000 and 0.516).
+- **Ledger:** every LT row is marked done with its verdict (docs/glass/CHANGES.md rows 104–118).
+- **Colab:** stage9 had finished by 11:23 ET (clock, status check); session `liar` stopped at 11:30 ET; no session is left running.
+  - Before stopping, every file on the machine that was not yet local was downloaded and checked by md5:
+    - run logs, chain scripts and the v1 partial run: ~/ldata/colab_final/final_small.tgz, unpacked beside it;
+    - the last-token hidden states saved by every run (five files, 1.1 GB; the qwen7b and llama8b ones are the input to M2/M3): ~/ldata/colab_final/final_hidden.tar.
+  - The LT4 Llama features and transcripts are in ~/ldata/both, as for every other run.
+- **Nothing is left to run.** Natural next steps: larger models, other probe sets, and lies that come with no instruction at all. FINDINGS.md (Caveats) lists the current limits.
+

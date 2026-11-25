@@ -305,3 +305,27 @@ Shown: failed_lie vs truth for the K1 detector, test split, when the probes cann
 
   - On mean feature: the pre-registered two-way K3 still says no (0.594 the other way).
 - **Llama (llama8b_sys) is running.**
+
+## Nov 25, 11:27 ET (clock): LT4 on Llama, instruction in the system prompt: the finding holds in both clean families
+
+- **Run llama8b_sys:** 854 transcripts in 2,177 s (427 questions the model answers correctly when honest; one lie and one truth transcript each).
+- **Labels:** truth 367, lie 207, failed_lie 133, left out 147 (17%; 87 lie-instructed, 60 truth-instructed). The user-turn Llama run left out 14%.
+- **Cache self-check:** median |cached − full| 0.124, r 0.9995, the same as the user-turn Llama run (0.11). LT4 declared cached-path scoring with the frozen scorers, so these are cached-path numbers. In the main runs the full-path recompute changed no verdict, and the LT4 margins (1.000 against 0.57) are far larger than that noise.
+- **Hand-read failed lies are plain correct answers**, with no lie talk: 'The answer is 720.', 'He needs 481 grams of wax.', 'Howard Glacier is located on the continent of Antarctica.'. Only 4 of 133 contain a word such as 'false' or 'actually' (for example the bare answer 'False.' to a true/false question), so the Mistral confound does not arise here.
+- **Scores** (results/liar/k_scores_llama8b_sys.json, t_scores_llama8b_sys.json, lt4_llama_failed_vs_truth.json):
+
+  | test | result | verdict |
+  |---|---|---|
+  | **failed_lie vs truth** | **1.000** within the system-prompt run, and 1.000 across formats in both directions (system ↔ user turn) | reads the instruction (K2 i) in this placement too |
+  | the same with the instruction deleted | 0.573 | near chance, a clean control (user-turn Llama: 0.59) |
+  | lie vs truth | 1.000 within and across formats | K1-style pass |
+  | instruction deleted, lie vs truth | 0.765–0.818 | — |
+  | mean feature | 0.886 for lie vs truth and 0.850 for failed vs truth within the system-prompt run | K3: not a yes-bias (0.764 the other way) |
+  | T1, lie vs failed_lie within the system-prompt run | 0.820 | — |
+  | T1 across formats, same model | 0.762 (system → user) and 0.843 (user → system) | — |
+  | T3, text-only baseline | 0.641 | the real-lie tell goes beyond the wording here too |
+
+- **How the control was computed:** the K1 detector trained on llama8b_sys (score_k.fit), then score_k.auc for failed_lie vs truth with the features F, with the instruction-deleted features Fn, and with the mean feature. The same call reproduces the stored Qwen file exactly (1.000, 0.516, 0.993; 121 failed, 231 truth).
+- **Side observation (descriptive):** with the instruction in the system prompt, Llama fails to lie much more often: 133 of 340 labelled lie-instructed answers (39%), against 24% with it in the user turn. Qwen fails about as often in both placements (55% and 52%).
+- **LT4 is closed:** in both clean families, with the lie instruction in the system prompt, failed lies score as lies at 1.000, and deleting the instruction brings them to 0.52–0.57.
+- **Colab:** stage9 is done and nothing is running. Every file on the Colab machine that was not yet local (run logs, chain scripts, the v1 partial run, the last-token hidden states of every run, the input to M2/M3) is being downloaded to ~/ldata/colab_final before the session is stopped.
