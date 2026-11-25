@@ -82,3 +82,22 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   - `python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m4_scores.json qwen7b llama8b`, after downloading <tag>_feats_knockout.npy into ~/ldata/both;
   - if check_cache fails, re-score with LIAR_FULL=1 (ledger LT1-full);
   - Mistral: score_k / score_t for every pair.
+
+## Update, Nov 25 06:02 ET (clock)
+
+- **M3 fails in both families** (closing ≤ 0.05).
+- **M4: the probes cannot see the instruction tokens, yet failed lies still score as lies at 0.979 (Qwen) and 0.972 (Llama).** Deleting the instruction gives 0.57–0.59, so the lying mode is carried by the tokens encoded after the instruction (results/liar/m4_scores.json).
+- **Cache agreement check, Qwen:** Pearson r = 0.99967, median |diff| = 0.25. The 0.1 line fails; the median sits at bfloat16 logit resolution for |features| about 14.
+  - The full-path recompute of the Qwen test split is running: about 5 s per transcript, 478 transcripts.
+  - When it is done, re-score with LIAR_FULL=1 (ledger LT1-full).
+- **The chain now running is /content/stage5.sh** (log STAGE5.log; DONE marker STAGE5DONE). It started when check_cache qwen7b finished. Steps:
+  1. knockout user and assistant spans for qwen7b, then for llama8b (ledger LT2-M5);
+  2. check_cache llama8b;
+  3. run_liar mistral7b;
+  4. M2 qwen7b, then M2 llama8b.
+- **Label robustness:** arithmetic-only failed vs truth is 1.0 in both families (results/liar/robust_labels.json).
+- **To score the span knockouts:**
+  1. Download <tag>_feats_knockout_user.npy and <tag>_feats_knockout_assistant.npy into ~/ldata/both.
+  2. Run `KO_SPAN=user python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m5_user.json qwen7b llama8b`, and the same with assistant.
+  3. Reading (LT2-M5): the span whose hiding brings failed vs truth to ≤ 0.65, while the other span leaves it ≥ 0.90, carries the mode.
+- **Final-report draft** (outside the repo): /home/claude/FINAL_DRAFT.md.
