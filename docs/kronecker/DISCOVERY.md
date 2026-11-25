@@ -95,3 +95,4 @@ Dvir's 1993 theorem, applied recursively by a short procedure with no learning a
   - `python3 scripts/kronecker/p34_heldout.py p4 18` scores P4.
 - **Second question, KR1b (B):** `python3 scripts/kronecker/rule_search.py` (development sizes) and `python3 scripts/kronecker/rule_heldout.py 15 16 17 18` (frozen rule).
 - **Table checks:** `python3 scripts/kronecker/table_checks.py 3 ... 20`.
+- **Technical summary with every verdict:** docs/kronecker/FINDINGS.md.
