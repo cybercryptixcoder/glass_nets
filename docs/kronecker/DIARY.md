@@ -117,4 +117,4 @@
   - LightGBM on the same test triples: 99.055%, with 7,850 false zeros.
   - P4: 99.773%.
 - Both added sizes meet the KR1b (A) criteria (results/kronecker/KR1f.json).
-- In total, over n = 15–20 the frozen known-math procedure has been scored on 465.5M ordered triples, never called a nonzero coefficient zero, and beat per-n LightGBM at every n by 0.55–0.75 points.
+- In total, over n = 15–20 the frozen known-math procedure has been scored on 465.2M ordered triples, never called a nonzero coefficient zero, and beat per-n LightGBM at every n by 0.55–0.68 points.
