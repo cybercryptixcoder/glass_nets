@@ -29,3 +29,31 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
 - Network baseline batched (0.44 s per system instead of 20 s): 3,000 random-set
   systems in the background (scripts/planets/nn_batch.py).
 - Close the functional-form gap; then fresh N-body integrations.
+
+## 20:45 to 21:07 — where the law falls short, and why
+
+- Saturating eccentricity forms (scripts/planets/fit_law2.py, results/planets/laws_round2.json):
+  4 constants reach 1.25 on the random dev half, the same as the 6-constant L4.
+  Binned table: the slope of log t in the three-body spacing falls as the relative
+  eccentricity approaches orbit crossing and is nearly flat once orbits cross
+  (36% of evaluated systems have crossing relative eccentricity yet survive 1e4 orbits).
+- Censored maximum-likelihood fit (Normal scatter, truncated at 4, censored at 9) failed:
+  sigma ran to 5.5, predictions worse (1.49). Mis-specified (outcome bimodal near the
+  stability boundary). Abandoned; results kept in laws_round3_tobit.json.
+- Network baseline batched: 1,750 random-set systems scored (samples=300, model
+  samples=30). On the 638 unstable ones: network 1.168, law 1.229, so the gap is 0.06 dex.
+- The decisive diagnostic: correlation with the truth is 0.70 for the network and 0.46
+  for the initial-condition law; the network is biased high by +0.33 dex on this metric,
+  the law is unbiased. For compact systems (spacing below -0.25) the network gets 0.96
+  against the law's 1.24. So the network's 1e4-orbit integration carries real information
+  that the initial conditions do not: an initial-condition-only law cannot honestly be
+  said to match it, even where the RMSE numbers come close through the network's bias.
+- Change of approach (not of target): the law may use what the network uses, a 1e4-orbit
+  integration, but only through physically meaningful summaries: the chaos indicator
+  MEGNO (Lyapunov time), the eccentricity-mode variation relative to orbit crossing,
+  resonance strength, secular time (Tamayo et al. 2020 quantities, computed by SPOCK).
+  This is the same information budget as the network and as Alford et al. 2026.
+- Compute: short-integration features for 1,600 resonant (training) systems and the
+  1,750 network-scored random systems, split between this workspace and an 8-CPU Colab
+  runtime. Fresh verification set made: 800 new systems (population members never used,
+  with new random angles), scripts/planets/fresh.py; integrations to 1e6 orbits next.
