@@ -47,3 +47,11 @@ None yet for this sprint.
 - **Next:**
   1. Run `python3 scripts/kronecker/resid_atlas.py 15 16 17 18` locally after rule_heldout finishes. It shows where P4's leftover zeros live on held-out n; this is allowed now that the rule is frozen.
   2. Finish docs/kronecker/DISCOVERY.md: the (B) outcome, n = 19 and 20, the atlas.
+
+## Update, Nov 25 06:15 ET (clock): Kronecker sprint complete
+
+- **KR1b (A) met at n = 15–18; KR1f met at n = 19 and 20.** P2 is above LightGBM by 0.55–0.68 points at every n, with 0 false zeros over 465.2M triples.
+- **KR1b (B) not met.** The frozen rule catches 0–2.5% of the leftover zeros.
+- **All results are committed** under results/kronecker/; the summary is docs/kronecker/DISCOVERY.md.
+- **The Colab `kron` session was stopped after every result had been downloaded and committed.** The n = 19 and 20 tables can be rebuilt with scripts/kronecker/kron_tables.py in about 5 minutes.
+- **Nothing is left running for this sprint.**
