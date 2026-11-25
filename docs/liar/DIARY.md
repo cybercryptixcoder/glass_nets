@@ -72,3 +72,24 @@
 - **Disclosure:** the per-probe lie-vs-failed AUCs for Qwen were read at 04:29, before T1 was scored. The T1 line (0.75) had been fixed at 04:20.
 
 **Running on Colab `liar`** (stage 2): attrib (T4), M3 for both families, check_cache for both, the Mistral run (LT3), then M2.
+
+## Nov 25, 05:19 ET (clock): T4 for both families; M3 on Qwen fails; knockout test declared; Colab chain reordered
+
+- **T4, the whose-statement control.** The T1 detector scores the same answers quoted in the user's turn:
+
+  | family | answer in the model's own turn | answer quoted in the user's turn |
+  |---|---|---|
+  | Qwen | 0.875 | 0.746 |
+  | Llama | 0.864 | 0.566 |
+
+  - Both drops exceed the 0.05 line, so the within-model tell is not just 'a false statement is in context'.
+  - Caveat: the quoted setting also has no instruction, which is a change of context for the detector.
+- **M3, the lying-mode direction failed_lie − truth, on Qwen** (/content/liar_out/qwen7b_mech_M3.stdout):
+  - Adding it at every assistant-turn position barely moves the K1 detector. The sweep gives −0.003 to 0.056 across layers 4–24.
+  - At layer 16, on the test split, the closing fractions are 0.050 and 0.040 against a 0.5 line. **M3 fails on Qwen**; random controls and Llama are pending.
+  - Together with K2 (ii), where deleting the instruction removes the failed-lie signal, this suggests the probes read the instruction text directly by attention.
+  - Ledger LT2-M4 declares an attention-knockout test of that, before it runs (scripts/liar/knockout.py).
+- **The Colab chain was reordered** so the knockout runs before the Mistral replication and M2.
+  - The old chain's shells were stopped while the running Qwen M3 job continued.
+  - New chain: /content/stage3.sh, log /content/liar_out/STAGE3.log, marker /content/liar_out/STAGE3DONE.
+  - Order: M3 llama8b, check_cache qwen7b, check_cache llama8b, knockout qwen7b, knockout llama8b, run_liar mistral7b, M2 qwen7b, M2 llama8b.
