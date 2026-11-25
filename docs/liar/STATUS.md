@@ -175,3 +175,17 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   - The same for llama8b_sys.
   - score_t.py likewise.
 - **Kronecker KR1g** (descriptive, local): scripts/kronecker/lgbm_errors.py 15 is running; log ~/kdata/lgbm_errors_15.log.
+
+## Update, Nov 25 10:48 ET (clock)
+
+- **Done and committed:**
+  - K1–K3, T1–T4, M2–M5c in both families, plus the full-path re-score;
+  - LT3, Mistral, with its confound noted, and its knockouts;
+  - LT4 on Qwen: system-prompt placement, failed vs truth 1.000, deleted-instruction control 0.516.
+- **Running:** llama8b_sys (stage9 step 2, about 5 s per question for 427 questions).
+- **When it lands:**
+  1. Download it.
+  2. Run `python3 -I scripts/liar/score_k.py ~/ldata/both llama8b_sys llama8b results/liar/k_scores_llama8b_sys.json`, and the same with score_t.py.
+  3. Compute the failed-vs-truth control as for Qwen (results/liar/lt4_qwen_failed_vs_truth.json).
+  4. Update FINDINGS and DISCOVERY.
+- **At 12:30:** the final report, and stop the Colab `liar` session.
