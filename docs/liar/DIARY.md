@@ -107,3 +107,25 @@
 - **The knockout test (LT2-M4) is running on Qwen.**
   - The empty-mask known case reproduces the features exactly.
   - The instruction is found as 12 tokens in the first transcript.
+
+## Nov 25, 06:00 ET (clock): M4, the instruction knockout, in both families: the lying mode travels through later tokens
+
+The K1 detector on test transcripts (results/liar/m4_scores.json):
+
+| family | condition | failed_lie vs truth | lie vs truth | lie vs failed_lie |
+|---|---|---|---|---|
+| Qwen | normal | 1.000 | 1.000 | 0.631 |
+| Qwen | probes cannot see the instruction tokens | **0.979** | 0.994 | 0.781 |
+| Qwen | instruction deleted from the transcript | 0.569 | 0.834 | 0.776 |
+| Llama | normal | 1.000 | 1.000 | 0.792 |
+| Llama | probes cannot see the instruction tokens | **0.972** | 0.988 | 0.729 |
+| Llama | instruction deleted from the transcript | 0.585 | 0.784 | 0.721 |
+
+- **Pre-registered reading (LT2-M4):** ≥ 0.90 means the instruction's effect reaches the probes through the transcript's later tokens. That holds in both families.
+- **What it means:**
+  - Hiding the instruction tokens from the probes barely matters, because the tokens encoded after the instruction already carry the lying mode.
+  - Deleting the instruction, so that nothing is ever encoded under it, removes the mode.
+  - M3 (a last-token direction added at the assistant turn) moved nothing.
+  - So the mode is stored, but not as one direction at the end of the transcript.
+- **Next (ledger LT2-M5):** span knockouts. Hide the whole user turn, or the whole assistant turn, from the probes. These run first in the new chain, /content/stage5.sh (log STAGE5.log).
+  - The Qwen cache check is running now. The Llama cache check, Mistral and M2 come after the span knockouts.
