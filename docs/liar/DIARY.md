@@ -134,3 +134,6 @@ The K1 detector on test transcripts (results/liar/m4_scores.json):
   - The cross-family real-lie tell then reaches 0.678 (Qwen → Llama) and 0.798 (Llama → Qwen), against 0.624 and 0.581 under the pre-registered T2.
   - Part of the T2 failure is scale mismatch. The verdict stays as pre-registered: T2 fails, and the honest summary is partial transfer at best.
   - The instruction signal transfers at 0.99–1.00.
+- **Exploratory validity check** (results/liar/t1_by_source.json). Failed lies cluster in arithmetic, so could the real-lie tell just be question type? No: within question type the T1 detector still separates lie from failed_lie.
+  - Arithmetic: Qwen 0.992, Llama 0.809.
+  - Everything else: Qwen 0.824, Llama 0.895.
