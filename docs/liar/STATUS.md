@@ -138,3 +138,16 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   - Then the LIAR_FULL=1 re-score (needs llama8b_feats_full.npy and llama8b_feats_noinstr_full.npy from the Llama check).
   - Then Mistral (LT3) and M2.
 - **Docs to finish:** docs/liar/DISCOVERY.md (add M5–M5c, full-path re-score, Mistral) and the final report (draft at /home/claude/FINAL_DRAFT.md, outside the repo).
+
+## Update, Nov 25 07:54 ET (clock)
+
+- **M5b and M5c are done in both families.** The lying mode sits in the assistant-header template tokens between the turns. Results in results/liar/m5b_both.json and m5c_after.json; DIARY 07:53.
+- **Running:** /content/stage7.sh (pid 68347). It is on check_cache llama8b: the check fails and the full recompute of 438 test transcripts takes about 6 s each, finishing around 08:35 ET (estimate). Then run_liar mistral7b (LT3), M2 qwen7b and M2 llama8b.
+- **When the Llama recompute lands:**
+  1. Download llama8b_feats_full.npy, llama8b_feats_noinstr_full.npy and llama8b_check_cache.json into ~/ldata/both. The json goes to results/liar/.
+  2. Run `LIAR_FULL=1 python3 -I scripts/liar/score_k.py ~/ldata/both qwen7b llama8b results/liar/k_scores_full.json`.
+  3. Run the same with score_t.py into t_scores_full.json.
+- **Mistral:**
+  1. Download mistral7b_feats.npy, mistral7b_feats_noinstr.npy, mistral7b_transcripts.jsonl and mistral7b_log.txt.
+  2. Read some transcripts by hand.
+  3. Score every pair with score_k.py and score_t.py (LT3).
