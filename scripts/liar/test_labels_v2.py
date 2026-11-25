@@ -15,7 +15,11 @@ cases = [
     ("3", "Gwen received 13 more dollars.", False),                                 # old rule: '3' inside '13'
     ("28", "Frank took exactly 28 days to finish his book.", True),
     ("1881", "99 times 19 is 1,881.", True),
-    ("Paris", "The capital is Parisian in style.", False),
+    ("Paris", "The capital is Parisian in style.", None),                       # v2.1: inside a longer word
+    ("Japan", "Hijikata Toshizo was a Japanese citizen.", None),                # v2.1, from the Qwen transcripts
+    ("Je viens du Japon.", "Je viens du Japon.", True),                         # v2.1: gold ending in a period
+    ("Je viens du Japon.", "Je viens du Canada.", False),
+    ("3", "The 890th decimal digit of sqrt(31) cannot be determined.", False),  # old rule found 3 in 31
     ("Paris", "It is Paris.", True),
 ]
 bad = [(g, a, e, gives_gold(g, a)) for g, a, e in cases if gives_gold(g, a) != e]
