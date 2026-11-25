@@ -22,10 +22,10 @@ On three modern open model families (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), the 
   - We then asked the paper's 65 probes and recorded the log-odds of yes against no.
   - Each answer was labelled from its text: *lie* if it does not give the correct answer, *failed lie* if the model was told to lie but gave the correct answer, *truth* otherwise. Labelling rules: scripts/liar/labels_v2.py, tested on hand-read transcripts.
 - **Pre-registration.**
-  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT2, LT1-mech) before the scores existed.
+  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3) before the scores it judges existed.
   - Questions were split 50/50 by question; all numbers below are on the held-out half.
 
-## The numbers (Qwen and Llama; Mistral, the third family, gives the same picture: failed lie vs truth 0.998–1.000, real lie vs failed lie 0.837 within, 0.52–0.66 across)
+## The numbers
 
 | test | Qwen → Qwen | Qwen → Llama | Llama → Qwen | Llama → Llama |
 |---|---|---|---|---|
@@ -35,6 +35,11 @@ On three modern open model families (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), the 
 | **lie vs failed lie** (instruction held fixed; detector retrained for it) | **0.875** | 0.624 | 0.581 | **0.864** |
 
 All entries are AUCs. Each column header gives the family whose detector was trained, then the family it was tested on.
+
+Mistral-7B, the third family, gives the same picture:
+
+- failed lie vs truth: 0.998–1.000 in every pairing;
+- real lie vs failed lie: 0.837 within Mistral, 0.52–0.66 across families.
 
 - **The detector treats a failed lie as a lie.** A truthful answer given under the lie instruction looks like a lie to it. Pre-registered test K2 (i) therefore says the detector reads the instruction.
 - **Why, in the probes' own answers** (results/liar/probe_table.json):
@@ -81,7 +86,13 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 
 ## Where everything is
 
-- **Code:** scripts/liar/: run_liar.py (generation and probes), labels_v2.py, score_k.py, score_t.py, score_t4.py, probe_table.py, attrib.py, mech.py, check_cache.py.
-- **Scores:** results/liar/k_scores.json, t_scores.json, t4_scores.json, probe_table.json.
+- **Code:** scripts/liar/: run_liar.py (generation and probes), labels_v2.py, score_k.py, score_t.py, score_t4.py, score_m4.py, probe_table.py, attrib.py, knockout.py, mech.py, check_cache.py.
+- **Scores:**
+  - results/liar/k_scores.json and k_scores_full.json;
+  - t_scores.json and t_scores_full.json;
+  - t4_scores.json;
+  - m4_scores.json, m5_user.json, m5_assistant.json, m5b_both.json, m5c_after.json;
+  - the Mistral pairs: k_scores_*_mistral7b.json, t_scores_*_mistral7b.json;
+  - probe_table.json and probe_table_3.json.
 - **Story:** docs/liar/DIARY.md and docs/liar/STATUS.md. Technical summary with every verdict: docs/liar/FINDINGS.md.
 - **Raw features and transcripts** stay outside the repo; they are small and can be shared on request. They can also be regenerated from the open weights; the decoding is greedy.
