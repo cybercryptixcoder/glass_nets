@@ -4,7 +4,7 @@
 
 ## Setup
 
-- **Models:** Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, both in bfloat16 with greedy decoding. Mistral-7B-Instruct-v0.3 is a declared replication (LT3).
+- **Models:** Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, plus Mistral-7B-Instruct-v0.3 as a declared replication (LT3). All in bfloat16 with greedy decoding.
 - **Questions:** 744, from Pacchiardi et al.'s processed datasets plus 150 multiplications.
 - **Answers:** four matched lie/truth instruction pairs.
 - **Features:** log P(yes) − log P(no) after each of the paper's 65 probes (probes.csv, text as written).
@@ -36,7 +36,7 @@
 | LT2-M5b | probes cannot see the user turn and the answer | 0.997, 0.992 | the template tokens between the turns carry it |
 | LT2-M5c | probes cannot see anything after the user header | 0.591, 0.534 | localisation confirmed (no leak) |
 | LT1-score / LT1-full | cached vs full features, 20 transcripts; then all test transcripts recomputed | Qwen r 0.9997, median 0.25; Llama r 0.9995, median 0.125 | check fails; on full-path test features every K and T verdict is unchanged, AUCs within 0.007 (results/liar/k_scores_full.json, t_scores_full.json) |
-| LT3 | Mistral replication | pending | |
+| LT3 | Mistral-7B as a third family: K1 1.000 all directions; **K2 (i) 0.998–1.000**; K2 (ii) 0.94–0.96; T1 0.837; T2 0.52–0.66; T3 text baseline 0.845 | K1 pass, **reads the instruction (replicated)**, T1 pass, T2 fail, Mistral's real-lie tell not shown beyond wording; within Mistral the mean feature alone reaches 0.984 |
 
 The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Llama→Llama.
 
@@ -60,7 +60,7 @@ The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Ll
 
 ## Caveats
 
-- Two families so far; Mistral is pending.
+- Three families (Qwen, Llama, Mistral), all 7–8B instruction-tuned models.
 - One prompt format and one probe set.
 - Labels come from answer text.
 - bfloat16 features: the strict agreement line failed, and the full-path recompute of every test transcript leaves all verdicts unchanged.

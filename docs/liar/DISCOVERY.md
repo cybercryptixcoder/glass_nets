@@ -4,7 +4,7 @@
 
 ## The result in one sentence
 
-On two modern open model families (Qwen2.5-7B-Instruct, Llama-3.1-8B-Instruct), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00), so what it detects, and what transfers across model families, is the lie instruction in the context, not the lie; holding the instruction fixed, each model does leave a real lie trace in its follow-up answers (AUC 0.86–0.88), but that trace does not transfer between families (0.58–0.62).
+On three modern open model families (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), the black-box lie detector of Pacchiardi et al. (ICLR 2024) flags truthful answers that the model gave *while instructed to lie* exactly as it flags real lies (AUC 0.99–1.00). What it detects, and what transfers across families, is a lying mode set up by the instruction and carried by the few chat-template tokens of the assistant header, not the lie. Holding the instruction fixed, each model does leave a real-lie trace in its follow-up answers (AUC 0.84–0.88), but that trace does not transfer between families (0.52–0.66).
 
 ## The background
 
@@ -25,7 +25,7 @@ On two modern open model families (Qwen2.5-7B-Instruct, Llama-3.1-8B-Instruct), 
   - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT2, LT1-mech) before the scores existed.
   - Questions were split 50/50 by question; all numbers below are on the held-out half.
 
-## The numbers
+## The numbers (Qwen and Llama; Mistral, the third family, gives the same picture: failed lie vs truth 0.998–1.000, real lie vs failed lie 0.837 within, 0.52–0.66 across)
 
 | test | Qwen → Qwen | Qwen → Llama | Llama → Qwen | Llama → Llama |
 |---|---|---|---|---|
@@ -74,7 +74,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 - **That explains a published pattern:** the detector looks strong on prompted lies and collapses where no instruction exists.
 - **It does not show** that black-box lie detection is impossible. A within-model trace of the real lie exists, and it is stronger when the statement is the model's own.
 - **Caveats:**
-  - Two families (a third is being run as a replication).
+  - Three families, all 7–8B instruction-tuned. In Mistral the real-lie trace is not shown to go beyond the answer's wording: a text-only baseline reaches 0.845 against the probes' 0.837.
   - One prompt format.
   - Labels from answer text: ambiguous answers are left out, about 6–14%.
   - Features from a bfloat16 model with a cached computation. The pre-declared agreement check failed its strict line (median difference 0.25, one bfloat16 step; r = 0.9997). As declared, every test transcript was recomputed without the cache, and every pre-registered verdict stayed the same (AUCs moved by at most 0.007).
