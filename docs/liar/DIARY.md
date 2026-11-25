@@ -93,3 +93,7 @@
   - The old chain's shells were stopped while the running Qwen M3 job continued.
   - New chain: /content/stage3.sh, log /content/liar_out/STAGE3.log, marker /content/liar_out/STAGE3DONE.
   - Order: M3 llama8b, check_cache qwen7b, check_cache llama8b, knockout qwen7b, knockout llama8b, run_liar mistral7b, M2 qwen7b, M2 llama8b.
+- 05:28 ET (clock read 05:27:18 just before): the chain was replaced again, so the knockout lands before the 07:51 session reset.
+  - New chain: /content/stage4.sh, log /content/liar_out/STAGE4.log, marker STAGE4DONE.
+  - Order: knockout qwen7b, knockout llama8b, check_cache qwen7b, check_cache llama8b, run_liar mistral7b, M2 qwen7b, M2 llama8b.
+  - It starts when the running M3 llama8b job ends.
