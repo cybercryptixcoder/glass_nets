@@ -58,7 +58,7 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
   runtime. Fresh verification set made: 800 new systems (population members never used,
   with new random angles), scripts/planets/fresh.py; integrations to 1e6 orbits next.
 
-## 21:07 to 21:21 — the law, and the checks on it
+## 21:07 to 21:20 — the law, and the checks on it
 
 - Short-integration summaries (SPOCK FeatureClassifier, Tamayo et al. 2020 quantities)
   computed for 1,720 resonant training systems and 1,736 of the 1,750 network-scored
@@ -91,7 +91,7 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
 - Fresh N-body set: 800 new systems; integrations to 1e6 orbits running here (items
   0-399) and on Colab (400-799), with short summaries and network predictions on Colab.
 
-## 21:21 to 21:40 — freezing, ablation, fresh integrations
+## 21:20 to 21:34 — freezing, ablation, fresh integrations
 
 - Law parameters fixed by final_law.py at 21:18; written to results/planets/FROZEN_LAW.json
   at 21:25. Nothing below refits it.
@@ -104,7 +104,7 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
 - Pipeline cross-check: network and summaries for 16 fresh systems recomputed in this
   workspace match the Colab values (network 0.05 dex mean difference, sampling noise;
   summaries identical to 5 digits). Same spock 2.1.1 and rebound 4.6.0 on both machines.
-- Interim fresh scoring at 21:33 (343 integrated, 79 unstable before 1e6 orbits): law
+- Interim fresh scoring just after 21:32 (343 integrated, 79 unstable before 1e6 orbits): law
   ahead of the network, with the bootstrap interval excluding zero on both fresh metrics.
   For like-for-like context, the held-out random set scored as if stopped at 1e6 orbits
   (random_as_if_1e6.json): law 1.034 vs network 1.121 on the 398 unstable systems,

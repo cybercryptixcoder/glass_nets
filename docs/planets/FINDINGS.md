@@ -2,8 +2,8 @@
 
 ## The finding
 
-When does a compact system of three planets go unstable? The most accurate predictor so
-far has been a Bayesian neural network (Cranmer et al. 2021, shipped in SPOCK). It runs a
+When does a compact system of three planets go unstable? The reference predictor is a
+Bayesian neural network (Cranmer et al. 2021, shipped in SPOCK). It runs a
 short simulation (10,000 orbits) and feeds the whole time series to the network. Earlier
 attempts to replace it with equations either lost accuracy or lost physical meaning: the
 2026 distillation of the network into equations (Alford et al.) is 0.16 dex worse than the
@@ -24,7 +24,9 @@ and t / P1 = 10^4.34 for the few systems that already go unstable inside the sho
 
 Errors are in dex (log10 of the instability time). The two are statistically tied; the
 formula is ahead on the pre-registered metric and level on the other. It was fit on a
-different dataset (the 'resonant' systems) and never tuned on these.
+different dataset (the 'resonant' systems); its form was chosen on half of these test
+systems (see 'How sure we are'), and it was then frozen and checked on new systems
+integrated here.
 
 ## What the quantities are
 
@@ -48,8 +50,9 @@ different dataset (the 'resonant' systems) and never tuned on these.
   the three-body (1/4) and Hill (1/3) scalings.
 - Chaos: at fixed spacing and forcing, t grows as the Lyapunov time to the power 0.53.
   This is the most stable constant in the formula (0.533 +- 0.035 across five disjoint
-  training subsets). It is a Lecar-type relation (Lecar et al. 1992 proposed t ~ T_Lyap^1.7
-  for asteroids), but far shallower once spacing and forcing are accounted for.
+  training subsets). It is a Lecar-type relation (Lecar, Franklin and Murison 1992 found the time
+  to orbit crossing growing as the Lyapunov time to about the 1.7 power for small Solar
+  System bodies), but far shallower once spacing and forcing are accounted for.
 - Forcing: t falls as the eccentricity swing (in crossing units) to the power 1.27; pure
   diffusion to crossing would give 2.
 - Starting near crossing costs up to 0.54 dex.
@@ -88,5 +91,12 @@ different dataset (the 'resonant' systems) and never tuned on these.
   Cranmer et al. 2021 used them in a tree-based regressor. Both are black boxes.
 - Alford et al. 2026 distilled the network into equations of complexity 26 that are 0.16
   dex worse than the network and not unit-consistent.
+- Alford et al. 2026 (arXiv 2610.35617) note that no general equations for predicting
+  instability times existed before their distilled ones; the only human-derived analytic
+  estimate they compare with is Petit et al. 2020 (coplanar, initially circular orbits).
+- Lammers, Hadden and Murray 2024 (ApJ 972, 53) fit a power law for idealized
+  equal-mass, equally spaced systems; on these general systems it scores 2.00 dex.
+- Hussain and Tamayo 2020 showed chaos limits any prediction to about a factor of 3
+  (0.4 to 0.5 dex); our shadow integrations give 0.47 dex on this population.
 - Here: a formula with seven constants, every term a named physical quantity, that matches
   the network on unseen systems, with a must-fail control and an independent N-body check.
