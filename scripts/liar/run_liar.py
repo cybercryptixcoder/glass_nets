@@ -101,7 +101,8 @@ YES, NO = first_ids(["Yes", "yes", " Yes", " yes", "YES"]), first_ids(["No", "no
 P("yes ids", YES, "no ids", NO)
 
 @torch.no_grad()
-def probe_feats(base_msgs, bs=24):
+def probe_feats_full(base_msgs, bs=24):
+    """Reference implementation: every probe conversation run in full."""
     texts = [chat(base_msgs + [{"role": "user", "content": p + " Answer yes or no."}]) for p in PROBES]
     feats = []
     for i in range(0, len(texts), bs):
@@ -110,6 +111,37 @@ def probe_feats(base_msgs, bs=24):
         y = torch.logsumexp(lp[:, YES], -1); n = torch.logsumexp(lp[:, NO], -1)
         feats += (y - n).tolist()
     return feats
+
+def expand_cache(pkv, B):
+    if hasattr(pkv, "batch_repeat_interleave"):
+        pkv.batch_repeat_interleave(B); return pkv
+    raise RuntimeError("cache cannot be expanded")
+
+@torch.no_grad()
+def probe_feats(base_msgs):
+    """Same features, computing the shared transcript once (KV cache) and only the probe turns per probe."""
+    prefix = chat(base_msgs, gen=False)
+    texts = [chat(base_msgs + [{"role": "user", "content": p + " Answer yes or no."}]) for p in PROBES]
+    if not all(t.startswith(prefix) for t in texts):
+        return probe_feats_full(base_msgs)
+    pid = tok(prefix, return_tensors="pt", add_special_tokens=False).input_ids.to("cuda")
+    suf = [tok(t[len(prefix):], add_special_tokens=False).input_ids for t in texts]
+    B, Lp = len(suf), pid.shape[1]
+    out = model(input_ids=pid, use_cache=True)
+    pkv = expand_cache(out.past_key_values, B)
+    Ls = max(len(x) for x in suf)
+    ids = torch.full((B, Ls), tok.pad_token_id, dtype=torch.long)
+    m = torch.zeros((B, Ls), dtype=torch.long)
+    for i, x in enumerate(suf):
+        ids[i, :len(x)] = torch.tensor(x); m[i, :len(x)] = 1
+    ids, m = ids.to("cuda"), m.to("cuda")
+    att = torch.cat([torch.ones((B, Lp), dtype=torch.long, device="cuda"), m], 1)
+    pos = (Lp + torch.arange(Ls, device="cuda")).unsqueeze(0).expand(B, -1)
+    logits = model(input_ids=ids, attention_mask=att, position_ids=pos, past_key_values=pkv, use_cache=True).logits
+    last = torch.tensor([len(x) - 1 for x in suf], device="cuda")
+    lp = torch.log_softmax(logits[torch.arange(B, device="cuda"), last, :].float(), -1)
+    y = torch.logsumexp(lp[:, YES], -1); n = torch.logsumexp(lp[:, NO], -1)
+    return (y - n).tolist()
 
 @torch.no_grad()
 def last_hidden(msgs):
@@ -137,6 +169,17 @@ P("honest-correct", len(kept), "of", len(items), "| lies that avoid the gold:", 
 # 2. probe features
 rows, F, F_noinstr, H = [], [], [], []
 t0 = time.time()
+# self-check of the cached features against the full computation, first transcript
+_b = [{"role": "user", "content": f"{LIE[kept[0]['k']]} {kept[0]['q']}{SUFFIX}"}, {"role": "assistant", "content": kept[0]["lie_answer"]}]
+_a, _f = np.array(probe_feats(_b)), np.array(probe_feats_full(_b))
+P("cache self-check: max |cached - full| =", float(np.abs(_a - _f).max()), "mean |full| =", float(np.abs(_f).mean()))
+def save_all(final=False):
+    np.save(os.path.join(OUT, f"{TAG}_feats.npy"), np.array(F, dtype=np.float32))
+    np.save(os.path.join(OUT, f"{TAG}_feats_noinstr.npy"), np.array(F_noinstr, dtype=np.float32))
+    np.save(os.path.join(OUT, f"{TAG}_hidden_last.npy"), np.array(H, dtype=np.float16))
+    with open(os.path.join(OUT, f"{TAG}_transcripts.jsonl"), "w") as f:
+        for r in rows:
+            f.write(json.dumps(r) + "\n")
 for j, it in enumerate(kept):
     for cond in ("lie", "truth"):
         instr = (LIE if cond == "lie" else TRUTH)[it["k"]]
@@ -149,13 +192,8 @@ for j, it in enumerate(kept):
         rows.append(dict(qi=it["qi"], src=it["src"], q=it["q"], gold=it["gold"], k=it["k"], cond=cond, label=label, answer=ans))
     if j % 25 == 0:
         P("probed", j, "of", len(kept), f"{time.time() - t0:.0f}s")
-        np.save(os.path.join(OUT, f"{TAG}_feats.npy"), np.array(F, dtype=np.float32))
-np.save(os.path.join(OUT, f"{TAG}_feats.npy"), np.array(F, dtype=np.float32))
-np.save(os.path.join(OUT, f"{TAG}_feats_noinstr.npy"), np.array(F_noinstr, dtype=np.float32))
-np.save(os.path.join(OUT, f"{TAG}_hidden_last.npy"), np.array(H, dtype=np.float16))
-with open(os.path.join(OUT, f"{TAG}_transcripts.jsonl"), "w") as f:
-    for r in rows:
-        f.write(json.dumps(r) + "\n")
+        save_all()
+save_all(final=True)
 with open(os.path.join(OUT, f"{TAG}_items.jsonl"), "w") as f:
     for it in items:
         f.write(json.dumps(it) + "\n")
