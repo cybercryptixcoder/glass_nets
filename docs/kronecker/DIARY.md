@@ -11,7 +11,7 @@
 - **This changes the picture in the target report.** The published "best interpretable model, about 83%" was never compared with this 1993 theory, which reaches 97–98% on our triples. The black boxes (98–99%) can therefore only add about 0.5–2 points over known math, and all of it must come from the hard zeros.
 - **Pre-registered criterion KR1(c), "beat B1 by ≥ 5 points", is impossible:** B1 is at 97.6–97.9% on the held-out n. The change is declared in the ledger (KR1b) before any rule search.
 
-## Nov 25, ~02:20 ET (after the 02:05 clock read; next entry carries a fresh read): where the hard zeros are (dev n ≤ 14 only)
+## Nov 25, 02:11 ET (clock): where the hard zeros are (dev n ≤ 14 only)
 
 - **B2, LightGBM on raw parts** (orbit-level 80/20 split, same triples):
   - n = 12: 97.35% against B1's 96.50%; it catches 56% of the hard zeros.
