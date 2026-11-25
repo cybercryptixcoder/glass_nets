@@ -123,3 +123,12 @@ N-body integrations. Ledger row: PL1 in docs/glass/CHANGES.md.
 - Robust view (fresh_robust.json): the network has the smaller median error (0.58 vs 0.66)
   but misses by more than 2 dex on 12.3% of the unstable systems against the law's 3.2%.
 - Decision at the 21:45 check: no extension needed. Everything registered is delivered.
+
+## 21:47 — hand read and close
+
+- Read 10 fresh unstable systems by hand (truth, law, network, MEGNO, forcing, spacing):
+  sensible, no pipeline oddities. The network's 19 misses over 2 dex on the fresh set are
+  strongly chaotic systems (median MEGNO 19.6, truth median 10^5.2 orbits) that it called
+  long-lived (median 10^8.6); the law, reading MEGNO directly, puts them at a median 10^6.2.
+- Raw traces committed (results/planets/raw/). Colab session stopped. Knee work stays
+  stashed locally, not pushed.

@@ -81,6 +81,11 @@ scored with the law frozen at 21:25 (FROZEN_LAW.json). 693 were integrated by th
 | median absolute error, the 154 | 0.657 | 0.579 | |
 | misses larger than 2 dex, the 154 | 3.2% | 12.3% | |
 
+Hand read (DIARY 21:47): the network's 19 misses over 2 dex are strongly chaotic systems
+(median MEGNO 19.6) that went unstable at a median 10^5.2 orbits; the network called them
+long-lived (median 10^8.6), the law much less so (median 10^6.2), because its chaos term
+reads MEGNO directly.
+
 Reading: on new systems the law beats the network on both registered-style metrics, with
 intervals that exclude zero. The network is slightly better on the typical system (median
 error) but misses by more than 2 dex four times as often (it calls some short-lived systems
