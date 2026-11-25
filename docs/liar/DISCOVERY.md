@@ -77,7 +77,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - Two families (a third is being run as a replication).
   - One prompt format.
   - Labels from answer text: ambiguous answers are left out, about 6–14%.
-  - Features from a bfloat16 model with a cached computation. The pre-declared agreement check failed its strict line (median difference 0.25, one bfloat16 step; r = 0.9997). As declared, every test transcript was recomputed without the cache, and the scores did not change (to 3 decimals for Qwen; Llama recompute: see STATUS).
+  - Features from a bfloat16 model with a cached computation. The pre-declared agreement check failed its strict line (median difference 0.25, one bfloat16 step; r = 0.9997). As declared, every test transcript was recomputed without the cache, and every pre-registered verdict stayed the same (AUCs moved by at most 0.007).
 
 ## Where everything is
 

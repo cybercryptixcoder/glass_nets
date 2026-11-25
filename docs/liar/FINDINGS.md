@@ -35,7 +35,7 @@
 | LT2-M5 | probes cannot see the user turn / the answer | 0.975, 0.957 / 1.000, 1.000 | neither span alone |
 | LT2-M5b | probes cannot see the user turn and the answer | 0.997, 0.992 | the template tokens between the turns carry it |
 | LT2-M5c | probes cannot see anything after the user header | 0.591, 0.534 | localisation confirmed (no leak) |
-| LT1-score | cached vs full features, 20 transcripts | Qwen r 0.9997, median 0.25; Llama r 0.9995, median 0.125 | fail; full-path recompute run |
+| LT1-score / LT1-full | cached vs full features, 20 transcripts; then all test transcripts recomputed | Qwen r 0.9997, median 0.25; Llama r 0.9995, median 0.125 | check fails; on full-path test features every K and T verdict is unchanged, AUCs within 0.007 (results/liar/k_scores_full.json, t_scores_full.json) |
 | LT3 | Mistral replication | pending | |
 
 The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Llama→Llama.
@@ -50,7 +50,6 @@ The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Ll
   - With the old substring labels: 1.000 / 0.9997 (results/liar/robust_labels.json).
   - T1 within question type: arithmetic 0.992 / 0.809, other 0.824 / 0.895 (results/liar/t1_by_source.json).
 - **Hiding the answer** from the probes takes the real-lie signal (lie vs failed_lie, K1 detector) to chance: 0.569 / 0.515.
-- **Qwen full-path re-score:** within-model AUCs unchanged to 3 decimals. The two-family re-score is pending.
 
 ## Novelty
 
@@ -64,6 +63,6 @@ The four K2 entries are in the order Qwen→Qwen, Qwen→Llama, Llama→Qwen, Ll
 - Two families so far; Mistral is pending.
 - One prompt format and one probe set.
 - Labels come from answer text.
-- bfloat16 features: the strict agreement line failed, and the full-path recompute leaves results unchanged.
+- bfloat16 features: the strict agreement line failed, and the full-path recompute of every test transcript leaves all verdicts unchanged.
 - In T4 the quoted setting also removes the instruction (change of context).
 - The knockouts mask attention from the probe tokens only; the transcript itself is encoded normally.

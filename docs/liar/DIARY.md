@@ -205,3 +205,11 @@ Shown: the K1 detector's failed_lie vs truth AUC (the instruction signal) on the
 - **Files:** results/liar/m5b_both.json, m5c_after.json.
 
 **Chain:** /content/stage7.sh (pid 68347) is running check_cache llama8b. The check fails as expected, and the full recompute of 438 test transcripts is at about 6 s each. Mistral (LT3) and M2 follow.
+
+## Nov 25, 08:31 ET (clock): claim-grade re-score on full-path test features: every verdict unchanged
+
+- **Llama cache check** (results/liar/llama8b_check_cache.json): r = 0.99949, median |diff| = 0.125, max 0.68. The check fails, as Qwen's did. All 438 Llama test transcripts were recomputed on the full path (2,555 s).
+- **Re-score** with full-path test features in both families (ledger LT1-full; results/liar/k_scores_full.json, t_scores_full.json):
+  - K1 pass, K2 (i) fail (reads the instruction), K2 (ii) pass, K3 not a yes-bias, T1 pass, T2 fail, T3 beyond wording. Identical to the cached-path scores.
+  - Every AUC moved by at most 0.007. For example, T2 Llama→Qwen goes from 0.581 to 0.588, and the mean-feature AUC from 0.594 to 0.587.
+- **Next on the GPU** (/content/stage7.sh): run_liar mistral7b (LT3), then M2 for both families.
