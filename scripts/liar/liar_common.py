@@ -134,7 +134,10 @@ def instruction_positions(m, msgs, instr):
 
 def span_positions(m, msgs, span):
     """Prefix token positions of the first user turn's content ('user') or of the assistant turn's content
-    ('assistant'), found from character offsets (LT2-M5)."""
+    ('assistant'), found from character offsets (LT2-M5); 'both' is their union (LT2-M5b)."""
+    if span == "both":
+        u, a = span_positions(m, msgs, "user"), span_positions(m, msgs, "assistant")
+        return sorted(set(u) | set(a))
     prefix = chat(m, msgs, gen=False)
     text = msgs[0]["content"] if span == "user" else msgs[1]["content"]
     start = prefix.find(text) if span == "user" else prefix.rfind(text)
