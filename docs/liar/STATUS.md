@@ -101,3 +101,21 @@ Outputs: /content/liar_out/<tag>_feats_attrib.npy, <tag>_mech_<pos>_vs_<neg>.jso
   2. Run `KO_SPAN=user python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m5_user.json qwen7b llama8b`, and the same with assistant.
   3. Reading (LT2-M5): the span whose hiding brings failed vs truth to ≤ 0.65, while the other span leaves it ≥ 0.90, carries the mode.
 - **Final-report draft** (outside the repo): /home/claude/FINAL_DRAFT.md.
+
+## Update, Nov 25 06:56 ET (clock)
+
+- **Qwen cache check:** r = 0.99967, median 0.25, so the check fails. The full-path recompute is done and leaves within-model scores unchanged to 3 decimals. The files <tag>_feats_full.npy and <tag>_feats_noinstr_full.npy for Qwen are in ~/ldata/both.
+- **M5 on Qwen:**
+  - Hiding the whole user turn leaves failed vs truth at 0.975.
+  - Hiding the whole answer leaves it at 1.000, but drops lie vs failed (K1 detector) from 0.63 to 0.57.
+  - Files: results/liar/m5_user_qwen.json, m5_assistant_qwen.json.
+  - Declared M5b (ledger LT2-M5b): hide both spans at once.
+- **The chain now running is /content/stage6.sh** (log STAGE6.log, marker STAGE6DONE). It starts after the running llama8b user knockout. Steps:
+  1. knockout llama8b assistant;
+  2. knockout qwen7b both, then llama8b both;
+  3. check_cache llama8b, with recompute;
+  4. run_liar mistral7b;
+  5. M2 qwen7b, then M2 llama8b.
+- **Scoring when each lands:**
+  - `KO_SPAN=<span> python3 -I scripts/liar/score_m4.py ~/ldata/both results/liar/m5_<span>.json qwen7b llama8b`, with span = user, assistant or both;
+  - after the Llama recompute: `LIAR_FULL=1 python3 -I scripts/liar/score_k.py ~/ldata/both qwen7b llama8b results/liar/k_scores_full.json`, and likewise score_t.py into t_scores_full.json.
