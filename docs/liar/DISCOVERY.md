@@ -22,7 +22,7 @@ On two modern open model families (Qwen2.5-7B, Llama-3.1-8B), the black-box lie 
   - We then asked the paper's 65 probes and recorded the log-odds of yes against no.
   - Each answer was labelled from its text. Told to lie: *lie* if the answer does not give the correct answer, *failed lie* if it does. Told to answer truthfully: *truth* if it gives the correct answer. Ambiguous answers are left out. Labelling rules: scripts/liar/labels_v2.py, tested on hand-read transcripts.
 - **Pre-registration.**
-  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4, LT5) before the scores it judges existed.
+  - Every test and pass line was written in the ledger (docs/glass/CHANGES.md, rows LT1, LT1-score, LT1-labels, LT1-mech, LT1-full, LT2, LT2-M4, LT2-M5, LT2-M5b, LT2-M5c, LT3, LT3-M5, LT4, LT5, LT6) before the scores it judges existed.
   - Questions were split 50/50 by question; all numbers below are on the held-out half.
 
 ## The numbers
@@ -79,6 +79,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - every one of the nine groups reaches at least 0.91 in both families;
   - the nonsense probes do not make the model confess. Under the lie instruction its answers to them drift toward "yes", even when its first answer was true, and the detector reads that drift.
   - So the paper's observation that even unknowable questions work fits the instruction reading.
+- **Not tied to one wording of the instruction** (pre-registered as LT6). Each question was asked under one of four lie instructions. Failed lies score as lies under each of them (0.999–1.000). A detector trained without one wording still flags that wording's failed lies at 0.999–1.000. All four wordings contain "with a lie", so this shows generality across paraphrases, not across very different ways of inducing a lie.
 - **Robust to where the instruction sits.** Deployed systems and benchmarks such as Liars' Bench often put such instructions in the system prompt, so we moved the lie instruction there (both clean families, pre-registered as LT4):
   - failed lies still score as lies at 1.000 in Qwen and in Llama;
   - the detector transfers between the two formats at 1.000;
@@ -98,7 +99,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
 
 ## Where everything is
 
-- **Code:** scripts/liar/: run_liar.py (generation and probes), labels_v2.py, score_k.py, score_t.py, score_t4.py, score_m4.py, score_groups.py, probe_table.py, attrib.py, knockout.py, mech.py, check_cache.py.
+- **Code:** scripts/liar/: run_liar.py (generation and probes), labels_v2.py, score_k.py, score_t.py, score_t4.py, score_m4.py, score_groups.py, score_wording.py, probe_table.py, attrib.py, knockout.py, mech.py, check_cache.py.
 - **Scores:**
   - results/liar/k_scores.json and k_scores_full.json;
   - t_scores.json and t_scores_full.json;
@@ -107,6 +108,7 @@ All entries are AUCs. Each column header gives the family whose detector was tra
   - the Mistral pairs: k_scores_*_mistral7b.json, t_scores_*_mistral7b.json; Mistral knockouts m4_mistral.json, m5b_mistral.json, m5c_mistral.json;
   - the system-prompt runs (LT4): k_scores_qwen7b_sys.json, k_scores_llama8b_sys.json, t_scores_qwen7b_sys.json, t_scores_llama8b_sys.json, lt4_qwen_failed_vs_truth.json, lt4_llama_failed_vs_truth.json;
   - probe groups (LT5): groups_full.json and groups_cached.json;
+  - instruction wordings (LT6): wording_full.json and wording_cached.json;
   - probe_table.json and probe_table_3.json.
 - **Story:** docs/liar/DIARY.md and docs/liar/STATUS.md. Technical summary with every verdict: docs/liar/FINDINGS.md.
 - **Raw features and transcripts** stay outside the repo; they are small and can be shared on request. They can also be regenerated from the open weights; the decoding is greedy.
