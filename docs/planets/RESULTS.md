@@ -35,6 +35,19 @@ Published numbers (their own evaluation choices, not re-run here): Petit et al. 
 their network's 1.26 on the same evaluation, i.e. 0.16 dex worse than the network. On our
 evaluation the law is 0.055 dex better than the network on the same metric family.
 
+## Every term earns its place (ablation.json)
+
+Refit without one term at a time (censored, resonant only), same 1,736 systems:
+
+| | unstable | with stable |
+|---|---|---|
+| full law | 1.104 | 0.880 |
+| without the chaos term, log10(MEGNO - 2) | 1.219 | 1.020 |
+| without the three-body spacing Xh | 1.189 | 0.989 |
+| without the eccentricity forcing, log10(sigma_EM / EM_cross) | 1.144 | 0.973 |
+| without the near-pair spacing, log10(EM_cross) | 1.127 | 0.892 |
+| without the crossing term, min(R, 1) | 1.125 | 0.919 |
+
 ## Checks
 
 - Recalibration (recalibration_check.json): an affine correction fitted on the DEV half's
@@ -58,6 +71,6 @@ See the section at the end (filled when the integrations are scored).
 ## How to reproduce
 
 features.py and physfeat.py (initial conditions) -> nn_batch.py (network) ->
-short_feats.py (summaries; Colab copy in DIARY) -> short_table.py -> final_law.py ->
+short_feats.py (summaries; Colab launchers in scripts/planets/colab) -> short_table.py -> final_law.py ->
 controls.py, ic_only_same.py, recal_check.py, nn_settings_check.py -> fresh.py make/run
 -> fresh_eval.py.
