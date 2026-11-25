@@ -20,9 +20,10 @@ mu, sd, w = np.array(det["mean"]), np.array(det["scale"]), np.array(det["coef"])
 def score(f): return float(((np.asarray(f) - mu) / sd) @ w + b0)
 import score_k
 lab = np.array(score_k.relabel(rows)); tr = np.array([r["qi"] in L.TRAIN for r in rows])
-NEG = det.get("neg", "truth")              # LT2 M2: failed_lie
-lie_tr, tru_tr = np.flatnonzero(tr & (lab == "lie")), np.flatnonzero(tr & (lab == NEG))
-lie_te, tru_te = np.flatnonzero(~tr & (lab == "lie")), np.flatnonzero(~tr & (lab == NEG))
+NEG = det.get("neg", "truth")              # LT2 M2: failed_lie; M3: truth
+POS = det.get("pos", "lie")                # LT2 M3: failed_lie
+lie_tr, tru_tr = np.flatnonzero(tr & (lab == POS)), np.flatnonzero(tr & (lab == NEG))
+lie_te, tru_te = np.flatnonzero(~tr & (lab == POS)), np.flatnonzero(~tr & (lab == NEG))
 nL = H.shape[1] - 1
 dvec = {Lh: torch.tensor(np.asarray(H[lie_tr, Lh], np.float32).mean(0) - np.asarray(H[tru_tr, Lh], np.float32).mean(0)).cuda()
         for Lh in range(4, nL - 1, 4)}
@@ -57,7 +58,7 @@ for Lh, v in dvec.items():
 best = max(sweep, key=lambda k: min(sweep[k]["close_plus"], sweep[k]["close_minus"]))
 r3 = np.random.default_rng(3)
 te_l, te_t = r3.choice(lie_te, min(40, len(lie_te)), replace=False), r3.choice(tru_te, min(40, len(tru_te)), replace=False)
-res = dict(tag=tag, neg=NEG, layer=int(best), d_norm=float(dvec[best].norm()), sweep={str(k): v for k, v in sweep.items()})
+res = dict(tag=tag, pos=POS, neg=NEG, layer=int(best), d_norm=float(dvec[best].norm()), sweep={str(k): v for k, v in sweep.items()})
 res["test"] = closing(te_t, te_l, best, dvec[best]); print("test", res["test"], flush=True)
 g4 = torch.Generator(device="cpu").manual_seed(4); rnd = []
 for j in range(3):
@@ -71,4 +72,4 @@ res["pass"] = bool(res["test"]["close_plus"] >= 0.5 and res["test"]["close_minus
 res["exploratory_last_token_only"] = closing(te_t, te_l, best, dvec[best], last_only=True)
 res["seconds"] = round(time.time() - t0)
 print(res, flush=True)
-json.dump(res, open(os.path.join(out, f"{tag}_mech_{NEG}.json"), "w"), indent=1)
+json.dump(res, open(os.path.join(out, f"{tag}_mech_{POS}_vs_{NEG}.json"), "w"), indent=1)
