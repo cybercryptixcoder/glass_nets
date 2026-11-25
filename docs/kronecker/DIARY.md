@@ -102,3 +102,10 @@
   | 17 | 46% | 6% | 13% | 0% | 35% |
 
   - The 'other' part, with no two-row shape, hook or squared rectangle, grows with n. That part is the genuinely open territory.
+
+## Nov 25, 05:27 ET (clock): n = 20 P2 job died; rerun queued alone
+
+- On Colab `kron`, the n = 20 P2 + LightGBM job (`p2_heldout.py 20`) left an empty log and is no longer running.
+  - It ran in parallel with the n = 19 jobs. The most likely cause is memory: n = 20 has 246M ordered triples and the orbit computation holds several arrays of that size.
+- The P4 job for n = 20 is running alone.
+- A solo rerun of `p2_heldout.py 20` is queued behind it: /content/p2_20.sh, log /content/kdata/heldout_20b.log, marker /content/kdata/P2_20_DONE. Same frozen code, no change.
