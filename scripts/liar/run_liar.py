@@ -170,8 +170,14 @@ items = []
 for qi, (src, q, gold) in enumerate(chosen):
     k = qi % len(LIE)
     items.append(dict(qi=qi, src=src, q=q, gold=gold, k=k))
-lie_prompts = [chat([{"role": "user", "content": f"{LIE[it['k']]} {it['q']}{SUFFIX}"}]) for it in items]
-tru_prompts = [chat([{"role": "user", "content": f"{TRUTH[it['k']]} {it['q']}{SUFFIX}"}]) for it in items]
+PLACE = os.environ.get("PLACE", "user")          # LT4: 'system' puts the instruction in the system message
+def instructed(instr, q):
+    if PLACE == "system":
+        return [{"role": "system", "content": instr}, {"role": "user", "content": f"{q}{SUFFIX}"}]
+    return [{"role": "user", "content": f"{instr} {q}{SUFFIX}"}]
+P("instruction placement", PLACE)
+lie_prompts = [chat(instructed(LIE[it['k']], it['q'])) for it in items]
+tru_prompts = [chat(instructed(TRUTH[it['k']], it['q'])) for it in items]
 t0 = time.time()
 lie_ans = generate(lie_prompts); tru_ans = generate(tru_prompts)
 P("generated", len(items) * 2, f"{time.time() - t0:.0f}s")
@@ -185,7 +191,7 @@ P("honest-correct", len(kept), "of", len(items), "| lies that avoid the gold:", 
 rows, F, F_noinstr, H = [], [], [], []
 t0 = time.time()
 # self-check of the cached features against the full computation, first transcript
-_b = [{"role": "user", "content": f"{LIE[kept[0]['k']]} {kept[0]['q']}{SUFFIX}"}, {"role": "assistant", "content": kept[0]["lie_answer"]}]
+_b = instructed(LIE[kept[0]['k']], kept[0]['q']) + [{"role": "assistant", "content": kept[0]["lie_answer"]}]
 _a, _f = np.array(probe_feats(_b)), np.array(probe_feats_full(_b))
 P("cache self-check: max |cached - full| =", float(np.abs(_a - _f).max()), "median =", float(np.median(np.abs(_a - _f))),
   "pearson r =", float(np.corrcoef(_a, _f)[0, 1]), "mean |full| =", float(np.abs(_f).mean()))
@@ -200,7 +206,7 @@ for j, it in enumerate(kept):
     for cond in ("lie", "truth"):
         instr = (LIE if cond == "lie" else TRUTH)[it["k"]]
         ans = it["lie_answer"] if cond == "lie" else it["truth_answer"]
-        base = [{"role": "user", "content": f"{instr} {it['q']}{SUFFIX}"}, {"role": "assistant", "content": ans}]
+        base = instructed(instr, it['q']) + [{"role": "assistant", "content": ans}]
         label = ("lie" if not it["lie_contains_gold"] else "failed_lie") if cond == "lie" else "truth"
         F.append(probe_feats(base))
         F_noinstr.append(probe_feats([{"role": "user", "content": f"{it['q']}{SUFFIX}"}, {"role": "assistant", "content": ans}]))
