@@ -77,8 +77,8 @@ Read all of these (they were triaged as useful or minor, not essential). Title |
 - [x] Claude Fable 5 & Claude Mythos 5 System Card | 2026-06 | https://www-cdn.anthropic.com/2f9323abbcc4abe219577539efe19a623c9ca2bd/Claude%20Fable%205%20%26%20Claude%20Mythos%205%20System%20Card.pdf | anthropic
 - The Value Axis: Language Models Encode Whether They're on the Right Track | 2026-06 | https://arxiv.org/abs/2606.17056 | anthropic
 - A Global Workspace in Language Models (summary) | 2026-07 | https://www.anthropic.com/research/global-workspace | anthropic
-- Reading Between the Dots: Decoding Hidden Computation across Filler Tokens | 2026-07 | https://arxiv.org/abs/2607.03502 | anthropic
-- A Shared Subcircuit Lets LLMs Count Down Across Tasks | 2026-07 | https://arxiv.org/abs/2607.12279 | anthropic
+- [x] Reading Between the Dots: Decoding Hidden Computation across Filler Tokens | 2026-07 | https://arxiv.org/abs/2607.03502 | anthropic — DONE already (`arxiv-2607.03502`); queue line was unticked, ticked at run 775 after an ID-based gate (title-first lines hide from the slug check)
+- [x] A Shared Subcircuit Lets LLMs Count Down Across Tasks | 2026-07 | https://arxiv.org/abs/2607.12279 | anthropic — DONE already (`arxiv-2607.12279`); queue line was unticked, ticked at run 775 after an ID-based gate
 - Fine-Tuned Lie Detectors Failed to Generalize | 2026-08 | https://alignment.anthropic.com/2026/lie-detectors/ | anthropic
 - [x] Evaluating and Improving LLM Self-Modeling | 2026-08 | https://arxiv.org/abs/2608.30980 | anthropic — DONE entry 373 (`arxiv-2608.30980`)
 - Steering Language Model Goals with Value Transplant | 2026-09 | https://arxiv.org/abs/2609.34056 | anthropic
