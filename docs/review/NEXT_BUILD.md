@@ -419,8 +419,12 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
   "scientist" wrote 59 concept programs over three rounds (0 of 24; 0 of 15 after refinement with round-1 scores;
   0 of 20 from minimal pairs on channel 22), and 8 rules synthesised from the channels also failed
   (kepler/FINDINGS §4; kepler/DIARY, Nov 24). The agent's own conclusion: "The residual is mostly not a simple static
-  feature." The one feature accepted was a calculation feature (capture resolution). Both point the same way: what is
-  missing from the vocabulary is dynamic (calculation, search), not another static board pattern.
+  feature." Shallow calculation does not fill it either: three hand-written calculation features (capture
+  resolution, threats, mate in the capture sequence) together raise the explained share only from 77.4% to 78.5%,
+  and only capture resolution passed (`results/kepler/chess/calculation_features.json`). So the missing part is
+  neither a static pattern nor shallow calculation written from outside. The untested candidate is the network's own
+  deeper look-ahead (Jenner et al. 2024 showed Leela computes future moves internally), which has to be read from
+  inside the network, not added as a hand-written feature.
 - *Why it blocks.* Discovery *is* the invention of a concept that was not in the vocabulary. A system that can only
   say "unexplained residual" when the network uses something new cannot discover.
 - *Needed.* **Library learning**: new primitives are defined as programs from the network's own units, verified by
@@ -847,8 +851,10 @@ This shows how the roles and stages fit together on the case where the record st
 bullet is a description of what the box *would* do, not a result. Kepler's K9 already tried a one-shot version of
 the observer step on these very pairs (channel 22's minimal pairs: 0 of 20 programs accepted). What differs below is
 the cycle around it: a simulation test, refinement with the failures shown, rivals separated by designed positions,
-a frontier model in the reasoning roles, and a library that contains calculation and search primitives, which the
-agent's own K9 conclusion says the residual needs.
+a frontier model in the reasoning roles, a library that contains calculation and search primitives, and, above
+all, variables read from inside the network: hand-written calculation features added from outside closed only 1.2
+points (`results/kepler/chess/calculation_features.json`), so the cycle must start from what the network itself
+computes, including its internal look-ahead.
 
 - **Where the record stops.** On LD2, 61 classical concepts explain 78% of the value; quiet positions 81%, tactical
   positions 36%; channels 22 and 15 track the unexplained part, and resetting channel 22 removes 32% of the residual
@@ -989,8 +995,10 @@ argued.
 - **Where the record leaves it:**
   - 61 classical concepts explain 78% of LD2's value; quiet positions 81%, tactical ones 36%;
   - two causal channels (22, 15) track the residual;
-  - 59 concept programs from the cheap scientist, all rejected; the one accepted feature was a calculation
-    (capture-resolution) feature, and the agent concluded the residual "is mostly not a simple static feature";
+  - 59 concept programs from the cheap scientist, all rejected; three hand-written calculation features together
+    add only 1.2 points (77.4% → 78.5%), and the agent concluded the residual "is mostly not a simple static
+    feature". The likely home of the rest is the network's internal look-ahead, which only an inside-out reading can
+    reach;
   - one counter-textbook behaviour rule (trade queens when lost against strong play) verified in play;
   - no rule shown to be an internal switch (kepler/FINDINGS §4–5).
 - **Decoded means:**
