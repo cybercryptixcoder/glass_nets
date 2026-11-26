@@ -1101,11 +1101,11 @@ small (59 programs against Helix's thousands).
 
 **Whether interpretability can be a good home for Helix, and the test that decides it.** Helix's own research
 question is how a discovery system gets past its model's prior (`helix_evolve/docs/research/RESEARCH_CASE.md`).
-Its answer so far is sobering for a design that relies on the score alone:
+Helix's own evidence so far is sobering for a design that relies on the score alone:
 - selection by a score "stays near what the model has already written" (19 of 19 fresh restarts returned to the
   textbook construction);
 - what moved the search furthest was a signal on the proposal side, written ideas from outside the model (run C's
-  summary of published methods);
+  summary of published methods; `docs/RECORDS.md`);
 - the case cites reinforcement learning on verifiable rewards as not getting past the prior, and distillation from
   another model as doing so.
 
@@ -1186,9 +1186,9 @@ glass-2 was frozen, pre-registered and given a shuffled-network control that had
 0.81 (REPORT_ROUND2). So the loophole-closing goes where Helix learned it belongs, in the scorer, in three layers:
 - a restricted definition language: a budget of free constants; no weights, no raw activations, no fitted
   sub-models;
-- a must-fail set written before the scorer is used, made of the programs a search will find first (a boosted-tree
-  fit, a linear map of earlier channels, a pruned copy, a hash of the input), plus shuffled targets and held-out
-  positions;
+- a must-fail set written before the scorer is used, made of the programs a search would find first if it could (a
+  boosted-tree fit, a linear map of earlier channels, a pruned copy, a hash of the input), plus shuffled targets and
+  held-out positions;
 - the rule that a program which beats the must-fail set is first a finding about the scorer, checked by the
   director, before it is a finding about the network.
 
