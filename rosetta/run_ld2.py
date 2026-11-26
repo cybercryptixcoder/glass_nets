@@ -60,10 +60,10 @@ def site_acts(m, rows, site=SITE):
 
 
 @torch.no_grad()
-def value(m, rows, edit=None):
+def value(m, rows, edit=None, bs=1000):
     out = []
-    for i in range(0, len(rows), 500):
-        _, wdl = m(planes(rows[i:i + 500]), edit=edit)
+    for i in range(0, len(rows), bs):
+        _, wdl = m(planes(rows[i:i + bs]), edit=edit)
         out.append((wdl[:, 0] - wdl[:, 2]).numpy())
     return np.concatenate(out)
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
                 a = unit_rows(c)(rr); g = np.random.default_rng(int(c)); return np.stack([x[g.permutation(64)] for x in a])
             d = D.define(shuf); d["unit"] = f"LD2 channel {c}, squares shuffled"; ctrl.append(d)
             print("shuffled", c, d["text"], d["heldout_fidelity"], flush=True)
-        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl, "pos")
+        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl[:24], "pos")   # squares-shuffled controls keep totals: not a control at the position level
         json.dump({"line_max": mx, "line_q99": q99, "line_pos_max": px, "line_pos_q99": pq, "controls": ctrl},
                   open(f"{RES}/ld2_controls_site{SITE}.json", "w"), indent=1)
         print("LINE per-square", round(mx, 4), "position-level", round(px, 4), round(time.time() - t0), "s")

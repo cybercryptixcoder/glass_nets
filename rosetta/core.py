@@ -92,14 +92,22 @@ def search(y, L, specs, beam=48, depth=3, keep=10):
     return out
 
 
-def search_pos(yt, L3, specs, beam=48, depth=3, keep=10, min_count=5):
+def residualizer(Q):
+    """Projection that removes what the nuisance columns Q [n, q] (e.g. piece counts) explain, plus a constant."""
+    Q1 = np.column_stack([np.ones(len(Q)), Q]).astype(np.float64)
+    G = np.linalg.pinv(Q1.T @ Q1) @ Q1.T
+    return lambda Y: (Y - (Y @ G.T) @ Q1.T) if Y.ndim == 2 else (Y - Q1 @ (G @ Y))
+
+
+def search_pos(yt, L3, specs, beam=48, depth=3, keep=10, min_count=5, resid=None):
     """Position-level search: the program's count per position (sum over sites) against the unit's total per
-    position (yt [n]). L3: literal matrix reshaped [M, n, S]."""
-    yc = (yt - yt.mean()).astype(np.float32)
+    position (yt [n]), both with the nuisance (material) part removed by `resid`. L3: literal matrix [M, n, S]."""
+    resid = resid or (lambda Y: Y - (Y.mean(-1, keepdims=True) if Y.ndim == 2 else Y.mean()))
+    yc = resid(yt.astype(np.float64)).astype(np.float32)
     sd = yc.std() + 1e-9
 
     def corr(Cn):                       # Cn: [M, n] counts per position
-        Cc = Cn - Cn.mean(1, keepdims=True)
+        Cc = resid(Cn.astype(np.float64)).astype(np.float32)
         den = np.sqrt((Cc ** 2).sum(1)) * sd * np.sqrt(len(yc))
         c = (Cc @ yc) / np.maximum(den, 1e-9)
         c[(Cn > 0).sum(1) < min_count] = 0.0

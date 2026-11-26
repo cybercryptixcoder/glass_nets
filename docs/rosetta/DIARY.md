@@ -37,3 +37,28 @@ activity. Added the level the rest of the network can pool: the unit's total per
 per position, with its own search and its own control line. On S3 the position-level search returns
 "own_P and rel_rank>=4 and passed_pawn" at held-out 0.962 (before the sealed file was read). Controls and planted
 networks rerun with both levels; LD2 not yet scored.
+
+**04:42. Measurement change 3 (a control error, fixed before LD2 was scored).** At the position level the
+square-shuffled controls are not controls (shuffling squares inside a position leaves its total unchanged), and the
+untrained networks' totals were matched at 0.958 by plain piece counts: random functions of the board are mostly
+material. Position-level fidelity now removes the 12 piece counts from both the unit's total and the program's count
+(a definition must explain what is not material), and the position-level line uses only untrained-network controls.
+Check after the change, before the sealed file was read: S3's readout direction still gets
+"own_P and rel_rank>=4 and passed_pawn" at 0.955; an untrained network's readout gets -0.51 and its top channel 0.46.
+
+**04:48. LD2, first pass (site 10, the last block).** The record's surrogate leaves 22% of LD2's value unexplained.
+Rosetta ranked LD2's 128 last-block channels by correlation with that residual among those whose ablation moves the
+value (above the median): channels 15, 80, 22, 122, 14, 103, 76, 89 (the record's two causal channels, 22 and 15,
+came back unprompted). Lines from controls (an untrained LD2 with its weights permuted, plus square-shuffled units):
+per-square 0.166, position-level 0.434. Defined above the per-square line: 15, 80, 122, 14, 103, 76 and the
+residual direction; 22 and 89 not. The two strongest:
+- channel 122: "not opp_P and outnumbered_opp and la_m1_to" (0.377): the square the network's own best move goes to,
+  when an enemy piece there has more attackers than defenders;
+- channel 80: "opp_Q and att_us<=1 and not la_m1_to" (0.369): the enemy queen, attacked at most once, not our target.
+
+**04:51. Two translation errors found and fixed.**
+- The memoriser (whose output is exactly constant: std 0.0) got 3 accepted definitions, because the unit filter
+  kept the top 6 units by ablation effect even when every effect was zero. The intent says a variable is kept only
+  if the network uses it. Fix: keep a unit only if ablating it moves the output by at least 1% of the output's spread
+  across positions (a network with a constant output uses nothing). Rerun.
+- The LD2 substitution test crashed (batching mismatch between the network pass and the program map). Fixed; rerun.

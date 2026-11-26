@@ -6,7 +6,7 @@ substitute(...)    -> put the program in place of the unit inside the network; s
 """
 import numpy as np
 
-from rosetta.core import literal_specs, literal_matrix, search, search_pos, program_map, fidelity, describe
+from rosetta.core import literal_specs, literal_matrix, search, search_pos, program_map, fidelity, describe, residualizer
 
 
 class Defs:
@@ -20,6 +20,11 @@ class Defs:
         self.L = literal_matrix(Ps, self.specs)
         self.L3 = self.L.reshape(len(self.specs), len(self.rs), -1)
         self.Pt = np.asarray(P[self.rt], dtype=np.float32)
+        # material (12 piece counts) is removed from position-level totals: a definition must explain the rest
+        pc = [names.index(n) for n in names if n[:4] in ("own_", "opp_") and len(n) == 5]
+        self.res_s = residualizer(Ps[:, :, pc].sum(1))
+        self.res_t = residualizer(self.Pt[:, :, pc].sum(1))
+
 
     def define(self, unit_rows_fn, keep=5, center=True):
         """unit_rows_fn(rows) -> [len(rows), S] activity of one unit. Returns the training-best program and its
@@ -45,11 +50,12 @@ class Defs:
         best["runners_up"] = out[1:]
         # the same unit at the level the rest of the network can pool: its total per position
         ts, tt = ys.reshape(len(self.rs), S).sum(1), yt.reshape(len(self.rt), S).sum(1)
-        rp = search_pos(ts, self.L3, self.specs, keep=3)
+        rp = search_pos(ts, self.L3, self.specs, keep=3, resid=self.res_s)
         prog, c = rp[0]
         m = program_map(self.Pt, self.specs, prog).reshape(len(self.rt), S).sum(1)
         best["pos"] = {"program": [self.specs[i][:3] for i in prog], "text": describe(self.specs, prog),
-                       "train_corr": round(c, 4), "heldout_fidelity": round(fidelity(tt, m), 4)}
+                       "train_corr": round(c, 4), "heldout_fidelity": round(fidelity(self.res_t(tt.astype(np.float64)), self.res_t(m.astype(np.float64))), 4),
+                       "heldout_fidelity_raw": round(fidelity(tt, m), 4)}
         return best
 
 

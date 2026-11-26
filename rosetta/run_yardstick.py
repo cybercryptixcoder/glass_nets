@@ -41,7 +41,10 @@ def units_for(m, D, n_keep=6):
             h = h.clone(); h[:, c] = torch.tensor(mean[c]).view(8, 8); return h
         y1, _ = run(m, rows, ed)
         eff.append(float(np.mean(np.abs(y1 - y0))))
-    order = [int(c) for c in np.argsort(eff)[::-1][:n_keep]]
+    # a unit is a variable only if the network uses it: ablating it moves the output by >= 1% of the output's own
+    # spread across positions (fixed before scoring; a network with a constant output uses nothing)
+    floor = 0.01 * float(y0.std())
+    order = [int(c) for c in np.argsort(eff)[::-1][:n_keep] if eff[c] > floor and eff[c] > 0]
     # the readout direction: per-square projection onto the channel weights that best predict the output
     ytr, htr = run(m, D.rs)
     T = htr.sum(2)
@@ -56,9 +59,10 @@ def define_net(m, D, tag):
         d = D.define(lambda rows, c=c: run(m, rows)[1][:, c])
         d.update({"unit": f"channel {c}", "channel": c, "effect": round(eff[c], 4)})
         out["units"].append(d)
-    d = D.define(lambda rows: np.einsum("c,ncs->ns", w, run(m, rows)[1]))
-    d.update({"unit": "readout direction", "channel": None, "effect": None})
-    out["units"].append(d)
+    if order:                                   # the readout direction too, only if any unit is used at all
+        d = D.define(lambda rows: np.einsum("c,ncs->ns", w, run(m, rows)[1]))
+        d.update({"unit": "readout direction", "channel": None, "effect": None})
+        out["units"].append(d)
     return out, w
 
 
@@ -92,7 +96,7 @@ if __name__ == "__main__":
                 def shuf(rows, c=c, mm=mm):
                     a = run(mm, rows)[1][:, c]; return np.stack([r[rng.permutation(64)] for r in a])
                 d = D.define(shuf); d["unit"] = f"{name} channel {c}, squares shuffled"; ctrl.append(d)
-        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl, "pos")
+        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl[:32], "pos")   # squares-shuffled controls keep totals: not a control at the position level
         json.dump({"line_max": mx, "line_q99": q99, "line_pos_max": px, "line_pos_q99": pq, "controls": ctrl},
                   open(f"{RES}/yard_controls.json", "w"), indent=1)
         print("LINE per-square max", round(mx, 4), "| position-level max", round(px, 4), round(time.time() - t0), "s")
