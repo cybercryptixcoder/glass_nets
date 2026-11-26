@@ -39,7 +39,7 @@ if __name__ == "__main__":
     def run(job):
         f, s, rv, fens, top = job
         def score(sentence):
-            pred = llm.teach(sentence, fens, k=3, effort="none")
+            pred = llm.teach(sentence, fens, k=3, effort=os.environ.get("EFFORT", "none"), boards=True)
             if len(pred) != len(top):
                 return None
             return float(np.mean([len(set(p[:3]) & t) / 3 for p, t in zip(pred, top)]))
@@ -49,4 +49,4 @@ if __name__ == "__main__":
         out = list(ex.map(run, jobs))
     for o in out:
         print(json.dumps(o))
-    json.dump(out, open(f"{L.RES}/teach_dict_s{L.SITE}.json", "w"), indent=1)
+    json.dump(out, open(f"{L.RES}/teach_dict_boards_{os.environ.get('EFFORT', 'none')}_s{L.SITE}.json", "w"), indent=1)

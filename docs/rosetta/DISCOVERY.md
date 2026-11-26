@@ -32,11 +32,13 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
 
 3. **One of the network's own ideas passes every test we set in advance:** a detector for "the move I am about to
    play wins material: the piece on its target is outnumbered or undefended". Swapped into the network, the rule does
-   about half of the variable's job; the second network has the same variable. It is a known chess idea, now shown to
-   be a real, working part of the network.
+   about half of the variable's job. All three Leela networks we opened have this variable, including the transformer,
+   where the rule does 73% of the variable's job. It is a known chess idea, now shown to be a real, working part of
+   these networks.
 
 4. **The translated rules carry real knowledge about who wins.** Added to everything textbook chess measures, they
-   improve predictions of game results on 16,000 unseen games, by about a fifth of what the network itself adds.
+   improve predictions of game results on 16,000 unseen games, by about a fifth of what the network itself adds. That
+   knowledge is spread over many rules; no handful of them carries it.
 
 5. **A full dictionary of one layer.** 485 of the 512 variables in Leela's last layer got a chess rule. Rebuilding
    that layer from the rules alone, the network still picks the same move 41% of the time (5% for a layer that knows

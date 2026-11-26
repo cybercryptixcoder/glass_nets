@@ -68,6 +68,9 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
   fresh set), fit on the 16,000 original game positions. The textbook library reaches R2 0.149 for the result; the 114
   translated variables add +0.65% (CI +0.13% to +1.17%); LD2's own value adds +3.58% (CI +2.89% to +4.22%). The
   translations carry about a fifth of what the network knows about who wins beyond the textbook, on games it never saw.
+- Concentration (knowledge_select_s10.json): the five variables with the largest single gains on the original
+  held-out games do not add significantly on the fresh games, alone (best +0.18%, CI -0.06% to +0.42%) or together
+  (+0.22%, CI -0.14% to +0.56%). The knowledge is spread over many variables.
 
 ## 6. Look-ahead (lookahead_profile.json, lookahead_causal*_site*.json, feats_lookahead_s10.json)
 

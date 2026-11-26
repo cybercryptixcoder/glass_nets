@@ -72,7 +72,8 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    - on 16,000 positions from games never used anywhere: +0.65% (CI +0.13% to +1.17%), against +3.58% for LD2's value.
 
    About a fifth of what the network knows about game results beyond the textbook is carried by variables Rosetta can
-   name.
+   name, but spread over many of them: the five that looked best on the original games add nothing significant on the
+   fresh ones, alone or together.
 
 5. **A full dictionary of a chess network's last layer.** 485 of LD2's 512 last-block variables translated into
    programs: 114 at fidelity 0.3 or more, 49 at 0.5, 14 at 0.7. Rebuilt from those programs alone and run through

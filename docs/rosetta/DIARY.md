@@ -189,3 +189,9 @@ programs ("not pawn_att_them and outnumbered_opp and la_m1_to" 2.90, "not opp_P 
 outnumbered_opp" 1.82, "hanging_opp and mob_us>=1 and not la_m1_to" 1.13): fidelity 0.800; put in place of the variable
 inside t1 at block 6, it restores 73.1% of the variable's effect on the value (bar 50%). The same concept is a working
 part of all three networks: LD2 (restores 50% to 54%), t1 (73%), matched in 744706 (0.70).
+
+**05:44. Which variables carry the knowledge? (knowledge_select_s10.json).** Each of the 114 translated variables
+scored alone on the held-out split of the original games; the five best then tested on the fresh games (untouched by
+the choice): none adds significantly alone (best +0.18%, CI -0.06% to +0.42%), and the five together +0.22% (CI
+-0.14% to +0.56%). The knowledge the translations carry on fresh games (+0.65% with all 114) is spread over many
+variables, not concentrated in a few nameable concepts.

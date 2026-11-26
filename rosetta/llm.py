@@ -103,9 +103,18 @@ def propose_many(jobs, workers=6):
         return list(ex.map(lambda j: propose(*j), jobs))
 
 
-def teach(sentence, fens, k=5, effort="high"):
+def board_text(fen):
+    """The position drawn as an 8 x 8 grid with coordinates (uppercase = White), plus who is to move."""
+    b = chess.Board(fen); rows = []
+    for r in range(7, -1, -1):
+        rows.append(f"{r + 1} " + " ".join((b.piece_at(chess.square(f, r)).symbol() if b.piece_at(chess.square(f, r)) else ".") for f in range(8)))
+    rows.append("  a b c d e f g h")
+    return "\n".join(rows) + f"\n{'White' if b.turn else 'Black'} to move ('us')."
+
+
+def teach(sentence, fens, k=5, effort="high", boards=False):
     """Fresh call: from the sentence alone, name the k squares where the unit is most active in each position."""
-    pos = "\n".join(f"{i + 1}. {f}" for i, f in enumerate(fens))
+    pos = "\n\n".join(f"Position {i + 1}:\n{board_text(f)}" if boards else f"{i + 1}. {f}" for i, f in enumerate(fens))
     prompt = f"""A unit in a chess network is active on squares described by this rule (the side to move is "us"):
 "{sentence}"
 For each position below, list the {k} squares where the rule most applies (real square names like e4), best first.
