@@ -770,22 +770,22 @@ the Claude session by hand. The box should make that reasoning explicit and plen
 - **Language models propose and argue; code decides.** Every output is a hypothesis to test, a program to run, or a
   prediction that gets scored.
 
-| Role | What it reasons about | What checks it |
-|---|---|---|
-| **Cartographer** | Proposes regimes and competences from behaviour and state clusters; designs probe sets that cover them | Coverage and predictive gain of the proposed regimes |
-| **Observer** | Looks at a found variable (its top examples, contrasts, minimal pairs) and says what it is | A simulation test: from the description alone, predict the variable on new inputs |
-| **Theorist** | Proposes rival algorithms for a part (at least two, so the experimenter has something to separate) | The experimenter's discriminating tests |
-| **Formaliser** | Turns words into executable library programs plus an alignment (the construction format) | The judge, at every level |
-| **Experimenter** | Chooses the next stimulus or intervention that best separates the live hypotheses (Helix Probe's role, one level down) | Information gained, measured afterwards |
-| **Critic** | Attacks each candidate claim: confounds, "decodable but unused", ceiling effects, a rival that fits equally well; writes must-fail cases *before* a measure is built | Its predicted failures are run; a critic that cries wolf is scored too |
-| **Abstractor** | Reads many verified definitions and proposes shared primitives | Compression gain on held-out networks and variables |
-| **Translator / teacher** | States L4 knowledge in human terms, with examples and counter-examples; writes teaching sets | Transfer tests on fresh models, then people |
-| **Librarian** | Matches each claim against prior work (the 793-entry Aether log plus the 193-entry core); turns known mechanisms into hypotheses to test, not answers to assume | A novelty statement that a second pass must not overturn |
-| **Prover** | Writes the verifier or proof sketch that turns an explanation into a bound | Soundness is checked by code; tightness and cost are measured |
-| **Reader** | Reads weights directly, with tools, as a source of first hypotheses | Measured like every other hypothesis source; later trained with verified rewards (section 3.6) |
-| **Planner** | Keeps the Glass Model, chooses what to work on next (largest structured residual, highest expected information) | The residual curve |
-| **Informant** (language-model targets only) | The target model itself, asked about its own processing ("were you told to lie?", "what are you tracking here?"); introspection adapters are the trained version (core literature entry `arxiv-2604.16812`) | Its reports are hypotheses, never evidence: each one is checked against the internals. The liar sprint shows why: the follow-up answers read the instruction, not the lie |
-| **Puzzle-maker** | Invents algorithms published nowhere and writes networks that implement them (weight-space programming), or designs training data with a planted rule, for the calibration ladder; seals the answer key | The networks must behave as specified; the key stays sealed until scoring. Kept strictly apart from every role that interprets |
+| Role | What it reasons about | What checks it | Model grade (3.11) |
+|---|---|---|---|
+| **Cartographer** | Proposes regimes and competences from behaviour and state clusters; designs probe sets that cover them | Coverage and predictive gain of the proposed regimes | Flash at volume (clustering and probe-set proposals are scored) |
+| **Observer** | Looks at a found variable (its top examples, contrasts, minimal pairs) and says what it is | A simulation test: from the description alone, predict the variable on new inputs | Flash at volume for drafts; strong for the final description |
+| **Theorist** | Proposes rival algorithms for a part (at least two, so the experimenter has something to separate) | The experimenter's discriminating tests | Strong |
+| **Formaliser** | Turns words into executable library programs plus an alignment (the construction format) | The judge, at every level | Strong, or Flash inside a volume run when the program is scored exactly |
+| **Experimenter** | Chooses the next stimulus or intervention that best separates the live hypotheses (Helix Probe's role, one level down) | Information gained, measured afterwards | Flash at volume (information gain is scored after the fact) |
+| **Critic** | Attacks each candidate claim: confounds, "decodable but unused", ceiling effects, a rival that fits equally well; writes must-fail cases *before* a measure is built | Its predicted failures are run; a critic that cries wolf is scored too | Strong |
+| **Abstractor** | Reads many verified definitions and proposes shared primitives | Compression gain on held-out networks and variables | Flash at volume plus a compression scorer (LILO-style), strong to name |
+| **Translator / teacher** | States L4 knowledge in human terms, with examples and counter-examples; writes teaching sets | Transfer tests on fresh models, then people | Strong |
+| **Librarian** | Matches each claim against prior work (the 793-entry Aether log plus the 193-entry core); turns known mechanisms into hypotheses to test, not answers to assume | A novelty statement that a second pass must not overturn | Flash to retrieve at volume, strong to judge novelty |
+| **Prover** | Writes the verifier or proof sketch that turns an explanation into a bound | Soundness is checked by code; tightness and cost are measured | Strong |
+| **Reader** | Reads weights directly, with tools, as a source of first hypotheses | Measured like every other hypothesis source; later trained with verified rewards (section 3.6) | Flash or a trained reader (3.6, 3.13) |
+| **Planner** | Keeps the Glass Model, chooses what to work on next (largest structured residual, highest expected information) | The residual curve | Strong (this is the director) |
+| **Informant** (language-model targets only) | The target model itself, asked about its own processing ("were you told to lie?", "what are you tracking here?"); introspection adapters are the trained version (core literature entry `arxiv-2604.16812`) | Its reports are hypotheses, never evidence: each one is checked against the internals. The liar sprint shows why: the follow-up answers read the instruction, not the lie | The target model itself |
+| **Puzzle-maker** | Invents algorithms published nowhere and writes networks that implement them (weight-space programming), or designs training data with a planted rule, for the calibration ladder; seals the answer key | The networks must behave as specified; the key stays sealed until scoring. Kept strictly apart from every role that interprets | Strong to invent and write networks; Flash at volume to train planted-rule networks |
 
 Two consequences:
 - **Capability matters per role.** The record says the cheap reader cannot do the theorist's or formaliser's work
