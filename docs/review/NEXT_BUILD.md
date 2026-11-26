@@ -5,16 +5,18 @@ branch `liar` (with `kronecker`, `planets`, `kepler`, `decompiler`, `glass-netwo
 literature log on `main`. Every claim about the past points to a file. The running log of how this review was done
 is `REVIEW_LOG.md`.*
 
-*Status: first complete draft at 23:39 ET Nov 25 (clock); revised through 00:17 ET Nov 26 (final version of the first hour). Every revision is listed in
-REVIEW_LOG.md.*
+*Status: first complete draft at 23:39 ET Nov 25 (clock); revised through 00:17 ET Nov 26 (first run), and through
+03:39 ET Nov 26 (second run: the engine question, then an independent critique and a fact-check of the changes,
+both folded in). Every revision is listed in REVIEW_LOG.md.*
 
 **How to read it.** `BRIEF.md` is the two-page version; §0 here is the whole answer in short. Then, in order of
 importance: §1b (what the system interprets and why that framing limits it), §3.1–§3.4 (what the box hands back, how
 understanding is measured, how it discovers, where language models reason), §3.11–§3.13 (the engine: a high-volume
 loop, a toolkit and a strong director; how the box knows it is improving; the flywheel), §6 (the four flagships and
 what "decoded" means for each), §10 (the first experiments, X0–X8). §2 is the full diagnosis, with evidence for every
-gap; §11 is a glossary. `CRITIQUE.md` is an independent critique of an earlier version by a fresh agent; what
-survived checking against the sources is folded in here, and each change is logged in REVIEW_LOG.md.
+gap; §11 is a glossary. `CRITIQUE.md` is an independent critique of an earlier version by a fresh agent, and
+`VERIFY_CHANGES.md` a fact-check of the changes made in answer to it; what survived checking against the sources is
+folded in here, and each change is logged in REVIEW_LOG.md.
 
 ---
 
