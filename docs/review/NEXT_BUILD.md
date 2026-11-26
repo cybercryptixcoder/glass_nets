@@ -12,8 +12,9 @@ REVIEW_LOG.md.*
 importance: §1b (what the system interprets and why that framing limits it), §3.1–§3.4 (what the box hands back, how
 understanding is measured, how it discovers, where language models reason), §3.11–§3.13 (the engine: a high-volume
 loop, a toolkit and a strong director; how the box knows it is improving; the flywheel), §6 (the four flagships and
-what "decoded" means for each), §10 (the first six experiments). §2 is the full diagnosis, with evidence for every
-gap; §11 is a glossary.
+what "decoded" means for each), §10 (the first experiments, X0–X8). §2 is the full diagnosis, with evidence for every
+gap; §11 is a glossary. `CRITIQUE.md` is an independent critique of an earlier version by a fresh agent; what
+survived checking against the sources is folded in here, and each change is logged in REVIEW_LOG.md.
 
 ---
 
@@ -837,7 +838,7 @@ the Claude session by hand. The box should make that reasoning explicit and plen
 | **Cartographer** | Proposes regimes and competences from behaviour and state clusters; designs probe sets that cover them | Coverage and predictive gain of the proposed regimes | Flash at volume (clustering and probe-set proposals are scored) |
 | **Observer** | Looks at a found variable (its top examples, contrasts, minimal pairs) and says what it is | A simulation test: from the description alone, predict the variable on new inputs | Flash at volume for drafts; strong for the final description |
 | **Theorist** | Proposes rival algorithms for a part (at least two, so the experimenter has something to separate) | The experimenter's discriminating tests | Strong |
-| **Formaliser** | Turns words into executable library programs plus an alignment (the construction format) | The judge, at every level | Strong, or Flash inside a volume run when the program is scored exactly |
+| **Formaliser** | Turns words into executable library programs plus an alignment (the construction format) | The judge, at every level | Strong, or Flash inside a volume run, under the restricted language and must-fail set (3.11) |
 | **Experimenter** | Chooses the next stimulus or intervention that best separates the live hypotheses (Helix Probe's role, one level down) | Information gained, measured afterwards | Flash at volume (information gain is scored after the fact) |
 | **Critic** | Attacks each candidate claim: confounds, "decodable but unused", ceiling effects, a rival that fits equally well; writes must-fail cases *before* a measure is built | Its predicted failures are run; a critic that cries wolf is scored too | Strong |
 | **Abstractor** | Reads many verified definitions and proposes shared primitives | Compression gain on held-out networks and variables | Flash at volume plus a compression scorer (LILO-style), strong to name |
