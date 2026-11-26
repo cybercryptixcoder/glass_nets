@@ -2171,3 +2171,13 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   `NEXT_BUILD.md` (diagnosis and design), `REVIEW_LOG.md` (every step, finding and decision, with clock times) and
   `PREREG_FIRST_EXPERIMENTS.md` (the first six experiments, pre-registered, none run).
 - No code was changed and no experiment was run. This entry only points to the review's own log.
+
+## Nov 26, 03:21 ET (clock): the review, after an independent critique
+
+- An independent critique by a fresh agent is in `docs/review/CRITIQUE.md` (13 objections). Each was checked against
+  its source; all held, and the review was changed accordingly (REVIEW_LOG findings F44–F57, decisions D12–D16).
+- The main change: the review's test against copies is now "answering without running" (ARC's matching sampling,
+  EVIDENCE_LADDER rung Y), because the repo's own pre-registered test of "fewer bits than a copy" (T2) had rejected
+  every real explanation. A new free experiment, X0, tests it on the saved runs. `docs/review/BRIEF.md` is the
+  two-page version.
+- No code was changed and no experiment was run.
