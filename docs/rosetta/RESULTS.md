@@ -273,3 +273,10 @@ line: +0.87% over textbook concepts (CI +0.46 to +1.33%), 21% of its own gain (+
 (CI -0.25 to +0.32%); static tactics +0.22% (CI -0.10 to +0.56%); the swing over textbook plus static tactics +0.50%
 (CI +0.09 to +0.92%). Replicates: in both networks the material won along the network's own line carries part of its
 knowledge beyond the textbook (LD2 17% to 33%, 744706 12% to 21%), and random lines carry none.
+
+How much of the 16 the textbook restates (carriers_textbook_s10.json; board totals, held-out positions, the 61
+textbook concepts in gradient-boosted trees): R2 0.19 (variable 172) to 0.91 (77); the evaluation carriers 434 0.56
+(most correlated: material -0.31, their space +0.20), 304 0.65 (material +0.41, our mobility +0.40, attacks on our king
+zone -0.36), 303 0.59 (their space, their rooks on open files, their castling rights), 192 0.52, 415 0.51, 461 0.32.
+Each is partly a blend of familiar quantities and 35% to 80% something the textbook does not hold: the target for the
+next build.

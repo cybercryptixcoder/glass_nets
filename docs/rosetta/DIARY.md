@@ -310,3 +310,10 @@ run is not done by 06:50 it is stopped and reported as not run.
 +0.87% over textbook concepts on the fresh games (CI +0.46 to +1.33%), 21% of 744706's own gain (+4.10%); along random
 legal moves +0.02% (CI -0.25 to +0.32%); over static tactics +0.50% (CI +0.09 to +0.92%). Both registered conditions
 hold. Share in 744706: an eighth to a fifth (12% to 21%); in LD2 a sixth to a third (17% to 33%).
+
+**06:38. How much of the 16 the textbook restates (carriers_textbook_s10.json, exploratory).** Board totals on
+held-out positions, the 61 textbook concepts (gradient-boosted trees): R2 from 0.19 (variable 172) to 0.91 (77). The
+evaluation carriers sit in the middle: 434 0.56 (most correlated: material -0.31, their space +0.20), 304 0.65
+(material +0.41, our mobility +0.40, attacks on our king zone -0.36), 303 0.59 (their space +0.34, their rooks on open
+files +0.28, their castling rights -0.27), 192 0.52, 415 0.51, 461 0.32. So each carrier is partly a blend of familiar
+quantities (material, space, mobility, king safety) and 35% to 80% something the textbook does not hold.
