@@ -1082,6 +1082,25 @@ This loop is the last phase, not the first. It needs GPUs and a working inner lo
 whose ceiling is not set by how many good researchers are available, and that is what "changes the world by its
 capability" asks for.
 
+### 3.14 The toolkit inventory: what already exists, and what is missing
+
+"Toolkit first" (3.11) only helps if it is clear what the toolkit already holds. This inventory is of capabilities,
+not a build plan.
+
+| Verb or part | Exists in the repo | Missing |
+|---|---|---|
+| Run a network with named sites, and record activations | `lab/nets.py` (MLPs, ReLU RNNs, small transformers, in numpy), `lab/lm.py` (the GPT-2 family), `kepler/targets/chess/leela.py`, `leela_t.py` (Leela ports), `kepler/targets/fluid/model.py` | One interface across all of them; models beyond these families (7–8B language models for flagships 3 and 4) |
+| Intervene: substitute, interchange, partial and edit, remove a subspace | `lab/judge.py`, `lab/lmjudge.py` (calibrated, with controls) | Scoring against intermediate states, not only the final decision; output measures for distributions, fields and values |
+| Decompose weights or activations | `lab/spd.py` (SPD, small networks); `lab/unitmap.py` (a unit library); Kepler's channel analysis | Sparse dictionaries, transcoders and attribution graphs at the scale of Leela and 7–8B models; query/key mechanisms (the atlas's open limit) |
+| Recognise structure | `lab/decomp/` (groups, orbits, factor mode, closed forms) | Recognisers for the other spaces of §3.5: geometry, automata, dynamics, numerical operators, search, inference |
+| Explain when a part fires | `lab/atlas.py` (trees over a vocabulary; rule or lookup labels) | Definitions synthesised as programs (the volume engine) |
+| Laws and concepts | `kepler/core/law.py`, `probe.py`, `residual.py` | Open program search beyond fixed term libraries (LLM-SR-style) |
+| Search with a cheap model | `probe/` (Helix Probe loop); Helix Evolve's engine in its own repo | One engine wired to this toolkit's scorers |
+| Exact scorers with must-fail controls | Pieces inside the judge, the atlas certificate and Kepler's frozen criteria | One scorer library that every volume run and confirm test calls |
+| The Glass Model store | Nothing. Today's state lives in diaries, JSON reports and the catalog | The whole store: claims, alignments, evidence, guarantees, residual ledger, rival hypotheses, provenance |
+| The calibration ladder | The planted RNN and transformer, Tracr targets, the memoriser, the decompiler's secret-relabelled groups | Networks implementing unpublished algorithms (written or trained with planted rules), with sealed keys |
+| A view for people | `lab/server.py`, the catalog and playground | The trace view (§1b) over the Glass Model |
+
 ---
 
 ## 4. What to keep, what to scrap
