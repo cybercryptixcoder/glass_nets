@@ -1,10 +1,13 @@
-# The first six experiments of the next build: pre-registrations
+# The first experiments of the next build: pre-registrations
 
 *Written Nov 26, 2026, in the second review run, from `docs/review/NEXT_BUILD.md` §10. Nothing here has been run.
 Each entry follows the repository's build routine (`CLAUDE.md`): the build step it serves, the question with a yes/no
 answer and the decision each answer leads to, the measurement (built first and proven on known cases), the cases
 that must pass and must fail, the controls, how many runs, and where the pass lines come from. Pass lines come from
 controls, never from the results they judge. Each experiment needs Shreyas's go before any spend.*
+
+*Revised the same night after an independent critique (`docs/review/CRITIQUE.md`; changes logged in REVIEW_LOG.md,
+F44–F56): X0 added; X1, X3, X4 and X6 changed; X7 and X8 added.*
 
 *Shared conventions:*
 - *"Held out" means inputs (positions, flows, prompts, networks) never used to design the method or fit the
@@ -16,33 +19,78 @@ controls, never from the results they judge. Each experiment needs Shreyas's go 
 
 ---
 
-## X1. The stronger-reader test (the R3 question, finally asked)
+## X0. The test against copies, on saved runs (free)
+
+**Build step it serves.** The anti-copy measure of the box (NEXT_BUILD §3.2 item 3). Every later claim of
+"explanation, not copy" rests on it, and X1's and X6's must-fail sets are scored with it.
+
+**Question.** Written as estimators of what their networks do, do the real explanations of small networks beat
+sampling the network, where every saved copy, disguise and the shuffled-network account does not?
+- **Yes**: answering without running becomes the anti-copy gate (NEXT_BUILD Q12).
+- **No** (a must-pass account fails, or a must-fail case passes): report it, return to the intent, and keep copies out
+  by restricted languages and must-fail sets alone, with that limit stated on every claim. Do not tune the lines.
+
+**Cases (the T2 sets, `docs/glass/info_measure_T2.txt`).**
+- Must pass: M2,2's account (round 1), M4,3's account (c928), the lc_8_6 census rule (round 2 b).
+- Must fail: every saved copy and near-copy in the T2 table, the 18 disguises D1–D6, and the lc_3_4 shuffled-network
+  account.
+
+**Measurement (frozen before any scoring).**
+- **What is estimated:** each network's accuracy against the task rule on three input distributions: the task's own,
+  and two shifts fixed by someone who has not seen any estimate (for example, one position pinned near the maximum).
+- **Estimators:** each must-pass account is written once as an estimator (a procedure that returns an estimate and
+  counts its own floating-point operations), by a session that sees neither the networks' true accuracies nor any
+  score. Copies and disguises are programs that compute the network, so their estimator is sampling them. This step
+  measures the estimator-writer as well as the account; that is the known cost of the measure, stated in every
+  report.
+- **References (the controls that set the line):** Monte Carlo on the network at the same compute, repeated 1,000
+  times to give its error distribution; the task rule used as an estimator; the cheapest T2 copy of matching
+  fidelity, run as a sampler.
+- **"Passes"** means: on all three distributions, the error at its own compute is below the 5th percentile of Monte
+  Carlo's error at that compute, and below the task-rule estimator's error. A copy meets this only by chance (about
+  5% per distribution).
+
+**Runs.** One scoring pass over saved material; no network is trained and no model is called except to write the
+three estimators.
+
+**Cost.** None beyond a session's time.
+
+---
+
+## X1. The stronger-reader test (the R3 question, finally asked), where a short account is known to exist
 
 **Build step it serves.** Choosing the model for the reasoning roles of the box (NEXT_BUILD §3.4): theorist,
 formaliser, critic, director.
 
-**Question.** On dense networks where the cheap reader stalled, does a frontier reader produce an account that passes
-the version-2 certificate, where DeepSeek V4.1 Flash does not, at the same step budget?
-- **Yes** (frontier passes on at least one target, Flash passes on none): frontier models go in the reasoning roles
-  from the start.
+**Question.** On targets where a short, verified account is known to exist and the cheap reader failed, does a
+frontier reader recover the account where DeepSeek V4.1 Flash does not, at the same step budget?
+- **Yes** (the frontier reader recovers at least two of the known-account targets; Flash none): frontier models go
+  in the reasoning roles from the start.
 - **No, both fail**: the bottleneck is the method (one leap to a whole account), not the model, which supports the
   new centre (NEXT_BUILD §4).
-- **Both pass**: the version-2 feedback, not the model, was the missing piece; cheap models can hold reasoning roles
-  where the certificate guides them.
+- **Both pass**: the interface and feedback, not the model, were the missing piece; cheap models can hold reasoning
+  roles where the feedback guides them.
+
+**Why these targets.** The first version of X1 used M8,5 and lc_6_5. Those are known to admit no short faithful
+account (rules replace at most 7% of either before it falls below the task rule, UNITS_FINDINGS U17; no exact
+structure in 7 searches), so "both fail" was decided in advance there.
 
 **Targets.**
-- M8,5 (AlgZoo, 112 parameters) and lc_6_5 (longest cycle, 378 parameters): both stalled in rounds 1–2.
-- M4,3 as the must-pass harness check: both readers passed it before.
+- Known account, cheap reader failed:
+  - GPT-2 month rollover (hand-built account 5 of 5 stages; blinded cheap reader 1 of 5);
+  - GPT-2 countdown (blinded cheap reader 1 of 5, the same as its prior-only control);
+  - two of X2's planted networks, if X2 has run, with their keys sealed.
+- Known-negative arm: M8,5 and lc_6_5. A short account here is checked for copying first (X0's test and T2's S).
+- Harness check: M4,3, which both readers passed before.
 
 **Measurement (frozen before any run).**
-- The version-2 certificate as it stands (`docs/glass/INTENT.md`):
-  - fidelity with a 95% interval against the task rule;
-  - information S against the copy frontier (the T2 form, which placed every saved copy at S ≥ 0.91);
-  - inside claims at intermediate sites, judged by the calibrated interchange tests.
-- **"Passes"** means all three of these:
-  - fidelity above the task rule by more than two standard errors;
-  - S below the line set by the shuffled-weights runs (the lowest S any shuffled run reaches, minus its spread);
-  - at least one intermediate-site claim that passes interchange.
+- LM targets: the LM judge at a commit fixed now. It is first re-run on the hand-built month account and be-verb
+  (must pass) and on the prior-only controls (must fail). If the hand-built month account does not pass on it, its
+  re-certification comes first (PROJECT_REVIEW §8), and X1 waits.
+- Planted networks: X2's scorer against the sealed key.
+- AlgZoo arm: the version-2 certificate (`docs/glass/INTENT.md`), with X0's test added if X0 passed.
+- **"Recovers"** means every stage passes (LM targets) or every planted mechanism is recovered (X2's scorer), while
+  the reader's prior-only control does not.
 
 **Must-fail cases.**
 - The same readers on shuffled weights of each target.
@@ -53,14 +101,14 @@ the version-2 certificate, where DeepSeek V4.1 Flash does not, at the same step 
 - The prior-only control for each reader (`--told --no-weights --one-shot`).
 
 **Runs.**
-- 3 per reader per target, for 12 runs in all.
+- 3 per reader per target.
 - 3 against 0 is the smallest split a one-sided exact test separates at p ≈ 0.05.
-- Step cap: 80, as in round 2.
+- Step caps as in the original runs: 150 for the LM targets, 80 for the AlgZoo arm.
 
-**Free first.** Re-score every saved round-2 run under the frozen version-2 certificate. This also checks that no
-saved run already passes.
+**Free first.** Re-score every saved run under the frozen judge. This also checks that no saved run already passes.
 
-**Cost.** Frontier API calls need a key and Shreyas's go.
+**Precondition and cost.** A frontier-model key: this workspace has only DeepSeek V4.1 Flash (PLAN_SCALING).
+Frontier API calls need a key and Shreyas's go.
 
 ---
 
@@ -119,7 +167,8 @@ after every attempt has been scored.
 coarse solver at matched cost? In other words, does it learn a closure or a long-step integrator worth decoding?
 - **Yes** (network error below the coarse solver's by more than the spread between training seeds): the learned
   closure and integrator are the discovery target.
-- **No**: widen the resolution gap or the step, or choose another physics target.
+- **No**: our rebuild does not reproduce the published kind of gain; fix the training, the resolution gap or the
+  step, and only then consider another physics target.
 
 **Setup.**
 - **Simulator.** The existing one (`kepler/targets/fluid/sim.py`, which accepts any grid size n).
@@ -137,6 +186,12 @@ coarse solver at matched cost? In other words, does it learn a closure or a long
 - One-step error, and error after 20 steps.
 - Cost per simulated time unit, measured on the same machine.
 
+**Known answer.** Kochkov et al. 2021 (arXiv 2102.01010) showed, on 2D turbulence, that learned corrections on
+coarse grids match baseline solvers with 8–10× finer resolution in each dimension, with 40–80× speed-ups. So "Yes" is
+the expected outcome of a correct rebuild, and the experiment is a known-answer rung. "No" means our rebuild is wrong
+(training, resolution gap, step) before it means the physics target is wrong; fix that first. The discovery comes
+after: reading the learned correction, which that work did not do.
+
 **Must-fail control.** A network trained on 64 × 64 frames of a 64 × 64 simulation (Kepler's current setup). It is
 scored against the fine truth the same way, and must show the coarse solver's own error. This check says that any
 advantage of the new model comes from the coarse-graining.
@@ -147,10 +202,22 @@ advantage of the new model comes from the coarse-graining.
 
 ---
 
-## X4. One concept-invention cycle on the chess residual, run by a strong agent
+## X4. One concept-invention cycle on LD2's quiet-position residual, run by a strong agent
 
 **Build step it serves.** The definition stage of the loop (NEXT_BUILD §3.3 C, §3.8). X4 and X6 run on the same
 target with the same scorer, so together they decide which engine runs that stage.
+
+**Why this target.** Channel 22's causal evidence is in quiet positions: resetting it removes 32% of the
+quiet-position residual (kepler/DIARY K4). The record's numbers are all LD2's, a convolutional network; the
+tactical residual and the transformer t1 come later.
+
+**Step 0: knowledge or error (cheap, first).** The residual is LD2's value minus the classical surrogate (boosted
+trees fitted to LD2's outputs, `kepler/core/residual.py`). Does it predict the games' outcomes (and, if a deep engine
+is available, its evaluation) beyond the surrogate?
+- Measure: the partial correlation of the residual with the outcome, controlling for the surrogate, with a 95%
+  interval, on held-out positions. Control: the residual shuffled across positions.
+- Above zero: the residual carries knowledge, and what X4 names can be level K. Not above zero: the residual is
+  mostly LD2's error; X4 proceeds, labelled as explaining the network's errors.
 
 **Question.** Can a strong agent, working through the cycle of §3.8, produce a definition for channel 22 of Leela LD2
 that passes Kepler's frozen criteria and an intervention check? The cycle is: observer, simulation test, formaliser,
@@ -161,6 +228,10 @@ rivals separated by designed positions. Kepler's 59 one-shot programs found none
 **Data.** Regenerate with the existing scripts (`scripts/kepler/chess_build.py`, `chess_channels.py`), into `KDATA`.
 The per-position data is not in the repo.
 
+**The definition language (fixed now, shared with X6).** Python over the board using `python-chess`; search up to
+two moves deep allowed; at most 5 constants fitted on the fit set; no fitted sub-models (no trees, no regressions
+inside a program); no access to the network, its weights or activations; no outside engines or tables.
+
 **Measurement.** Kepler's frozen four criteria, unchanged (`results/kepler/chess/calculation_features.json` shows
 their form):
 - held-out gain on LD2 with a 95% interval above zero;
@@ -168,13 +239,17 @@ their form):
 - decodability above the untrained copy;
 - not a restatement of a library concept.
 
-One new criterion, fixed now:
+Two new criteria, fixed now:
 - steering channel 22 along the program's value moves the network's evaluation in the predicted direction on held-out
-  positions, at least as much as the median effect of the accepted capture-resolution feature.
+  positions, at least as much as the median effect of the accepted capture-resolution feature;
+- the program beats the best sparse surrogate with the same number of constants (a linear model over the 64-feature
+  classical library with at most 5 non-zero coefficients, fitted to channel 22 on the fit set).
 
 **Must-fail.**
 - The FEN-hash noise program, as before.
 - A program fitted to channel 22 values shuffled across positions.
+- Outside the language, scored anyway to show what the language excludes: a boosted-tree fit to channel 22 over board
+  features, and a linear map from earlier channels.
 
 **Runs.**
 - One cycle, as long as the strong agent needs within a two-hour cap.
@@ -215,60 +290,126 @@ true mechanisms are known exactly.
 
 ## X6. Helix volume on the definition the one-shot scientist missed
 
-**Build step it serves.** The definition stage (NEXT_BUILD §3.3 C, §3.11): whether the Helix volume engine runs it.
+**Build step it serves.** The definition stage (NEXT_BUILD §3.3 C, §3.11): whether the Helix volume engine runs it,
+and whether the network's signal gets a cheap model past its prior.
 
 **Question.** Does Helix's figure-eight on a Flash-grade model find a board program that matches channel 22 on
-held-out positions and passes Kepler's frozen criteria, where Kepler's 59 one-shot programs found none? The loops are
-an exploring loop that varies programs and a reasoning loop that tests one change at a time, with a memory of
-findings and one exact scorer.
-- **Yes at Helix scale, no at Kepler's scale**: volume is what was missing, and the engine runs the definition stage.
-- **Yes at both**: the loop structure, not the volume, was missing.
-- **No at both**: the bottleneck is the library's base language or the variable itself, and the director takes that
+held-out positions and passes X4's criteria, where Kepler's 59 one-shot programs found none? The loops are an
+exploring loop that varies programs and a reasoning loop that tests one change at a time, with a memory of findings
+and one frozen scorer. Two arms:
+- **A, score-only:** the proposer sees its programs and their scores.
+- **B, evidence shown:** the proposer also sees, each round, the 20 fit-set positions where its best program errs
+  most, and minimal pairs that differ mainly in channel 22.
+
+**The null, stated first.** Helix's own research case predicts that selection by a score alone stays near what the
+model already proposes (`helix_evolve/docs/research/RESEARCH_CASE.md`). So arm A is expected to fail where Kepler
+failed, and only a signal on the proposal side (arm B) might not.
+
+**Decisions.**
+- **Yes in B only**: the network's evidence, shown to the proposer, is what gets past the prior; the engine runs the
+  definition stage with it.
+- **Yes in A and B**: volume plus the score suffices.
+- **Yes at Helix scale only**: volume was missing. **Yes at both scales**: the loop structure, not volume, was missing.
+- **No anywhere**: the bottleneck is the definition language or the variable itself, and the director takes that
   stage. Compare with X4 on the same scorer.
 
 **The scorer (frozen before the run, plain code, no model).**
+- **Language.** X4's definition language, exactly.
 - **Fit and selection.** Correlation with channel 22's activity on positions from a fit set; selection by the same
   measure on a validation set.
-- **Final verdict.** On a test set of positions from games never used, scored once at the end with Kepler's four
-  criteria plus X4's steering criterion.
-- **Programs.** Python using `python-chess`, with a CPU-time cap. Search up to two moves deep is allowed, so
-  calculation can be expressed. No outside engines or tables (no Stockfish, no opening or evaluation databases).
-- **Target.** Run on a single decomposition feature that carries the residual if one is available, because a raw
-  channel may mix several features. Channel 22 itself is the fallback, and the report says which was used.
-- **Loopholes closed in the scorer itself, as Helix learned to do:**
-  - no access to the network or its activations;
-  - no position hashing;
-  - exact, deterministic evaluation.
+- **Final verdict.** On a test set of positions from games never used, scored once at the end with X4's criteria,
+  including "beats the best sparse surrogate with the same number of constants".
+- **Target.** A single decomposition feature that carries the residual if one is available, because a raw channel may
+  mix several features. Channel 22 itself is the fallback, and the report says which was used.
+- **Loopholes closed in the scorer itself, as Helix learned to do:** no access to the network or its activations; no
+  position hashing; exact, deterministic evaluation; a CPU-time cap.
 
-**Must-fail.**
+**Must-fail (run through the scorer before the search starts).**
 - The FEN-hash noise program.
 - A run whose target is channel 22's values shuffled across positions. It sets the null distribution: a real pass
   must beat the 99th percentile of the shuffled-target runs.
+- The X4 out-of-language fits (boosted trees; a linear map of earlier channels), to confirm that the language and
+  the surrogate line exclude them.
 
 **Budgets.**
 - 59 programs, matched to Kepler.
 - 2,500 programs, about Helix run C's scale.
 
-**Runs.** 3 seeds at each budget, because Helix's seed-to-seed spread is large (`helix_evolve/docs/LEAN_RESULTS.md`).
+**Runs.** 3 seeds per arm at each budget, 12 runs, because Helix's seed-to-seed spread is large
+(`helix_evolve/docs/LEAN_RESULTS.md`; runs C and D ended 0.007 apart).
 
 **Cost.**
-- Flash calls at Helix scale: about one VM day per long run, as for Helix Evolve's runs.
+- Flash calls at Helix scale: about one VM day per long run, as for Helix Evolve's runs; six long runs.
 - Shreyas's go is needed.
 
 ---
 
-## How the six fit together
+## X7. The lying gate, in the smallest model that shows it
+
+**Build step it serves.** Flagship 3's first L2 object, the gate (NEXT_BUILD §6, flagship 3).
+
+**Question.** Is the lying mode routed through a small set of attention heads that read the chat-template tokens?
+- **Yes** (a set of at most 10 heads carries more than half of the mode's effect on the lie rate): decompose and
+  define the gate.
+- **No**: the mode is spread out, as the sprint's single-direction result hinted (at most about 12% of the gap closed
+  by one direction); move to a decomposition of the template-token stream (transcoders).
+
+**Model.** The smallest of the liar sprint's models that shows the mode under the sprint's failed-lie test; a
+smaller open model if one passes the same test.
+
+**Measurement (frozen).** The model's lie rate and the detector's score on the sprint's prompts, under path patching
+from the template positions, one head at a time, then greedy sets. Every effect is predicted in writing before its
+run.
+
+**Controls.** A truthful-instruction prompt set (the heads must not change truthful answers); a fiction or role-play
+set (side effects predicted in advance); random head sets of the same size (a found set must beat the 99th
+percentile of 100 random sets).
+
+**Cost.** GPU hours for a 7–8B model, or less for a smaller one; Shreyas's go.
+
+---
+
+## X8. Which open model reads weights above its controls?
+
+**Build step it serves.** Flagship 4's subject (NEXT_BUILD §6, flagship 4).
+
+**Question.** Does any open model, whose insides the toolkit can decompose, read small networks' weights above a
+shuffled-weights control?
+- **Yes**: it is flagship 4's subject (Q8).
+- **No**: flagship 4 starts by training an open reader with verified rewards (NEXT_BUILD §3.6), then studies it.
+
+**Protocol.** The shapes tasks of the replication recorded in `docs/literature/wsp/K1_STATE_OF_ART.md` (with its
+shuffled control), and Singh's experiment-1 edit-prediction test (Spearman against the no-weights baseline). Code
+sandbox mode and large output budgets, as K1 advises.
+
+**Models.** Open models chosen before any run, plus DeepSeek V4.1 Flash as the known-weak reference (0 of 8 on shapes).
+
+**Pass line.** Above the shuffled-weights control by more than that control's spread over 3 repetitions, and a
+Spearman gain over no weights with a 95% interval above zero.
+
+**Free first.** Re-read the replication's saved transcripts for which open models came closest and why (K1: DeepSeek
+spends its output budget copying weight rows).
+
+**Cost.** API calls or GPU time; Shreyas's go.
+
+---
+
+## How they fit together
 
 | Experiment | Decides | Feeds |
 |---|---|---|
+| X0 | Whether answering without running separates explanations from copies | §3.2 item 3; every must-fail set |
 | X1 | Which model holds the reasoning roles | §3.4 |
 | X2 | Whether the calibration ladder can be built, and today's discovery score | Every later claim |
-| X3 | Whether flagship 2 has a target | Flagship 2 |
-| X4 + X6 | Which engine runs the definition stage: a strong agent's cycle, or Helix volume | §3.3 C, §3.11 |
+| X3 | Whether our rebuilt fluid target reproduces the known gain | Flagship 2 |
+| X4 + X6 | Which engine runs the definition stage, and whether the network's evidence gets a cheap model past its prior | §3.3 C, §3.11 |
 | X5 | Whether Helix Probe's loop is the box's skeleton | §3.3 |
+| X7 | Whether the lying mode has a localisable gate | Flagship 3 |
+| X8 | Whether flagship 4 has an open reader to study | Flagship 4 |
 
 Recommended order, because each answer shapes the next:
-1. X2 and X5: cheap, and they build the yardstick and test the skeleton.
-2. X1: it decides who reasons.
-3. X4 and X6 together: they decide the definition engine.
-4. X3: it opens flagship 2.
+1. X0: free, and the anti-copy test everything else uses.
+2. X2 and X5: cheap, and they build the yardstick and test the skeleton.
+3. X1: it decides who reasons (needs a frontier key).
+4. X4 and X6 together, X4's step 0 first; X7 and X8 alongside.
+5. X3: it opens flagship 2.
