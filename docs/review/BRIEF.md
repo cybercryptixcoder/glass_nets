@@ -46,8 +46,8 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
     explanation beat simply running the network, or its cheapest copy, for the same compute? A copy can only answer
     by being run. The same test works with a language model as the estimator: barred from running code and given
     less budget than hand-executing the network would take, it can use an explanation but not a copy. The two
-    versions catch different things: the first, copies of the network's own size; the second, opaque programs of
-    any size, such as a small distilled student. (Length in a
+    versions catch different things: the first, copies of the network's own size; the second, opaque programs such
+    as a small distilled student, because its budget is set below the cost of running even those by hand. (Length in a
     shared vocabulary is reported too, but not as a gate: the repo's own pre-registered test showed that "fewer bits
     than a copy" rejects real explanations of small networks.);
   - whether it makes checking the network cheaper, where the domain allows a proof;
@@ -120,7 +120,7 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
 | # | Question | Decides |
 |---|---|---|
 | X0 | On saved runs, does answering without running accept the real explanations and reject every copy? (free, plus a cheap reader arm) | Whether the test against copies works |
-| X1 | Does a frontier reader recover accounts known to exist (month rollover, countdown, planted networks) where Flash stalled? | Who holds the reasoning roles |
+| X1 | Does a frontier reader recover accounts known to exist (month rollover; planted networks) where Flash stalled? | Who holds the reasoning roles |
 | X2 | Can unpublished-algorithm networks be made, and what does today's toolkit recover blind? | The discovery yardstick |
 | X3 | Does our rebuilt coarse fluid emulator reproduce the published gain over the coarse solver? | Whether flagship 2 has a target |
 | X4 | Is LD2's quiet-position residual knowledge or error, and can a cycle define channel 22? | The definition engine (with X6) |

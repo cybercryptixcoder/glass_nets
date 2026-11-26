@@ -19,10 +19,10 @@ F44–F56): X0 added; X1, X3, X4 and X6 changed; X7 and X8 added.*
 
 ---
 
-## X0. The test against copies, on saved runs (free)
+## X0. The test against copies, on saved runs (main arm free; reader arm cheap)
 
 **Build step it serves.** The anti-copy measure of the box (NEXT_BUILD §3.2 item 3). Every later claim of
-"explanation, not copy" rests on it, and X1's and X6's must-fail sets are scored with it.
+"explanation, not copy" rests on it, and X1's AlgZoo arm uses it if it passes.
 
 **Question.** Written as estimators of what their networks do, do the real explanations of small networks beat
 sampling the network, where every saved copy, disguise and the shuffled-network account does not?
@@ -49,22 +49,30 @@ sampling the network, where every saved copy, disguise and the shuffled-network 
   a short faithful program is a cheaper sampler than the network, and that is part of what an explanation buys.
   Copies and disguises compute the network, so their estimator is sampling them. This step measures the
   estimator-writer as well as the account; that is the known cost of the measure, stated in every report.
-- **The reference (the control that sets the line):** Monte Carlo on the network at the same compute, repeated 1,000
-  times to give its error distribution. Below one forward pass of compute, the reference is the task-rule estimate
-  (the best guess with no samples).
-- **"Passes"** means: on all five quantities, the error at its own compute is below the 5th percentile of the
-  reference's error at that compute. A copy meets this only by chance (about 5% per quantity, so about 3 in 10
-  million for all five).
+- **Scoring, in ARC's own form (EVIDENCE_LADDER rung Y, "averaging the squared error"):** each estimator's mean
+  squared error on each quantity, over 100 repeated runs if it is randomised (its squared error if it is
+  deterministic), divided by Monte Carlo's mean squared error on the network at the same compute. Below one forward
+  pass of compute, the Monte Carlo reference is the task-rule estimate (the best guess with no samples).
+- **The line comes from the copies:** every must-fail program is run as a sampler and scored the same way, which
+  gives the ratio a copy reaches by chance. An estimator "beats sampling" on a quantity when its ratio is below the
+  5th percentile of the copies' ratios on that quantity.
+- **Degenerate quantities:** where Monte Carlo's mean squared error at the estimator's compute is below 1e-6 (a
+  sub-population the network almost never gets wrong), the quantity cannot separate anything; it is reported and
+  left out of the decision. At least three of the five must remain, or the sub-populations are redrawn by the same
+  blind rule before any estimate exists.
+- **"Passes"** means: it beats sampling on every quantity left in the decision. The quantities are nested, so no
+  independence is assumed; the chance rate is read off the copies' own results.
 - **Reported, not a line:** a small student distilled from each network to the same fidelity as its account, run as
   a sampler. A short readable rule and a small opaque student of equal cost tie on this test; if one does, the
   account's advantage is readability, not computation, and the reader arm decides it.
 
 **Reader arm (cheap; Flash calls, so Shreyas's go).** The same question with a language model as the estimator,
 which removes the estimator-writing step.
-- The reader may not run code. Its token budget per question is set below what hand-executing the copy on one input
-  takes (computed from the copy's own forward-pass cost before any call), so a copy gives it nothing it can use.
-- Four conditions per network: given the account; given a copy; given the distilled student as code (it cannot be
-  executed within the budget either); given only the task (the floor).
+- The reader may not run code. Its token budget per question is set below what hand-executing, on one input, the
+  smallest opaque program in the comparison takes (the distilled student; computed from its forward-pass cost before
+  any call), so neither the copy nor the student can be run within it.
+- Four conditions per network: given the account; given a copy; given the distilled student as code; given only the
+  task (the floor).
 - **"Passes"** means: given the account, its estimates of the five quantities beat the task-only floor, the copy
   condition and the student condition by more than the floor's spread over 5 repetitions.
 - The copy condition is reported on its own. If it beats the floor, the reader is reading structure off raw weights
@@ -84,23 +92,28 @@ formaliser, critic, director.
 
 **Question.** On targets where a short, verified account is known to exist and the cheap reader failed, does a
 frontier reader recover the account where DeepSeek V4.1 Flash does not, at the same step budget?
-- **Yes** (the frontier reader recovers at least two of the known-account targets; Flash none): frontier models go
-  in the reasoning roles from the start.
+- **Yes** (the frontier reader recovers month rollover, and every planted network X2 supplies; Flash none): frontier
+  models go in the reasoning roles from the start. If X2 has not run, month rollover alone decides, with 3 runs each
+  as below.
 - **No, both fail**: the bottleneck is the method (one leap to a whole account), not the model, which supports the
   new centre (NEXT_BUILD §4).
 - **Both pass**: the interface and feedback, not the model, were the missing piece; cheap models can hold reasoning
   roles where the feedback guides them.
 
-**Why these targets.** The first version of X1 used M8,5 and lc_6_5. Those are known to admit no short faithful
-account (rules replace at most 7% of either before it falls below the task rule, UNITS_FINDINGS U17; no exact
-structure in 7 searches), so "both fail" was decided in advance there.
+**Why these targets.** The first version of X1 used M8,5 and lc_6_5 alone, and the next version wrongly called them
+known negatives. They stalled for the cheap reader, but both were decomposed exactly by SPD and the atlas (DIARY: an
+"EXACT, sparsely used decomposition of M8,5 … faithful above the task rule"; ATLAS_RESULTS: lc_6_5 passes on
+development), so a faithful account exists, though not a short program. The 7% cap on rule replacement (U17) was
+measured on M16,10-class networks, not on these two. So they are an open arm here, informative but not decisive.
 
 **Targets.**
 - Known account, cheap reader failed:
   - GPT-2 month rollover (hand-built account 5 of 5 stages; blinded cheap reader 1 of 5);
-  - GPT-2 countdown (blinded cheap reader 1 of 5, the same as its prior-only control);
-  - two of X2's planted networks, if X2 has run, with their keys sealed.
-- Known-negative arm: M8,5 and lc_6_5. A short account here is checked for copying first (X0's test and T2's S).
+  - X2's planted networks, if X2 has run, with their keys sealed.
+- Open arms, reported but not deciding:
+  - GPT-2 countdown (blinded cheap reader 1 of 5, the same as its prior-only control; the hand-built account reached
+    only 2 of 5, `docs/RESULTS_LM.md`, so there is no complete account to recover);
+  - M8,5 and lc_6_5 (above). A short account here is checked for copying first (X0's test and T2's S).
 - Harness check: M4,3, which both readers passed before.
 
 **Measurement (frozen before any run).**
@@ -108,9 +121,9 @@ structure in 7 searches), so "both fail" was decided in advance there.
   (must pass) and on the prior-only controls (must fail). If the hand-built month account does not pass on it, its
   re-certification comes first (PROJECT_REVIEW §8), and X1 waits.
 - Planted networks: X2's scorer against the sealed key.
-- AlgZoo arm: the version-2 certificate (`docs/glass/INTENT.md`), with X0's test added if X0 passed.
-- **"Recovers"** means every stage passes (LM targets) or every planted mechanism is recovered (X2's scorer), while
-  the reader's prior-only control does not.
+- Open AlgZoo arm: the version-2 certificate (`docs/glass/INTENT.md`), with X0's test added if X0 passed.
+- **"Recovers"** means every stage passes (month rollover) or every planted mechanism is recovered (X2's scorer),
+  while the reader's prior-only control does not. On the open arms, the stage count is reported.
 
 **Must-fail cases.**
 - The same readers on shuffled weights of each target.
@@ -231,13 +244,15 @@ target with the same scorer, so together they decide which engine runs that stag
 quiet-position residual (kepler/DIARY K4). The record's numbers are all LD2's, a convolutional network; the
 tactical residual and the transformer t1 come later.
 
-**Step 0: knowledge or error (cheap, first).** The residual is LD2's value minus the classical surrogate (boosted
-trees fitted to LD2's outputs, `kepler/core/residual.py`). Does it predict the games' outcomes (and, if a deep engine
-is available, its evaluation) beyond the surrogate?
-- Measure: the partial correlation of the residual with the outcome, controlling for the surrogate, with a 95%
-  interval, on held-out positions. Control: the residual shuffled across positions.
-- Above zero: the residual carries knowledge, and what X4 names can be level K. Not above zero: the residual is
-  mostly LD2's error; X4 proceeds, labelled as explaining the network's errors.
+**Step 0: how much of the residual is knowledge (cheap, first).** The residual is LD2's value minus the classical
+surrogate (boosted trees fitted to LD2's outputs, `kepler/core/residual.py`). Any decent network's value predicts
+outcomes beyond a fit to 61 concepts, so a yes/no test would be foregone; the number that matters is the share.
+- Measure: the share of the residual's variance explained by the game's outcome (and by a deep engine's evaluation,
+  if one is available) beyond the surrogate, with a 95% interval, on held-out positions. Reported three ways: all
+  positions, quiet positions, and channel 22's component (the part of the residual channel 22 tracks).
+- Control: the same with the residual shuffled across positions.
+- The share, not a yes/no, sets the label: what X4 names counts toward level K in proportion to the knowledge share
+  of the part it explains, and the rest is reported as explaining LD2's errors.
 
 **Question.** Can a strong agent, working through the cycle of §3.8, produce a definition for channel 22 of Leela LD2
 that passes Kepler's frozen criteria and an intervention check? The cycle is: observer, simulation test, formaliser,
@@ -249,8 +264,11 @@ rivals separated by designed positions. Kepler's 59 one-shot programs found none
 The per-position data is not in the repo.
 
 **The definition language (fixed now, shared with X6).** Python over the board using `python-chess`; search up to
-two moves deep allowed; at most 5 constants fitted on the fit set; no fitted sub-models (no trees, no regressions
-inside a program); no access to the network, its weights or activations; no outside engines or tables.
+two moves deep allowed; at most 5 numeric constants in all, counting every numeric literal and table entry in the
+program (a search over thousands of programs tunes hard-coded numbers by selection, and a literal piece-square table
+is a fitted table); no fitted sub-models (no trees, no regressions inside a program); no access to the network, its
+weights or activations; no outside engines or tables. Only the language excludes boosted trees and linear maps of
+earlier channels, since either would beat the 5-coefficient surrogate below.
 
 **Measurement.** Kepler's frozen four criteria, unchanged (`results/kepler/chess/calculation_features.json` shows
 their form):
@@ -268,6 +286,8 @@ Two new criteria, fixed now:
 **Must-fail.**
 - The FEN-hash noise program, as before.
 - A program fitted to channel 22 values shuffled across positions.
+- Inside the language, the loophole a search would find: a legal program carrying a literal table tuned on the fit set
+  (it must be rejected by the constant count).
 - Outside the language, scored anyway to show what the language excludes: a boosted-tree fit to channel 22 over board
   features, and a linear map from earlier channels.
 
@@ -348,8 +368,9 @@ failed, and only a signal on the proposal side (arm B) might not.
 - The FEN-hash noise program.
 - A run whose target is channel 22's values shuffled across positions. It sets the null distribution: a real pass
   must beat the 99th percentile of the shuffled-target runs.
-- The X4 out-of-language fits (boosted trees; a linear map of earlier channels), to confirm that the language and
-  the surrogate line exclude them.
+- X4's tuned-literal-table program, which the constant count must reject.
+- X4's out-of-language fits (boosted trees; a linear map of earlier channels), to confirm that the language rejects
+  them; the surrogate line alone would not.
 
 **Budgets.**
 - 59 programs, matched to Kepler.
@@ -371,8 +392,9 @@ failed, and only a signal on the proposal side (arm B) might not.
 **Question.** Is the lying mode routed through a small set of attention heads that read the chat-template tokens?
 - **Yes** (a set of at most 10 heads carries more than half of the mode's effect on the lie rate): decompose and
   define the gate.
-- **No**: the mode is spread out, as the sprint's single-direction result hinted (at most about 12% of the gap closed
-  by one direction); move to a decomposition of the template-token stream (transcoders).
+- **No**: the mode is spread out, as the sprint's direction result hinted (adding the mode's mean direction moved the
+  detector by only 1–5% of the gap, liar/DISCOVERY); move to a decomposition of the template-token stream
+  (transcoders).
 
 **Model.** The smallest of the liar sprint's models that shows the mode under the sprint's failed-lie test; a
 smaller open model if one passes the same test.
