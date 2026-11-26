@@ -1258,7 +1258,9 @@ argued.
   In fact it is not cheap at all. Counting arithmetic from the code (`model.py`: width 32, six dilated 3 × 3 blocks;
   `sim.py`: RK4 with five FFTs per right-hand side, four substeps per frame), one forward pass costs about 512
   million floating-point operations per frame, against about 11 million for the solver it imitates: roughly 47×
-  more. This is an arithmetic estimate, not a timing on hardware.
+  more. This is an arithmetic estimate, not a timing on hardware: on a GPU, batched convolutions run fast and many
+  small FFTs are latency-bound, so wall-clock could differ. What the count shows is that the network saves no
+  arithmetic, which is what "cheap" would have to mean.
   And the law it was trained on was sealed in the simulator, so the best possible finding was "it implements the
   law". To ask how a network does physics cheaply, train it where
   cheapness is forced:

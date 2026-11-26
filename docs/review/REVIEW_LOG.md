@@ -209,7 +209,7 @@ Push access to the repo was refused by the session's permission system, so this 
 
 ### The fluid model's cost (02:55, after resuming)
 
-- **F43. The current fluid model is about 47× more expensive per frame than the solver it imitates,** by arithmetic count (about 512 MFLOP for the network against about 11 MFLOP for four RK4 pseudo-spectral substeps at 64 × 64). So "how is it cheap?" not only cannot be asked of this target; the target is not cheap. An estimate from the code, not a timing; GPU convolutions and FFT constants change the ratio but not its order of magnitude in favour of the network.
+- **F43. The current fluid model is about 47× more expensive per frame than the solver it imitates,** by arithmetic count (about 512 MFLOP for the network against about 11 MFLOP for four RK4 pseudo-spectral substeps at 64 × 64). So "how is it cheap?" not only cannot be asked of this target; the target is not cheap. An estimate from the code, not a timing. Wall-clock on a GPU could differ a lot (batched convolutions run fast; many small FFTs are latency-bound), so what this shows is that the network saves no arithmetic, not that it is slower in every setting. *(Wording corrected at 02:56: the first version claimed more than the count supports.)*
 
 ## Reasoning: how the findings led to the design (written 23:56)
 
