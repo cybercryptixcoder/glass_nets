@@ -123,6 +123,11 @@ Push access to the repo was refused by the session's permission system, so this 
 - 03:08: sent update 4 of the second run.
 - between 03:08 and 03:11: record qualifications across NEXT_BUILD (§0's buildable table; §1's table and its reading; §1b's lessons and the month trace; assumption 3; Gap 12; §3.5; §4; §8; flagships 1, 2 and 4; §3.8; §3.10; §9; the glossary). Pushed (328b5fea).
 - 03:13: the reading guide now points to CRITIQUE.md and X0–X8; the formaliser's model grade no longer says "scored exactly". This log updated (F44–F56, D12–D15, earlier findings marked). Next: BRIEF.md and PREREG_FIRST_EXPERIMENTS.md brought in line.
+- between 03:13 and 03:16: BRIEF.md and PREREG_FIRST_EXPERIMENTS.md brought in line: X0 given a full pre-registration; X1, X3, X4 and X6 rewritten; X7 and X8 added. Pushed (a723a5cf).
+- between 03:16 and 03:17: §0 now names the weakest load-bearing part (telling an explanation from a copy is still unsolved; X0 decides the candidate); Q9 and the residual curve split the residual into knowledge and the network's errors first; two risks added to §8. X0's task-rule comparison changed from "below" to "no worse than", because M2,2's must-pass account is the task rule itself and would otherwise fail by construction. Pushed (22149b48, c3e5e5f4).
+- 03:17: launched a second fresh agent to fact-check only tonight's changed passages against their sources (read-only; report to `/home/claude/review/VERIFY_CHANGES.md`), because the edits were many and fast. Sent update 5 of the second run.
+- between 03:17 and 03:20: consistency pass (LD2 named wherever the chess numbers appear in §0, the buildable table and the brief; record claims qualified in §0; compression prices SPD and transcoders like copies, which is right for a substrate; §0 says cross-network sharing is measured, not assumed). Then an addition of my own, F57: a second test against copies with a no-code reader on a token budget (Gap 2, §3.2 item 5, X0's reader arm). Pushed (7f7eedf8 to 22c922e6).
+- 03:20: this log updated (F57, D16).
 - Messages to Shreyas, for the record (first run): update 1 at 23:34; update 2 with both files at 23:44; update 3 with files at 23:52; update 4 with files at 00:01; the extension request at 00:04 (each time taken from the clock reading just before sending).
 
 ## Findings (numbered, added as they appear)
@@ -235,6 +240,8 @@ Push access to the repo was refused by the session's permission system, so this 
 - **F55. X3's general question already has a published yes (O12).** Kochkov et al. 2021 (arXiv 2102.01010): on 2D turbulence, learned coarse-grid corrections match baseline solvers with 8–10× finer resolution, with 40–80× speed-ups. *Changed:* X3 is a known-answer rung; the discovery is reading the learned correction, which that work did not do. The critique's own cost count agrees with F43.
 - **F56. None of the first experiments touched a language model (O13),** though two of the four flagships are about language models. *Changed:* X7 (the lying gate, the routing step flagship 3 names as next) and X8 added, and run early (§9).
 
+- **F57. A second test against copies is available, with a language model as the estimator** (my reasoning after the critique, not from it). A copy is of little use to a reader that cannot execute it within its budget; an explanation is not. So the transfer test (NEXT_BUILD §3.2 item 5) becomes a test against copies when the reader may not run code and has a per-question token budget below what hand-executing the copy would take (set from the copy's own cost, before any call). Caveat: a reader may read some structure off raw weights; then the copy condition beats the floor, which is itself a finding for flagship 4, and the explanation must beat the copy condition, not only the floor. It removes X0's estimator-writing step and merges the anti-copy test with the observer's simulation test.
+
 ## Reasoning: how the findings led to the design (written 23:56)
 
 - **R1. Who the engine is.** F2, F16, F30: everything that held up on hard targets was done by a strong agent by hand; the cheap reader succeeded only where the mechanism's kind was already in its prior. So the box must be designed around reasoning that is plentiful, explicit and verified (language-model roles in series, NEXT_BUILD §3.4), not around one author and one judge.
@@ -272,6 +279,8 @@ Push access to the repo was refused by the session's permission system, so this 
 - **D14 (03:06).** Retarget X1, X3, X4 and X6; add X0, X7 and X8; state the preconditions (a frontier-model key, GPU time, Shreyas's approval before any spending). Reason: F48, F51, F55, F56, and CLAUDE.md's rule to ask before spending.
 
 - **D15 (03:08).** Report every record entry with its failed replications and caveats in the same row, not only in a later section. Reason: F53.
+
+- **D16 (03:19).** Add the bounded-reader version of the test against copies to Gap 2, §3.2 item 5 and X0 (a cheap reader arm, which needs Shreyas's go for the Flash calls). Reason: F57; it removes the cost the evidence ladder names for matching sampling (accounts written as estimators).
 
 ## Next (as of 00:17)
 - Final versions of the first hour delivered (NEXT_BUILD.md, REVIEW_LOG.md, review-next-build.patch).
