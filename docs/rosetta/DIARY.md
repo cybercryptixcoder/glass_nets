@@ -317,3 +317,7 @@ evaluation carriers sit in the middle: 434 0.56 (most correlated: material -0.31
 (material +0.41, our mobility +0.40, attacks on our king zone -0.36), 303 0.59 (their space +0.34, their rooks on open
 files +0.28, their castling rights -0.27), 192 0.52, 415 0.51, 461 0.32. So each carrier is partly a blend of familiar
 quantities (material, space, mobility, king safety) and 35% to 80% something the textbook does not hold.
+
+**06:39. The ranking is stable (attr_stability_s10.json).** Attribution recomputed on 600 other training positions
+picks the same 16 variables (16 of 16; rank correlation over all 512 0.992), with the same fresh-game gain (+3.25%).
+No extension requested: the work is committed and pushed; the final check is at 07:04.

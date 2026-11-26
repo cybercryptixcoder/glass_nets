@@ -280,3 +280,6 @@ textbook concepts in gradient-boosted trees): R2 0.19 (variable 172) to 0.91 (77
 zone -0.36), 303 0.59 (their space, their rooks on open files, their castling rights), 192 0.52, 415 0.51, 461 0.32.
 Each is partly a blend of familiar quantities and 35% to 80% something the textbook does not hold: the target for the
 next build.
+
+Stability (attr_stability_s10.json): attribution recomputed on 600 other training positions selects the same 16
+variables (16 of 16; rank correlation over all 512 variables 0.992) and gives the same fresh-game gain (+3.25%).

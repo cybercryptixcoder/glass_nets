@@ -17,7 +17,7 @@ Branch `rosetta` (cut from `review-next-build`). Ledger rows R1, R2 and R3 in do
 - Where the evaluation passes (RESULTS.md section 9, ledger R3): `rosetta/glass2.py`, `rosetta/glass2_global_check.py`,
   `rosetta/fresh_where.py`, `rosetta/fresh_where_744706.py`, `rosetta/top_pos.py`, `rosetta/carriers_wdl.py`,
   `rosetta/line_swing.py`, `rosetta/line_swing_joint.py`, `rosetta/line_swing_static.py`, `rosetta/line_swing_744706.py`,
-  `rosetta/carriers_textbook.py`.
+  `rosetta/carriers_textbook.py`, `rosetta/attr_stability.py`.
 - Results: `results/rosetta/*.json`; write-ups: RESULTS.md, FINDINGS.md, DISCOVERY.md (plain language), DIARY.md.
 
 ## Data outside the repo (~/kdata, gitignored)
