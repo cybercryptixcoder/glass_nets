@@ -85,14 +85,15 @@ what:**
 - **Language models reason at every step**, in series, one role at a time: cartographer, observer, theorist,
   formaliser, experimenter, critic, abstractor, translator, librarian, prover, reader, planner, an informant (the
   target model's own reports, treated as hypotheses), and a puzzle-maker that writes the test networks. They propose
-  and argue; code decides. That makes even the words of an explanation
-  testable.
+  and argue; code decides. That makes even the words of an explanation testable.
 - **Hypothesis spaces with structure** (geometry, algebra, automata, dynamics, numerical operators, search,
   inference), each with a recogniser and a verifier. This is how "provably" extends past finite tables.
 - **Learning across networks:** a motif library with recognisers, trained readers, and developmental, comparative and
   data-level lenses, so the hundredth network is cheaper than the first.
 - **The public product becomes that library** (3.10): the concepts and mechanisms networks have learned, each a
-  program with a recogniser anyone can run, with per-network Glass Models as the evidence.
+  program with a recogniser anyone can run, with per-network Glass Models as the evidence. How much networks share
+  is measured, not assumed: the record so far shows approximate sharing at small sizes and individual mechanisms
+  above them (Gap 12, Q3).
 
 **The engine** (3.11, added in the second run): both a high-volume loop and a strong agent, on one toolkit. In the
 cases we have from all three Helix lines, a cheap model at volume did well where the thing searched was a small
