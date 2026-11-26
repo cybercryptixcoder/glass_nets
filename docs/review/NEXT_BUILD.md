@@ -8,14 +8,16 @@ is `REVIEW_LOG.md`.*
 *Status: first complete draft at 23:39 ET Nov 25 (clock); revised through 00:17 ET Nov 26 (final version of the first hour). Every revision is listed in
 REVIEW_LOG.md.*
 
-**How to read it.** §0 is the whole answer on one page. Then, in order of importance: §1b (what the system interprets
-and why that framing limits it), §3.1–§3.4 (what the box hands back, how understanding is measured, how it
-discovers, where language models reason), §6 (the four flagships and what "decoded" means for each), §10 (the first
-five experiments). §2 is the full diagnosis, with evidence for every gap; §11 is a glossary.
+**How to read it.** `BRIEF.md` is the two-page version; §0 here is the whole answer in short. Then, in order of
+importance: §1b (what the system interprets and why that framing limits it), §3.1–§3.4 (what the box hands back, how
+understanding is measured, how it discovers, where language models reason), §3.11–§3.13 (the engine: a high-volume
+loop, a toolkit and a strong director; how the box knows it is improving; the flywheel), §6 (the four flagships and
+what "decoded" means for each), §10 (the first six experiments). §2 is the full diagnosis, with evidence for every
+gap; §11 is a glossary.
 
 ---
 
-## 0. The answer in one page
+## 0. The answer in short
 
 **What the system is today.** A set of strong instruments and a discipline of honesty:
 - a calibrated causal judge;
