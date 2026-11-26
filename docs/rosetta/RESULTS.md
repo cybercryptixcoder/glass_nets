@@ -184,4 +184,7 @@ Five translated variables, plain-English sentences written from the programs alo
 fresh DeepSeek V4.1 Flash call (no thinking; a run with low thinking did not return within 11 minutes and was stopped)
 names the 3 squares where the variable is most active: hit rates 0.00, 0.08 and 0.13 against chance 0.05, rival
 sentences 0.04 to 0.25, and 3 of 10 answers unparseable. The test failed: this reader cannot apply a square-level
-definition to positions given as FEN text. Teachability stays untested; it needs a reader that is shown the board.
+definition to positions given as FEN text. Second try with the boards drawn as 8 x 8 grids
+(teach_dict_boards_none_s10.json): "we are in check" 0.21 (rival 0.04); the others 0.00 to 0.13 (chance 0.05). A run
+with low thinking gave no answer in about ten minutes and was stopped. Teachability stays essentially untested: a
+reader strong enough to apply square-level rules (a frontier model, or people) is needed.

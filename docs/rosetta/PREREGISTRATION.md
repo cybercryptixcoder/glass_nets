@@ -32,3 +32,11 @@ Ledger row R1 (docs/glass/CHANGES.md) was written before any Rosetta code. Its r
   second untrained network.
 - (L) DISCOVERY bar: met by LD2 variable 174 as a three-program composition, at the margin (substitution 0.501 and
   0.536 on a disjoint set, bar 0.50), with its knowledge criterion met through the look-ahead clause.
+
+## R2 (registered at 05:59, before its run)
+
+Ledger row R2: confirm the exploratory split of look-ahead by the follow-up move's type on 2,000 fresh positions.
+Predictions: (1) t1 looks ahead along quiet follow-ups at both blocks; (2) each convolutional network's quiet effect
+has its upper bound below t1's estimate at the same block; (3) all three look ahead along forcing follow-ups.
+Outcome: (1) and (3) held; (2) failed for 744706 at block 4. The architecture split is withdrawn; the strength
+difference and the dominance of forcing lines stand.

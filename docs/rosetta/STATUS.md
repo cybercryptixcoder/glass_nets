@@ -22,9 +22,21 @@ Branch `rosetta` (cut from `review-next-build`). Ledger row R1 in docs/glass/CHA
 yardstick networks, fresh-games cache). Rebuild: `python3 rosetta/line.py LD2`, `python3 rosetta/build_prims.py LD2`,
 same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`, then the drivers above.
 
+## Results in one line each
+
+- Known answers: 3 of 3 planted rules recovered blind.
+- Look-ahead: all three Leela networks look ahead mostly along forcing lines; the transformer's is about three times as
+  strong (confirmed on fresh positions, ledger R2, two of three predictions).
+- A capture concept passes all six pre-registered checks in LD2 (at the margin) and can be substituted in all three
+  networks (50% to 73%).
+- Translated variables carry about a fifth of LD2's extra knowledge about game results, on fresh games, spread thinly.
+- No new chess concept; the textbook gap is mostly unexplained (translations close about 7%).
+
 ## Next (in order of value)
 
 1. Translate the transformer t1 layer by layer (it is the network that looks ahead) and show its look-ahead as an
    explicit step of a glass model.
 2. A teachability test with a reader that sees the board (rendered positions), and then human players.
-3. Look-ahead across more networks of both architectures and different strengths, to separate design from strength.
+3. Look-ahead across more networks of both architectures and different strengths, to separate design from strength
+   (R2 showed the clean split by architecture does not hold for 744706).
+4. Compositions for every variable of the dictionary, to raise the glass model's evaluation (now R2 0.06).
