@@ -131,6 +131,13 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
   confirmed on fresh positions for two of three registered predictions; the third (no quiet look-ahead in either
   convolutional network) failed for 744706.
 - Finding 4's effect is small, and the fresh-games test is the strictly untouched one.
+- Finding 6 is exploratory work done in the last hour (ledger R3). Its knowledge numbers are all on the untouched fresh
+  games. The 744706 replication, the line-swing test, its static-tactics control and its 744706 replication were each
+  registered in the diary before they ran; the 16-variable count and the random-variable controls for LD2 were not.
+  The variables were ranked by attribution to the network's own value, so they are expected to predict what the value
+  predicts. The finding is how few variables suffice (16 of 512, while the move choice needs more than 128), not that
+  they predict at all. With static tactics added, the line swing's gain fell below its gain alone (+0.84% against
+  +1.18%), so these fitted gains carry noise. That is why its share is quoted as a range.
 
 ## Compared with prior work
 
