@@ -207,3 +207,16 @@ all intervals above zero; 744706 along captures (+0.24, +0.26) and marginally ch
 +0.01, intervals include zero); LD2 along checks (+0.05, +0.11) and captures at block 4 (+0.14), not quiet moves
 (+0.006, -0.011). Convolutional Leela networks look ahead only along forcing lines; the transformer along every kind
 of move. The low-thinking teachability run was stopped (no answer after about ten minutes).
+
+**05:59. R2 registered (ledger row R2) before the run.** The by-type split was exploratory, so it is retested on 2,000
+fresh positions (Kepler's fresh Lichess set, seeded sample), each network's own line, blocks 4 and 6, with three
+predictions fixed in advance: t1 looks ahead along quiet follow-ups (CI above 0 at both blocks); the convolutional
+nets' quiet effect stays below t1's (upper CI bound under t1's estimate); all three look ahead along forcing follow-ups
+(CI above 0 at block 4 or 6). Running.
+
+**06:06. R2 result: partly confirmed (lookahead_fresh_*.json).** On 2,000 fresh positions: forcing follow-ups, t1
++0.26 and +0.31, 744706 +0.10 and +0.08, LD2 +0.09 and +0.09 (blocks 4, 6; all intervals above zero); quiet
+follow-ups, t1 +0.029 and +0.035 (above zero), 744706 +0.023 and +0.023 (above zero), LD2 +0.001 and +0.005 (not).
+Predictions 1 and 3 held; prediction 2 failed for 744706 at block 4. The exploratory "convolutional nets look ahead
+only along forcing lines" is withdrawn for 744706; what stands is that forcing lines carry most of the look-ahead in all
+three networks and the transformer's is about three times as strong.

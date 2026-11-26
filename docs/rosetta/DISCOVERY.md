@@ -25,11 +25,13 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
 1. **It finds hidden rules without being told.** On three test networks trained on secret rules, it recovered all
    three exactly or in an equivalent form.
 
-2. **The convolutional Leela networks think ahead only when the next move is forcing; the transformer thinks ahead
-   all the time.** Erasing the network's memory of the square where its next-but-one move will land makes it less sure
-   of its current move. In the two convolutional networks that happens only when that future move is a check or a
-   capture. In the transformer it happens for quiet moves too, and far more strongly for captures. (The transformer is
-   also a stronger network, so this may be about strength as well as design.)
+2. **Chess networks think ahead mostly along forcing lines, and the transformer thinks ahead about three times as
+   hard.** Erasing the network's memory of the square where its next-but-one move will land makes it less sure of its
+   current move. In all three Leela networks this happens mainly when that future move is a check or a capture, and
+   most strongly in the transformer. For quiet future moves the effect is small (the transformer and one convolutional
+   network) or absent (the other). This was checked again, with predictions written down first, on 2,000 positions
+   from games never used before; one of the three predictions only partly held. (The transformer is also a stronger
+   network, so this may be about strength as well as design.)
 
 3. **One of the network's own ideas passes every test we set in advance:** a detector for "the move I am about to
    play wins material: the piece on its target is outnumbered or undefended". Swapped into the network, the rule does

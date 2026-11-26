@@ -118,6 +118,21 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
   The convolutional networks look ahead only along forcing follow-ups; the transformer along all three kinds. t1's
   probe at block 8: AUC 0.922.
 
+- Confirmation on 2,000 fresh positions (ledger R2, predictions registered before the run; lookahead_fresh_*.json):
+
+| network, block | all follow-ups | forcing (check or capture) | quiet |
+|---|---|---|---|
+| t1 (transformer), 4 | +0.052 (+0.039 to +0.067) | +0.262 (+0.162 to +0.381), n 196 | +0.029 (+0.019 to +0.039), n 1801 |
+| t1 (transformer), 6 | +0.062 (+0.048 to +0.077) | +0.310 (+0.213 to +0.417), n 196 | +0.035 (+0.025 to +0.045), n 1801 |
+| 744706 (convolutional), 4 | +0.030 (+0.016 to +0.045) | +0.102 (+0.043 to +0.171), n 188 | +0.023 (+0.009 to +0.038), n 1812 |
+| 744706 (convolutional), 6 | +0.028 (+0.017 to +0.040) | +0.080 (+0.027 to +0.144), n 188 | +0.023 (+0.012 to +0.035), n 1812 |
+| LD2 (convolutional), 4 | +0.010 (-0.006 to +0.027) | +0.087 (+0.041 to +0.136), n 193 | +0.001 (-0.016 to +0.020), n 1732 |
+| LD2 (convolutional), 6 | +0.013 (-0.005 to +0.032) | +0.085 (+0.042 to +0.131), n 193 | +0.005 (-0.016 to +0.026), n 1732 |
+
+  Prediction 1 (t1 quiet above zero at both blocks): held. Prediction 3 (forcing above zero in all three): held.
+  Prediction 2 (each convolutional net's quiet upper bound below t1's estimate at the same block): held for LD2 at both
+  blocks and for 744706 at block 6 (0.035 against 0.035, by a hair); failed for 744706 at block 4 (0.038 against 0.029).
+
 ## 6b. The DISCOVERY battery (battery_s10.json, compose_sub_K3_s10.json, rep_compose_K3_s10.json, sub_check_f174_s10.json)
 
 Ten translated variables through the six pre-registered checks (a fidelity above the line, b not a restatement, c

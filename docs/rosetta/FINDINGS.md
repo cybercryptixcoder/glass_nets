@@ -28,30 +28,34 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    network with a constant output got no definitions. One false positive on a second random network (1 of 7 units
    just over the line, which is the best of 32 control units, so chance passes are expected).
 
-2. **Convolutional Leela networks look ahead only along forcing lines; the transformer also looks ahead along quiet
-   moves.** Removing the network's state on the square where its own follow-up move will land (never a square of its
-   first two moves) lowers the probability of its current move. Against a control square matched on occupancy, on
-   being attacked by the moved piece and on attack counts, split by what the follow-up move is (exploratory cut, made
-   after the main test):
+2. **All three Leela networks look ahead along forcing lines; the transformer does so about three times as strongly,
+   and also along quiet moves.** Removing the network's state on the square where its own follow-up move will land
+   (never a square of its first two moves) lowers the probability of its current move, against a control square matched
+   on occupancy, on being attacked by the moved piece and on attack counts. The split by the follow-up move's type was
+   found on the main sample and then retested, with predictions registered in advance (ledger R2), on 2,000 fresh
+   positions from games never used in this work:
 
-   | network, block | follow-up is a check | follow-up is a capture | follow-up is quiet |
+   | network, block | all follow-ups | forcing (check or capture) | quiet |
    |---|---|---|---|
-   | t1 (transformer), 4 | +0.143 (+0.041 to +0.267) | +0.911 (+0.501 to +1.384) | +0.025 (+0.012 to +0.040) |
-   | t1 (transformer), 6 | +0.182 (+0.117 to +0.255) | +0.822 (+0.440 to +1.273) | +0.039 (+0.025 to +0.054) |
-   | 744706 (convolutional), 4 | +0.051 (+0.000 to +0.108) | +0.241 (+0.048 to +0.486) | +0.011 (-0.006 to +0.027) |
-   | 744706 (convolutional), 6 | +0.050 (-0.004 to +0.111) | +0.262 (+0.062 to +0.505) | +0.010 (-0.005 to +0.024) |
-   | LD2 (convolutional), 4 | +0.050 (+0.009 to +0.097) | +0.138 (+0.011 to +0.296) | +0.006 (-0.013 to +0.026) |
-   | LD2 (convolutional), 6 | +0.108 (+0.051 to +0.169) | +0.069 (-0.047 to +0.222) | -0.011 (-0.032 to +0.012) |
+   | t1 (transformer), 4 | +0.052 (+0.039 to +0.067) | +0.262 (+0.162 to +0.381), n 196 | +0.029 (+0.019 to +0.039), n 1801 |
+   | t1 (transformer), 6 | +0.062 (+0.048 to +0.077) | +0.310 (+0.213 to +0.417), n 196 | +0.035 (+0.025 to +0.045), n 1801 |
+   | 744706 (convolutional), 4 | +0.030 (+0.016 to +0.045) | +0.102 (+0.043 to +0.171), n 188 | +0.023 (+0.009 to +0.038), n 1812 |
+   | 744706 (convolutional), 6 | +0.028 (+0.017 to +0.040) | +0.080 (+0.027 to +0.144), n 188 | +0.023 (+0.012 to +0.035), n 1812 |
+   | LD2 (convolutional), 4 | +0.010 (-0.006 to +0.027) | +0.087 (+0.041 to +0.136), n 193 | +0.001 (-0.016 to +0.020), n 1732 |
+   | LD2 (convolutional), 6 | +0.013 (-0.005 to +0.032) | +0.085 (+0.042 to +0.131), n 193 | +0.005 (-0.016 to +0.026), n 1732 |
 
-   (Cost in log-probability of the current move, minus the matched control; 95% bootstrap intervals; groups of 40 to
-   154 positions for checks and captures, 791 to 1,327 for quiet moves.) Overall, without the split: t1 +0.075 and
-   +0.086 (blocks 4, 6), 744706 +0.023 and +0.023, LD2 +0.016 (not significant) and +0.006.
+   (Cost in log-probability of the network's current move, minus the matched control; 95% bootstrap intervals.)
+
+   Of the three registered predictions, two held (the transformer looks ahead along quiet moves at both depths; all
+   three networks look ahead along forcing moves) and one failed in part: 744706, a convolutional network, also looks
+   ahead weakly along quiet moves (+0.023), about as much as the transformer at block 4. LD2 shows none along quiet
+   moves. So the robust statement is about strength and kind, not a clean split by architecture: forcing lines carry
+   most of the look-ahead in every network, and the transformer's is the largest.
 
    Jenner et al. (2024) found look-ahead in Leela's transformer and built their method on its squares-as-tokens
-   structure; Rosetta reproduces that known answer with its own recogniser and adds the convolutional comparison. The
-   convolutional networks also carry less of the information: a probe reads the follow-up square at AUC 0.83 at block 6
-   of LD2 (board alone 0.79, untrained copy 0.64), against 0.91 in t1 (board alone 0.80). A looser first control had
-   suggested a large overall effect in LD2 (+0.089); the matched control removed it, which is why it is the one reported.
+   structure; Rosetta reproduces that known answer with its own recogniser and adds the comparison with convolutional
+   Leela networks. The transformer also carries the follow-up square more clearly: a probe reads it at AUC 0.91 at
+   block 6 (board alone 0.80), against 0.83 for LD2 (board alone 0.79, untrained copy 0.64).
 
 3. **One internal concept passes every pre-registered check.** LD2 variable 174, defined as a weighted sum of three
    programs: "an enemy piece other than a pawn, with more attackers than defenders, on the square the network's chosen
@@ -96,7 +100,7 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
   dictionary was needed.
 - **The cheap model at volume added nothing here**: 45 usable proposals from 18 live calls, none better than the
   exhaustive search.
-- **Look-ahead in the convolutional networks is confined to forcing lines**; overall it is weak, and in LD2 not significant.
+- **No clean architecture split in look-ahead**: 744706 looks ahead weakly along quiet moves too; LD2 does not.
 
 ## How sure we are, and where to doubt
 
@@ -106,8 +110,9 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
   so compositions of three programs were tried on four candidates and one passed. The line for compositions came from
   the untrained dictionary. Its knowledge criterion is met only through the look-ahead clause.
 - Finding 2 compares networks of different strength and age as well as architecture; the transformer t1 is a newer,
-  stronger network. Architecture is the most likely explanation, not the only one. The split by move type was made after
-  the main test; it is consistent across both convolutional networks and two depths, but it is exploratory.
+  stronger network, so architecture and strength cannot be separated with three networks. The split by move type was
+  confirmed on fresh positions for two of three registered predictions; the third (no quiet look-ahead in either
+  convolutional network) failed for 744706.
 - Finding 4's effect is small, and the fresh-games test is the strictly untouched one.
 
 ## Compared with prior work
