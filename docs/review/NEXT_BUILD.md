@@ -83,6 +83,18 @@ what:**
 - **The public product becomes that library** (3.10): the concepts and mechanisms networks have learned, each a
   program with a recogniser anyone can run, with per-network Glass Models as the evidence.
 
+**The engine** (3.11, added in the second run): both a high-volume loop and a strong agent, on one toolkit. The
+evidence from all three Helix lines says a cheap model at volume is strong exactly where the thing searched is a
+small program and the score is exact and loophole-free (Helix Evolve beat the best human construction on an open
+inequality that way), and weak where the score can be gamed or one leap must produce a large artifact. So:
+- the **toolkit** (every verb and every score as code) is the foundation and comes first;
+- a **Helix-style volume engine** on a Flash-grade model runs the sub-problems with exact scores: definitions of
+  found variables, laws and closures, experiment design, abstraction;
+- a **strong agent** directs: picks the residual, writes the scorer, decides what is confirmed, writes the account.
+
+Interpretability may be the best home Helix has had: Helix's open question is how to get past the model's prior, and
+here the network's own variables are an exact signal from outside that prior.
+
 **Verdict:** rebuild the centre, keep the instruments as parts (section 4).
 
 **How to know it is working:**
@@ -94,7 +106,7 @@ The flagships that should pull the build are the ones Shreyas named (section 6):
 fluid model is cheap, what gives an LLM the ability to lie, and how an LLM reads weights. The fluid target has to be
 rebuilt first, because as built it cannot pose the question (section 6). The research order is in section 9:
 calibration ladder first, then the loop on it, then one flagship end to end with its residual curve. Section 10
-lists the first five small experiments that test the premises the design rests on.
+lists the first six small experiments that test the premises the design rests on.
 
 ### Why the box is buildable: the argument from the record
 
@@ -912,6 +924,77 @@ holds.
 
 Per-network Glass Models stay as the evidence behind each library entry.
 
+### 3.11 The engine question: a high-volume loop on a cheap model, a toolkit for a strong agent, or both
+
+*(Added in the second run, Nov 26, at Shreyas's request: should the next version be an agentic setup that takes many
+iterations on a Flash-grade model, as Helix Probe and Helix Evolve were, or a toolkit handed to someone who can use
+it well?)*
+
+**The evidence from all three Helix lines, side by side** (one model throughout unless stated: DeepSeek V4.1 Flash):
+
+| Where | What the cheap model did | What happened | Source |
+|---|---|---|---|
+| Helix Evolve, second autocorrelation inequality | Thousands of programs (2,564 in run C), an exploring loop and a reasoning loop around **one exact scorer**, a memory of findings | Beat AlphaEvolve's first result, the best human construction (0.941362) and several published LLM systems; did not reach AlphaEvolve V2 or TTT-Discover | `helix_evolve/README.md`, `docs/RECORDS.md` |
+| Helix Evolve, lean experiments (circles, AC1, AC2) | Five loop designs, 3 seeds each | Unguided mutations set 75–98% of the gains; the planner set records but small ones; the notes did not help on average; planner programs learned to sit exactly on the checker's floating-point boundary until checking was made exact | `helix_evolve/docs/LEAN_RESULTS.md` |
+| Helix Probe, FIND | Predict-first loop: experimenter, updater, theorist | 0.82–0.90 numeric against 0.38 for the same model in FIND's protocol; most of the gap is behavioural (the loop always experiments); at equal inputs +0.10; the theorist showed no measurable value | `docs/handoff/03_ANALYSIS.md` §0, §6 |
+| Helix Probe, ARC-AGI-3 | Same loop on games | 0 of 35 levels: it learned mechanics, never what completes a level | same, §0 item 7 |
+| Goal 1, weight editing | Loop variant with complete evidence and candidate selection | The only real removals (2 of 12); every other "success" broke the cue, not the skill | `docs/FINDINGS.md` |
+| Goal 2, open map | Free exploration with a score | Gamed the score, then made edits too weak to matter | `docs/FINDINGS.md` |
+| Constructor reader | One long conversation, one leap to a whole explanation | Clean, familiar networks only; copies elsewhere | section 1 |
+| Kepler's scientist | One-shot proposals: 59 programs in three rounds | 0 accepted | `docs/kepler/DIARY.md` |
+
+**The rule the evidence supports.** A cheap model at volume is strong exactly when four things hold, and weak when
+any one fails:
+1. **the thing searched for is a small program** (a construction, a heuristic, a function);
+2. **the score is exact, cheap and loophole-free** (Helix's results "can't be faked"; the floating-point boundary
+   and the copy rules show what happens otherwise);
+3. **progress is incremental**, so variations can climb (a fitness landscape with slopes);
+4. **the volume is real**: thousands of candidates, with diversity kept up (published systems used 25,600–51,200).
+
+It fails where the score can be gamed (Goal 2, the copy rules), where the task needs a goal nobody has seen
+(ARC-AGI-3), where one leap must produce a large composed artifact (the constructor), and where the "volume" is
+small (59 programs against Helix's thousands).
+
+**What that means for interpretability, sub-problem by sub-problem:**
+
+| Sub-problem of the box | Small program? | Exact, loophole-free score? | Verdict |
+|---|---|---|---|
+| **Definition synthesis**: write a program over the inputs that computes a variable found inside the network | Yes | Yes: held-out agreement with the variable's values, agreement under intervention, length in library terms; a memorising program fails held-out data, as Kepler's hash-noise control already showed | **Volume engine.** This is the best fit in the whole box |
+| **Laws and closures**: write the term or closure that, added to a known model, reproduces the network's dynamics or internal state | Yes | Yes, against the network's implied dynamics on held-out flows | **Volume engine.** It extends Kepler's fixed 38-term library into open program search |
+| **Experiment design**: find the stimulus or intervention that best separates two rival hypotheses | Yes | Yes, after the fact (did the outcome split the rivals?) | **Volume engine** |
+| **Abstraction**: find shared primitives across verified definitions | Yes | Yes: total description length over the corpus | **Volume engine,** with LILO-style naming by a language model |
+| **Structure recognition** (decompiler-style) | Partly | Yes (exhaustive or causal checks) | Volume helps tune; the structure theory comes from a strong reasoner |
+| **The whole Glass Model**: composing levels into an algorithm and deciding it is an explanation | No | Only partly: faithfulness can be scored, "explanation, not copy" only through the shared-library and proof measures, still unproven as gates | **Strong agent,** with frozen confirm tests |
+| **Framing**: which target, which residual, what counts as understood, what a person should learn | No | No | **Strong agent and Shreyas** |
+
+**So the answer is both, in three layers, built in this order:**
+1. **The toolkit is the foundation, and it comes first.** Every verb and every score as code: decompositions,
+   interventions, the Glass Model store, the scorers. Both a volume engine and a strong agent depend on it, and a
+   volume engine is only as good as its scorer. Handed to a capable agent, the toolkit alone is already the system
+   that produced every hard-target result so far, minus the bespoke rebuilding.
+2. **A volume engine (Helix's figure-eight on a Flash-grade model)** runs inside the sub-problems that have exact
+   scores: an exploring loop that varies programs without a plan, a reasoning loop that tests one change at a time,
+   a memory of findings, one exact scorer. Kepler's scientist was a one-shot generator at about one fortieth of
+   Helix's volume, so "a cheap model cannot find the chess residual's concept" has not been tested at the volume
+   where Helix works (experiment X6, section 10).
+3. **A strong agent as director** owns the Glass Model: picks the residual to attack, writes and pre-registers the
+   scorer a volume run will climb, reads what comes back, separates rivals, decides what is confirmed, and writes the
+   human account. Shreyas stays the judge of what is worth understanding.
+
+**Why interpretability may be the best home Helix has had.** Helix's own research question is how a discovery system
+gets past its model's prior: language-model searches re-weight what the model already imagines
+(`helix_evolve/docs/research/RESEARCH_CASE.md`). The vocabulary problem in this review (Gap 5) is the same problem:
+the LLM scientist proposed classical chess ideas because those are what it knows. In interpretability the target
+network supplies what that research case says is missing, **a dense, exact signal from outside the model's prior**:
+its own internal variables. A definition search scored against a variable the network computes is pulled toward the
+network's concept, not the model's habit. The two projects meet here: Helix supplies the engine, the network supplies
+the signal, and the toolkit supplies the scorer that connects them.
+
+**What would show this is wrong.** If a Helix-scale definition search (thousands of programs, exact held-out scorer,
+search primitives allowed) still finds nothing for a variable the network demonstrably computes, then the bottleneck
+is not volume but the library's base language or the variable itself, and the director, not the engine, must do
+that work. X6 is designed to tell these apart.
+
 ---
 
 ## 4. What to keep, what to scrap
@@ -934,6 +1017,7 @@ Per-network Glass Models stay as the evidence behind each library entry.
 | SPD and the atlas | **Keep, as one decomposition instrument and one honesty label** | Exact decomposition and the rule/lookup label are valuable. Its explanation layer (trees over a fixed vocabulary) is replaced by the definition step (3.3 C) |
 | Kepler's law extraction, concept probes with controls, and teachability test | **Keep, wire inside-out** | Each law or strategy must get an implementation claim (Gap 7) |
 | The change ledger, frozen measures, pre-registration | **Keep, at the confirm boundary** | Credibility. Exploration happens before the boundary, labelled |
+| Helix Evolve's figure-eight engine (separate repo `helix_evolve`) | **Bring in, as the volume engine** | Exploring and reasoning loops around one exact scorer, with a memory of findings; beat the best human construction on an open problem with a Flash-grade model (3.11) |
 | The Helix Probe loop (`probe/`) | **Keep, as the loop's skeleton** | Predict-first, experiment-choosing, keep-if-better rules made a weak model strong on FIND (RESULTS_LOG R5). The network's insides become one more box |
 | Kepler's "hypotheses as executable code, judged by frozen tests" | **Keep, as the rule for every role** | It is the right contract between a language model and the evidence. What failed around it: 59 programs from a cheap model over three rounds (one with refinement, one on minimal pairs from channel 22) and 8 channel-derived rules, all rejected, with a library of static board features only (kepler/FINDINGS §4; kepler/DIARY). The missing parts were reasoning strength, a refine-against-failures cycle, and dynamic primitives |
 | Catalog and playground | **Keep, as a view of the Glass Model** | The trace view (1b) grows out of the playground |
@@ -981,6 +1065,7 @@ Each question is stated so that it has a yes/no answer and a decision, in the re
 | Q7 | Which roles need which model? | The same tasks run with a frontier model and a cheap one, role by role | Decides where capability is the binding limit (the R3 question, finally asked) |
 | Q8 | How does a language model read weights, and can the skill be trained? | A mechanistic account of an open reader model reading small networks, and a trained reader that beats its untrained self on held-out networks with verified rewards | Yes: reading becomes an instrument. No: the skill is local arithmetic plus priors (as the reading audits suggest); then rely on tools |
 | Q9 | Does the residual curve bend? | On a flagship, each round of the loop adds verified concepts and the structured residual falls, beyond what the classical library reaches | This is the box's headline number |
+| Q11 | Does volume find what one-shot proposals missed? A Helix-scale definition search (exploring and reasoning loops, thousands of programs, exact held-out scorer) on a variable the network demonstrably computes | It finds definitions that pass held-out agreement and intervention, where Kepler's 59 one-shot programs found none, at a matched and at a Helix-scale budget | Yes: the volume engine becomes the definition stage (3.11). No: the bottleneck is the library's base language or the variable; the director takes that stage |
 | Q10 | Do alignments compose? If each link of the hierarchy holds within its measured tolerance, is the end-to-end error bounded by their combination, or do small errors compound (the "compounding structureless noise" that DIAGNOSIS_ABOVE_32 cites from Gross et al.)? | On known-answer networks, the end-to-end error of the composed Glass Model stays within a stated function of the per-link errors | Yes: a hierarchy's guarantee can be assembled from its links, which is what makes the trace view trustworthy. No: per-link certificates must be complemented by end-to-end tests at every level, and the ledger must track compounding |
 
 ---
@@ -1227,7 +1312,7 @@ boundary.
 
 ---
 
-## 10. The first five experiments, and what each would decide
+## 10. The first six experiments, and what each would decide
 
 Each one is small (minutes to hours), tests a premise the whole design rests on, and has a decision for each outcome.
 Pass lines come from controls, set before the runs, as `CLAUDE.md` requires. None has been run.
@@ -1238,6 +1323,7 @@ Pass lines come from controls, set before the runs, as `CLAUDE.md` requires. Non
 | X2 | **A first discovery score for today's tools.** The puzzle-maker writes ten small networks implementing algorithms invented for the test, keys sealed; a Claude session with today's instruments tries to recover them blind | That a calibration ladder of unpublished algorithms can be made, and how far today's system is from Q1–Q2 | Holds: the ladder exists and has a baseline to beat. Fails: weight-space programming cannot produce realistic test networks; fall back to planted-rule training |
 | X3 | **Does the rebuilt fluid model have something to be cheap about?** Train the video model on coarse-grained frames of a 4× finer simulation, with a longer step; compare with the plain coarse solver at matched cost | That a coarse emulator learns a closure worth decoding (flagship 2) | Holds: the closure is the discovery target. Fails: it learns no better than the coarse solver; raise the resolution gap or the step until it does, or choose a different physics target |
 | X4 | **One concept-invention cycle on the chess residual** (section 3.8): the observer, the formaliser and the simulation test on the positions of channel 22 | That a definition can be synthesised for a variable nobody named, on a real network (Q2) | Holds: the residual curve gets its first point. Fails: find where it breaks (the observer's description, the program, the alignment) before scaling the loop |
+| X6 | **Helix volume on a definition the one-shot scientist missed.** Run Helix's figure-eight (exploring and reasoning loops, Flash-grade model, programs allowed to search a few moves ahead) to write a board program that matches chess channel 22 (or a decomposition feature that carries the residual) on held-out positions, scored exactly, with the hash-noise control and the replication network in the scorer. Compare at Kepler's budget (59 programs) and at Helix's (thousands) | That volume plus an exact scorer anchored to the network's own variable gets past the model's prior (Q11, section 3.11) | Holds: the volume engine becomes the definition stage. Fails at both budgets: the library's base language or the variable is the bottleneck, and the director must work it out |
 | X5 | **The Helix skeleton on the insides of a network.** Point `probe/` at a planted RNN, with interventions as the probes and a predict-first model of the internals | That the predict-first loop transfers from black boxes to network internals | Holds: it becomes the loop's skeleton. Fails: keep the roles, and replace the loop's selection rules with ones built for internal claims |
 
 ---
