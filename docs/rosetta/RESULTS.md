@@ -188,3 +188,54 @@ definition to positions given as FEN text. Second try with the boards drawn as 8
 (teach_dict_boards_none_s10.json): "we are in check" 0.21 (rival 0.04); the others 0.00 to 0.13 (chance 0.05). A run
 with low thinking gave no answer in about ten minutes and was stopped. Teachability stays essentially untested: a
 reader strong enough to apply square-level rules (a frontier model, or people) is needed.
+
+## 9. Where the evaluation and the extra knowledge pass (glass2_*.json, fresh_where_s10.json, top_pos_s10.json, line_swing*_s10.json)
+
+Exploratory, run after the main tests (diary 06:10 to 06:22). The 512 variables are ranked by attribution: activation
+times the gradient of LD2's value along each variable's decoder direction, on 600 training positions.
+
+The glass model with the K most important variables put back at their true values and every other variable at its
+single program (1,000 held-out positions):
+
+| K | value R2 against the network | top move same as the network |
+|---|---|---|
+| 0 (the glass model of section 4) | 0.062 | 0.413 |
+| 8 | 0.476 | 0.392 |
+| 16 | 0.697 | 0.400 |
+| 32 | 0.846 | 0.385 |
+| 64 | 0.918 | 0.402 |
+| 128 | 0.969 | 0.513 |
+| 256 | 0.987 | 0.611 |
+| 512 (true codes) | 0.990 | 0.695 |
+
+The evaluation passes through a few variables; the move choice is spread over many. Richer definitions (sums of three
+programs) for the 64 most important variables do not repair it: value R2 0.074, top move 0.399.
+
+Fresh games (16,000 positions never used in Rosetta), textbook concepts plus the board-wide totals of LD2's own
+variables (true codes), trained on the original games:
+
+| added to the textbook concepts | gain in R2 for the game result | 95% CI | share of LD2's own gain |
+|---|---|---|---|
+| LD2's value (ceiling) | +3.58% | 2.89 to 4.26% | 100% |
+| totals of the 8 most important variables | +2.54% | 1.93 to 3.25% | 71% |
+| totals of the 16 most important | +3.25% | 2.59 to 3.94% | 91% |
+| totals of the 64 most important | +2.99% | 2.14 to 3.78% | 83% |
+| totals of all 512 | +3.66% | 2.79 to 4.47% | 102% |
+| control: 16 random variables (three draws) | +2.22%, +0.60%, +0.48% | | 62%, 17%, 13% |
+| control: the 16 least important | +0.16% | -0.07 to 0.40% | 4.5% |
+
+(The 62% random draw contains the variables ranked 5th and 6th.) The network's knowledge beyond the textbook passes
+mostly through about 16 of its 512 variables at block 10. Rosetta cannot define most of them yet: as counted programs
+at the position level (material removed), only 2 of the 16 pass the untrained-network line of 0.456 (variables 77 and
+228, which are also well defined square by square); the evaluation carriers (434, 415, 303, 304, 192 and others) reach
+0.11 to 0.36. Their board totals track LD2's value (434: -0.69; 304: +0.72) and the part of it textbook concepts miss
+(434: -0.46; 415: +0.43).
+
+The material LD2's own line wins (registered before the run, diary 06:22): side to move's material balance after 1, 2
+and 3 plies of LD2's greedy line, minus now. On fresh games, textbook concepts plus these three numbers recover +1.18%
+(CI 0.78 to 1.60%), 33% of LD2's gain; the same numbers along random legal moves recover +0.02% (CI -0.25 to 0.32%).
+Adding them to LD2's value adds nothing (102%), and adding them to the 16 variables' totals adds little (+3.32% against
++3.25%). Yet no single one of the 16 carries the swing (held-out correlations -0.12 to +0.13), and the totals predict
+the swing itself only a little beyond textbook concepts (R2 0.34 from textbook concepts, 0.38 with the 16 totals, 0.42
+with all 512). A third of what LD2 knows beyond the textbook is what its own forcing line wins; the 16 variables hold
+that knowledge for predicting the result without holding the swing as a number.

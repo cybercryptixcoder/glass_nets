@@ -94,10 +94,21 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    the dictionary itself), but almost none of its evaluation (R2 0.06 against 0.99). The translations keep move logic,
    not judgement. All 22 definitions tested in the second network replicate.
 
+6. **Where the network's judgement lives (exploratory, after the main tests; RESULTS.md section 9).** The glass model
+   loses the evaluation because of a handful of variables: putting back at their true values the 8 that LD2's value
+   depends on most lifts the evaluation fit from R2 0.06 to 0.48, and 16 lift it to 0.70; the move choice needs more
+   than 128. On 16,000 fresh games, the board-wide totals of those 16 variables carry 91% of LD2's gain over textbook
+   knowledge (16 random variables: 13% to 62%; the 16 least important: 4.5%). Rosetta's programs define only 2 of the
+   16, square by square or counted over the board. A third of LD2's knowledge beyond the textbook is the material its
+   own 3-ply line wins (33%; the same count along random legal moves: 0.6%), and its value already contains it. So the
+   translated rules spread their small share of the knowledge thinly (item 4), while the network concentrates its
+   judgement in about 16 variables that need a vocabulary of lines and exchanges, not squares.
+
 ## What it did not find
 
 - **No new chess concept.** The unexplained 22% of LD2's evaluation is still mostly unexplained: all translated
   variables together close 6.6% of it (+1.46% of variance), and the best six, chosen on training positions, +0.96%.
+  We now know where it passes (about 16 variables, item 6) but not what those variables compute.
 - **Raw channels cannot be defined well** (best 0.46 with four programs; substitution restores at most 4%); the sparse
   dictionary was needed.
 - **The cheap model at volume added nothing here**: 45 usable proposals from 18 live calls, none better than the

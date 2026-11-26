@@ -48,11 +48,19 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
    that layer from the rules alone, the network still picks the same move 41% of the time (5% for a layer that knows
    nothing). But it loses almost all of its sense of who is winning.
 
+6. **The network's judgement runs through about 16 of its 512 internal variables, and a third of what it knows beyond
+   the textbook is what its own planned moves win.** Of what the network knows about who wins beyond textbook chess,
+   91% passes through about 16 of the 512 variables in its last layer (16 picked at random carry 13% to 62%). Our
+   rules describe only 2 of those 16, which is why the rebuilt layer loses the evaluation. One part we can name: the
+   material the network wins along the three moves it plans ahead accounts for a third of its extra knowledge (the
+   same count along random moves accounts for almost none).
+
 ## What we don't have yet
 
 - **No new chess strategy.** The part of the network's judgement that textbook chess misses is still mostly
   unexplained; the translated rules close about 7% of it.
-- **The rules capture the network's move logic far better than its judgement.**
+- **The rules capture the network's move logic far better than its judgement.** We now know where the judgement
+  lives (about 16 variables) but not yet what they compute.
 - **The passing concept passes at the margin**, and only after combining three rules.
 - **The look-ahead comparison** involves three networks, which differ in strength as well as design.
 

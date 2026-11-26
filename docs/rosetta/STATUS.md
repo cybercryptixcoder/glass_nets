@@ -31,6 +31,10 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
   networks (50% to 73%).
 - Translated variables carry about a fifth of LD2's extra knowledge about game results, on fresh games, spread thinly.
 - No new chess concept; the textbook gap is mostly unexplained (translations close about 7%).
+- The evaluation passes through few variables: 16 of LD2's 512 carry 91% of its gain over textbook knowledge on fresh
+  games (random 16: 13% to 62%; least important 16: 4.5%), and Rosetta cannot define most of them yet.
+- A third of LD2's knowledge beyond the textbook is the material its own 3-ply line wins (33%; along random moves
+  0.6%); its value already contains it.
 
 ## Next (in order of value)
 
@@ -39,4 +43,7 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
 2. A teachability test with a reader that sees the board (rendered positions), and then human players.
 3. Look-ahead across more networks of both architectures and different strengths, to separate design from strength
    (R2 showed the clean split by architecture does not hold for 744706).
-4. Compositions for every variable of the dictionary, to raise the glass model's evaluation (now R2 0.06).
+4. Define the 16 evaluation variables (section 9 of RESULTS.md): they carry 91% of LD2's extra knowledge and put the
+   glass model's evaluation from R2 0.06 to 0.70 when exact. Square-level and counted programs fail on most of them, so
+   the vocabulary needs quantities about lines and exchanges (the line's material swing explains a third of the
+   extra knowledge but sits in none of them alone).

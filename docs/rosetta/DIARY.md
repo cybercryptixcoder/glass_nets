@@ -224,3 +224,44 @@ three networks and the transformer's is about three times as strong.
 **06:07. The capture concept substituted in 744706 (sub_744706_capture.json).** 744706's variable 455, defined from its
 own line as three programs (fidelity 0.732), restores 54.9% of its effect on 744706's value at block 10. The capture
 concept is now a substitutable part of all three networks: LD2 50% to 54%, 744706 55%, t1 73%.
+
+**06:10 to 06:17. Why the glass model misses the evaluation (glass2_s10.json, glass2_where_s10.json,
+glass2_global_check_s10.json; rosetta/glass2.py).** The variables were ranked by attribution (activation times the
+gradient of LD2's value along each decoder direction, 600 training positions). (1) Defining the 64 most important ones
+as sums of three programs instead of one barely helps: value fit 0.062 to 0.074, top-move agreement 41.3% to 39.9%
+(1,000 held-out positions). (2) Putting the K most important variables back at their true values, all others at their
+single programs: value fit 0.06 (K=0), 0.48 (8), 0.70 (16), 0.85 (32), 0.92 (64), 0.97 (128), 0.99 (512). Move
+agreement stays near 40% until K=128 (51%), 256 (61%), 512 (70%). The evaluation goes through a few variables; the move
+choice is spread over many. (3) About half of the top 16 are variables the per-square vocabulary barely defines
+(fidelity 0.07 to 0.26), and their board-wide totals track the evaluation: variable 434's total correlates -0.69 with
+LD2's value and -0.46 with the part textbook concepts miss; 304 +0.72 and +0.39; 415 +0.51 and +0.43; 192 -0.61 and
+-0.43. They carry an evaluation already computed upstream, so a rule about one square cannot define them.
+
+**06:17. Registered before the run (exploratory, no pass line): where does LD2's extra knowledge go?** On the 16,000
+fresh positions: textbook concepts plus the board-wide totals of the K most important variables (true codes, K = 8, 16,
+64, 512), trained on the original games, scored on fresh games, against LD2's own value (+3.58% earlier) as the
+ceiling. Reported as a share of the network's gain with bootstrap intervals (rosetta/fresh_where.py).
+
+**06:19 to 06:21. Where LD2's extra knowledge goes (fresh_where_s10.json) and whether its carriers can be counted
+(top_pos_s10.json).** On the 16,000 fresh game positions, textbook concepts plus the board-wide totals of LD2's 8 most
+important variables (true codes) recover 71% of LD2's own gain over textbook knowledge (+2.54% against +3.58%); the
+top 16 recover 91% (+3.25%, CI 2.59 to 3.94%); all 512, 102%. Controls added after the first result: 16 random
+variables 62%, 17% and 13% (the 62% draw contains the variables ranked 5th and 6th); the 16 least important 4.5%. So
+the network's knowledge beyond the textbook passes mostly through about 16 of its 512 variables at block 10. Defining
+those 16 as counted programs at the position level (material removed) passes the untrained-network line for only 2 of
+them (77 and 228, already well defined square by square); the evaluation carriers (434, 415, 303, 304, 192 and
+others) stay at 0.11 to 0.36, below the line.
+
+**06:22. Registered before the run: the carriers hold what LD2's own line wins (rosetta/line_swing.py).** Material swing
+along LD2's own 3-ply line (after 1, 2 and 3 plies, side to move's balance minus now). (1) Held-out correlation of the
+top 16 variables' totals with the 3-ply swing, raw and with textbook concepts removed. (2) Fresh games: textbook plus
+the three swings, against LD2's value as the ceiling; control: the same swings along random legal moves. Yes if (2)'s
+interval sits above the control's and recovers a clear share of the network's gain; no otherwise.
+
+**06:22. Line-swing result (line_swing_s10.json): yes for (2), no for (1).** (2) On the 16,000 fresh positions,
+textbook concepts plus the material LD2's own 3-ply line wins recover 33% of LD2's gain over textbook knowledge (+1.18%,
+CI 0.78 to 1.60%); the same swing along random legal moves recovers 0.6% of it (+0.02%, CI -0.25 to 0.32%). Adding the swing to LD2's
+value adds nothing (102% of the value's gain, intervals overlapping), so the value already contains it. (1) But the
+16 evaluation variables do not carry it one by one: held-out correlations of their totals with the 3-ply swing are
+between -0.12 and +0.13 (after removing textbook concepts, -0.09 to +0.10). A third of what LD2 knows beyond the
+textbook is what its own forcing line wins; which variables hold it jointly is the next question.
