@@ -105,6 +105,7 @@ Push access to the repo was refused by the session's permission system, so this 
 - 01:04: added NEXT_BUILD §3.12: one run of the agentic box end to end (inner Helix volume loop with an exact scorer; middle director cycle with the residual curve; outer loop across versions with the discovery score), with a diagram, and why the inner loop optimising its score is safe here (scorer written and frozen first, must-fail controls inside it, claims only through confirm mode).
 - 01:05: wrote `docs/review/BRIEF.md`, the two-page version (where it stands; the five assumptions; the box; the engine; keep/scrap; flagships and their open seats; the six experiments). The critique is still running; the brief and NEXT_BUILD will be revised by whatever survives it.
 - 01:05: read Helix Evolve's VERSIONS.md sections on lean (stores, Scout), v9 (design map), v8 (register of hills) and v7 (side lines). Added to NEXT_BUILD §3.11 a table mapping each Helix Evolve part to its job in the box (two loops → inner engine; stores → confirmed claims and rival ledger; register of hills → rival explanations grouped by behaviour, a working answer to non-identifiability; design map → hypothesis-space map and library growth; side lines → keeping rivals alive; Scout → Librarian; golden version → the outer loop's rule).
+- 01:06: added NEXT_BUILD §3.13, the flywheel: search → verify → distil into a trained reader → repeat (the AlphaZero pattern for interpretation), with interpretability self-play on the calibration ladder as an unlimited, verifiable curriculum (a puzzle-maker builds networks with hidden algorithms; an interpreter decodes them); why its signal comes from outside the reader's prior; the risk (puzzle networks unlike trained ones) and its guards. Added it as phase 7 of §9.
 - Messages to Shreyas, for the record: update 1 at 23:34; update 2 with both files at 23:44; update 3 with files at 23:52; update 4 with files at 00:01; the extension request at 00:04 (each time taken from the clock reading just before sending).
 
 ## Findings (numbered, added as they appear)
@@ -224,6 +225,8 @@ Push access to the repo was refused by the session's permission system, so this 
 
 - **D9 (00:59).** Answer the engine question with three layers, built in order: toolkit first (every verb and score as code); a Helix-style volume engine on a Flash-grade model inside the sub-problems with exact scores (definitions, laws and closures, experiment design, abstraction); a strong agent as director for composition, framing and claims. Reason: F36–F40.
 - **D10 (00:59).** Commits from now on carry no Claude co-author lines: Shreyas's stated rule for Helix work is to commit under his own name with no Claude attribution, and Glass Networks is a Helix spinoff. The branch's first two commits carry the lines; offer to rewrite them.
+
+- **D11 (01:06).** Add the flywheel (search, verify, distil, self-play) as the last phase: it is the part whose ceiling does not depend on how many good researchers exist, which is what the brief asks for; it waits until the inner loop works.
 
 ## Next (as of 00:17)
 - Final versions of the first hour delivered (NEXT_BUILD.md, REVIEW_LOG.md, review-next-build.patch).

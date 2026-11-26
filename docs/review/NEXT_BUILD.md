@@ -1047,6 +1047,41 @@ loopholes. The design puts the loophole-closing where Helix learned it belongs: 
 the director before the search starts, with the must-fail controls built in (shuffled targets, hash programs, held-out
 positions). Nothing an inner loop produces becomes a claim until the director runs it through confirm mode.
 
+### 3.13 The flywheel that could make it scale: search, verify, distil, and self-play
+
+The three loops of 3.12 make the box improve on one network and across versions. A fourth loop, later and costlier,
+could make the box improve with compute rather than with human effort. It is the AlphaZero pattern applied to
+interpretation, and every part of it is already named above:
+1. **Search.** The volume engine finds definitions, laws and algorithms that pass exact scorers.
+2. **Verify.** The confirm tests keep only what is true of the network.
+3. **Distil.** The verified explanations, paired with the networks they explain, train a reader (3.6), so the next
+   search starts from better proposals.
+4. **Repeat.** A better reader proposes better candidates, and search goes further from there.
+
+**Where the training tasks come from: interpretability self-play.** The calibration ladder's puzzle-maker can write
+or train networks with hidden algorithms without limit, each with a sealed key, and the scorers can check any
+recovery exactly. That turns interpretation into a two-player game:
+- the puzzle-maker tries to build networks that are hard to decode but still behave to their spec;
+- the interpreter tries to decode them.
+
+An unlimited, verifiable curriculum is what made game-playing systems climb past human level. Here it would come
+from networks rather than games.
+
+**Why it could get past the model's prior,** where plain reinforcement learning on one's own outputs does not (the
+finding Helix's research case cites): the signal comes from outside the reader, from networks whose computation the
+reader did not write. That includes real trained networks once their explanations are verified.
+
+**The risk, stated plainly.** Puzzle networks may not look like trained ones, and a reader trained on them would then
+learn the puzzle-maker's habits.
+- The ladder's own guards apply: hide written structure behind a change of basis or distillation, and use networks
+  trained on data with planted rules.
+- Real networks with verified Glass Models should enter the training set as soon as there are any.
+- Whether the reader transfers is measured on the held-out rungs and on real flagships, never assumed.
+
+This loop is the last phase, not the first. It needs GPUs and a working inner loop. But it is the part of the design
+whose ceiling is not set by how many good researchers are available, and that is what "changes the world by its
+capability" asks for.
+
 ---
 
 ## 4. What to keep, what to scrap
@@ -1372,6 +1407,8 @@ needs them.
    game phases, flow regimes). *Answers Q5.*
 6. **The language-model flagships** (lying; weight reading), once the decomposition layer reaches 7–8B models and the
    library has primitives for beliefs, states and speech acts. *Answers Q8 and flagship 3.*
+7. **The flywheel (3.13):** distil verified explanations into a trained reader, and add interpretability self-play
+   on the ladder. It comes only after the inner loop works, and it needs GPUs.
 
 Two things run through every phase and are never deferred: the residual ledger, and the honesty rules at the confirm
 boundary.
