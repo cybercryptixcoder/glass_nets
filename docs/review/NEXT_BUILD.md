@@ -114,7 +114,14 @@ with Helix's own prediction as the null.
 **How to know it is working:**
 - **the discovery score:** blind recovery of algorithms that are known to the experimenters and published nowhere;
 - **the residual curve:** on a flagship, each round adds named, verified, teachable concepts, and the structured
-  residual falls below what the classical library reaches.
+  residual falls below what the classical library reaches. The residual is first split into knowledge (what
+  predicts the truth beyond the classical library) and the network's own errors, so that the curve cannot bend by
+  naming mistakes.
+
+**The weakest load-bearing part, stated plainly.** Telling an explanation from a disguised copy was the project's
+central unsolved problem, and it still is. The design's answer (answering without running, 3.2 item 3) is a
+candidate taken from ARC and from the repo's own evidence ladder, not a result. X0 tests it on the saved runs at no
+cost, and until it passes, copies are kept out only by restricted search languages and must-fail sets.
 
 The flagships that should pull the build are the ones Shreyas named (section 6): a chess network's strategies, how a
 fluid model is cheap, what gives an LLM the ability to lie, and how an LLM reads weights. The fluid target has to be
@@ -1295,7 +1302,7 @@ Each question is stated so that it has a yes/no answer and a decision, in the re
 | Q6 | Do explanations transfer? | A fresh model given only the explanation predicts the network better than given only the task, or given a surrogate fitted to the network's behaviour; then people (teachability) | Yes: the words are true. No: the explanation is a description, not an understanding |
 | Q7 | Which roles need which model? | The same tasks run with a frontier model and a cheap one, role by role | Decides where capability is the binding limit (the R3 question, finally asked) |
 | Q8 | How does a language model read weights, and can the skill be trained? | A mechanistic account of an open reader model reading small networks, and a trained reader that beats its untrained self on held-out networks with verified rewards | Yes: reading becomes an instrument. No: the skill is local arithmetic plus priors (as the reading audits suggest); then rely on tools |
-| Q9 | Does the residual curve bend? | On a flagship, each round of the loop adds verified concepts and the structured residual falls, beyond what the classical library reaches | This is the box's headline number |
+| Q9 | Does the residual curve bend? | On a flagship, each round of the loop adds verified concepts and the structured residual falls, beyond what the classical library reaches, after the residual is split into knowledge and the network's own errors | This is the box's headline number |
 | Q11 | Does volume find what one-shot proposals missed? A Helix-scale definition search (exploring and reasoning loops, thousands of programs, the restricted held-out scorer with its must-fail set; score-only and evidence-shown arms) on a variable the network demonstrably computes | It finds definitions that pass held-out agreement and intervention and beat a fitted surrogate with the same number of free constants, where Kepler's 59 one-shot programs found none, at a matched and at a Helix-scale budget | Yes: the volume engine becomes the definition stage (3.11). No: the bottleneck is the library's base language or the variable; the director takes that stage |
 | Q10 | Do alignments compose? If each link of the hierarchy holds within its measured tolerance, is the end-to-end error bounded by their combination, or do small errors compound (the "compounding structureless noise" that DIAGNOSIS_ABOVE_32 cites from Gross et al.)? | On known-answer networks, the end-to-end error of the composed Glass Model stays within a stated function of the per-link errors | Yes: a hierarchy's guarantee can be assembled from its links, which is what makes the trace view trustworthy. No: per-link certificates must be complemented by end-to-end tests at every level, and the ledger must track compounding |
 | Q12 | Does answering without running separate explanations from copies? | On saved runs (X0): the must-pass accounts beat sampling the network and its copy frontier at matched compute, and no saved copy, disguise or shuffled-network account does | Yes: it is the anti-copy gate (3.2 item 3). No: copies are kept out by restricted languages and must-fail sets alone, and that limit is stated on every claim |
@@ -1532,6 +1539,8 @@ them as hypotheses and tests.
 
 | Risk | How it is handled |
 |---|---|
+| The test against copies fails on the saved runs (X0) | Copies are then kept out only by restricted search languages and must-fail sets, which is weaker. Every claim states that limit, the languages stay narrow enough that a copy cannot be written in them, and the director's reading stays the last line. The record shows this risk is real: every rule written against copies so far was beaten |
+| A residual curve bends by naming the network's errors, not its knowledge | The residual is split first: the part that predicts the truth (game outcomes, a deep engine, the fine simulation) beyond the reference library, and the rest. Only the first counts as level K |
 | Invented concepts are just-so stories | Every concept must predict held-out values, pass intervention, and transfer to a fresh reader. The critic writes must-fail cases first. Exploratory concepts never become claims without the confirm mode |
 | Decompositions at scale leave dark matter (cross-layer transcoders: about 11–22% reconstruction error, SYNTHESIS §3) | The residual ledger accounts for it explicitly; exactness is used where a claim needs it (parameter decomposition); "complete" means accounted for |
 | Several explanations pass the same tests (non-identifiability) | Rivals are generated on purpose (theorist, critic) and separated by designed experiments. When two survive, both are reported, with the tests that would separate them. Answering without running, compression and proof compression rank survivors |
