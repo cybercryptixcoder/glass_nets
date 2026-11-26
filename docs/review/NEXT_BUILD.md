@@ -409,21 +409,22 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
      structure can: an exact formula, a sum over a few regimes, a short derivation. The estimator is asked many
      different questions, including rare sub-populations where sampling is expensive: a copy must be run for each,
      while an explanation answers from its structure. The ladder calls this "the strongest test of 'understood'" and
-     names its cost: accounts must be written as estimators. One escape stays open: a smaller program that is not
-     readable (a pruned copy, a small distilled student) is also a cheaper sampler. This test cannot tell it from a
-     short readable rule of the same cost; the reader version below can, because a reader cannot execute a student
-     in its head. So the compute version catches copies of the network's own size, and the reader version catches
-     opaque programs of any size.
+     names its cost: accounts must be written as estimators.
 
      The same test can be run with a reader as the estimator, which removes that cost. Give a language model the
      explanation, bar it from running code, and give it a token budget per question smaller than it would take to
      execute a copy of the network by hand on one input (the budget is set from the copy's own cost, not from any
-     result). Then ask it about the network: outputs on new inputs, accuracy on a shifted distribution, the effect
-     of an edit. A copy should give such a reader little it can use; an explanation should give it much. The
+     result). Then ask it about the network: outputs on new inputs, accuracy on a rare sub-population, the effect of
+     an edit. A copy should give such a reader little it can use; an explanation should give it much. The
      explanation must beat the same reader given a copy, and the floor is the same reader given only the task. (If
      the copy itself beats the floor, the reader is reading structure off raw weights, which is a finding for
-     flagship 4.) This is also the simulation test
-     the observer role already uses (3.4), so the words of an explanation and its anti-copy test become one test.
+     flagship 4.) This is also the simulation test the observer role already uses (3.4), so the words of an
+     explanation and its anti-copy test become one test.
+
+     The two versions catch different escapes. A smaller program that is not readable (a pruned copy, a small
+     distilled student) is also a cheaper sampler, so the compute version cannot tell it from a short readable rule
+     of the same cost; the reader version can, because a reader cannot execute a student in its head. So the compute
+     version catches copies of the network's own size, and the reader version catches opaque programs of any size.
   2. **Compression of the proof, where the domain allows it.** An explanation turned into a verifier that bounds the
      network's behaviour faster than brute force (Gross et al. 2024; Wu, Jaburi, Drori & Gross 2025,
      `main:docs/literature/aether/arxiv-2410.07476.md`). An over-claiming account is refuted by arithmetic. This is
