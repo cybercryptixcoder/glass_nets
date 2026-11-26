@@ -1,6 +1,6 @@
 # Rosetta: status
 
-Branch `rosetta` (cut from `review-next-build`). Ledger row R1 in docs/glass/CHANGES.md. Intent: docs/rosetta/INTENT.md.
+Branch `rosetta` (cut from `review-next-build`). Ledger rows R1, R2 and R3 in docs/glass/CHANGES.md. Intent: docs/rosetta/INTENT.md.
 
 ## Done (Nov 26, 04:09 to 07:09 ET)
 
@@ -14,6 +14,9 @@ Branch `rosetta` (cut from `review-next-build`). Ledger row R1 in docs/glass/CHA
   `rosetta/compose_sub.py`, `rosetta/sub_check.py`; replication: `rosetta/replicate.py`, `rosetta/rep_compose.py`;
   look-ahead: `rosetta/probe_lookahead.py`, `rosetta/lookahead_causal.py`, `rosetta/lookahead_causal2.py`,
   `rosetta/t1_lookahead.py`; teaching: `rosetta/teach_dict.py`.
+- Where the evaluation passes (RESULTS.md section 9, ledger R3): `rosetta/glass2.py`, `rosetta/glass2_global_check.py`,
+  `rosetta/fresh_where.py`, `rosetta/fresh_where_744706.py`, `rosetta/top_pos.py`, `rosetta/carriers_wdl.py`,
+  `rosetta/line_swing.py`, `rosetta/line_swing_joint.py`, `rosetta/line_swing_static.py`, `rosetta/line_swing_744706.py`.
 - Results: `results/rosetta/*.json`; write-ups: RESULTS.md, FINDINGS.md, DISCOVERY.md (plain language), DIARY.md.
 
 ## Data outside the repo (~/kdata, gitignored)
@@ -35,7 +38,7 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
   games (random 16: 13% to 62%; least important 16: 4.5%); replicated in 744706 (78%; random 16: 35% to 39%). They
   split into win, loss and draw signals, and Rosetta cannot define most of them yet.
 - A sixth to a third of LD2's knowledge beyond the textbook is the material its own 3-ply line wins (33% alone, 17%
-  over static tactics; along random moves 0.6%); its value already contains it.
+  over static tactics; along random moves 0.6%); its value already contains it. Replicated in 744706 (12% to 21%).
 
 ## Next (in order of value)
 

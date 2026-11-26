@@ -55,7 +55,8 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
    "this is drawish" signals rather than one score. Our rules describe only 2 of those 16, which is why the rebuilt
    layer loses the evaluation. One part we can name: the material the network wins along the three moves it plans
    ahead accounts for a sixth to a third of its extra knowledge, even after counting the pieces that are simply under
-   attack now (the same count along random moves accounts for almost none).
+   attack now (the same count along random moves accounts for almost none). The second network shows the same, a little
+   more weakly (an eighth to a fifth).
 
 ## What we don't have yet
 

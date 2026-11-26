@@ -300,3 +300,13 @@ static tactics add +0.23% over textbook concepts (CI -0.10 to +0.56%), the line 
 (CI 0.40 to 1.27%); the swing's addition over static tactics is +0.61% (CI +0.22 to +1.01%), above 0 as registered.
 Caveat: together they score below the swing alone, so the fitted gains carry some noise, and the swing's own share is
 better quoted as between a sixth and a third of LD2's extra knowledge (+0.61% to +1.18% of +3.58%).
+
+**06:33. Registered before the run: does the line swing replicate in 744706? (rosetta/line_swing_744706.py)** Its own
+3-ply line on the original and fresh positions, its own value as the ceiling. Replicates if the swing's fresh-game
+interval sits above the random-move control's and its addition over static tactics has an interval above 0. If the
+run is not done by 06:50 it is stopped and reported as not run.
+
+**06:36. Line swing in 744706: replicates (line_swing_744706_s10.json).** Along 744706's own 3-ply line, the swing adds
++0.87% over textbook concepts on the fresh games (CI +0.46 to +1.33%), 21% of 744706's own gain (+4.10%); along random
+legal moves +0.02% (CI -0.25 to +0.32%); over static tactics +0.50% (CI +0.09 to +0.92%). Both registered conditions
+hold. Share in 744706: an eighth to a fifth (12% to 21%); in LD2 a sixth to a third (17% to 33%).

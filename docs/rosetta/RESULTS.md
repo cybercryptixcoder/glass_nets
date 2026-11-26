@@ -267,3 +267,9 @@ hanging pieces, hanging value, captures available and the best free capture): st
 +0.56%); the swing adds +0.61% (CI +0.22 to +1.01%) over textbook plus static tactics, so it is not static tactics.
 Together the two score below the swing alone (+0.84% against +1.18%), so these fitted gains carry noise: the swing's
 share of LD2's extra knowledge is better given as a sixth to a third.
+
+Line swing in 744706 (registered before the run, DIARY 06:33; line_swing_744706_s10.json). Along 744706's own 3-ply
+line: +0.87% over textbook concepts (CI +0.46 to +1.33%), 21% of its own gain (+4.10%); along random legal moves +0.02%
+(CI -0.25 to +0.32%); static tactics +0.22% (CI -0.10 to +0.56%); the swing over textbook plus static tactics +0.50%
+(CI +0.09 to +0.92%). Replicates: in both networks the material won along the network's own line carries part of its
+knowledge beyond the textbook (LD2 17% to 33%, 744706 12% to 21%), and random lines carry none.
