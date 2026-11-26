@@ -55,10 +55,11 @@ sampling the network, where every saved copy, disguise and the shuffled-network 
 which removes the estimator-writing step.
 - The reader may not run code. Its token budget per question is set below what hand-executing the copy on one input
   takes (computed from the copy's own forward-pass cost before any call), so a copy gives it nothing it can use.
-- Three conditions per network: given the account; given a copy (must fail: no better than the next condition); given
-  only the task (the floor).
-- **"Passes"** means: given the account, its accuracy estimates on the three distributions beat the task-only floor
-  by more than the floor's spread over 5 repetitions, while the copy condition does not.
+- Three conditions per network: given the account; given a copy; given only the task (the floor).
+- **"Passes"** means: given the account, its accuracy estimates on the three distributions beat both the task-only
+  floor and the copy condition by more than the floor's spread over 5 repetitions.
+- The copy condition is reported on its own. If it beats the floor, the reader is reading structure off raw weights
+  without executing them, which is itself a finding for flagship 4.
 
 **Runs.** One scoring pass over saved material; no network is trained. The reader arm is 3 networks × 3 conditions ×
 5 repetitions of short calls.

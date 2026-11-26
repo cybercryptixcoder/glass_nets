@@ -417,8 +417,10 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
      explanation, bar it from running code, and give it a token budget per question smaller than it would take to
      execute a copy of the network by hand on one input (the budget is set from the copy's own cost, not from any
      result). Then ask it about the network: outputs on new inputs, accuracy on a shifted distribution, the effect
-     of an edit. A copy gives such a reader nothing it can use; an explanation does. The must-fail control is the same
-     reader given a copy, and the floor is the same reader given only the task. This is also the simulation test
+     of an edit. A copy should give such a reader little it can use; an explanation should give it much. The
+     explanation must beat the same reader given a copy, and the floor is the same reader given only the task. (If
+     the copy itself beats the floor, the reader is reading structure off raw weights, which is a finding for
+     flagship 4.) This is also the simulation test
      the observer role already uses (3.4), so the words of an explanation and its anti-copy test become one test.
   2. **Compression of the proof, where the domain allows it.** An explanation turned into a verifier that bounds the
      network's behaviour faster than brute force (Gross et al. 2024; Wu, Jaburi, Drori & Gross 2025,
@@ -750,8 +752,8 @@ its L2 program and L1 variables, see where the network and the model agree and w
 5. **Transfer.** Give the explanation, and only the explanation, to a fresh reader: a language model that has not
    seen the network, or a person. Can it predict the network on new inputs and under new interventions, or rebuild
    a network that behaves the same? The reader may not run code and works within a token budget per question set
-   below the cost of executing the network by hand, so a copy gives it nothing to use: transfer is then a second
-   test against copies (Gap 2), with the same reader given a copy as its must-fail control. The control is the same reader given only the task's description (the
+   below the cost of executing the network by hand, so a copy is of little use to it: transfer is then a second
+   test against copies (Gap 2), and the explanation must beat the same reader given a copy. The control is the same reader given only the task's description (the
    prior-only control, moved to the reader's side): the explanation's worth is the gain over it, and over the same
    reader given a surrogate fitted to the network's behaviour. This is what makes
    the *words* testable, closing the gap that the DESCRIPTION field never was. The same test, run with people, is teachability: Schut et al.'s grandmaster test, or Kepler's
