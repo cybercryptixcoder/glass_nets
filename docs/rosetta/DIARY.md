@@ -321,3 +321,8 @@ quantities (material, space, mobility, king safety) and 35% to 80% something the
 **06:39. The ranking is stable (attr_stability_s10.json).** Attribution recomputed on 600 other training positions
 picks the same 16 variables (16 of 16; rank correlation over all 512 0.992), with the same fresh-game gain (+3.25%).
 No extension requested: the work is committed and pushed; the final check is at 07:04.
+
+**06:40 to 06:42. One block earlier (fresh_where_LD2_s8.json, exploratory, no controls run at this block).** LD2's own
+dictionary at block 8 (fraction of variance unexplained 0.135), attribution taken through blocks 9 and 10: on the
+fresh games the top 8 variables' totals recover 51% of LD2's gain over textbook knowledge, the top 16 66%, the top 64
+83% (block 10: 71%, 91%, 83%). The evaluation is gathered into a few variables over the last two blocks.
