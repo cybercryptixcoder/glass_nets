@@ -47,8 +47,9 @@ sampling the network, where every saved copy, disguise and the shuffled-network 
   times to give its error distribution; the task rule used as an estimator; the cheapest T2 copy of matching
   fidelity, run as a sampler.
 - **"Passes"** means: on all three distributions, the error at its own compute is below the 5th percentile of Monte
-  Carlo's error at that compute, and below the task-rule estimator's error. A copy meets this only by chance (about
-  5% per distribution).
+  Carlo's error at that compute, and no worse than the task-rule estimator's error (no worse, not below: M2,2's
+  account is the task rule itself). The task-rule comparison bites on the shifted distributions, where a network
+  departs from the rule. A copy meets the Monte Carlo line only by chance (about 5% per distribution).
 
 **Runs.** One scoring pass over saved material; no network is trained and no model is called except to write the
 three estimators.
