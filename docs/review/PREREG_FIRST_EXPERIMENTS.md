@@ -232,7 +232,9 @@ findings and one exact scorer.
 - **Final verdict.** On a test set of positions from games never used, scored once at the end with Kepler's four
   criteria plus X4's steering criterion.
 - **Programs.** Python using `python-chess`, with a CPU-time cap. Search up to two moves deep is allowed, so
-  calculation can be expressed.
+  calculation can be expressed. No outside engines or tables (no Stockfish, no opening or evaluation databases).
+- **Target.** Run on a single decomposition feature that carries the residual if one is available, because a raw
+  channel may mix several features. Channel 22 itself is the fallback, and the report says which was used.
 - **Loopholes closed in the scorer itself, as Helix learned to do:**
   - no access to the network or its activations;
   - no position hashing;

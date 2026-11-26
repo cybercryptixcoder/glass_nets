@@ -967,6 +967,20 @@ small (59 programs against Helix's thousands).
 | **The whole Glass Model**: composing levels into an algorithm and deciding it is an explanation | No | Only partly: faithfulness can be scored, "explanation, not copy" only through the shared-library and proof measures, still unproven as gates | **Strong agent,** with frozen confirm tests |
 | **Framing**: which target, which residual, what counts as understood, what a person should learn | No | No | **Strong agent and Shreyas** |
 
+**Where definition synthesis fits volume search least well, and how each is handled:**
+- **Selection overfitting.** With thousands of candidates, picking the best on a validation set overfits it. A final
+  test set is scored once, at the end (X6 does this).
+- **The variable is a mixture.** A raw channel may carry several features at once, which no single short program
+  matches. Decompose first and search against single features. Raw channels are only a fallback.
+- **The variable depends on other learned variables.** Look-ahead uses the network's own evaluation of future
+  positions, which no board-only program has. Definitions must be allowed in terms of variables already aligned
+  inside the network (L2 operations), not only in terms of the input. Otherwise the search is asked for something
+  circular.
+- **Needle-in-a-haystack scores.** If the score gives no partial credit, variation cannot climb. Correlation-type
+  scores give partial credit; a pass/fail score alone would not.
+- **Outside help.** Programs must not call outside engines or tables (a chess engine, an evaluation database).
+  Otherwise the search finds the engine, not the network's concept.
+
 **So the answer is both, in three layers, built in this order:**
 1. **The toolkit is the foundation, and it comes first.** Every verb and every score as code: decompositions,
    interventions, the Glass Model store, the scorers. Both a volume engine and a strong agent depend on it, and a
