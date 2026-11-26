@@ -62,3 +62,39 @@ residual direction; 22 and 89 not. The two strongest:
   if the network uses it. Fix: keep a unit only if ablating it moves the output by at least 1% of the output's spread
   across positions (a network with a constant output uses nothing). Rerun.
 - The LD2 substitution test crashed (batching mismatch between the network pass and the program map). Fixed; rerun.
+
+**04:57. Yardstick, final (blind; the sealed file read only by the scorer).** Planted rules recovered: S1 1.000,
+S2 0.988 (Rosetta's equivalent: "squares we attack whose only enemy attacker is the king"), S3 1.000: 3 of 3. Must-fail:
+the constant-output network, 0 definitions (pass); a second untrained network, 1 of 7 units over the position-level
+line (0.667 against 0.586). The line is the maximum over 32 control units, so a chance pass on one of several units
+per network is expected; recorded as a false positive of the line, not hidden. (results/rosetta/yard_score.json)
+
+**04:55. LD2 raw channels, confirmation.** Every single-channel definition failed substitution (restores 0.4% to 4%
+of the ablation effect: a 0.37 correlation is not a stand-in for the unit); channel 15's definition is a restatement
+(R2 0.95 from the library). All seven together add +0.47% of LD2's value variance to the textbook surrogate (CI
+0.12% to 0.82%), and nothing measurable for game results. Composed definitions (four programs) reach 0.46 at best.
+Conclusion: raw channels of this dense network are mixtures; the review's step 2 (find the network's own variables)
+is needed before definition.
+
+**04:58. Variable finder added.** A top-k sparse autoencoder (512 features, 8 active per square) on LD2's last block
+rebuilds 85.5% of its activity variance. Control: the same on the untrained LD2 (68%).
+
+**05:01. Residual-carrying variables.** The 12 features most correlated with the textbook residual (and moving the
+value when removed) are frequent (active in 49% to 74% of positions). Four are defined above the line (0.33): mostly
+"not an enemy minor or major piece" and pawn-support patterns; none at the position level. The residual is not carried
+by crisp, rare variables at the last block.
+
+**05:01. Search-procedure recogniser.** All 512 features scored against the network's own line (top move, the reply,
+the follow-up), each best match then defined twice: with the full library and with every look-ahead primitive removed
+(the static rival). Results (results/rosetta/feats_lookahead_s10.json):
+- feature 43: "own_P and control>=-1 and la_m1_from" 0.469, static rival -0.18: the pawn the network is about to push;
+- feature 502: "not empty and not open_file and la_m1_to" 0.459, static rival 0.343: the piece it is about to take;
+- feature 174: "not opp_P and outnumbered_opp and la_m1_to" 0.684, static rival 0.662: an outnumbered enemy piece on
+  the square its move lands on, mostly static;
+- the reply and follow-up primitives (la_m2, la_m3) only reach 0.13 to 0.19, and every such feature's best definition
+  is static (enemy pieces where a reply starts). So at the last block LD2 binds its own move to its reason, but no
+  variable represents the opponent's reply or its follow-up above what static structure explains.
+
+**05:02. Next: the whole layer.** Translating all 512 variables into programs, then rebuilding the layer from the
+translations and running the rest of LD2 on it (a glass model of the layer): how much of its evaluation and move choice
+survive, and how much of what the textbook misses the translation reproduces.

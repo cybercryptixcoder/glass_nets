@@ -109,3 +109,66 @@ if __name__ == "__main__":
             out["all_results_gain"] = gain(L.CX[g_tr], yo[g_tr], L.CX[g_te], yo[g_te], Tn[g_tr], Tn[g_te])[0]
             print("all", out["all_value_gain"], out["all_results_gain"])
         json.dump(out, open(f"{RES}/feats_confirm_s{SITE}.json", "w"), indent=1)
+
+
+def dense_codes(rows, V=None, I=None, m=512):
+    V = CV if V is None else V; I = CI if I is None else I
+    v, i = np.asarray(V[rows], dtype=np.float32), np.asarray(I[rows]).astype(np.int64)
+    Z = np.zeros((len(rows), 64, m), np.float32)
+    np.put_along_axis(Z, i, v, axis=2)
+    return Z
+
+
+def lookahead_scan():
+    """Search-procedure recogniser: which of the network's own variables mark squares of its OWN future moves?
+    Every feature is scored against each look-ahead primitive; the best are then defined twice, with the full library
+    and with the look-ahead primitives removed (the static rival). Line: the same scan on the untrained SAE."""
+    D = Defs(L.P, L.names, L.TR, L.TE)
+    la = [k for k, n in enumerate(L.names) if n.startswith("la_")]
+    Pt = np.asarray(L.P[D.rt], dtype=np.float32)
+    Z = dense_codes(D.rt)
+    def scan(Z):
+        Zc = Z - Z.mean(0, keepdims=True)
+        Zc = Zc.reshape(-1, Z.shape[2]); Zc /= (Zc.std(0) + 1e-9)
+        out = {}
+        for k in la:
+            p = Pt[:, :, k].reshape(-1); p = (p - p.mean()) / (p.std() + 1e-9)
+            out[L.names[k]] = (Zc * p[:, None]).mean(0)
+        return out
+    real = scan(Z)
+    cu = np.load(os.path.join(R, f"codes_LD2_s{SITE}_untrained.npz")); rows_u = np.load(os.path.join(R, f"rows_LD2_s{SITE}_untrained.npy"))
+    idx = {r: i for i, r in enumerate(rows_u)}
+    Zu = dense_codes([idx[r] for r in D.rt], cu["v"], cu["i"])
+    ctrl = scan(Zu)
+    line = float(max(np.nanmax(np.abs(v)) for v in ctrl.values()))
+    hits = []
+    for nm, v in real.items():
+        for f in np.argsort(-np.abs(np.nan_to_num(v)))[:3]:
+            hits.append((abs(float(v[f])), nm, int(f), float(v[f])))
+    hits.sort(reverse=True)
+    print("look-ahead line from the untrained SAE:", round(line, 4), flush=True)
+    names_static = [n for n in L.names]
+    res = {"line": line, "features": []}
+    seen = set()
+    for score, nm, f, v in hits:
+        if f in seen or score < line:
+            continue
+        seen.add(f)
+        full = D.define(lambda rr, f=f: fmap(f, rr))
+        # static rival: the same search with every look-ahead literal disabled
+        keep = [j for j, s in enumerate(D.specs) if not L.names[s[0]].startswith("la_")]
+        Lsave, Ssave, L3save = D.L, D.specs, D.L3
+        D.L, D.specs = D.L[keep], [D.specs[j] for j in keep]; D.L3 = D.L.reshape(len(D.specs), len(D.rs), -1)
+        stat = D.define(lambda rr, f=f: fmap(f, rr))
+        D.L, D.specs, D.L3 = Lsave, Ssave, L3save
+        r = {"feature": f, "best_lookahead_primitive": nm, "corr": round(v, 4), "freq": float((Z[:, :, f] > 0).any(1).mean()),
+             "full_library": {"text": full["text"], "heldout_fidelity": full["heldout_fidelity"]},
+             "static_only": {"text": stat["text"], "heldout_fidelity": stat["heldout_fidelity"]}}
+        res["features"].append(r); print(json.dumps(r), flush=True)
+        if len(res["features"]) >= 10:
+            break
+    json.dump(res, open(f"{RES}/feats_lookahead_s{SITE}.json", "w"), indent=1)
+
+
+if __name__ == "__main__" and sys.argv[1] == "lookahead":
+    lookahead_scan()
