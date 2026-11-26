@@ -65,11 +65,17 @@ what:**
 - **The measures: six numbers instead of "verified/complete":**
   - faithfulness under intervention at every level;
   - completeness (the residual ledger);
-  - compression against a shared, growing library (a rate–distortion curve of understanding, which replaces the
-    copy rules with a theory);
-  - proof compression (does the explanation make checking the network cheaper?);
+  - answering without running, the test against copies: used to estimate what the network does, does the
+    explanation beat running the network (or its cheapest copy) for the same compute? A copy can only answer by
+    being run. This is ARC's "matching sampling", already rung Y of the repo's evidence ladder. Compression against
+    a shared library is reported beside it as a signal, not a gate: the repo's own pre-registered test showed that
+    "fewer bits than a copy" rejects real explanations of small networks;
+  - proof compression, where the domain allows it (does the explanation make checking the network cheaper?);
   - transfer (can a fresh model or a person predict the network from the explanation alone?);
   - control (can the explanation be used to edit the network with every effect predicted in advance?).
+  Transfer and control are scored against baselines that use no explanation (attribution patching, "no change", a
+  behaviour-fitted surrogate), because attribution patching once out-predicted the project's own construction on
+  held-out interventions (EXPERIMENT_LOG E7).
 - **The method: a residual-driven discovery loop that invents its own vocabulary.** Cartography → the network's own
   variables → synthesised definitions → composition into an algorithm and comparison with the textbook one →
   abstraction into new library primitives → knowledge a person can learn → confirmation under frozen tests.
@@ -85,17 +91,22 @@ what:**
 - **The public product becomes that library** (3.10): the concepts and mechanisms networks have learned, each a
   program with a recogniser anyone can run, with per-network Glass Models as the evidence.
 
-**The engine** (3.11, added in the second run): both a high-volume loop and a strong agent, on one toolkit. The
-evidence from all three Helix lines says a cheap model at volume is strong exactly where the thing searched is a
-small program and the score is exact and loophole-free (Helix Evolve beat the best human construction on an open
-inequality that way), and weak where the score can be gamed or one leap must produce a large artifact. So:
+**The engine** (3.11, added in the second run): both a high-volume loop and a strong agent, on one toolkit. In the
+cases we have from all three Helix lines, a cheap model at volume did well where the thing searched was a small
+program and the score was exact and closed to loopholes (Helix Evolve passed the best human construction on an open
+inequality, first with no outside input and then further with a written summary of published methods), and badly
+where the score could be gamed or one leap had to produce a large artifact. So:
 - the **toolkit** (every verb and every score as code) is the foundation and comes first;
-- a **Helix-style volume engine** on a Flash-grade model runs the sub-problems with exact scores: definitions of
-  found variables, laws and closures, experiment design, abstraction;
+- a **Helix-style volume engine** on a Flash-grade model runs the sub-problems with precise, cheap scores:
+  definitions of found variables, laws and closures, experiment design, abstraction. Those scores are truth tests,
+  and a copy passes truth tests, so each needs a restricted program language and a set of fitted copies that must
+  fail, written before the search starts;
 - a **strong agent** directs: picks the residual, writes the scorer, decides what is confirmed, writes the account.
 
-Interpretability may be the best home Helix has had: Helix's open question is how to get past the model's prior, and
-here the network's own variables are an exact signal from outside that prior.
+Whether interpretability can get Helix past its model's prior is open and testable, not given. Helix's own research
+case says that selection by a score alone re-weights what the model already proposes. The network can also feed the
+proposer evidence from outside that prior (counter-examples, top-activating inputs, minimal pairs). X6 tests both,
+with Helix's own prediction as the null.
 
 **Verdict:** rebuild the centre, keep the instruments as parts (section 4).
 
@@ -359,33 +370,49 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
 
 **Gap 2. "Explanation versus copy" was attacked with rules about the program's text, not with a theory.**
 - *Now.* Five literal-counting rules, each beaten (decimals, rescaling, integers over a scale, tables plus indices).
-  Then an information measure against a copy frontier. Its first version failed its pre-registered test on tiny
-  networks (DIARY 11:35); a revised version (T2) placed every one of 30+ saved copies and disguises at S ≥ 0.91
-  (PLAN_SCALING, findings 1), but it was kept as a reported signal, not a gate. That measure is the right instinct;
-  the two ideas below generalise it.
+  Then an information measure against a copy frontier. Its first version failed its pre-registered test (DIARY
+  11:35). The revised version (T2) placed every one of 30+ saved copies and disguises at S ≥ 0.91, but it also
+  rejected all three real explanations that had to pass: M2,2 at 0.68, M4,3 at 1.44 and the lc_8_6 census rule at
+  0.50 (`docs/glass/info_measure_T2.txt`, which ends "PRE-REGISTERED CRITERION MET: False"). So it was kept as a
+  reported signal, not a gate. The record drew the lesson itself (DIARY 11:35): M4,3's real account "isn't shorter
+  than its 32 weights. It reorganises them"; "explanation = fewer bits than a copy" is "wrong as a general
+  definition"; and, following ARC, a copy is bad "because it tells you nothing without being run".
 - *Evidence.* LEARNINGS E1, E3, E10, E11; PROJECT_REVIEW §6; INTENT change 2 "REOPENED".
 - *Why it blocks.* Without it, "certified" can mean "copied", and the reader is rewarded for copying.
-- *Needed.* Two ideas that the repo's own literature log already holds, put at the centre:
-  1. **Compression against a shared library.** An explanation's length is measured in a vocabulary (a library of
-     concepts and operations) whose cost is paid once and shared across many networks and inputs, the way a
-     mathematician's definitions are. A copy cannot be short in such a vocabulary, because raw weights are not
-     reusable primitives: the total cost is the library's length plus each explanation's length given the library,
-     so a "primitive" that only one network uses pays its full length, and a disguised weight table is exactly such
-     a primitive. Only structure that recurs (across inputs, regimes, layers or networks) gets cheap. This is the
-     minimum-description-length idea of library learning (DreamCoder-style wake/sleep), applied to networks
-     instead of programming tasks.
-  2. **Compression of the proof.** An explanation is real to the extent that it makes *checking* the network cheaper:
-     it turns into a verifier that bounds the network's behaviour faster than brute force (Gross et al. 2024; Wu,
-     Jaburi, Drori & Gross 2025, `main:docs/literature/aether/arxiv-2410.07476.md`). A copy's verifier costs as much
-     as running the network. This measure "cannot be talked around", because an over-claiming account is refuted by
-     arithmetic.
+- *Needed.* A test aimed at what actually makes a copy useless: it can answer a question about the network only by
+  being run. Three yardsticks, in order of how much weight they can bear:
+  1. **Answering without running** (ARC's "matching sampling", EVIDENCE_LADDER rung Y). Use the explanation as an
+     estimator of something the network does: its accuracy on a distribution, how often an intermediate variable
+     takes a value, the effect of an intervention. Score its error against the compute it used, and compare with
+     sampling. A copy run on samples is just sampling, so it cannot beat sampling. An explanation that has found the
+     structure can: an exact formula, a sum over a few regimes, a short derivation. Two refinements narrow the
+     obvious escapes without closing them. The comparison includes the cheapest copies that standard compression
+     finds (rounded, pruned, distilled into a smaller student), not only the network, so being a smaller copy gains
+     nothing. And the estimator is asked many different questions: a copy must be run for each, while an
+     explanation answers from its structure. The ladder calls this "the strongest test of 'understood'" and names
+     its cost: accounts must be written as estimators.
+  2. **Compression of the proof, where the domain allows it.** An explanation turned into a verifier that bounds the
+     network's behaviour faster than brute force (Gross et al. 2024; Wu, Jaburi, Drori & Gross 2025,
+     `main:docs/literature/aether/arxiv-2410.07476.md`). An over-claiming account is refuted by arithmetic. This is
+     the worst-case form of item 1, and its reach is narrow. In the best published case the verifier was about three
+     times faster than brute force and non-vacuous on 55% of the models; loss bounds did not work; and the ladder
+     rates proofs "out of reach above tens of parameters". So it serves the calibration ladder and enumerable
+     domains, not the flagships.
+  3. **Compression against a shared library, reported as a signal.** Description length in a vocabulary whose cost
+     is shared across networks (DreamCoder-style library learning). It separates copies on bigger networks, where
+     copies grow and accounts do not, and it is what the abstractor optimises when deciding which concepts to keep.
+     It is not a gate, for the record's two reasons and two more:
+     - real accounts of small networks must carry their parameters;
+     - on tiny networks, program scaffolding dominates the length;
+     - generic compression primitives (low rank, quantisation, pruning) recur in every network, so a library learner
+       would make them cheap, and a compressed copy with them;
+     - amortising the library over inputs as well as networks would make a weight table, used on every input,
+       nearly free.
 
-  Both ideas meet, by construction, the three conditions the project itself set for any replacement of the copy
-  rules (REPORT_ROUND2, corrections §3): they measure information or computation, not how numbers are written; their
-  pass lines come from controls (the copy frontier and shuffled networks on one side, the task rule on the other);
-  and a copy in any encoding fails them, because a weight table is neither reusable across networks nor cheaper to
-  check than the network. Condition (c), rejecting every saved copy and every new disguise before adoption, still has
-  to be shown on the saved runs before either is used as a gate.
+  None of the three is shown to meet the project's conditions for replacing the copy rules (REPORT_ROUND2,
+  corrections §3) until it passes condition (c): accept the must-pass accounts (M2,2, M4,3, the census rule) and
+  reject every saved copy, every disguise and the shuffled-network account. For item 1 this is a cheap test on saved
+  runs once the three must-pass accounts are written as estimators of their networks' accuracy.
 
 **Gap 3. No guarantees beyond held-out statistics.**
 - *Now.* Every certificate is a held-out sample statistic. Early on, the project decided that "'proven accurate'
@@ -584,7 +611,7 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
 | Gap | Answered in | Measured by |
 |---|---|---|
 | 1. No explanation object that spans levels | 3.1 Glass Model (L0–L4); 3.3 D composition | Faithfulness at every level (3.2 item 1); Q4 |
-| 2. Copy vs explanation by rules | 3.2 items 3–4 (shared-library compression; proof compression) | The rate–distortion curve of understanding |
+| 2. Copy vs explanation by rules | 3.2 items 3–4 (answering without running; proof compression where the domain allows; library compression reported) | Error against compute, beside the network and its copy frontier run as samplers |
 | 3. No guarantees beyond statistics | Gap 3's ladder; 3.5 hypothesis spaces with verifiers | Guarantee type per claim; Q5 |
 | 4. Cannot generate explanations | 3.3 B variables; 3.4 theorist, observer, experimenter | Q1 on the calibration ladder |
 | 5. Closed vocabulary | 3.3 C definitions, E abstraction; 3.6 library | Q2, Q3; the residual curve (Q9) |
@@ -662,22 +689,34 @@ its L2 program and L1 variables, see where the network and the model agree and w
    and restricted, because with unrestricted maps any network matches any algorithm (Sutter et al., in
    EVIDENCE_LADDER).
 2. **Completeness.** The residual ledger, per level, against the task rule and against controls.
-3. **Compression against a shared library.** Description length of the explanation in the library's vocabulary,
-   with the library's own cost amortised over every network and input it explains. Plotting fidelity against
-   length gives a **rate–distortion curve of understanding** for each network. A copy is one point on it (high
-   fidelity, long); the textbook rule is another (short, low fidelity); an explanation is a point that dominates
-   both. This replaces the literal-counting rules with a theory. Concretely:
-   - the horizontal axis is description length in the library's terms (bits, with the library's cost amortised);
-   - the vertical axis is faithfulness under intervention at intermediate states (item 1);
-   - the references are the copy frontier (the network's own weights rounded to 1, 2, … bits, as EVIDENCE_LADDER
-     already defines it), the task rule, and shuffled-network controls;
-   - a network's understanding gain is how far its best explanations sit above the copy frontier at each length.
-4. **Proof compression.** Turn the explanation into a verifier that bounds the network's behaviour, and report
-   (bound tightness, verifier cost) against brute force. A copy cannot make checking cheaper; an explanation can.
+3. **Answering without running: the test against copies.** Use the explanation as an estimator of what the network
+   does, and score its error against the compute it spends, beside sampling (ARC's "matching sampling",
+   EVIDENCE_LADDER rung Y). The questions are many and varied: accuracy on a stated distribution, how often an
+   intermediate variable takes a value, the effect of an intervention, where the network fails. A copy can answer
+   each only by being run on samples, so it cannot beat sampling. The comparison samplers are the network and the
+   cheapest copies that standard compression finds (rounded, pruned, distilled into a smaller student). Concretely:
+   - the horizontal axis is compute (operations spent answering);
+   - the vertical axis is error against the network's true answer;
+   - the references are sampling the network, sampling its copy frontier, the task rule used as an estimator, and
+     shuffled-network controls;
+   - a network's understanding gain is how far its explanations' error-for-compute curves sit below the samplers'.
+
+   **Reported beside it, not used as a gate: compression against a shared library.** Description length in the
+   library's vocabulary, with the library's cost amortised across networks (not across inputs, which would make any
+   weight table nearly free), plotted against faithfulness: a rate–distortion curve. A copy is one point on it, the
+   textbook rule another. It separates copies on larger networks, where copies grow and accounts do not, and it is
+   what the abstractor uses to decide which concepts to keep. It is not a gate, because the repo's own
+   pre-registered test of the idea rejected every real explanation of a small network (T2; section 2, Gap 2).
+4. **Proof compression, where the domain allows it.** Turn the explanation into a verifier that bounds the network's
+   behaviour, and report (bound tightness, verifier cost) against brute force. A copy cannot make checking cheaper;
+   an explanation can. This is the worst-case form of item 3, and its reach is narrow today (Gap 2). It serves the
+   calibration ladder and enumerable or group-structured domains. On the flagships, item 3 with a probabilistic
+   guarantee stands in for it.
 5. **Transfer.** Give the explanation, and only the explanation, to a fresh reader: a language model that has not
    seen the network, or a person. Can it predict the network on new inputs and under new interventions, or rebuild
    a network that behaves the same? The control is the same reader given only the task's description (the
-   prior-only control, moved to the reader's side): the explanation's worth is the gain over it. This is what makes
+   prior-only control, moved to the reader's side): the explanation's worth is the gain over it, and over the same
+   reader given a surrogate fitted to the network's behaviour. This is what makes
    the *words* testable, closing the gap that the DESCRIPTION field never was. The same test, run with people, is teachability: Schut et al.'s grandmaster test, or Kepler's
    "does the rule help a classical evaluator".
 6. **Control.** Use the explanation to make a targeted change to the network: remove one ability, move one variable,
@@ -685,7 +724,11 @@ its L2 program and L1 variables, see where the network and the model agree and w
    the prediction. Understanding that cannot be used to edit precisely is incomplete. The project met the opposite
    case on Nov 5–7: editors that did not understand the network "succeeded" by breaking the cue ("+") instead of the
    skill (FINDINGS.md, Goal 1). This is also the measure behind Shreyas's Nov 7 vision of a model whose parts can be
-   turned up, down or off with predictable results.
+   turned up, down or off with predictable results. Every edit prediction is reported against baselines that use no
+   explanation: "no change", attribution patching (a first-order estimate from the network itself) and a
+   behaviour-fitted surrogate. The record shows why. On held-out interventions, attribution patching predicted the
+   decision better than the project's own construction: 90.8% against 82.3% overall, and 57.0% against 13.9% when
+   the decision changed (EXPERIMENT_LOG E7).
 
 ### 3.3 How it discovers: a residual-driven loop that invents its own vocabulary
 
@@ -939,7 +982,7 @@ it well?)*
 
 | Where | What the cheap model did | What happened | Source |
 |---|---|---|---|
-| Helix Evolve, second autocorrelation inequality | Thousands of programs (2,564 in run C), an exploring loop and a reasoning loop around **one exact scorer**, a memory of findings | Beat AlphaEvolve's first result, the best human construction (0.941362) and several published LLM systems; did not reach AlphaEvolve V2 or TTT-Discover | `helix_evolve/README.md`, `docs/RECORDS.md` |
+| Helix Evolve, second autocorrelation inequality | Thousands of programs, an exploring loop and a reasoning loop around **one exact scorer**, a memory of findings | With no outside input (run B, warm-started across versions), passed the best human construction (0.941362) after about 2,220 programs and ended about 8e-5 above it. Given a written summary of published methods (run C, 2,564 programs), it went much further (0.948610) and passed several published LLM systems; its second seed (run D) ended at 0.941244, below the human best. Neither reached AlphaEvolve V2 or TTT-Discover. Fresh restarts: 19 of 19 peaked at or below 0.8825, the textbook construction | `helix_evolve/README.md`, `docs/RECORDS.md`, `docs/research/RESEARCH_CASE.md` |
 | Helix Evolve, lean experiments (circles, AC1, AC2) | Five loop designs, 3 seeds each | Unguided mutations set 75–98% of the gains; the planner set records but small ones; the notes did not help on average; planner programs learned to sit exactly on the checker's floating-point boundary until checking was made exact | `helix_evolve/docs/LEAN_RESULTS.md` |
 | Helix Probe, FIND | Predict-first loop: experimenter, updater, theorist | 0.82–0.90 numeric against 0.38 for the same model in FIND's protocol; most of the gap is behavioural (the loop always experiments); at equal inputs +0.10; the theorist showed no measurable value; mixing chosen and random experiments did best on numeric functions (0.88, against 0.80 with every experiment chosen and 0.75 with every one random) | `docs/handoff/03_ANALYSIS.md` §0, §6 |
 | Helix Probe, ARC-AGI-3 | Same loop on games | 0 of 35 levels: it learned mechanics, never what completes a level | same, §0 item 7 |
@@ -948,28 +991,29 @@ it well?)*
 | Constructor reader | One long conversation, one leap to a whole explanation | Clean, familiar networks only; copies elsewhere | section 1 |
 | Kepler's scientist | One-shot proposals: 59 programs in three rounds | 0 accepted | `docs/kepler/DIARY.md` |
 
-**The rule the evidence supports.** A cheap model at volume is strong exactly when four things hold, and weak when
-any one fails:
+**What the cases we have suggest.** In these cases a cheap model at volume did well when four things held together,
+and badly when one was missing. This is a pattern in eight cases, not a law (FIND, for one, succeeded with at most 25
+experiments per function, from loop design rather than volume):
 1. **the thing searched for is a small program** (a construction, a heuristic, a function);
 2. **the score is exact, cheap and loophole-free** (Helix's results "can't be faked"; the floating-point boundary
    and the copy rules show what happens otherwise);
 3. **progress is incremental**, so variations can climb (a fitness landscape with slopes);
 4. **the volume is real**: thousands of candidates, with diversity kept up (published systems used 25,600–51,200).
 
-It fails where the score can be gamed (Goal 2, the copy rules), where the task needs a goal nobody has seen
-(ARC-AGI-3), where one leap must produce a large composed artifact (the constructor), and where the "volume" is
+It failed where the score could be gamed (Goal 2, the copy rules), where the task needed a goal nobody had seen
+(ARC-AGI-3), where one leap had to produce a large composed artifact (the constructor), and where the "volume" was
 small (59 programs against Helix's thousands).
 
 **What that means for interpretability, sub-problem by sub-problem:**
 
-| Sub-problem of the box | Small program? | Exact, loophole-free score? | Verdict |
+| Sub-problem of the box | Small program? | Precise, cheap, loophole-free score? | Verdict |
 |---|---|---|---|
-| **Definition synthesis**: write a program over the inputs that computes a variable found inside the network | Yes | Yes: held-out agreement with the variable's values, agreement under intervention, length in library terms; a memorising program fails held-out data, as Kepler's hash-noise control already showed | **Volume engine.** This is the best fit in the whole box |
-| **Laws and closures**: write the term or closure that, added to a known model, reproduces the network's dynamics or internal state | Yes | Yes, against the network's implied dynamics on held-out flows | **Volume engine.** It extends Kepler's fixed 38-term library into open program search |
+| **Definition synthesis**: write a program over the inputs that computes a variable found inside the network | Yes | Precise and cheap, but not loophole-free on its own. Held-out and intervention agreement are truth tests (sample estimates, not exact), and a copy passes truth tests: a fitted surrogate, or a program that re-implements earlier layers, would score well. A memorising program fails held-out data (Kepler's hash-noise control), but that is the only escape the current scorer closes. Usable with a restricted definition language and a fitted-copy must-fail set (below) | **Volume engine, inside those restrictions.** The closest fit in the box if the restrictions hold |
+| **Laws and closures**: write the term or closure that, added to a known model, reproduces the network's dynamics or internal state | Yes | Yes, against the network's implied dynamics on held-out flows, within a sparse term budget (Kepler's regression used 5 of 38 terms); a fitted neural closure would also fit, so it is in the must-fail set | **Volume engine.** It extends Kepler's fixed 38-term library into open program search |
 | **Experiment design**: find the stimulus or intervention that best separates two rival hypotheses | Yes | Yes, after the fact (did the outcome split the rivals?) | **Volume engine** |
 | **Abstraction**: find shared primitives across verified definitions | Yes | Yes: total description length over the corpus | **Volume engine,** with LILO-style naming by a language model |
 | **Structure recognition** (decompiler-style) | Partly | Yes (exhaustive or causal checks) | Volume helps tune; the structure theory comes from a strong reasoner |
-| **The whole Glass Model**: composing levels into an algorithm and deciding it is an explanation | No | Only partly: faithfulness can be scored, "explanation, not copy" only through the shared-library and proof measures, still unproven as gates | **Strong agent,** with frozen confirm tests |
+| **The whole Glass Model**: composing levels into an algorithm and deciding it is an explanation | No | Only partly: faithfulness can be scored; "explanation, not copy" only through answering without running and proof compression (3.2), neither yet shown on the saved copies | **Strong agent,** with frozen confirm tests |
 | **Framing**: which target, which residual, what counts as understood, what a person should learn | No | No | **Strong agent and Shreyas** |
 
 **Where definition synthesis fits volume search least well, and how each is handled:**
@@ -979,8 +1023,17 @@ small (59 programs against Helix's thousands).
   matches. Decompose first and search against single features. Raw channels are only a fallback.
 - **The variable depends on other learned variables.** Look-ahead uses the network's own evaluation of future
   positions, which no board-only program has. Definitions must be allowed in terms of variables already aligned
-  inside the network (L2 operations), not only in terms of the input. Otherwise the search is asked for something
-  circular.
+  inside the network (L2 operations), not only in terms of the input, or the search is asked for something
+  circular. But only through variables that already have a confirmed definition of their own, so that the search
+  cannot hand the network's own computation back as the answer.
+- **Fitted copies.** A boosted-tree fit, a linear map of earlier channels, or a pruned copy of the layers below would
+  all agree with the variable on held-out data. So the definition language has a budget of free constants, no access
+  to weights or raw activations, and no fitted sub-models. Before the scorer is used, a must-fail set of exactly
+  those programs is written and run through it, and a program counts only if it beats a fitted surrogate restricted
+  to the same number of free constants.
+- **Readability is the point.** Helix's record program is a 516-line optimiser
+  (`helix_evolve/results/records/v102_v102-helix_p2563.py`), and its readability did not matter there. Here it
+  does, so the length and constant budgets are part of the score, not a tidy-up afterwards.
 - **Needle-in-a-haystack scores.** If the score gives no partial credit, variation cannot climb. Correlation-type
   scores give partial credit; a pass/fail score alone would not.
 - **Outside help.** Programs must not call outside engines or tables (a chess engine, an evaluation database).
@@ -993,21 +1046,34 @@ small (59 programs against Helix's thousands).
    that produced every hard-target result so far, minus the bespoke rebuilding.
 2. **A volume engine (Helix's figure-eight on a Flash-grade model)** runs inside the sub-problems that have exact
    scores: an exploring loop that varies programs without a plan, a reasoning loop that tests one change at a time,
-   a memory of findings, one exact scorer. Kepler's scientist was a one-shot generator at about one fortieth of
+   a memory of findings, one frozen scorer. Kepler's scientist was a one-shot generator at about one fortieth of
    Helix's volume, so "a cheap model cannot find the chess residual's concept" has not been tested at the volume
    where Helix works (experiment X6, section 10).
 3. **A strong agent as director** owns the Glass Model: picks the residual to attack, writes and pre-registers the
    scorer a volume run will climb, reads what comes back, separates rivals, decides what is confirmed, and writes the
    human account. Shreyas stays the judge of what is worth understanding.
 
-**Why interpretability may be the best home Helix has had.** Helix's own research question is how a discovery system
-gets past its model's prior: language-model searches re-weight what the model already imagines
-(`helix_evolve/docs/research/RESEARCH_CASE.md`). The vocabulary problem in this review (Gap 5) is the same problem:
-the LLM scientist proposed classical chess ideas because those are what it knows. In interpretability the target
-network supplies what that research case says is missing, **a dense, exact signal from outside the model's prior**:
-its own internal variables. A definition search scored against a variable the network computes is pulled toward the
-network's concept, not the model's habit. The two projects meet here: Helix supplies the engine, the network supplies
-the signal, and the toolkit supplies the scorer that connects them.
+**Whether interpretability can be a good home for Helix, and the test that decides it.** Helix's own research
+question is how a discovery system gets past its model's prior (`helix_evolve/docs/research/RESEARCH_CASE.md`).
+Its answer so far is sobering for a design that relies on the score alone:
+- selection by a score "stays near what the model has already written" (19 of 19 fresh restarts returned to the
+  textbook construction);
+- what moved the search furthest was a signal on the proposal side, written ideas from outside the model (run C's
+  summary of published methods);
+- the case cites reinforcement learning on verifiable rewards as not getting past the prior, and distillation from
+  another model as doing so.
+
+The vocabulary problem in this review (Gap 5) is the same problem: the LLM scientist proposed classical chess ideas
+because those are what it knows. A network can supply two kinds of signal:
+- **through the score**, which is selection, and by Helix's own analysis re-weights the prior;
+- **through what the proposer is shown**: where its last program disagreed with the variable, the inputs that drive
+  the variable hardest, minimal pairs that differ only in it. That is a signal on the proposal side, the analogue of
+  run C's summary.
+
+Kepler tried the second kind once, at tiny volume: 20 programs from minimal pairs chosen by channel 22, at low effort
+with a brevity instruction, and none was accepted (K9). So this is a hypothesis with a stated null, not a premise.
+X6 runs score-only volume against volume with the network's evidence shown, and Helix's own prediction (score-only
+volume stays near the prior) is the null to beat.
 
 **Which Helix Evolve parts carry over, and where they go** (from `helix_evolve/docs/VERSIONS.md`):
 
@@ -1021,15 +1087,16 @@ the signal, and the toolkit supplies the scorer that connects them.
 | The Scout (lean) | Web, code and paper searches each generation | The Librarian role |
 | One golden version (lean) | Only one current version, always known | The outer loop's rule: a new box version replaces the old only by raising the discovery score |
 
-**What would show this is wrong.** If a Helix-scale definition search (thousands of programs, exact held-out scorer,
-search primitives allowed) still finds nothing for a variable the network demonstrably computes, then the bottleneck
+**What would show this is wrong.** If a Helix-scale definition search (thousands of programs, the restricted scorer
+with its must-fail set, search primitives allowed, the network's evidence shown to the proposer) still finds nothing
+for a variable the network demonstrably computes, then the bottleneck
 is not volume but the library's base language or the variable itself, and the director, not the engine, must do
 that work. X6 is designed to tell these apart.
 
 ### 3.12 One run of the agentic box, end to end, and how it knows it is improving
 
 Shreyas asked whether this system can do what the evolutionary system does: run many times and check that it
-verifiably improves. It can, at three timescales, each with its own exact signal.
+verifiably improves. It can, at three timescales, each with its own signal.
 
 ```
  OUTER LOOP (days, across versions of the box)        signal: discovery score on the calibration ladder
@@ -1038,10 +1105,10 @@ verifiably improves. It can, at three timescales, each with its own exact signal
  │  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
  │  │ pick the largest structured residual → state the question → write and freeze its scorer   │ │
  │  │        │                                                                                 │ │
- │  │        ▼   INNER LOOP (minutes): Helix volume search      signal: the exact score        │ │
+ │  │        ▼   INNER LOOP (minutes): Helix volume search      signal: the frozen score       │ │
  │  │   ┌──────────────────────────────────────────────────────────────────────────────┐      │ │
  │  │   │ exploring loop (vary programs freely) ⇄ reasoning loop (one change at a time) │      │ │
- │  │   │              └──────────► one exact scorer ◄──────────┘   memory of findings   │      │ │
+ │  │   │              └──────────► one frozen scorer ◄──────────┘  memory of findings   │      │ │
  │  │   └──────────────────────────────────────────────────────────────────────────────┘      │ │
  │  │        │ best candidates                                                                 │ │
  │  │        ▼                                                                                 │ │
@@ -1056,7 +1123,7 @@ verifiably improves. It can, at three timescales, each with its own exact signal
 
 | Loop | Runs on | What improves | How it is verified |
 |---|---|---|---|
-| **Inner** (minutes, many thousands of calls) | A Flash-grade model, Helix's figure-eight | One candidate definition, law or experiment | The exact scorer, fixed by the director before the run: held-out agreement with the network's variable, intervention agreement, length |
+| **Inner** (minutes, many thousands of calls) | A Flash-grade model, Helix's figure-eight | One candidate definition, law or experiment | The scorer, fixed by the director before the run: held-out agreement with the network's variable and under intervention, inside the restricted definition language, after its fitted-copy must-fail set has been run through it |
 | **Middle** (hours, a few dozen cycles) | A strong agent as director | The Glass Model of one network | The residual curve: the structured residual falls only when a claim passes the frozen confirm tests |
 | **Outer** (days, across versions of the box) | Shreyas and the director | The box itself | The discovery score on the calibration ladder (blind recovery of unpublished algorithms). A new version replaces the old only if it raises that score, one golden version at a time, as lean Helix keeps |
 
@@ -1066,18 +1133,27 @@ it. That is the meta-evolutionary loop Shreyas scrapped for Helix as too slow an
 available. The same limit holds here until one ladder evaluation is cheap, so it stays a later option. Until then a
 person and the director change the box, one golden version at a time.
 
-**Why this does not repeat the Goal 2 failure ("the loop optimises whatever score it is shown").** The inner loop is
-*meant* to optimise its score, as Helix's loops do, and that is safe exactly when the score is exact and closed to
-loopholes. The design puts the loophole-closing where Helix learned it belongs: in the scorer, written and frozen by
-the director before the search starts, with the must-fail controls built in (shuffled targets, hash programs, held-out
-positions). Nothing an inner loop produces becomes a claim until the director runs it through confirm mode.
+**Why this need not repeat the Goal 2 failure ("the loop optimises whatever score it is shown").** The inner loop
+is *meant* to optimise its score, as Helix's loops do, so everything depends on how closed the score is. The record
+shows that freezing a scorer and building in must-fail controls detects a loophole rather than preventing one: judge
+glass-2 was frozen, pre-registered and given a shuffled-network control that had to fail, and the control passed at
+0.81 (REPORT_ROUND2). So the loophole-closing goes where Helix learned it belongs, in the scorer, in three layers:
+- a restricted definition language: a budget of free constants; no weights, no raw activations, no fitted
+  sub-models;
+- a must-fail set written before the scorer is used, made of the programs a search will find first (a boosted-tree
+  fit, a linear map of earlier channels, a pruned copy, a hash of the input), plus shuffled targets and held-out
+  positions;
+- the rule that a program which beats the must-fail set is first a finding about the scorer, checked by the
+  director, before it is a finding about the network.
+
+Nothing an inner loop produces becomes a claim until the director runs it through confirm mode.
 
 ### 3.13 The flywheel that could make it scale: search, verify, distil, and self-play
 
 The three loops of 3.12 make the box improve on one network and across versions. A fourth loop, later and costlier,
 could make the box improve with compute rather than with human effort. It is the AlphaZero pattern applied to
 interpretation, and every part of it is already named above:
-1. **Search.** The volume engine finds definitions, laws and algorithms that pass exact scorers.
+1. **Search.** The volume engine finds definitions, laws and algorithms that pass the restricted scorers.
 2. **Verify.** The confirm tests keep only what is true of the network.
 3. **Distil.** The verified explanations, paired with the networks they explain, train a reader (3.6), so the next
    search starts from better proposals.
@@ -1094,7 +1170,9 @@ from networks rather than games.
 
 **Why it could get past the model's prior,** where plain reinforcement learning on one's own outputs does not (the
 finding Helix's research case cites): the signal comes from outside the reader, from networks whose computation the
-reader did not write. That includes real trained networks once their explanations are verified.
+reader did not write and from verified explanations of them. That is closer to the distillation from another model
+that the research case says does get past the prior than to learning from one's own outputs. It includes real
+trained networks once their explanations are verified.
 
 **The risk, stated plainly.** Puzzle networks may not look like trained ones, and a reader trained on them would then
 learn the puzzle-maker's habits.
@@ -1121,7 +1199,7 @@ not a build plan.
 | Explain when a part fires | `lab/atlas.py` (trees over a vocabulary; rule or lookup labels) | Definitions synthesised as programs (the volume engine) |
 | Laws and concepts | `kepler/core/law.py`, `probe.py`, `residual.py` | Open program search beyond fixed term libraries (LLM-SR-style) |
 | Search with a cheap model | `probe/` (Helix Probe loop); Helix Evolve's engine in its own repo | One engine wired to this toolkit's scorers |
-| Exact scorers with must-fail controls | Pieces inside the judge, the atlas certificate and Kepler's frozen criteria | One scorer library that every volume run and confirm test calls |
+| Scorers with restricted languages and fitted-copy must-fail sets | Pieces inside the judge, the atlas certificate and Kepler's frozen criteria | One scorer library that every volume run and confirm test calls |
 | The Glass Model store | Nothing. Today's state lives in diaries, JSON reports and the catalog | The whole store: claims, alignments, evidence, guarantees, residual ledger, rival hypotheses, provenance |
 | The calibration ladder | The planted RNN and transformer, Tracr targets, the memoriser, the decompiler's secret-relabelled groups | Networks implementing unpublished algorithms (written or trained with planted rules), with sealed keys |
 | A view for people | `lab/server.py`, the catalog and playground | The trace view (§1b) over the Glass Model |
@@ -1148,7 +1226,7 @@ not a build plan.
 | SPD and the atlas | **Keep, as one decomposition instrument and one honesty label** | Exact decomposition and the rule/lookup label are valuable. Its explanation layer (trees over a fixed vocabulary) is replaced by the definition step (3.3 C) |
 | Kepler's law extraction, concept probes with controls, and teachability test | **Keep, wire inside-out** | Each law or strategy must get an implementation claim (Gap 7) |
 | The change ledger, frozen measures, pre-registration | **Keep, at the confirm boundary** | Credibility. Exploration happens before the boundary, labelled |
-| Helix Evolve's figure-eight engine (separate repo `helix_evolve`) | **Bring in, as the volume engine** | Exploring and reasoning loops around one exact scorer, with a memory of findings; beat the best human construction on an open problem with a Flash-grade model (3.11) |
+| Helix Evolve's figure-eight engine (separate repo `helix_evolve`) | **Bring in, as the volume engine** | Exploring and reasoning loops around one exact scorer, with a memory of findings; passed the best human construction on an open problem with a Flash-grade model, with no outside input, and went much further with a summary of published methods (3.11) |
 | The Helix Probe loop (`probe/`) | **Keep, as the loop's skeleton** | Predict-first, experiment-choosing, keep-if-better rules made a weak model strong on FIND (RESULTS_LOG R5). The network's insides become one more box |
 | Kepler's "hypotheses as executable code, judged by frozen tests" | **Keep, as the rule for every role** | It is the right contract between a language model and the evidence. What failed around it: 59 programs from a cheap model over three rounds (one with refinement, one on minimal pairs from channel 22) and 8 channel-derived rules, all rejected, with a library of static board features only (kepler/FINDINGS §4; kepler/DIARY). The missing parts were reasoning strength, a refine-against-failures cycle, and dynamic primitives |
 | Catalog and playground | **Keep, as a view of the Glass Model** | The trace view (1b) grows out of the playground |
