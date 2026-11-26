@@ -134,6 +134,7 @@ Push access to the repo was refused by the session's permission system, so this 
 - 03:36: the fact-checker returned (`docs/review/VERIFY_CHANGES.md`; it checked HEAD 290c3301). Six problems and six minor ones, each tied to a source. I re-read the three that change a design (countdown in `docs/RESULTS_LM.md`; U17's networks in glass/DIARY 23:59 and SPD on M8,5; the liar direction figures in liar/DIARY 09:42 and DISCOVERY) and all three hold. Everything it lists is fixed (F60).
 - between 03:36 and 03:39: fixes pushed (c2e1ba21, 011524ea, 90b779ae).
 - 03:39: this log updated (F60; F48, F57 and F59 marked).
+- 04:00: at Shreyas's request (03:58), wrote `docs/review/HANDOFF.md` for the agent who will build the next version: the vision, the reasons behind it (each with sources), what is inherited, a reading order, the few fixed rules, and what is left free. Deliberately not a specification (D17).
 - Messages to Shreyas, for the record (first run): update 1 at 23:34; update 2 with both files at 23:44; update 3 with files at 23:52; update 4 with files at 00:01; the extension request at 00:04 (each time taken from the clock reading just before sending).
 
 ## Findings (numbered, added as they appear)
@@ -301,6 +302,8 @@ Push access to the repo was refused by the session's permission system, so this 
 - **D15 (03:08).** Report every record entry with its failed replications and caveats in the same row, not only in a later section. Reason: F53.
 
 - **D16 (03:19).** Add the bounded-reader version of the test against copies to Gap 2, §3.2 item 5 and X0 (a cheap reader arm, which needs Shreyas's go for the Flash calls). Reason: F57; it removes the cost the evidence ladder names for matching sampling (accounts written as estimators).
+
+- **D17 (04:00).** The builder's handoff states the picture and the reasons and points to the evidence, but fixes no architecture, order or technology, and calls the review's own designs hypotheses. Reason: Shreyas's instruction that the builder must be free to build, and the two checks tonight that found the review's designs wrong in places.
 
 ## Next (as of 03:39, end of the second run)
 - Delivered, on branch `review-next-build`: NEXT_BUILD.md (diagnosis and design, with the engine question and the

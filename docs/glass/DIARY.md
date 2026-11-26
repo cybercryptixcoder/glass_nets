@@ -2181,3 +2181,8 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   every real explanation. A new free experiment, X0, tests it on the saved runs. `docs/review/BRIEF.md` is the
   two-page version.
 - No code was changed and no experiment was run.
+
+## Nov 26, 04:00 ET (clock): handoff for the builder of the next version
+
+- `docs/review/HANDOFF.md` is the starting point for the agent who builds the next version: the vision, the reasons,
+  the reading order and what is left to the builder's judgement. It is not a specification.
