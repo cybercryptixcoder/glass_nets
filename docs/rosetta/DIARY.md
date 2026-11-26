@@ -98,3 +98,36 @@ the follow-up), each best match then defined twice: with the full library and wi
 **05:02. Next: the whole layer.** Translating all 512 variables into programs, then rebuilding the layer from the
 translations and running the rest of LD2 on it (a glass model of the layer): how much of its evaluation and move choice
 survive, and how much of what the textbook misses the translation reproduces.
+
+**05:08. The whole layer translated (results/rosetta/dict_s10_w*.json).** 485 of LD2's 512 last-block variables get a
+program; held-out fidelity median 0.15; 114 at or above 0.3, 49 at or above 0.5, 14 at or above 0.7, 3 at or above
+0.9. The strongest are piece-identity variables ("own_N and not pinned", 0.94); real chess concepts among them:
+"own_K and own_att_by_lower" (in check, 0.84), "rel_rank>=3 and safe_from_opp_pawns and mob_us>=4" (a hole in the enemy
+half that four or more of our moves reach, 0.67), "not opp_P and outnumbered_opp and la_m1_to" (0.68).
+
+**05:09. Glass model of the layer (results/rosetta/glass_s10.json).** LD2's last block rebuilt from (a) the true
+sparse codes, (b) Rosetta's 512 translations, (c) each variable's mean map only, then run through LD2's own heads
+(1,000 held-out positions): top-move agreement with the network 0.695 / 0.413 / 0.047; value R2 against the network
+0.990 / 0.062 / -0.022. The translation keeps much of the move logic and almost none of the evaluation.
+
+**05:10. Cheap model at volume (results/rosetta/ld2_propose_site10.json).** 18 live calls returned 45 usable
+expressions; none beat the exhaustive search (channel 80: 0.365 against 0.368; channel 76: 0.303 against 0.478).
+
+**05:11. Residual curve (results/rosetta/residual_curve_s10.json).** The 113 translated variables with fidelity at
+or above 0.3, as program counts, added to the record's surrogate: LD2 value +1.46% of variance (CI 0.93% to 2.02%),
+so 6.6% of the 22.2% the textbook misses; game results +1.31% (CI 0.16% to 2.45%), against +3.64% for LD2's own value
+(CI 2.20% to 5.13%): the translations carry about a third of what the network knows about who wins beyond the
+textbook. (Forward selection still running.)
+
+**05:10. Look-ahead profile (results/rosetta/lookahead_profile.json).** Linear probe on LD2's square vector for "this
+square is where the network's own follow-up move (ply 3) lands": AUC 0.804 / 0.824 / 0.833 at blocks 2 / 4 / 6,
+against 0.792 for gradient-boosted trees on all 53 static board primitives and 0.64 for the untrained network. The
+network's state carries its own future move beyond what the board shows, and more so with depth.
+
+**05:11. Causal look-ahead, first run (block 4, 1,200 held-out positions).** Mean-ablating the network's state on
+the follow-up move's destination square (never a square of the first two moves) lowers the log-probability of its
+current move by 0.097, against 0.008 for a control square of the same occupancy (difference 0.089, CI 0.059 to 0.120;
+for reference, the current move's own destination: 2.93). Jenner et al. (2024) found look-ahead in Leela's
+transformer and built their method on its squares-as-tokens structure; LD2 is a convolutional network. Tightening
+the control (also matched on being attacked by the moved piece after the move, and on attack counts) and running
+blocks 4, 6, 8 and the second network now.
