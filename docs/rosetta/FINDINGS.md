@@ -37,19 +37,22 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    |---|---|---|---|
    | t1 (transformer, 256 x 10) | 4 | +0.075 | +0.049 to +0.104 |
    | t1 (transformer, 256 x 10) | 6 | +0.086 | +0.061 to +0.114 |
+   | t1 (transformer, 256 x 10) | 8 | +0.054 | +0.035 to +0.079 |
    | 744706 (convolutional) | 4 | +0.023 | +0.004 to +0.041 |
+   | 744706 (convolutional) | 6 | +0.023 | +0.007 to +0.040 |
    | LD2 (convolutional) | 4 | +0.016 | -0.002 to +0.036 |
    | LD2 (convolutional) | 6 | +0.006 | -0.015 to +0.027 |
 
    Jenner et al. (2024) found look-ahead in Leela's transformer and built their method on its squares-as-tokens
-   structure; Rosetta reproduces that known answer with its own recogniser. The convolutional networks carry the
-   information (a probe reads the follow-up square at AUC 0.83 at block 6 of LD2, against 0.79 from the board alone and
-   0.64 for an untrained copy) but use it little. A looser first control had suggested a large effect in LD2 (+0.089);
+   structure; Rosetta reproduces that known answer with its own recogniser. The convolutional networks carry less of
+   the information and use it little: a probe reads the follow-up square at AUC 0.83 at block 6 of LD2 (board alone
+   0.79, untrained copy 0.64), against 0.91 in t1 (board alone 0.80). A looser first control had suggested a large effect in LD2 (+0.089);
    the matched control removed it, which is why the matched control is the one reported.
 
 3. **One internal concept passes every pre-registered check.** LD2 variable 174, defined as a weighted sum of three
-   programs: "an enemy piece other than a pawn, outnumbered by attackers, on the square the network's chosen move goes
-   to" + "a hanging enemy piece we attack (no check involved)" + "any non-knight piece on the chosen move's target":
+   programs: "an enemy piece other than a pawn, with more attackers than defenders, on the square the network's chosen
+   move goes to" (weight 1.78) + "an undefended enemy piece attacked by one of our pawns or minor pieces, on a square
+   none of our moves gives check from" (0.63) + "the chosen move captures something other than a knight" (0.51):
    - fidelity 0.759 on held-out positions (line 0.388);
    - not a restatement of the 61 classical concepts (R2 0.72, bar 0.9);
    - substituted for the variable inside LD2 it restores 50.1% of the variable's effect (CI 43% to 57%), and 53.6%

@@ -80,6 +80,9 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
 - Probe for "this square is where the network's own follow-up move lands" (ply 3): AUC 0.804 / 0.824 / 0.833 at
   blocks 2 / 4 / 6, against 0.792 for gradient-boosted trees on all 53 static board primitives and 0.64 to 0.67 for the
   untrained network.
+- The same probe on the transformer t1 (lookahead_profile_t1.json; t1's own line; board-only baseline 0.798):
+  AUC 0.851 / 0.894 / 0.911 at blocks 2 / 4 / 6 (untrained t1: 0.61 to 0.65). The transformer carries its follow-up
+  move much more strongly than LD2 (0.833 at block 6).
 - Causal test (mean-ablate one square's state, measure the drop in the log-probability of the network's own move):
 
 | network, block | follow-up square | matched control (occupancy, attacked by the moved piece, attack counts) | difference, 95% CI |

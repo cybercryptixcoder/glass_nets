@@ -195,3 +195,7 @@ scored alone on the held-out split of the original games; the five best then tes
 the choice): none adds significantly alone (best +0.18%, CI -0.06% to +0.42%), and the five together +0.22% (CI
 -0.14% to +0.56%). The knowledge the translations carry on fresh games (+0.65% with all 114) is spread over many
 variables, not concentrated in a few nameable concepts.
+
+**05:49. Transformer probe profile (lookahead_profile_t1.json).** Follow-up square (t1's own line): AUC 0.851 /
+0.894 / 0.911 at blocks 2 / 4 / 6, board-only 0.798, untrained t1 0.61 to 0.65. LD2: 0.804 / 0.824 / 0.833. The
+transformer both carries its follow-up move more strongly and uses it (causal effect about four to five times larger).
