@@ -1041,6 +1041,12 @@ verifiably improves. It can, at three timescales, each with its own exact signal
 | **Middle** (hours, a few dozen cycles) | A strong agent as director | The Glass Model of one network | The residual curve: the structured residual falls only when a claim passes the frozen confirm tests |
 | **Outer** (days, across versions of the box) | Shreyas and the director | The box itself | The discovery score on the calibration ladder (blind recovery of unpublished algorithms). A new version replaces the old only if it raises that score, one golden version at a time, as lean Helix keeps |
 
+**Can the outer loop be searched too, so the box builds itself?** In principle yes: the discovery score is an exact
+fitness for versions of the box, so its prompts, scorers and loop settings could be varied and kept when they raise
+it. That is the meta-evolutionary loop Shreyas scrapped for Helix as too slow and expensive for the compute
+available. The same limit holds here until one ladder evaluation is cheap, so it stays a later option. Until then a
+person and the director change the box, one golden version at a time.
+
 **Why this does not repeat the Goal 2 failure ("the loop optimises whatever score it is shown").** The inner loop is
 *meant* to optimise its score, as Helix's loops do, and that is safe exactly when the score is exact and closed to
 loopholes. The design puts the loophole-closing where Helix learned it belongs: in the scorer, written and frozen by

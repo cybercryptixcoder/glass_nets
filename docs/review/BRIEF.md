@@ -65,6 +65,9 @@
   - outer: the discovery score.
 - **Why this suits Helix.** Helix's open question is how to get past the model's prior. Here the network's own
   variables are an exact signal from outside that prior.
+- **The flywheel, last.** Search, verify, then distil the verified explanations into a trained reader, and repeat.
+  It is fed by interpretability self-play: a puzzle-maker builds networks with hidden algorithms and sealed keys, and
+  an interpreter decodes them. This is the part whose ceiling does not depend on how many good researchers exist.
 
 ## Keep, scrap, rebuild
 
