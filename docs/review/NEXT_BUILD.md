@@ -123,7 +123,7 @@ with Helix's own prediction as the null.
 
 **The weakest load-bearing part, stated plainly.** Telling an explanation from a disguised copy was the project's
 central unsolved problem, and it still is. The design's answer (answering without running, 3.2 item 3) is a
-candidate taken from ARC and from the repo's own evidence ladder, not a result. X0 tests it on the saved runs at no
+candidate taken from ARC and from the repo's own evidence ladder, not a result. X0's main arm tests it on the saved runs at no
 cost, and until it passes, copies are kept out only by restricted search languages and must-fail sets.
 
 The flagships that should pull the build are the ones Shreyas named (section 6): a chess network's strategies, how a
@@ -142,7 +142,7 @@ yet is their composition and the loop that invents vocabulary.
 | Recover structure blind (secret relabelling, unknown group), within a fixed family of structures | The decompiler: exact group tables, including A5's 60 × 60, from weights under a secret relabelling; not yet reliably (non-abelian groups: 2 of 5 completed runs at v3.5, 0 of 5 at the version pre-registered first) (decomp/RESULTS) |
 | Decompose exactly, and say honestly what is memorised | The atlas: SPD with rule/lookup labels, known answers recovered on fresh 227k-parameter networks, a memoriser flagged, though on a count of one (ATLAS_RESULTS A41–A44) |
 | Read a law out of a network blind | Kepler: 5 true terms of 38, coefficients within about 2%, regimes and a resolution limit (kepler/FINDINGS §1) |
-| Verify a full causal account of a real language-model behaviour, with a rival representation ruled out | Month rollover: 5 of 5 stages in GPT-2 small; the circle present but unused, replicated in three models (DISCOVERY.md). Partly: the comparison step after depth 8 is not traced, near-ties (32% of decisions) are excluded, and it was certified under rules set that morning and not yet re-certified on a judge fixed in advance (PROJECT_REVIEW §8) |
+| Verify a full causal account of a real language-model behaviour, with a rival representation ruled out | Month rollover: 5 of 5 stages in GPT-2 small; the circle present but unused, replicated in three models (DISCOVERY.md). Partly: the comparison step after depth 8 is not traced, near-ties (32% of decisions) are excluded (DISCOVERY.md, E23), and it was certified under rules set that morning and not yet re-certified on a judge fixed in advance (PROJECT_REVIEW §8) |
 | Lift a weak model with a predict-first experimental loop | Helix Probe on FIND: 0.82–0.90 against 0.38, mostly because the loop always experiments; +0.10 at equal inputs (RESULTS_LOG R5; handoff/03_ANALYSIS §0) |
 | Find verified strategy-level knowledge in a superhuman network | Kepler: a counter-textbook rule, confirmed on fresh games across three networks and shown to work in network play, though it did not help human players in real games (kepler/FINDINGS §5) |
 | Invent and name abstractions with a language model plus compression | LILO-style library learning (section 7) |
@@ -263,8 +263,8 @@ the year token, the final token reads it from there, by depth 8 each month is re
 two positions are compared, and the answer is decoded as a year token. The comparison step itself is not traced
 ("which components compute the comparison itself after depth 8" is listed as not yet known), so it is a partial
 trace, and still the closest the repo has to this shape. It is also the one hard-target result that held up, with
-two caveats on record: near-ties (32% of decisions) are excluded, and it has not been re-certified on a judge fixed
-in advance (PROJECT_REVIEW §8).
+two caveats on record: near-ties (32% of decisions) are excluded (DISCOVERY.md, E23), and it has not been
+re-certified on a judge fixed in advance (PROJECT_REVIEW §8).
 
 **So the product should be an execution trace of the network's algorithm, for any input, in human terms, with every
 step aligned to the network and verified, plus the program whose traces those are.**
@@ -413,8 +413,8 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
 
      The same test can be run with a reader as the estimator, which removes that cost. Give a language model the
      explanation, bar it from running code, and give it a token budget per question smaller than it would take to
-     execute a copy of the network by hand on one input (the budget is set from the copy's own cost, not from any
-     result). Then ask it about the network: outputs on new inputs, accuracy on a rare sub-population, the effect of
+     execute, by hand on one input, the smallest opaque program in the comparison (a copy, or a small distilled
+     student); the budget is set from that program's cost, not from any result. Then ask it about the network: outputs on new inputs, accuracy on a rare sub-population, the effect of
      an edit. A copy should give such a reader little it can use; an explanation should give it much. The
      explanation must beat the same reader given a copy, and the floor is the same reader given only the task. (If
      the copy itself beats the floor, the reader is reading structure off raw weights, which is a finding for
@@ -423,8 +423,9 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
 
      The two versions catch different escapes. A smaller program that is not readable (a pruned copy, a small
      distilled student) is also a cheaper sampler, so the compute version cannot tell it from a short readable rule
-     of the same cost; the reader version can, because a reader cannot execute a student in its head. So the compute
-     version catches copies of the network's own size, and the reader version catches opaque programs of any size.
+     of the same cost; the reader version can, because its budget is too small to execute even the student. So the
+     compute version catches copies of the network's own size, and the reader version catches opaque programs down
+     to the smallest one it is compared with.
   2. **Compression of the proof, where the domain allows it.** An explanation turned into a verifier that bounds the
      network's behaviour faster than brute force (Gross et al. 2024; Wu, Jaburi, Drori & Gross 2025,
      `main:docs/literature/aether/arxiv-2410.07476.md`). An over-claiming account is refuted by arithmetic. This is
@@ -757,7 +758,7 @@ its L2 program and L1 variables, see where the network and the model agree and w
 5. **Transfer.** Give the explanation, and only the explanation, to a fresh reader: a language model that has not
    seen the network, or a person. Can it predict the network on new inputs and under new interventions, or rebuild
    a network that behaves the same? The reader may not run code and works within a token budget per question set
-   below the cost of executing the network by hand, so a copy is of little use to it: transfer is then a second
+   below the cost of executing by hand the smallest opaque program compared (a copy or a distilled student), so a copy is of little use to it: transfer is then a second
    test against copies (Gap 2), and the explanation must beat the same reader given a copy. The control is the same reader given only the task's description (the
    prior-only control, moved to the reader's side): the explanation's worth is the gain over it, and over the same
    reader given a surrogate fitted to the network's behaviour. This is what makes
@@ -1078,8 +1079,10 @@ small (59 programs against Helix's thousands).
   circular. But only through variables that already have a confirmed definition of their own, so that the search
   cannot hand the network's own computation back as the answer.
 - **Fitted copies.** A boosted-tree fit, a linear map of earlier channels, or a pruned copy of the layers below would
-  all agree with the variable on held-out data. So the definition language has a budget of free constants, no access
-  to weights or raw activations, and no fitted sub-models. Before the scorer is used, a must-fail set of exactly
+  all agree with the variable on held-out data. So the definition language has a budget of free constants, counting
+  every numeric literal and table entry (a search over thousands of programs tunes hard-coded numbers by selection,
+  and a literal piece-square table is a fitted table), no access to weights or raw activations, and no fitted
+  sub-models. Before the scorer is used, a must-fail set of exactly
   those programs is written and run through it, and a program counts only if it beats a fitted surrogate restricted
   to the same number of free constants.
 - **Readability is the point.** Helix's record program is a 516-line optimiser
@@ -1109,8 +1112,9 @@ question is how a discovery system gets past its model's prior (`helix_evolve/do
 Helix's own evidence so far is sobering for a design that relies on the score alone:
 - selection by a score "stays near what the model has already written" (19 of 19 fresh restarts returned to the
   textbook construction);
-- what moved the search furthest was a signal on the proposal side, written ideas from outside the model (run C's
-  summary of published methods; `docs/RECORDS.md`);
+- the furthest result came with a signal on the proposal side, written ideas from outside the model (run C, given a
+  summary of published methods; `docs/RECORDS.md`). But this is one seed's evidence: run D, with the same summary,
+  ended below run B, which had none;
 - the case cites reinforcement learning on verifiable rewards as not getting past the prior, and distillation from
   another model as doing so.
 
@@ -1457,8 +1461,9 @@ argued.
     specific question (EXPERIMENT_LOG E12), though the question itself supplied the grid layout and that the
     outputs are actions; Shreyas's Nov 13 view that its failures are interface failures is still untested;
   - which open model to study is not settled. On the record, open models mostly fail to read at all (shapes tasks:
-    DeepSeek 0 of 8, Qwen 0 of 8, GLM 2 of 8, Kimi 4 of 8; `docs/literature/wsp/K1_STATE_OF_ART.md`), and the readers
-    that work are closed. X8 measures this first;
+    DeepSeek 0 of 8, Qwen 0 of 8, GLM 2 of 8, Kimi 4 of 8; `docs/literature/wsp/K1_STATE_OF_ART.md`). The best reader on record is
+    closed (Astra, 6 of 6), but two open-weight models read partly (Kimi 4 of 8; Qwen 3.8 27B and Kimi about 3 of 4
+    games in another test), so an open subject may exist. X8 measures this first;
   - reading audits say reading is local arithmetic plus dataset priors;
   - Singh: from weights alone, edit effects are predicted barely above a no-weights control (Spearman 0.17 vs 0.11,
     over 300 edits); in a separate test whose edits each depend on one hidden-state value, giving that value lifted
@@ -1622,20 +1627,20 @@ boundary.
 Each one is small (minutes to hours), tests a premise the whole design rests on, and has a decision for each outcome.
 Pass lines come from controls, set before the runs, as `CLAUDE.md` requires. None has been run. Preconditions, stated
 plainly: X1 needs a frontier-model key, and this workspace has only DeepSeek V4.1 Flash (PLAN_SCALING); X3, X7 and
-parts of X4 need GPU time; any spending needs Shreyas's approval first. X0 is free and comes first, because the test
+parts of X4 need GPU time; any spending needs Shreyas's approval first. X0's main arm is free and comes first, because the test
 against copies (3.2 item 3) rests on it.
 
 | # | Experiment | The premise it tests | If it holds / if it fails |
 |---|---|---|---|
 | X0 | **The test against copies, on saved runs (free, plus a cheap reader arm).** Write the must-pass accounts (M4,3 and the lc_8_6 census rule; M2,2's account is the task rule, matched at fidelity 1.000, so it cannot decide) as estimators of their networks' accuracy on the task distribution and on sub-populations fixed in advance. Score them, and every saved copy, disguise and the shuffled-network account, by error against compute, beside sampling the network and its copy frontier. Reader arm: a no-code reader with a per-question token budget below the cost of hand-executing the copy predicts each network's accuracy on the same distributions from the account, from a copy, and from the task alone | That answering without running separates explanations from copies where bit-counting did not (3.2 item 3; condition (c) of REPORT_ROUND2) | Holds: it becomes the anti-copy gate. Fails: report it, return to the intent, and keep copies out by restricted languages and must-fail sets alone, with that limit stated on every claim |
-| X1 | **The stronger-reader test, finally, where a short account is known to exist.** Targets where a short, verified account exists and the cheap reader failed: GPT-2 month rollover (hand-built 5 of 5 stages; cheap reader 1 of 5), GPT-2 countdown (cheap reader 1 of 5, the same as its prior-only control) and X2's planted networks. A frontier model in the reasoning roles, DeepSeek Flash as the control, same budget. M8,5 and lc_6_5 stay in only as a known-negative arm: they are known to admit no short faithful account (rules replace at most 7% of either before it falls below the task rule, UNITS_FINDINGS U17), so a short account there is checked for copying before anything else | That capability was a binding limit (R3, Q7) | Holds (the frontier reader recovers the known accounts where Flash did not): put frontier models in the theorist, formaliser and critic roles from the start. Fails on the known-account targets too: the bottleneck is the method, not the model, which strengthens the case for the new centre |
+| X1 | **The stronger-reader test, finally, where a short account is known to exist.** Targets where a short, verified account exists and the cheap reader failed: GPT-2 month rollover (hand-built 5 of 5 stages; cheap reader 1 of 5) and X2's planted networks. Two more arms are open, not decisive: GPT-2 countdown (cheap reader 1 of 5, hand-built only 2 of 5, so no complete account exists to recover) and M8,5 and lc_6_5 (they stalled for the reader but were decomposed exactly by SPD and the atlas, so a faithful account exists, though not a short program). A frontier model in the reasoning roles, DeepSeek Flash as the control, same budget | That capability was a binding limit (R3, Q7) | Holds (the frontier reader recovers the month account and the planted networks where Flash did not): put frontier models in the theorist, formaliser and critic roles from the start. Fails on the known-account targets too: the bottleneck is the method, not the model, which strengthens the case for the new centre |
 | X2 | **A first discovery score for today's tools.** The puzzle-maker writes ten small networks implementing algorithms invented for the test, keys sealed; a Claude session with today's instruments tries to recover them blind | That a calibration ladder of unpublished algorithms can be made, and how far today's system is from Q1–Q2 | Holds: the ladder exists and has a baseline to beat. Fails: weight-space programming cannot produce realistic test networks; fall back to planted-rule training |
 | X3 | **Rebuild the fluid target so that it has something to be cheap about, as a known-answer rung.** Train the video model on coarse-grained frames of a 4× finer simulation, with a longer step; compare with the plain coarse solver at matched cost. Prior work already answers the general question: on 2D turbulence, learned corrections on coarse grids matched baseline solvers with 8–10× finer resolution in each dimension, for 40–80× speed-ups (Kochkov et al. 2021, arXiv 2102.01010). So this checks that our rebuild reproduces that, and the discovery is what comes next: reading the learned correction | That our rebuilt emulator learns a closure worth decoding (flagship 2) | Holds: the closure is the discovery target. Fails: our rebuild does not reproduce the published kind of gain; fix the training or the resolution gap before reading anything, since the published result says it can be done |
 | X4 | **One concept-invention cycle on LD2's quiet-position residual** (section 3.8), where channel 22's causal evidence lives (resetting it removes 32% of the quiet residual): the observer, the formaliser and the simulation test on channel 22's positions, inside the restricted definition language with its must-fail set (3.11). First, a knowledge-versus-error check: does the residual predict a deep engine's evaluation, or game outcomes, beyond the classical surrogate? | That a definition can be synthesised for a variable nobody named, on a real network (Q2), and whether the residual it explains is knowledge or the network's own errors | Holds: the residual curve gets its first point, with the share that is knowledge stated. Fails: find where it breaks (the observer's description, the program, the alignment) before scaling the loop. If the residual mostly fails the knowledge check, it is still worth explaining, but as LD2's errors, not as level K |
 | X6 | **Helix volume on a definition the one-shot scientist missed.** Run Helix's figure-eight (exploring and reasoning loops, Flash-grade model, programs allowed to search a few moves ahead) to write a board program that matches chess channel 22 (or a decomposition feature that carries the residual) on held-out positions. The scorer works inside the restricted definition language, and its fitted-copy must-fail set (a boosted-tree fit, a linear map of earlier channels, a pruned copy), the hash-noise control and the replication network are run through it first. Two arms at each budget (Kepler's 59 programs, and Helix's thousands): score-only, and with the network's evidence shown to the proposer (where the last program disagreed, top-activating positions, minimal pairs). Helix's own prediction, that score-only volume stays near the prior, is the null | That volume, plus a scorer anchored to the network's own variable, gets past the model's prior, and which signal does it (Q11, section 3.11) | Holds (a program beats a fitted surrogate with the same number of free constants, on a final held-out set scored once): the volume engine becomes the definition stage, in the arm that worked. If only the evidence-shown arm holds, the network's signal enters through the proposer, as Helix's case predicts. Fails at both budgets in both arms: the library's base language or the variable is the bottleneck, and the director must work it out |
 | X5 | **The Helix skeleton on the insides of a network.** Point `probe/` at a planted RNN, with interventions as the probes and a predict-first model of the internals | That the predict-first loop transfers from black boxes to network internals | Holds: it becomes the loop's skeleton. Fails: keep the roles, and replace the loop's selection rules with ones built for internal claims |
-| X7 | **The lying gate, in the smallest model that shows it.** The liar sprint found that the black-box detector reads the instruction to lie, carried by chat-template tokens, and that single directions close at most about 12% of the gap. Find which attention heads read those template positions and pass the lying mode on (path patching from the template positions; knockout of candidate heads), predicting each effect before running it, with truthful-instruction and fiction or role-play controls. Use the smallest of the sprint's models that shows the mode, or a smaller one that passes the same failed-lie test | That the lying mode is a routing decision that can be localised (flagship 3's first open step); and the first language-model use of the loop | Holds: flagship 3 has its L2 object, the gate, to decompose and define. Fails: the mode is spread over many heads, as the single-direction result hinted; the next step is a decomposition of the template-token stream (transcoders), not head-level patching |
-| X8 | **Which open model reads weights at all?** Run the repo's weight-reading protocols (the shapes tasks with a shuffled control, K1; Singh's edit-prediction test) on open models that could be studied from the inside. On the record, DeepSeek scored 0 of 8 on shapes, Qwen 0 of 8, GLM 2 of 8 and Kimi 4 of 8; the strong readers are closed (`docs/literature/wsp/K1_STATE_OF_ART.md`) | That flagship 4 has a subject: an open reader above its controls, whose insides can be decomposed | Holds: study that model's reading (Q8). Fails: no open model reads above controls, so flagship 4 starts by training an open reader on verified rewards (3.6) and then studies it |
+| X7 | **The lying gate, in the smallest model that shows it.** The liar sprint found that the black-box detector reads the instruction to lie, carried by chat-template tokens, and that adding the mode's mean direction moved the detector by only 1–5% of the gap (the real-lie direction, a different signal, closed at most about 12%). Find which attention heads read those template positions and pass the lying mode on (path patching from the template positions; knockout of candidate heads), predicting each effect before running it, with truthful-instruction and fiction or role-play controls. Use the smallest of the sprint's models that shows the mode, or a smaller one that passes the same failed-lie test | That the lying mode is a routing decision that can be localised (flagship 3's first open step); and the first language-model use of the loop | Holds: flagship 3 has its L2 object, the gate, to decompose and define. Fails: the mode is spread over many heads, as the direction result hinted; the next step is a decomposition of the template-token stream (transcoders), not head-level patching |
+| X8 | **Which open model reads weights at all?** Run the repo's weight-reading protocols (the shapes tasks with a shuffled control, K1; Singh's edit-prediction test) on open models that could be studied from the inside. On the record, DeepSeek scored 0 of 8 on shapes, Qwen 0 of 8, GLM 2 of 8 and Kimi 4 of 8; the best reader on record is closed (Astra, 6 of 6) (`docs/literature/wsp/K1_STATE_OF_ART.md`) | That flagship 4 has a subject: an open reader above its controls, whose insides can be decomposed | Holds: study that model's reading (Q8). Fails: no open model reads above controls, so flagship 4 starts by training an open reader on verified rewards (3.6) and then studies it |
 
 ---
 
