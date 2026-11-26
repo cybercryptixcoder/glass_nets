@@ -1,0 +1,65 @@
+# Constructive Causal Abstraction and a Case Study in Mechanistic Interpretability
+
+- **Key:** arxiv-2611.31795
+- **Authors / organisation:** Yuchen Zhu, Sergio Hernan Garrido Mejia, Dominik Janzing; University College London (Zhu, contact address at Spotify), Max Planck Institute for Intelligent Systems, Amazon
+- **Date:** 2026-11 (arXiv v1)
+- **Link:** https://arxiv.org/abs/2611.31795
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+
+Causal abstraction, as the field currently practises it, is a *checking* exercise: someone proposes a high-level causal model, someone aligns its variables with a network's units or directions, interventions are run on both sides, and the abstraction is declared exact when the effects agree. The authors' complaint is that this framing quietly assumes the high-level intervention is a single well-defined thing to do. It usually is not. Many different low-level edits realise "change the macro variable by this much", and they generally have different effects on everything else, so the "macro causal effect" is undefined until one says which realisation one means. Their goal is therefore logically prior to verification: given a fixed micro model and a fixed way of aggregating micro variables into macro variables, derive the extra structure that makes macro interventions well-defined in the first place. The larger aim is to give the field an account of why intervention-based interpretability results are so implementation-sensitive, and in particular to explain away the "interpretability illusion" paradox in which the subspace that edits a behaviour is not the subspace through which the model computes it.
+
+## What they studied
+
+Structural causal models in the abstract — a micro model over variables `x` with mechanisms `f(x, n)` and exogenous noise `n`, an aggregation map `p` from micro to macro variables, and a macro structural function. The linear case gets a closed form; the nonlinear case a numerical scheme with existence and error theorems. The case study is two concrete systems: a frozen RoBERTa biography classifier predicting 28 professions (the Bias-in-Bios data of De-Arteaga et al., with gender probed at layer 0, the masked-mean input embedding), and GPT-2 Small on indirect object identification, where the unit of analysis is the MLP-8 hidden activation projected onto the `v_MLP` direction identified by an earlier editing study. Unit of analysis overall: macro variables and directions, with the "complementary variable" playing the role of the discarded state.
+
+## How they did it
+
+1. Define an intervention as a map applied to the micro variable space, post-composed onto the structural mechanism (their formulation; do- and shift-interventions are special cases).
+2. Introduce a **complementary variable** `q(x, n)`: a function of micro state and noise that retains exactly the information the aggregation map `p` throws away. Specify `q` and `p` jointly, and the admissible micro realisations of any macro intervention collapse into a set that all produce the same macro effect.
+3. Define an *implementation* of a macro intervention as a micro intervention that (i) hits the macro target and (ii) leaves `q` unchanged — the second condition is what rules out off-target macro effects.
+4. For linear micro models with a full-rank linear aggregation `P`, show by a kernel-inclusion condition that `q` has exactly one form: `q = (P·A − Ā·P, P)`, where `Ā` is the macro causal matrix the practitioner picks. Choosing `Ā` is choosing the macro model, and the paper reads the two natural choices as *control* (specify the response you want) versus *auditing* (average over realisations in their natural distribution, which corresponds to a stochastic intervention).
+5. Prove that every macro intervention with at least one implementation is well-defined (all implementations agree), and give mild sufficient conditions (micro dimension at least twice the macro dimension, plus a linear-independence condition) for shift interventions always to have an implementation.
+6. For nonlinear models, drop the closed form and instead solve for the implementation as an ODE: at each micro state choose the minimum-norm velocity that keeps `q` constant while moving the macro coordinate at the required rate. Integration gives an edit attaining the shift, with existence under constant-rank, feasibility and controlled-growth conditions, and an error bound linking integration step and inverse-solver error to edit error.
+7. Case study 1 (audit): fit a macro model of the 28 centred profession logits on the probed gender coordinate by least squares with intercept, so `q_audit` is the least-squares residual (zero conditional mean under the fitting distribution). The fitting distribution is defined by an LLM that rewrites 5,000 biographies to flip gender cues. Compare real text flips against macro predictions at fixed residual.
+8. Case study 2 (edit): construct `q`-preserving activation edits with the ODE scheme and check them against the macro predictions; separately compare edits along the editing direction `v_MLP` against `q`-preserving edits at the same macro coordinate.
+
+## What counts as an explanation here
+
+A **causal abstraction that is well-defined by construction**, plus a typed relation between two questions. Formally the output is the triple (aggregation `p`, complementary variable `q`, macro mechanism), which together give a counterfactual-level commutative property: whatever low-level implementation one uses, the macro outcome is the same. It is partial in the ordinary abstraction sense — it explains the macro variable, not the mechanism — but it is exact rather than approximate, and it is predictive: the fixed-`q` prediction is a claim about what edits that preserve the discarded state will do, checkable to numerical precision. The key conceptual payload is that "auditing" and "editing" are answers to different questions with different `q`, so a successful edit that changes `q` does not contradict an audit that found no effect.
+
+## How they judged success
+
+For the audit: held-out probe accuracy for the gender coordinate; fitted macro coefficients per profession; mean absolute residual change per logit; and the rate at which the top-scoring profession flips under real text edits versus the fixed-`q` macro prediction, reported on three splits (macro fit, calibration, held-out; 1,213-1,223 pairs each). For the constructed edits: whether every example attains the gender target while preserving `q` within a stated tolerance, whether the residual is preserved, and the maximum absolute discrepancy between realised and macro-predicted class probabilities. For IOI: the within-context range of the fixed-`q` macro response versus the range under `v_MLP` edits over the same coordinate span, the agreement of constructed `q`-preserving implementations with macro predictions across 32 base prompts, and the size of the induced change in `q` under `v_MLP` edits. Theory is checked by proof, with the nonlinear scheme's accuracy as an explicit error bound.
+
+## What they found
+
+- **The ill-definedness is real and large in the audit setting.** The fitted coefficients are small — the largest is nurse at +0.622 centred-logit units and the next four between roughly 0.18 and 0.32 — and the residual moves by about 0.16 per logit on average under real text edits. Prediction flips under actual textual gender edits happen at 60, 67 and 65 per ~1,215 on the three splits, whereas the fixed-residual macro model predicts 13 per split. The gap is not a failure of the macro model; it is the implementation variance the macro model deliberately averages away.
+- **The constructed edits hit the theory's target almost exactly.** All 16 curated biographies flip gender while preserving `q`, with maximum componentwise residual error 1.68e-4 and a maximum absolute discrepancy between realised and macro-predicted class probabilities of 2.75e-5.
+- **The illusion dissolves rather than being refuted.** In the IOI setting the auditing model's fixed-`q` response has a within-context range of 1.03 logits, while edits along the editing direction span 4.01 logits over the same coordinate range. `v_MLP` edits that raise the macro coordinate by one unit change the auditing `q` substantially and flip sign across contexts, because that direction pushes toward whichever name is in the second position. So the editing direction genuinely is not where the average causal signal lives, and the edit genuinely works — both statements are true because they are about different `q`.
+- **Weak-commitment cases are where bias bites.** In the curated set, profession changes occur only where the model is not confident; examples where it is certain barely move (a journalist at 91.0% to 90.4%, a professor at 89.8% to 91.6%), and the changes that do occur are the stereotyped ones (physician to nurse, nurse to professor).
+
+## Limits and open problems they name
+
+The nonlinear construction requires constant rank, feasibility and growth conditions, and its guarantee is on the mechanism-output domain actually reached, so an implementation on the whole domain needs an extra extension argument. The linear theory needs the micro dimension to be at least twice the macro dimension, which is the compression regime but is still an assumption. The audit distribution is *defined by* an LLM's biography rewrites, so the "implementation distribution" is a modelling choice, and no safety-audit practitioner was available — the authors say they simulated one. The 16 constructed examples are deliberately selected and the paper states explicitly that they do not estimate a population flip rate. Code is promised after publication. The probes are at a single layer (the input embedding), and the IOI study is one site, one model, one direction borrowed from prior work rather than rediscovered. The choice of `Ā` remains the practitioner's, and the auditing-versus-control reading of that choice is offered as guidance rather than derived.
+
+## What we take from it
+
+A **framing**, a **method**, and a sharp **warning** — the folder's first entry that turns implementation dependence from an embarrassment into an arithmetic quantity.
+
+1. **The warning first.** Every one of our intervention results inherits an unstated definition of the macro intervention. If our white-box model claims "steering direction `v` moves concept `c` by Δ", we are implicitly averaging over implementations or picking one, and the paper's audit table shows those answers can differ by a factor of five on the flip rate (65 versus 13 flips per 1,220). Concretely: our model's predictions should be stated as predictions *at fixed complementary residual*, and any edit that achieves the same macro coordinate by a different route should be reported as a different intervention, not as a confirmation.
+2. **The measure.** The fixed-`q` versus along-the-direction comparison in the IOI panel is the cleanest diagnostic shape the folder has seen for "is my steering direction the mechanism or merely a lever": report the response range under `q`-preserving edits and under directional edits at the same coordinate span, and report the induced change in `q` for the directional edit. A lever that changes `q` is not evidence about the mechanism, and a mechanism whose `q`-preserving response is nearly flat is not a lever. Both numbers, one panel.
+3. **The method.** For our purposes the ODE scheme is a constructive *prediction* tool: given a macro model and a complementary variable, it produces the actual edit that should realise a macro shift while holding everything else fixed — i.e. an intervention our model can specify down to the activation, not just rank. That is closer to "predict under intervention" than anything else in this folder from the abstraction lineage, and worth replicating on a transformer site we already understand.
+4. **The caution about `q`'s richness.** `q` cannot be too simple (ambiguity returns) or too rich (no non-zero macro change is achievable). In a neural network, `q` is being fitted as a least-squares residual over a behavioural distribution, so its richness is exactly the question of how much of the activation is "not the concept" — the same object other entries in this folder call the off-target or residual component, and the same object that must be preserved by any honest edit.
+5. **The lineage note.** This sits beside the folder's tabular-bucket diagnosis of interchange-intervention accuracy and the constructive-block identifiability work: all three say the abstraction's validity is conditional on structure that must be named, and this one names it as a variable rather than as a partition of inputs.
+
+## Tags
+
+unit: direction | layer | whole-model
+form: causal-abstraction | replacement-model
+method: patching | steering | probing | decomposition | other
+eval: patching | prediction/simulation | faithfulness
+goal: understanding | control/editing | science | evaluation-of-methods
