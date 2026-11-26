@@ -22,7 +22,7 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
 1. **One artifact, one leap, one judge.** Understanding is a hierarchy (variables → operations → algorithm →
    knowledge) built in many verified steps. Today nothing connects the levels.
 2. **Concepts known in advance.** Every instrument explains in a supplied vocabulary. Anything new comes back as
-   "residual": the chess network's 22% was located but never named.
+   "residual": the unexplained 22% of a chess network's value (LD2) was located but never named.
 3. **The decision, not the computation.** Almost every test asks "is my quantity at this site, and is it used for
    the decision?", not "what steps does the network take?". Separately, every result that held up rested on
    evidence from inference, and an LLM reading raw weights predicts edit effects barely better than one reading none

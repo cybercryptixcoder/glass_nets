@@ -30,7 +30,8 @@ survived checking against the sources is folded in here, and each change is logg
 What turned those instruments into results on hard targets was a Claude session doing research by hand, in a new
 bespoke pipeline for almost every target. The automated reader/judge loop the code is organised around succeeded only
 where the network was clean and its mechanism was of a kind the reader already knew (toys, compiled programs, a game
-policy, modular multiplication, English verb agreement, AlgZoo networks of at most 32 parameters). It failed on
+policy, modular multiplication in one of two completed runs, English verb agreement in a single run, AlgZoo
+networks of at most 32 parameters). It failed on
 every dense or unfamiliar target, and the last three sprints did not use the Glass code at all.
 
 **What stops it from being the magic box is not size. It is five assumptions built into how it interprets, and
@@ -42,8 +43,9 @@ what:**
    list, or a law read from behaviour. Nothing connects the levels.
 2. **That the concepts are known in advance.** Every instrument explains in a vocabulary someone supplied (task
    features, Fourier angles, 61 chess concepts, 38 physics terms, group theory). When a network uses something new,
-   the only possible output is "unexplained residual". The chess residual (about a fifth of the value, located in
-   tactical positions and in two causal channels, never named) is exactly where discovery was waiting.
+   the only possible output is "unexplained residual". The chess residual (about a fifth of LD2's value,
+   concentrated in tactical positions, with two causal channels tracking it in quiet ones, never named) is exactly
+   where discovery was waiting.
 3. **That the object is the decision, not the computation.** Almost every test asks "is my quantity Q at site S,
    and is it used for the decision?" The steps the network takes, its own intermediate results, its control flow by
    regime and its approximations, are tested only as far as they hold an analyst's variable. "How it works" is the
@@ -141,7 +143,7 @@ yet is their composition and the loop that invents vocabulary.
 | Read a law out of a network blind | Kepler: 5 true terms of 38, coefficients within about 2%, regimes and a resolution limit (kepler/FINDINGS §1) |
 | Verify a full causal account of a real language-model behaviour, with a rival representation ruled out | Month rollover: 5 of 5 stages in GPT-2 small; the circle present but unused, replicated in three models (DISCOVERY.md). Partly: the comparison step after depth 8 is not traced, near-ties (32% of decisions) are excluded, and it was certified under rules set that morning and not yet re-certified on a judge fixed in advance (PROJECT_REVIEW §8) |
 | Lift a weak model with a predict-first experimental loop | Helix Probe on FIND: 0.82–0.90 against 0.38, mostly because the loop always experiments; +0.10 at equal inputs (RESULTS_LOG R5; handoff/03_ANALYSIS §0) |
-| Find verified strategy-level knowledge in a superhuman network | Kepler: a counter-textbook rule, confirmed on fresh games across three networks and in play (kepler/FINDINGS §5) |
+| Find verified strategy-level knowledge in a superhuman network | Kepler: a counter-textbook rule, confirmed on fresh games across three networks and shown to work in network play, though it did not help human players in real games (kepler/FINDINGS §5) |
 | Invent and name abstractions with a language model plus compression | LILO-style library learning (section 7) |
 | Turn an explanation into a proof that cannot be talked around | Compact proofs on group networks (section 7) |
 
@@ -1333,7 +1335,8 @@ argued.
 - **Decoded means:**
   - an L3 algorithm whose trace on a position reproduces the network's value and policy through named concepts and
     an explicit look-ahead component;
-  - the structured residual driven well below the classical library's 20–22%, and split first into the part that
+  - the structured residual driven well below the classical library's 20–22% (LD2's figure; t1's is to be
+    measured), and split first into the part that
     predicts a deep engine's evaluation or game outcomes beyond the classical surrogate (knowledge) and the part
     that does not (the network's own errors). Both are worth explaining; only the first counts as level K;
   - each new concept defined as a board program, aligned internally, and teachable (a fresh model and then human
