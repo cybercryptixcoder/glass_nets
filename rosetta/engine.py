@@ -80,3 +80,45 @@ def restore_share(out_orig, out_abl, out_sub):
     ds = np.abs(out_sub - out_orig)
     m = da > np.quantile(da, 0.5)
     return float(1 - ds[m].mean() / max(da[m].mean(), 1e-9))
+
+
+def _define_additive(self, unit_rows_fn, terms=4, center=True):
+    """Composition: the unit as a short weighted sum of programs (at most `terms` programs and terms + 1 constants;
+    still no network weights, so not a copy). Greedy: each new program is searched on what the previous ones leave."""
+    ys = np.asarray(unit_rows_fn(self.rs), dtype=np.float32)
+    yt = np.asarray(unit_rows_fn(self.rt), dtype=np.float32)
+    if center:
+        mu = ys.mean(0, keepdims=True)
+        ys, yt = ys - mu, yt - mu
+    ys, yt = ys.reshape(-1), yt.reshape(-1)
+    if ys.std() < 1e-6:
+        return {"terms": [], "weights": [], "curve": []}
+    progs, Ms, Mt, curve = [], [], [], []
+    r = ys.copy()
+    for t in range(terms):
+        res = search(r, self.L, self.specs, keep=1)
+        if not res:
+            break
+        prog, _ = res[0]
+        progs.append(prog)
+        Ms.append(program_map(np.asarray(self.P[self.rs], dtype=np.float32), self.specs, prog))
+        Mt.append(program_map(self.Pt, self.specs, prog))
+        Xs = np.column_stack([np.ones(len(ys))] + Ms)
+        w, *_ = np.linalg.lstsq(Xs, ys, rcond=None)
+        r = ys - Xs @ w
+        Xt = np.column_stack([np.ones(len(yt))] + Mt)
+        curve.append({"n_terms": t + 1, "train_fidelity": round(fidelity(ys, Xs @ w), 4),
+                      "heldout_fidelity": round(fidelity(yt, Xt @ w), 4)})
+    return {"terms": [[self.specs[i][:3] for i in p] for p in progs], "texts": [describe(self.specs, p) for p in progs],
+            "weights": [round(float(x), 5) for x in w], "curve": curve}
+
+
+Defs.define_additive = _define_additive
+
+
+def additive_map(P, terms, weights):
+    """[n, S] map of a weighted sum of programs; weights[0] is the constant."""
+    m = np.full(P.shape[:2], weights[0], dtype=np.float32)
+    for prog, w in zip(terms, weights[1:]):
+        m += w * spec_map(P, prog)
+    return m

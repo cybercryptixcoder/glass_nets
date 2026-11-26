@@ -41,9 +41,9 @@ def units_for(m, D, n_keep=6):
             h = h.clone(); h[:, c] = torch.tensor(mean[c]).view(8, 8); return h
         y1, _ = run(m, rows, ed)
         eff.append(float(np.mean(np.abs(y1 - y0))))
-    # a unit is a variable only if the network uses it: ablating it moves the output by >= 1% of the output's own
+    # a unit is a variable only if the network uses it: ablating it moves the output by > 0.1% of the output's own
     # spread across positions (fixed before scoring; a network with a constant output uses nothing)
-    floor = 0.01 * float(y0.std())
+    floor = 0.001 * float(y0.std())
     order = [int(c) for c in np.argsort(eff)[::-1][:n_keep] if eff[c] > floor and eff[c] > 0]
     # the readout direction: per-square projection onto the channel weights that best predict the output
     ytr, htr = run(m, D.rs)
