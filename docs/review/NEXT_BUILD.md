@@ -43,12 +43,12 @@ what:**
    features, Fourier angles, 61 chess concepts, 38 physics terms, group theory). When a network uses something new,
    the only possible output is "unexplained residual". The chess residual (about a fifth of the value, located in
    tactical positions and in two causal channels, never named) is exactly where discovery was waiting.
-3. **That the object is the decision and the weights, not the computation at inference.** Almost every test asks "is
-   my quantity Q at site S, and is it used for the decision?" The steps the network takes, its own intermediate
-   results, its control flow by regime and its approximations, are tested only as far as they hold an analyst's
-   variable. "How it works" is the inference process, and that is what must be interpreted. The record agrees:
-   every result that held up rested on inference-time evidence, and weights alone predict edit effects at Spearman
-   0.17 against 0.97 from the hidden state (section 1b).
+3. **That the object is the decision, not the computation.** Almost every test asks "is my quantity Q at site S,
+   and is it used for the decision?" The steps the network takes, its own intermediate results, its control flow by
+   regime and its approximations, are tested only as far as they hold an analyst's variable. "How it works" is the
+   inference process, and that is what must be interpreted. A separate, supported point is where to look first:
+   every result that held up rested on inference-time evidence, and in the reading literature an LLM reading raw
+   weights predicted edit effects barely better than one reading none (section 1b).
 4. **That difficulty is parameter count, and the way up is a size ladder.** A clean 226k-parameter network got a
    short, verified account; dense 112-parameter ones never did, and yielded only to an exact decomposition.
    Difficulty is structure. The way in is top-down from what the network does, and bottom-up from decompositions,
@@ -119,7 +119,7 @@ The flagships that should pull the build are the ones Shreyas named (section 6):
 fluid model is cheap, what gives an LLM the ability to lie, and how an LLM reads weights. The fluid target has to be
 rebuilt first, because as built it cannot pose the question (section 6). The research order is in section 9:
 calibration ladder first, then the loop on it, then one flagship end to end with its residual curve. Section 10
-lists the first six small experiments that test the premises the design rests on.
+lists the first small experiments (X0–X8) that test the premises the design rests on.
 
 ### Why the box is buildable: the argument from the record
 
@@ -128,11 +128,11 @@ yet is their composition and the loop that invents vocabulary.
 
 | Stage of the box | Where it already works |
 |---|---|
-| Recover structure blind, without being told what to look for | The decompiler: exact group tables, including A5's 60 × 60, from weights under a secret relabelling (decomp/RESULTS) |
-| Decompose exactly, and say honestly what is memorised | The atlas: SPD with rule/lookup labels, known answers recovered on fresh 227k-parameter networks, a memoriser flagged (ATLAS_RESULTS A41–A44) |
+| Recover structure blind (secret relabelling, unknown group), within a fixed family of structures | The decompiler: exact group tables, including A5's 60 × 60, from weights under a secret relabelling; not yet reliably (non-abelian groups: 2 of 5 completed runs at v3.5, 0 of 5 at the version pre-registered first) (decomp/RESULTS) |
+| Decompose exactly, and say honestly what is memorised | The atlas: SPD with rule/lookup labels, known answers recovered on fresh 227k-parameter networks, a memoriser flagged, though on a count of one (ATLAS_RESULTS A41–A44) |
 | Read a law out of a network blind | Kepler: 5 true terms of 38, coefficients within about 2%, regimes and a resolution limit (kepler/FINDINGS §1) |
-| Verify a full causal account of a real language-model behaviour, with a rival representation ruled out | Month rollover: 5 of 5 stages in GPT-2 small; the circle present but unused, replicated in three models (DISCOVERY.md) |
-| Make a weak model strong with a predict-first experimental loop | Helix Probe on FIND (RESULTS_LOG R5) |
+| Verify a full causal account of a real language-model behaviour, with a rival representation ruled out | Month rollover: 5 of 5 stages in GPT-2 small; the circle present but unused, replicated in three models (DISCOVERY.md). Partly: the comparison step after depth 8 is not traced, near-ties (32% of decisions) are excluded, and it was certified under rules set that morning and not yet re-certified on a judge fixed in advance (PROJECT_REVIEW §8) |
+| Lift a weak model with a predict-first experimental loop | Helix Probe on FIND: 0.82–0.90 against 0.38, mostly because the loop always experiments; +0.10 at equal inputs (RESULTS_LOG R5; handoff/03_ANALYSIS §0) |
 | Find verified strategy-level knowledge in a superhuman network | Kepler: a counter-textbook rule, confirmed on fresh games across three networks and in play (kepler/FINDINGS §5) |
 | Invent and name abstractions with a language model plus compression | LILO-style library learning (section 7) |
 | Turn an explanation into a proof that cannot be talked around | Compact proofs on group networks (section 7) |
@@ -159,26 +159,28 @@ finite input set, **P** = a proof or sound bound. No result in the repo has a P.
 | Helix Probe (Nov 3–5) | FIND functions, ARC-AGI-3 games, toy boxes | Experimenter / updater / theorist loop; the box judges predictions | Cheap LLM roles | B (a model of the box's behaviour) | S | README (history), RESULTS_LOG |
 | Goal 1 (Nov 5–7) | Qwen 0.8B / 9B: remove addition, gender forms | LLM editor loop on weights | Cheap LLM | removal 2 of 12 runs; editors break the cue ("+"), not the skill | S | FINDINGS.md |
 | Goal 2 (Nov 7) | Qwen: map parts → abilities | Open-ended loop | Cheap LLM | failed 4 of 5 criteria; gamed its score | S | FINDINGS.md, PROJECT_REVIEW §2 |
-| Constructor (Nov 13–14) | Boolean nets, Tracr programs, mod-add and mod-mul (226k params), Breakout policy | Reader (DeepSeek Flash) writes `model(x, iv)` + `ALIGN`; causal judge | Cheap reader, judge calibrated by Claude | A on toys, compiled nets, Breakout and mod-mul (complete); mod-add 3 of 4 stages | S | EXPERIMENT_LOG E0–E12; `lab/constructions/INDEX.md` |
-| Constructor, LM (Nov 14–17) | GPT-2: be-verb, countdown, **month rollover** | Same, on a GPT-2 engine with cuts; `lm_circuit` | Be-verb: cheap reader (complete). Countdown: stalled. Month: **Claude by hand**; readers 1 of 5 stages | Month: A (5/5 stages) + circuit; replicated in 2 more models | S | RESULTS_LM, DISCOVERY.md (month), E21–E40 |
+| Constructor (Nov 13–14) | Boolean nets, Tracr programs, mod-add and mod-mul (226k params), Breakout policy | Reader (DeepSeek Flash) writes `model(x, iv)` + `ALIGN`; causal judge | Cheap reader, judge calibrated by Claude | A on toys, compiled nets, Breakout and mod-mul (complete in 1 of 2 completed blinded runs; the rerun reached 3 of 4 stages); mod-add 3 of 4 stages | S | EXPERIMENT_LOG E0–E12; `lab/constructions/INDEX.md` |
+| Constructor, LM (Nov 14–17) | GPT-2: be-verb, countdown, **month rollover** | Same, on a GPT-2 engine with cuts; `lm_circuit` | Be-verb: cheap reader (complete, a single run). Countdown: stalled (1 of 5 stages, the same as prior-only). Month: **Claude by hand**; readers 1 of 5 stages | Month: A (5/5 stages, certified under same-morning rules; the comparison step untraced) + circuit; replicated in 2 more models | S | RESULTS_LM, DISCOVERY.md (month), E21–E40 |
 | Glass rounds 1–2 (Nov 17–18) | AlgZoo RNNs 10–432 params; longest-cycle transformers | Constructor + anti-copy rules | Cheap reader | A only ≤ 32 params (M4,3 = rediscovery of ARC); copies above | S | LEARNINGS E1–E12, REPORT_ROUND2 |
 | Units program (Nov 18–19) | ~90 networks (AlgZoo, Tracr, noise-trained) | Unit library fits, replacement tests, noise tolerance | Claude | V/M partial (comparator units recur; fragility measured) | S | UNITS_FINDINGS |
 | Atlas (Nov 19–20) | AlgZoo RNNs to 1,376 params; lc transformers; 227k mod-arith transformers | SPD → triggers (trees over a feature vocabulary) → effects → rule-gated rebuild | Claude (pipeline); no LLM in the loop | M (5 of 6 held-out RNNs certified); mod-arith frequencies recovered from a vocabulary that contains them | S | ATLAS_RESULTS, SHOWCASE |
-| Decompiler (Nov 21–22) | Group-law transformers under secret relabelling; a^b mod p | Geometry of embeddings → group theory → program; M1 exhaustive, M2 causal | Claude (tool); blind at run time | A, blind, on 8/12 abelian, 2/2 S4, A5, S3×S3; new mechanism (nested discrete logs) | E (M1 over every input) + S (M2) | decomp/RESULTS, POW_MECHANISM |
-| Kepler (Nov 24) | Fluid video CNN; smoke-only model; Leela LD2, 744706, t1 | Concept probes, law extraction (sparse regression on a 38-term library), velocity swap; chess concept atlas, rule mining vs humans, play-outs | Claude; DeepSeek as "scientist" (0 of 59 concept programs accepted over three rounds) | Fluid: K (law with coefficients and regimes) + V/M (Biot–Savart kernel, velocity at block 5). Chess: B/K (behaviour rules; 78% of value explained by 61 classical concepts; residual unnamed) | S | kepler/FINDINGS, RESULTS |
+| Decompiler (Nov 21–22) | Group-law transformers under secret relabelling; a^b mod p | Geometry of embeddings → group theory → program; M1 exhaustive, M2 causal | Claude (tool); blind at run time | A, blind, on 8/12 abelian, 2/2 S4, A5, S3×S3 (non-abelian: 2 of 5 completed at v3.5, 0 of 5 at the version pre-registered first; abelian challenge v3: 3 of 5; factor mode 2 of 8, then 4 of 8 with v2); a new mechanism (nested discrete logs), found by the session using the tools, not yet by the tool alone | E (M1 over every input) + S (M2) | decomp/RESULTS, POW_MECHANISM |
+| Kepler (Nov 24) | Fluid video CNN; smoke-only model; Leela LD2, 744706, t1 | Concept probes, law extraction (sparse regression on a 38-term library), velocity swap; chess concept atlas, rule mining vs humans, play-outs | Claude; DeepSeek as "scientist" (0 of 59 concept programs accepted over three rounds) | Fluid: K (law with coefficients and regimes) + V/M (Biot–Savart kernel, velocity at block 5). Chess: B, with a K candidate (behaviour rules mined against humans; one counter-textbook rule verified in network play; no rule helped humans in real games, and none is an internal switch); 78% of LD2's value explained by 61 classical concepts, residual unnamed | S | kepler/FINDINGS, RESULTS |
 | Planets (Nov 24) | SPOCK instability network | Fit a physics formula that matches/beats the network | Claude | B (network replaced, not opened) | S | planets/DISCOVERY |
 | Kronecker (Nov 25) | ML claims on Kronecker vanishing | Recursive known theorems vs LightGBM | Claude | No network interpreted | E (ground truth exact) | SPRINTS_NOV25_REPORT Part 1 |
 | Liar (Nov 25) | Pacchiardi lie detector on Qwen, Llama, Mistral | Failed-lie test; probe groups; attention knockout | Claude | B + V (lying "mode" carried by chat-template tokens; real-lie trace model-specific) | S | liar/DISCOVERY |
 
 **What the table says, before any interpretation:**
 - Level A with a blind, exhaustive check was reached once: the decompiler, on group laws.
-- Level K was reached for a fluid model's law (by reading its behaviour against a term library) and for chess
-  behaviour rules (by mining its choices against humans). Neither came from reading the network's internals.
+- Level K was reached for a fluid model's law (by reading its behaviour against a term library). Chess reached a K
+  candidate: behaviour rules mined against humans, one verified in network play, none shown to help human players
+  (kepler/FINDINGS §5). Neither came from reading the network's internals.
 - The cheap reader reached level A on clean networks with familiar kinds of mechanism: toys, compiled programs, a
-  hand-written game policy, modular multiplication (226k parameters, complete, 97.3% behaviour; prior-only control
-  0 of 4 stages), GPT-2's be-verb agreement (complete; prior-only 1 of 5), and AlgZoo networks of at most 32
-  parameters (`lab/constructions/INDEX.md`). It failed on every dense AlgZoo network above 32 parameters, on GPT-2
-  countdown, and on month rollover (1 of 5 stages). Everything else above level B was produced by a Claude session
+  hand-written game policy, modular multiplication (226k parameters, complete with 97.3% behaviour in one of two
+  completed blinded runs, the rerun reaching 3 of 4 stages; prior-only control 0 of 4 stages), GPT-2's be-verb
+  agreement (complete, in a single run; prior-only 1 of 5), and AlgZoo networks of at most 32 parameters
+  (`lab/constructions/INDEX.md`). It failed on every dense AlgZoo network above 32 parameters, on GPT-2 countdown
+  (1 of 5 stages, no better than its prior-only control), and on month rollover (1 of 5 stages). Everything else above level B was produced by a Claude session
   acting as the researcher. The stronger-reader test (R3) was never run.
 - The last three sprints did not use the Glass code at all (`scripts/planets`, `scripts/liar`, Kronecker scripts are
   standalone; only Kepler reuses the Luminal client).
@@ -247,8 +249,11 @@ person wants to understand is that computation as a **process**:
 The month-rollover write-up is the one place in the repo with this shape, written by hand. Its route section reads
 like a trace (paraphrased from `lab/constructions/gpt2_month_rollover/DISCOVERY.md`): month1 is bound to the year at
 the year token, the final token reads it from there, by depth 8 each month is reduced to one position on a line, the
-two positions are compared, and the answer is decoded as a year token. It is also the one hard-target result that
-held up.
+two positions are compared, and the answer is decoded as a year token. The comparison step itself is not traced
+("which components compute the comparison itself after depth 8" is listed as not yet known), so it is a partial
+trace, and still the closest the repo has to this shape. It is also the one hard-target result that held up, with
+two caveats on record: near-ties (32% of decisions) are excluded, and it has not been re-certified on a judge fixed
+in advance (PROJECT_REVIEW §8).
 
 **So the product should be an execution trace of the network's algorithm, for any input, in human terms, with every
 step aligned to the network and verified, plus the program whose traces those are.**
@@ -289,8 +294,13 @@ inference:
 - the atlas's triggers: importance measured over inputs;
 - the liar sprint: the probes' answers and attention knockouts.
 
-The reading literature says the same thing in numbers. From weights alone, edit effects are predicted at Spearman
-0.17 (0.11 with no weights at all); from the true hidden state, at 0.97 (`docs/literature/wsp/K1_STATE_OF_ART.md`).
+The reading literature points the same way, in two separate tests by the same author
+(`main:docs/literature/wsp/blog-csinva-wsp-autoresearch-systematic-tests.md`). Over 300 edits, an LLM reading raw
+weights predicted edit effects at Spearman 0.17, against 0.11 with no weights at all. In a test of 48 edits built so
+that each effect is an exact formula of one hidden-state value, reading the weights scored the same as reading none
+(0.34 overall), and giving the reader that one value lifted it to 0.84: the missing piece was the activation, not
+the arithmetic. Both tests are about an LLM doing arithmetic by reading, not about weight-based instruments (SPD, the
+decompiler, compact proofs), which work from weights well.
 **So: inference first, for discovery; weights second, to generalise a mechanism once found to every input and to
 prove things about it.** The weights are where a mechanism's reach can be proven. The activations are where it can be
 found.
@@ -337,11 +347,11 @@ build should treat them as known:
 | Editors that do not understand a model fake success by breaking the cue, not the skill | FINDINGS.md, Goal 1 |
 | An optimiser pointed at a score games the score, and every rule written against the gaming gets beaten by a new disguise | Goal 2; LEARNINGS E1, E10, E11 |
 | A good predictor need not implement the law, and whether it does changes by regime (the fluid model follows the law in equilibrium, not in transients or out of distribution) | kepler/FINDINGS §1 |
-| Memorisation can be detected and labelled instead of explained away (rule vs lookup) | ATLAS_RESULTS A41 |
-| Blind structure recovery is possible when the hypothesis space has deep structure (groups, under a secret relabelling) | decomp/RESULTS |
+| Memorisation can be detected and labelled instead of explained away (rule vs lookup). The pre-registered test passed on a single mechanism: "passes, but thinly" | ATLAS_RESULTS A41 |
+| Blind structure recovery is possible when the hypothesis space has deep structure (groups, under a secret relabelling), though not yet reliably (2 of 5 completed non-abelian runs) | decomp/RESULTS |
 | A celebrated black-box detector can be reading the setup rather than the property (the lie instruction, not the lie) | liar/DISCOVERY |
 | Machine-learning "edges" must be compared with what known theory already decides | SPRINTS_NOV25_REPORT Part 1 (Kronecker) |
-| Predict-first, experiment-choosing loops make weak models strong on black boxes | RESULTS_LOG R5 |
+| Predict-first, experiment-choosing loops lift weak models on black boxes, mostly because they make the model experiment at all (at equal inputs the gain is +0.10) | RESULTS_LOG R5; handoff/03_ANALYSIS §0, §6 |
 
 ---
 
@@ -559,9 +569,13 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
   library and the atlas vocabularies are per-study. The trained reader (DIRECTIONS K2) and a learned decompiler were
   never built, though the literature log holds the precedent (Neural Decompiling of Tracr Transformers,
   arxiv-2410.00061: 73% functionally equivalent programs; graph metanetworks).
-- *Evidence that the lever exists.* Function-level units recur: comparator units in 5 of 5 training runs at 8
-  neurons, none in shuffled controls (UNITS_FINDINGS F1, U8). Shreyas's own hypothesis (Nov 18): networks are built
-  from shared basic units composed into larger tools.
+- *Evidence on the lever, both ways.* Function-level units recur at small size: comparator units in 5 of 5 training
+  runs at 8 neurons, none in shuffled controls (UNITS_FINDINGS F1, U8). But at 16 neurons they appear in 3–4 of 5
+  runs and partly in the controls; the pre-registered bar (recurring at all three sizes) was not met; and the units
+  program's own verdict is "approximate universality, exact individuality". The atlas's test of recurrence across
+  training runs was not confirmed either (1 of 4 seeds beat chance; ATLAS_RESULTS). Shreyas's own hypothesis
+  (Nov 18): networks are built from shared basic units composed into larger tools. So the library is a bet on
+  approximate, function-level reuse, to be tested early (Q3), not a given.
 - *Needed.* An executable, growing library of motifs, each with a recogniser that finds it in a new network, so that
   the hundredth network is cheaper than the first. And readers trained with verifiable rewards on synthetic networks
   with known programs and on verified explanations. This is also where Shreyas's "how do LLMs read weights" question
@@ -846,8 +860,8 @@ Two consequences:
 ### 3.5 The hypothesis spaces it needs (where "provable" comes from)
 
 The decompiler worked blind and exhaustively because it searched a hypothesis space with deep structure: the
-representation theory of groups. It found nested discrete logarithms in a^b mod p because that structure let it ask
-the right next question. The box needs many such spaces, each with a recogniser that finds the structure in
+representation theory of groups. With its tools, the session found nested discrete logarithms in a^b mod p, because
+that structure let it ask the right next question; automating that step is still open (decomp/POW_MECHANISM). The box needs many such spaces, each with a recogniser that finds the structure in
 activations or weights and a verifier for it:
 - **geometry:** lines, circles, tori, hierarchies and trees in representations (month line vs circle; Fourier
   circles);
@@ -918,8 +932,12 @@ computes, including its internal look-ahead.
 
 - **Where the record stops.** On LD2, 61 classical concepts explain 78% of the value; quiet positions 81%, tactical
   positions 36%; channels 22 and 15 track the unexplained part, and resetting channel 22 removes 32% of the residual
-  in quiet positions (kepler/FINDINGS §4).
+  in quiet positions (kepler/FINDINGS §4). These are LD2's numbers (a convolutional network). The cycle below is
+  written for t1, the transformer, where the baseline has to be measured first. Channel 22's causal evidence is in
+  quiet positions, so the first real test (X4) runs there, on LD2; the tactical residual below is t1's next step.
 - **Planner.** Picks the largest structured residual: the value the classical library misses in tactical positions.
+  Before anything is named, it checks whether that residual is knowledge or error: does it predict a deep engine's
+  evaluation, or game outcomes, beyond the classical surrogate?
 - **Variables (B).** Decompose the residual stream over squares at the layers where the residual is formed. Keep only
   the components that later layers read (substitution on the value), and that recur in the replication network.
   Each kept component comes with its top positions and minimal pairs (the same position with one piece moved, the
@@ -970,7 +988,10 @@ holds.
 - the library's growth curve is itself a scientific result about universality: how much of what networks compute is
   shared, and at which level.
 
-Per-network Glass Models stay as the evidence behind each library entry.
+Per-network Glass Models stay as the evidence behind each library entry. What the record supports so far is
+approximate, function-level sharing at small sizes, with mechanisms individual to each training run ("approximate
+universality, exact individuality", Gap 12). So the library holds motifs with recognisers that match approximately,
+and every network keeps its own residual. How far sharing goes is measured (Q3), not assumed.
 
 ### 3.11 The engine question: a high-volume loop on a cheap model, a toolkit for a strong agent, or both
 
@@ -1227,14 +1248,14 @@ not a build plan.
 | Kepler's law extraction, concept probes with controls, and teachability test | **Keep, wire inside-out** | Each law or strategy must get an implementation claim (Gap 7) |
 | The change ledger, frozen measures, pre-registration | **Keep, at the confirm boundary** | Credibility. Exploration happens before the boundary, labelled |
 | Helix Evolve's figure-eight engine (separate repo `helix_evolve`) | **Bring in, as the volume engine** | Exploring and reasoning loops around one exact scorer, with a memory of findings; passed the best human construction on an open problem with a Flash-grade model, with no outside input, and went much further with a summary of published methods (3.11) |
-| The Helix Probe loop (`probe/`) | **Keep, as the loop's skeleton** | Predict-first, experiment-choosing, keep-if-better rules made a weak model strong on FIND (RESULTS_LOG R5). The network's insides become one more box |
+| The Helix Probe loop (`probe/`) | **Keep, as the loop's skeleton** | Predict-first, experiment-choosing, keep-if-better rules lifted a weak model on FIND, mostly by making it experiment at all (+0.10 at equal inputs; RESULTS_LOG R5, handoff/03_ANALYSIS). The network's insides become one more box |
 | Kepler's "hypotheses as executable code, judged by frozen tests" | **Keep, as the rule for every role** | It is the right contract between a language model and the evidence. What failed around it: 59 programs from a cheap model over three rounds (one with refinement, one on minimal pairs from channel 22) and 8 channel-derived rules, all rejected, with a library of static board features only (kepler/FINDINGS §4; kepler/DIARY). The missing parts were reasoning strength, a refine-against-failures cycle, and dynamic primitives |
 | Catalog and playground | **Keep, as a view of the Glass Model** | The trace view (1b) grows out of the playground |
 | The literature log (Aether, core survey) | **Keep, wire in** | As the Librarian role's store: known mechanisms become hypotheses; novelty is checked before claims |
 | The reader/judge single-leap loop as the organising centre | **Scrap** | Succeeds only where the mechanism's kind is already familiar to the reader; on dense or unfamiliar networks it copies or recalls (E1, E4, E7, E10) |
 | DeepSeek V4.1 Flash as the reasoning engine | **Scrap for reasoning roles** | Weak weight reader on the record; never compared with a stronger model (R3) |
 | The size ladder | **Scrap** | Difficulty is structure, not size (Gap 6) |
-| Literal-counting and copy rules | **Scrap** | Replaced by compression against a shared library and proof compression (3.2) |
+| Literal-counting and copy rules | **Scrap** | Replaced by answering without running, proof compression where the domain allows, and restricted languages with must-fail sets for every search; library compression is kept as a reported signal (3.2) |
 | Per-study fixed vocabularies | **Scrap** | Replaced by a growing library (3.3 E) |
 | Bespoke pipelines per sprint | **Scrap as a pattern** | Each sprint's useful code becomes a verb or a recogniser; the rest stays as its sprint's record |
 | Templated LM tasks with analyst feature rows as the construction's input | **Replace** | The construction's input becomes the actual input (the text, the board, the frames), so the network's unnamed variables can appear (1b) |
@@ -1288,18 +1309,25 @@ argued.
 ### Flagship 1. A chess network's strategies (Leela t1, with LD2 and 744706 for replication)
 
 - **Where the record leaves it:**
+  - every number in this list except the behaviour rules is for LD2, a convolutional Leela network (128 filters, 10
+    residual blocks). The flagship is t1, a transformer, because Jenner et al. found look-ahead in a transformer that
+    treats squares as tokens. So the first step is to re-measure the classical baseline and the residual on t1;
   - 61 classical concepts explain 78% of LD2's value; quiet positions 81%, tactical ones 36%;
   - two causal channels (22, 15) track the residual;
   - 59 concept programs from the cheap scientist, all rejected; three hand-written calculation features together
     add only 1.2 points (77.4% → 78.5%), and the agent concluded the residual "is mostly not a simple static
     feature". The likely home of the rest is the network's internal look-ahead, which only an inside-out reading can
     reach;
-  - one counter-textbook behaviour rule (trade queens when lost against strong play) verified in play;
+  - one counter-textbook behaviour rule (trade queens when lost against strong play) verified in network-versus-
+    network play-outs; humans who made the same trade in real games did no better than with the network's other
+    advice (−0.02 [−0.10, 0.06]), and no mined rule helped humans;
   - no rule shown to be an internal switch (kepler/FINDINGS §4–5).
 - **Decoded means:**
   - an L3 algorithm whose trace on a position reproduces the network's value and policy through named concepts and
     an explicit look-ahead component;
-  - the structured residual driven well below the classical library's 20–22%;
+  - the structured residual driven well below the classical library's 20–22%, and split first into the part that
+    predicts a deep engine's evaluation or game outcomes beyond the classical surrogate (knowledge) and the part
+    that does not (the network's own errors). Both are worth explaining; only the first counts as level K;
   - each new concept defined as a board program, aligned internally, and teachable (a fresh model and then human
     players predict the network's choices better with it).
 - **Capabilities it pulls:** transcoder-scale decomposition of a transformer over squares; a chess library that grows
@@ -1346,8 +1374,11 @@ argued.
   - on coarse-grained frames of a much finer simulation, so it must learn an effective closure for the scales it
     cannot see;
   - and with steps many times the solver's step, so it must learn a long-step integrator.
-  That is how learned weather and climate emulators get cheap. The fine simulation is the ground truth for checking
-  whatever the box finds.
+  That is how learned weather and climate emulators get cheap, and it is already shown for this kind of flow: on 2D
+  turbulence, learned corrections on coarse grids matched baseline solvers with 8–10× finer resolution in each
+  dimension, for 40–80× speed-ups (Kochkov et al. 2021, arXiv 2102.01010). So the rebuild is a known-answer rung
+  (X3), and the discovery is in reading the learned correction, which that work did not do. The fine simulation is
+  the ground truth for checking whatever the box finds.
 - **Why this one can be a real discovery:** a learned closure for unresolved scales, and a learned long-step
   integrator, are scientific objects in their own right, comparable with known closure models, and nobody would
   write the network's version by hand.
@@ -1392,12 +1423,16 @@ argued.
 
 - **Where the record leaves it:**
   - the cheap reader, working through Python, verified a blinded game policy and named the game when asked a
-    specific question (EXPERIMENT_LOG E12); Shreyas's Nov 13 view that its failures are interface failures is still
-    untested;
+    specific question (EXPERIMENT_LOG E12), though the question itself supplied the grid layout and that the
+    outputs are actions; Shreyas's Nov 13 view that its failures are interface failures is still untested;
+  - which open model to study is not settled. On the record, open models mostly fail to read at all (shapes tasks:
+    DeepSeek 0 of 8, Qwen 0 of 8, GLM 2 of 8, Kimi 4 of 8; `docs/literature/wsp/K1_STATE_OF_ART.md`), and the readers
+    that work are closed. X8 measures this first;
   - reading audits say reading is local arithmetic plus dataset priors;
-  - Singh: from weights alone, edit effects are predicted barely above a no-weights control (Spearman 0.17 vs 0.11);
-    given the true hidden state, 0.97 (`docs/literature/wsp/K1_STATE_OF_ART.md`). The missing activation is the
-    bottleneck, which is one more reason to interpret inference, not weights alone.
+  - Singh: from weights alone, edit effects are predicted barely above a no-weights control (Spearman 0.17 vs 0.11,
+    over 300 edits); in a separate test whose edits each depend on one hidden-state value, giving that value lifted
+    the score from 0.34 to 0.84 (`main:docs/literature/wsp/blog-csinva-wsp-autoresearch-systematic-tests.md`). The
+    missing activation is the bottleneck, which is one more reason to interpret inference, not weights alone.
 - **Decoded means:** a mechanistic account, inside an open reader model, of what it computes when it reads a small
   network's weights (which internal variables track "periodic in the input index", "copies the previous token",
   "this unit is a comparator"), and a trained reader that is measurably better on held-out networks.
@@ -1498,12 +1533,12 @@ them as hypotheses and tests.
 |---|---|
 | Invented concepts are just-so stories | Every concept must predict held-out values, pass intervention, and transfer to a fresh reader. The critic writes must-fail cases first. Exploratory concepts never become claims without the confirm mode |
 | Decompositions at scale leave dark matter (cross-layer transcoders: about 11–22% reconstruction error, SYNTHESIS §3) | The residual ledger accounts for it explicitly; exactness is used where a claim needs it (parameter decomposition); "complete" means accounted for |
-| Several explanations pass the same tests (non-identifiability) | Rivals are generated on purpose (theorist, critic) and separated by designed experiments. When two survive, both are reported, with the tests that would separate them. Compression and proof compression rank survivors |
+| Several explanations pass the same tests (non-identifiability) | Rivals are generated on purpose (theorist, critic) and separated by designed experiments. When two survive, both are reported, with the tests that would separate them. Answering without running, compression and proof compression rank survivors |
 | Language-model roles game the verifiers, as the cheap reader did | Verifiers are frozen in confirm mode, and roles never see confirm data. Every role's output is scored, including the critic's |
 | Cost and time (SPD took hours at 227k) | Decompositions are trained once per model and reused; iteration happens on the calibration ladder; large runs only for questions already shaped by small ones |
 | Drift: the project re-founded itself about every two days | The flagships and the residual curve are fixed reference points. Each new phase extends the Glass Model and its library instead of starting a new instrument |
 | Overclaiming "provable" | Each claim carries its guarantee type, stated plainly. Exhaustive and proven claims are separated from statistical ones on every page |
-| The network is not modular or hierarchical at any level, so there is no middle to find | Then the rate–distortion curve says so: no explanation dominates both the copy and the task rule at any level. That is a measured fact about the network, reported as such, and the exact account (parameter decomposition with labels) is what the box delivers |
+| The network is not modular or hierarchical at any level, so there is no middle to find | Then the measures say so: at no level does an explanation answer better than sampling the network and its copies, or dominate both the copy and the task rule on the rate–distortion curve. That is a measured fact about the network, reported as such, and the exact account (parameter decomposition with labels) is what the box delivers |
 | The Glass Model of a large network is itself too large to read | It is a structured store, read through questions and traces (3.9), not end to end. Its size is measured (item 3 of 3.2), so "too large to read" becomes a number to improve |
 | Fragile, dense networks resist short accounts (AlgZoo above 32 parameters) | They get an exact account (parameter decomposition) with rule and lookup labels. That is honest and complete in the ledger sense. The box does not force a short program where the network has none |
 
@@ -1524,18 +1559,23 @@ needs them.
    discovery is a claim of recall. *Answers nothing yet; makes Q1, Q2 and Q4 measurable.*
 2. **Run the loop on the ladder, role by role.** Cartography → variables → definitions → composition, with the
    language-model roles of 3.4, the Helix skeleton (predict every experiment before running it), and the two modes.
-   Run each reasoning role with a frontier model and a cheap one. *Answers Q1, Q2, Q4, Q7.*
+   Run each reasoning role with a frontier model and a cheap one. Two cheap checks on saved material come first,
+   because later phases lean on them: the test against copies on the saved runs (X0, Q12), and cross-network sharing
+   on the seeds already trained by the units and atlas programs (Q3). *Answers Q1, Q2, Q4, Q7, Q12, and a first
+   reading of Q3.*
 3. **One flagship end to end, with its residual curve.** The fluid flagship (rebuilt as in section 6) is the fastest
    to iterate on: a small convolutional model, a simulator that gives ground truth, and a crisp discovery target (the
    learned closure and integrator) that physics can check without outside experts. Chess is the most prepared: three
    ported networks, a concept library, a measured 78% baseline, two causal channels already found. Either can go
    first. The criterion is the residual curve bending beyond the reference library (classical chess concepts;
    known physics terms and closure models). *Answers Q9, then Q6.*
-4. **Grow and test the library across networks.** Seeds and sizes of one family, then a second family. *Answers Q3.*
+4. **Grow and test the library across networks.** Seeds and sizes of one family, then a second family. *Answers Q3
+   in full.*
 5. **Typed guarantees beyond finite tables** on the classes where the loop has produced algorithms (ReLU regions,
    game phases, flow regimes). *Answers Q5.*
 6. **The language-model flagships** (lying; weight reading), once the decomposition layer reaches 7–8B models and the
-   library has primitives for beliefs, states and speech acts. *Answers Q8 and flagship 3.*
+   library has primitives for beliefs, states and speech acts. *Answers Q8 and flagship 3.* Their first steps do not
+   wait: the lying gate (X7) and the choice of an open reader (X8) are small and run early.
 7. **The flywheel (3.13):** distil verified explanations into a trained reader, and add interpretability self-play
    on the ladder. It comes only after the inner loop works, and it needs GPUs.
 
@@ -1573,7 +1613,8 @@ against copies (3.2 item 3) rests on it.
 | **Site** | A named place inside a network where activations can be read or overwritten. Example: `resid8@p`, the residual stream entering layer 8 at position p |
 | **Interchange test** | Copy a variable's value from input B's run into input A's run, and check that the network's answer changes the way the explanation predicts. Example: copy the "gap" variable of (1, 4) into the run on (5, 2); the max-network should now output 2 |
 | **Substitution test** | Replace a site's activation with what the explanation predicts there, run the rest of the network, and check that the answers survive |
-| **Copy frontier** | How faithful the network's own weights are when rounded to 1, 2, 3 … bits each: the best a "copy" can do at each length. An explanation must beat it |
+| **Copy frontier** | How faithful the network's own weights are when rounded to 1, 2, 3 … bits each: the best a "copy" can do at each length. Used two ways: as the reference for compression, and, run as a sampler, as one of the references an explanation must beat when answering without running |
+| **Answering without running (matching sampling)** | Use an explanation to estimate something the network does (its accuracy, how often a variable takes a value, an intervention's effect), and compare its error, for the compute used, with running the network on samples. A copy can only answer by being run, so it cannot win. Example: the account "the network outputs the larger of two inputs, except that it guesses when they differ by less than 0.1" gives its accuracy on any input distribution as one integral (half the probability that the two differ by less than 0.1), with no sampling |
 | **Task rule** | The answer the task's own definition gives (for 2nd argmax, the true second-largest). The bar an account must clear to say anything about *this* network |
 | **SPD** | Stochastic parameter decomposition: split each weight matrix exactly into many rank-1 pieces, and learn which pieces each input needs |
 | **Rule vs lookup** | A mechanism's description is a *rule* if it still predicts the mechanism on input values never seen while fitting, and a *lookup* if it only describes the cases it saw |
@@ -1582,7 +1623,7 @@ against copies (3.2 item 3) rests on it.
 | **Residual ledger** | The list of every unexplained part, with where it is, how big it is, and whether it is memorised, noise, or structured but unnamed |
 | **Glass Model** | This document's name for the box's output: a five-level, executable, aligned model of a network (network → variables → operations → algorithm → knowledge), with a residual ledger and a guarantee on each claim |
 | **Library learning** | Growing a vocabulary by turning definitions that recur into new named primitives, so later explanations get shorter (DreamCoder, Stitch, LILO) |
-| **Rate–distortion curve of understanding** | Faithfulness plotted against description length (in library terms) for a network's explanations, against the copy frontier and the task rule |
+| **Rate–distortion curve of understanding** | Faithfulness plotted against description length (in library terms) for a network's explanations, against the copy frontier and the task rule. Reported beside answering without running, not used as a gate |
 | **Proof compression** | How much an explanation lets a verifier check the network faster than brute force, at a stated bound |
 | **Typed guarantee** | The kind of evidence behind a claim: exhaustive, regional proof, compact proof, probabilistic with sample size, or adversarial search with budget |
 | **Marr's levels** | Three levels at which any information-processing system can be explained: what problem it solves and why (computational), with which representations and algorithm (algorithmic), and in what physical parts (implementation) |
