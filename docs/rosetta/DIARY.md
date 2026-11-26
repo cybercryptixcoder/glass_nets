@@ -265,3 +265,13 @@ value adds nothing (102% of the value's gain, intervals overlapping), so the val
 16 evaluation variables do not carry it one by one: held-out correlations of their totals with the 3-ply swing are
 between -0.12 and +0.13 (after removing textbook concepts, -0.09 to +0.10). A third of what LD2 knows beyond the
 textbook is what its own forcing line wins; which variables hold it jointly is the next question.
+
+**06:25. Pushed f5888a55 (R3 in the ledger).** Then, exploratory: do the 16 evaluation variables track winning, drawing
+or losing (carriers_wdl_s10.json, 3,000 held-out positions)? They split into "we are winning" variables (304: +0.66
+with LD2's win probability, -0.68 with loss; 493 +0.62 with win; 193, 415, 50, 0 and 184 +0.34 to +0.46) and "we are
+losing" variables (434: +0.78 with loss; 192 and 249 +0.59 and +0.53; 303 +0.54). Some also track how drawish the
+position is beyond who is ahead (draw probability with W - L removed): 434 -0.49, 493 -0.40, 508 +0.34. The network
+keeps win, loss and draw as separate signals rather than one score.
+
+**06:26. Error: the 06:26 update to Shreyas was headed "06:27", a time typed by hand before reading the clock (E8
+again).** The clock read straight after it says 06:26:13. Corrected in the next message.

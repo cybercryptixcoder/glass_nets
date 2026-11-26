@@ -239,3 +239,9 @@ Adding them to LD2's value adds nothing (102%), and adding them to the 16 variab
 the swing itself only a little beyond textbook concepts (R2 0.34 from textbook concepts, 0.38 with the 16 totals, 0.42
 with all 512). A third of what LD2 knows beyond the textbook is what its own forcing line wins; the 16 variables hold
 that knowledge for predicting the result without holding the swing as a number.
+
+Win, draw and loss (carriers_wdl_s10.json, 3,000 held-out positions; correlation of each variable's board total with
+LD2's own probabilities). The 16 split into "we are winning" variables (304: win +0.66, loss -0.68; 493: win +0.62;
+193, 415, 50, 0, 184: win +0.34 to +0.46) and "we are losing" variables (434: loss +0.78; 192: +0.59; 303: +0.54; 249:
++0.53). Three also track drawishness beyond who is ahead (draw probability with W - L removed linearly): 434 -0.49,
+493 -0.40 (decisive positions), 508 +0.34 (drawish). The evaluation is held as separate win, loss and draw signals.
