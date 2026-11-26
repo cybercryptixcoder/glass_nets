@@ -407,8 +407,8 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
      sampling. A copy run on samples is just sampling, so it cannot beat sampling. An explanation that has found the
      structure can: an exact formula, a sum over a few regimes, a short derivation. Two refinements narrow the
      obvious escapes without closing them. The comparison includes the cheapest copies that standard compression
-     finds (rounded, pruned, distilled into a smaller student), not only the network, so being a smaller copy gains
-     nothing. And the estimator is asked many different questions: a copy must be run for each, while an
+     finds (rounded, pruned, distilled into a smaller student), not only the network, so a copy made smaller by those
+     standard means gains nothing. And the estimator is asked many different questions: a copy must be run for each, while an
      explanation answers from its structure. The ladder calls this "the strongest test of 'understood'" and names
      its cost: accounts must be written as estimators.
   2. **Compression of the proof, where the domain allows it.** An explanation turned into a verifier that bounds the
@@ -730,7 +730,9 @@ its L2 program and L1 variables, see where the network and the model agree and w
    weight table nearly free), plotted against faithfulness: a rate–distortion curve. A copy is one point on it, the
    textbook rule another. It separates copies on larger networks, where copies grow and accounts do not, and it is
    what the abstractor uses to decide which concepts to keep. It is not a gate, because the repo's own
-   pre-registered test of the idea rejected every real explanation of a small network (T2; section 2, Gap 2).
+   pre-registered test of the idea rejected every real explanation of a small network (T2; section 2, Gap 2). Under
+   it, per-network decompositions (SPD, transcoders) are priced like copies, which is right: they are the substrate
+   the explanation is built on, not the explanation.
 4. **Proof compression, where the domain allows it.** Turn the explanation into a verifier that bounds the network's
    behaviour, and report (bound tightness, verifier cost) against brute force. A copy cannot make checking cheaper;
    an explanation can. This is the worst-case form of item 3, and its reach is narrow today (Gap 2). It serves the
