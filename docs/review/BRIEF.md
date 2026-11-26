@@ -44,8 +44,10 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
   - completeness;
   - **answering without running**, the test against copies: used to estimate what the network does, does the
     explanation beat simply running the network, or its cheapest copy, for the same compute? A copy can only answer
-    by being run. (Length in a shared vocabulary is reported too, but not as a gate: the repo's own pre-registered
-    test showed that "fewer bits than a copy" rejects real explanations of small networks.);
+    by being run. The same test works with a language model as the estimator: barred from running code and given
+    less budget than hand-executing the network would take, it can use an explanation but not a copy. (Length in a
+    shared vocabulary is reported too, but not as a gate: the repo's own pre-registered test showed that "fewer bits
+    than a copy" rejects real explanations of small networks.);
   - whether it makes checking the network cheaper, where the domain allows a proof;
   - whether a fresh reader can predict the network from it;
   - whether it lets you edit the network with every effect predicted first.
@@ -115,7 +117,7 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
 
 | # | Question | Decides |
 |---|---|---|
-| X0 | On saved runs, does answering without running accept the real explanations and reject every copy? (free) | Whether the test against copies works |
+| X0 | On saved runs, does answering without running accept the real explanations and reject every copy? (free, plus a cheap reader arm) | Whether the test against copies works |
 | X1 | Does a frontier reader recover accounts known to exist (month rollover, countdown, planted networks) where Flash stalled? | Who holds the reasoning roles |
 | X2 | Can unpublished-algorithm networks be made, and what does today's toolkit recover blind? | The discovery yardstick |
 | X3 | Does our rebuilt coarse fluid emulator reproduce the published gain over the coarse solver? | Whether flagship 2 has a target |
