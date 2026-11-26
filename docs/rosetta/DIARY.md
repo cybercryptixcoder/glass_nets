@@ -199,3 +199,11 @@ variables, not concentrated in a few nameable concepts.
 **05:49. Transformer probe profile (lookahead_profile_t1.json).** Follow-up square (t1's own line): AUC 0.851 /
 0.894 / 0.911 at blocks 2 / 4 / 6, board-only 0.798, untrained t1 0.61 to 0.65. LD2: 0.804 / 0.824 / 0.833. The
 transformer both carries its follow-up move more strongly and uses it (causal effect about four to five times larger).
+
+**05:52 to 05:57. Look-ahead by the kind of follow-up move (exploratory split, after the main test;
+lookahead_causal2_*_bytype.json, lookahead_causal2_t1_bytype.json).** Cost minus the matched control, blocks 4 and 6:
+the transformer t1 looks ahead along checks (+0.14, +0.18), captures (+0.91, +0.82) and quiet moves (+0.025, +0.039),
+all intervals above zero; 744706 along captures (+0.24, +0.26) and marginally checks (+0.05), not quiet moves (+0.01,
++0.01, intervals include zero); LD2 along checks (+0.05, +0.11) and captures at block 4 (+0.14), not quiet moves
+(+0.006, -0.011). Convolutional Leela networks look ahead only along forcing lines; the transformer along every kind
+of move. The low-thinking teachability run was stopped (no answer after about ten minutes).

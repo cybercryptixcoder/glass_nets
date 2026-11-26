@@ -103,6 +103,21 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
   strength are confounded. A first run with a looser control
   (occupancy only) showed +0.089 (CI 0.059 to 0.120) at LD2 block 4; tightening the control removed most of it.
 
+- Split by the follow-up move's type (lookahead_causal2_*_bytype.json, lookahead_causal2_t1_bytype.json; exploratory,
+  after the main test), cost minus matched control, 95% CI:
+
+| network, block | check | capture | quiet |
+|---|---|---|---|
+| t1, 4 | +0.143 (+0.041 to +0.267), n 80 | +0.911 (+0.501 to +1.384), n 40 | +0.025 (+0.012 to +0.040), n 791 |
+| t1, 6 | +0.182 (+0.117 to +0.255), n 80 | +0.822 (+0.440 to +1.273), n 40 | +0.039 (+0.025 to +0.054), n 791 |
+| 744706, 4 | +0.051 (+0.000 to +0.108), n 114 | +0.241 (+0.048 to +0.486), n 59 | +0.011 (-0.006 to +0.027), n 1,327 |
+| 744706, 6 | +0.050 (-0.004 to +0.111), n 140 | +0.262 (+0.062 to +0.505), n 51 | +0.010 (-0.005 to +0.024), n 1,309 |
+| LD2, 4 | +0.050 (+0.009 to +0.097), n 143 | +0.138 (+0.011 to +0.296), n 65 | +0.006 (-0.013 to +0.026), n 1,292 |
+| LD2, 6 | +0.108 (+0.051 to +0.169), n 154 | +0.069 (-0.047 to +0.222), n 73 | -0.011 (-0.032 to +0.012), n 1,273 |
+
+  The convolutional networks look ahead only along forcing follow-ups; the transformer along all three kinds. t1's
+  probe at block 8: AUC 0.922.
+
 ## 6b. The DISCOVERY battery (battery_s10.json, compose_sub_K3_s10.json, rep_compose_K3_s10.json, sub_check_f174_s10.json)
 
 Ten translated variables through the six pre-registered checks (a fidelity above the line, b not a restatement, c

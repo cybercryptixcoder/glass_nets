@@ -28,26 +28,30 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    network with a constant output got no definitions. One false positive on a second random network (1 of 7 units
    just over the line, which is the best of 32 control units, so chance passes are expected).
 
-2. **Leela's transformer looks ahead; its convolutional siblings barely do.** Removing the network's state on the
-   square where its own follow-up move will land (never a square of its first two moves) lowers the probability of its
-   current move. Against a control square matched on occupancy, on being attacked by the moved piece and on attack
-   counts:
+2. **Convolutional Leela networks look ahead only along forcing lines; the transformer also looks ahead along quiet
+   moves.** Removing the network's state on the square where its own follow-up move will land (never a square of its
+   first two moves) lowers the probability of its current move. Against a control square matched on occupancy, on
+   being attacked by the moved piece and on attack counts, split by what the follow-up move is (exploratory cut, made
+   after the main test):
 
-   | network | block | cost of removing the follow-up square, minus the matched control (log-probability) | 95% CI |
+   | network, block | follow-up is a check | follow-up is a capture | follow-up is quiet |
    |---|---|---|---|
-   | t1 (transformer, 256 x 10) | 4 | +0.075 | +0.049 to +0.104 |
-   | t1 (transformer, 256 x 10) | 6 | +0.086 | +0.061 to +0.114 |
-   | t1 (transformer, 256 x 10) | 8 | +0.054 | +0.035 to +0.079 |
-   | 744706 (convolutional) | 4 | +0.023 | +0.004 to +0.041 |
-   | 744706 (convolutional) | 6 | +0.023 | +0.007 to +0.040 |
-   | LD2 (convolutional) | 4 | +0.016 | -0.002 to +0.036 |
-   | LD2 (convolutional) | 6 | +0.006 | -0.015 to +0.027 |
+   | t1 (transformer), 4 | +0.143 (+0.041 to +0.267) | +0.911 (+0.501 to +1.384) | +0.025 (+0.012 to +0.040) |
+   | t1 (transformer), 6 | +0.182 (+0.117 to +0.255) | +0.822 (+0.440 to +1.273) | +0.039 (+0.025 to +0.054) |
+   | 744706 (convolutional), 4 | +0.051 (+0.000 to +0.108) | +0.241 (+0.048 to +0.486) | +0.011 (-0.006 to +0.027) |
+   | 744706 (convolutional), 6 | +0.050 (-0.004 to +0.111) | +0.262 (+0.062 to +0.505) | +0.010 (-0.005 to +0.024) |
+   | LD2 (convolutional), 4 | +0.050 (+0.009 to +0.097) | +0.138 (+0.011 to +0.296) | +0.006 (-0.013 to +0.026) |
+   | LD2 (convolutional), 6 | +0.108 (+0.051 to +0.169) | +0.069 (-0.047 to +0.222) | -0.011 (-0.032 to +0.012) |
+
+   (Cost in log-probability of the current move, minus the matched control; 95% bootstrap intervals; groups of 40 to
+   154 positions for checks and captures, 791 to 1,327 for quiet moves.) Overall, without the split: t1 +0.075 and
+   +0.086 (blocks 4, 6), 744706 +0.023 and +0.023, LD2 +0.016 (not significant) and +0.006.
 
    Jenner et al. (2024) found look-ahead in Leela's transformer and built their method on its squares-as-tokens
-   structure; Rosetta reproduces that known answer with its own recogniser. The convolutional networks carry less of
-   the information and use it little: a probe reads the follow-up square at AUC 0.83 at block 6 of LD2 (board alone
-   0.79, untrained copy 0.64), against 0.91 in t1 (board alone 0.80). A looser first control had suggested a large effect in LD2 (+0.089);
-   the matched control removed it, which is why the matched control is the one reported.
+   structure; Rosetta reproduces that known answer with its own recogniser and adds the convolutional comparison. The
+   convolutional networks also carry less of the information: a probe reads the follow-up square at AUC 0.83 at block 6
+   of LD2 (board alone 0.79, untrained copy 0.64), against 0.91 in t1 (board alone 0.80). A looser first control had
+   suggested a large overall effect in LD2 (+0.089); the matched control removed it, which is why it is the one reported.
 
 3. **One internal concept passes every pre-registered check.** LD2 variable 174, defined as a weighted sum of three
    programs: "an enemy piece other than a pawn, with more attackers than defenders, on the square the network's chosen
@@ -92,7 +96,7 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
   dictionary was needed.
 - **The cheap model at volume added nothing here**: 45 usable proposals from 18 live calls, none better than the
   exhaustive search.
-- **Look-ahead in the convolutional networks is weak**, and in LD2 not significant under the matched control.
+- **Look-ahead in the convolutional networks is confined to forcing lines**; overall it is weak, and in LD2 not significant.
 
 ## How sure we are, and where to doubt
 
@@ -101,8 +105,9 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
 - Finding 3 is at the margin, and came after a declared second step: single programs failed substitution (best 30%),
   so compositions of three programs were tried on four candidates and one passed. The line for compositions came from
   the untrained dictionary. Its knowledge criterion is met only through the look-ahead clause.
-- Finding 2 compares networks of different strength and age as well as architecture; the transformer t1 is a newer
-  network. Architecture is the most likely explanation, not the only one.
+- Finding 2 compares networks of different strength and age as well as architecture; the transformer t1 is a newer,
+  stronger network. Architecture is the most likely explanation, not the only one. The split by move type was made after
+  the main test; it is consistent across both convolutional networks and two depths, but it is exploratory.
 - Finding 4's effect is small, and the fresh-games test is the strictly untouched one.
 
 ## Compared with prior work

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     ix = {k: names.index(k) for k in ("empty", "att_us", "att_them")}
     own = [names.index(f"own_{p}") for p in "PNBRQK"]
     lk = {k: LOOK.index(k) for k in LOOK}
-    rows, t3s, ctrls, t1s, moves, att3 = [], [], [], [], [], []
+    rows, t3s, ctrls, t1s, moves, att3, kinds = [], [], [], [], [], [], []
     for i, b, ln in zip(pool, boards, lines):
         if len(rows) >= N:
             break
@@ -49,6 +49,8 @@ if __name__ == "__main__":
             continue
         rows.append(i); t3s.append(t3); ctrls.append((int(rng.choice(c1)), int(rng.choice(c2)))); t1s.append(sq("la_m1_to")); moves.append(ln[0])
         att3.append(int(la[t3, lk["la_m1_attacks"]] > 0))
+        b3 = b.copy(stack=False); b3.push(ln[0]); b3.push(ln[1])
+        kinds.append("check" if b3.gives_check(ln[2]) else "capture" if b3.is_capture(ln[2]) else "quiet")
     sel = [pool.index(r) for r in rows]
     bsel = [boards[j] for j in sel]
     midx = [move_index(net, b, m) for b, m in zip(bsel, moves)]
@@ -80,11 +82,13 @@ if __name__ == "__main__":
         diff = d["t3"] - d["ctrl_tight"]
         bt = [diff[rng.integers(0, len(diff), len(diff))].mean() for _ in range(2000)]
         split = {}
-        for nm, msk in (("t3 attacked by the moved piece", att3 == 1), ("t3 not attacked by the moved piece", att3 == 0)):
+        kk = np.array(kinds)
+        for nm, msk in (("t3 attacked by the moved piece", att3 == 1), ("t3 not attacked by the moved piece", att3 == 0),
+                        ("follow-up is a check", kk == "check"), ("follow-up is a capture", kk == "capture"), ("follow-up is quiet", kk == "quiet")):
             if msk.sum() > 30:
                 dd = d["t3"][msk] - d["ctrl_tight"][msk]; bb = [dd[rng.integers(0, len(dd), len(dd))].mean() for _ in range(2000)]
                 split[nm] = {"n": int(msk.sum()), "t3_minus_tight": round(float(dd.mean()), 4), "ci95": [round(float(np.quantile(bb, .025)), 4), round(float(np.quantile(bb, .975)), 4)]}
         r = {"net": "t1-256x10 (transformer)", "site": site, "n": len(rows), "mean_drop_logp": {k: round(float(v.mean()), 4) for k, v in d.items()},
              "t3_minus_tight": round(float(diff.mean()), 4), "ci95": [round(float(np.quantile(bt, .025)), 4), round(float(np.quantile(bt, .975)), 4)], "split": split}
         results.append(r); print(json.dumps(r), round(time.time() - t0), "s", flush=True)
-    json.dump(results, open(f"{L.RES}/lookahead_causal2_t1.json", "w"), indent=1)
+    json.dump(results, open(f"{L.RES}/lookahead_causal2_t1_bytype.json", "w"), indent=1)

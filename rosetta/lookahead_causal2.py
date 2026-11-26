@@ -24,7 +24,7 @@ if __name__ == "__main__":
     ix = {k: names.index(k) for k in ("la_m1_from", "la_m1_to", "la_m2_from", "la_m2_to", "la_m3_from", "la_m3_to", "empty",
                                       "la_m1_attacks", "att_us", "att_them")}
     own = [names.index(f"own_{p}") for p in "PNBRQK"]; opp = [names.index(f"opp_{p}") for p in "PNBRQK"]
-    rows, t3s, ctrls, t1s, moves, att3 = [], [], [], [], [], []
+    rows, t3s, ctrls, t1s, moves, att3, kinds = [], [], [], [], [], [], []
     for i in pool:
         if len(rows) >= n:
             break
@@ -44,6 +44,8 @@ if __name__ == "__main__":
             continue
         rows.append(i); t3s.append(t3); ctrls.append((int(rng.choice(c1)), int(rng.choice(c2)))); t1s.append(sq("la_m1_to")); moves.append(ln[0])
         att3.append(int(p[t3, ix["la_m1_attacks"]] > 0))
+        b3 = chess.Board(L.items[i]["fen"]); b3.push(chess.Move.from_uci(ln[0])); b3.push(chess.Move.from_uci(ln[1])); m3 = chess.Move.from_uci(ln[2])
+        kinds.append("check" if b3.gives_check(m3) else "capture" if b3.is_capture(m3) else "quiet")
     rows = np.array(rows)
     m = L.get_net(NET)
     if NET == "LD2":
@@ -75,7 +77,9 @@ if __name__ == "__main__":
     d = {k: base - logp(np.array(v)) for k, v in (("t3", t3s), ("ctrl_occupancy", [c[0] for c in ctrls]), ("ctrl_tight", [c[1] for c in ctrls]), ("t1", t1s))}
     att3 = np.array(att3)
     split = {}
-    for nm, msk in (("t3 attacked by the moved piece", att3 == 1), ("t3 not attacked by the moved piece", att3 == 0)):
+    kk = np.array(kinds)
+    for nm, msk in (("t3 attacked by the moved piece", att3 == 1), ("t3 not attacked by the moved piece", att3 == 0),
+                    ("follow-up is a check", kk == "check"), ("follow-up is a capture", kk == "capture"), ("follow-up is quiet", kk == "quiet")):
         if msk.sum() > 30:
             dd = d["t3"][msk] - d["ctrl_tight"][msk]
             bb = [dd[rng.integers(0, len(dd), len(dd))].mean() for _ in range(2000)]
@@ -87,4 +91,4 @@ if __name__ == "__main__":
            "share_t3_hurts_more": round(float((diff > 0).mean()), 4), "split": split,
            "t3_minus_occupancy_ctrl": round(float((d["t3"] - d["ctrl_occupancy"]).mean()), 4)}
     print(json.dumps(out), round(time.time() - t0), "s", flush=True)
-    json.dump(out, open(f"{L.RES}/lookahead_causal2_{NET}_site{site}.json", "w"), indent=1)
+    json.dump(out, open(f"{L.RES}/lookahead_causal2_{NET}_site{site}_bytype.json", "w"), indent=1)
