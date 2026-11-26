@@ -55,19 +55,23 @@ sampling the network, where every saved copy, disguise and the shuffled-network 
 - **"Passes"** means: on all five quantities, the error at its own compute is below the 5th percentile of the
   reference's error at that compute. A copy meets this only by chance (about 5% per quantity, so about 3 in 10
   million for all five).
+- **Reported, not a line:** a small student distilled from each network to the same fidelity as its account, run as
+  a sampler. A short readable rule and a small opaque student of equal cost tie on this test; if one does, the
+  account's advantage is readability, not computation, and the reader arm decides it.
 
 **Reader arm (cheap; Flash calls, so Shreyas's go).** The same question with a language model as the estimator,
 which removes the estimator-writing step.
 - The reader may not run code. Its token budget per question is set below what hand-executing the copy on one input
   takes (computed from the copy's own forward-pass cost before any call), so a copy gives it nothing it can use.
-- Three conditions per network: given the account; given a copy; given only the task (the floor).
-- **"Passes"** means: given the account, its estimates of the five quantities beat both the task-only floor and the
-  copy condition by more than the floor's spread over 5 repetitions.
+- Four conditions per network: given the account; given a copy; given the distilled student as code (it cannot be
+  executed within the budget either); given only the task (the floor).
+- **"Passes"** means: given the account, its estimates of the five quantities beat the task-only floor, the copy
+  condition and the student condition by more than the floor's spread over 5 repetitions.
 - The copy condition is reported on its own. If it beats the floor, the reader is reading structure off raw weights
   without executing them, which is itself a finding for flagship 4.
 
 **Runs.** One scoring pass over saved material; no network is trained. The reader arm is 2 deciding networks (plus
-M2,2, reported) × 3 conditions × 5 repetitions of short calls.
+M2,2, reported) × 4 conditions × 5 repetitions of short calls.
 
 **Cost.** None for the main arm beyond a session's time; a few dollars of Flash calls for the reader arm.
 

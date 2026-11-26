@@ -406,12 +406,14 @@ what is needed instead. None of them is a bug. Each is a capability or a stance 
      estimator of something the network does: its accuracy on a distribution, how often an intermediate variable
      takes a value, the effect of an intervention. Score its error against the compute it used, and compare with
      sampling. A copy run on samples is just sampling, so it cannot beat sampling. An explanation that has found the
-     structure can: an exact formula, a sum over a few regimes, a short derivation. Two refinements narrow the
-     obvious escapes without closing them. The comparison includes the cheapest copies that standard compression
-     finds (rounded, pruned, distilled into a smaller student), not only the network, so a copy made smaller by those
-     standard means gains nothing. And the estimator is asked many different questions: a copy must be run for each, while an
-     explanation answers from its structure. The ladder calls this "the strongest test of 'understood'" and names
-     its cost: accounts must be written as estimators.
+     structure can: an exact formula, a sum over a few regimes, a short derivation. The estimator is asked many
+     different questions, including rare sub-populations where sampling is expensive: a copy must be run for each,
+     while an explanation answers from its structure. The ladder calls this "the strongest test of 'understood'" and
+     names its cost: accounts must be written as estimators. One escape stays open: a smaller program that is not
+     readable (a pruned copy, a small distilled student) is also a cheaper sampler. This test cannot tell it from a
+     short readable rule of the same cost; the reader version below can, because a reader cannot execute a student
+     in its head. So the compute version catches copies of the network's own size, and the reader version catches
+     opaque programs of any size.
 
      The same test can be run with a reader as the estimator, which removes that cost. Give a language model the
      explanation, bar it from running code, and give it a token budget per question smaller than it would take to
@@ -729,8 +731,9 @@ its L2 program and L1 variables, see where the network and the model agree and w
    does, and score its error against the compute it spends, beside sampling (ARC's "matching sampling",
    EVIDENCE_LADDER rung Y). The questions are many and varied: accuracy on a stated distribution, how often an
    intermediate variable takes a value, the effect of an intervention, where the network fails. A copy can answer
-   each only by being run on samples, so it cannot beat sampling. The comparison samplers are the network and the
-   cheapest copies that standard compression finds (rounded, pruned, distilled into a smaller student). Concretely:
+   each only by being run on samples, so it cannot beat sampling. The comparison samplers are the network and its
+   copy frontier; smaller opaque programs (pruned copies, distilled students) are reported beside them and caught
+   by the reader version of the test (item 5). Concretely:
    - the horizontal axis is compute (operations spent answering);
    - the vertical axis is error against the network's true answer;
    - the references are sampling the network, sampling its copy frontier, the task rule used as an estimator, and
