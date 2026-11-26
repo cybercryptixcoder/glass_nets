@@ -220,3 +220,7 @@ follow-ups, t1 +0.029 and +0.035 (above zero), 744706 +0.023 and +0.023 (above z
 Predictions 1 and 3 held; prediction 2 failed for 744706 at block 4. The exploratory "convolutional nets look ahead
 only along forcing lines" is withdrawn for 744706; what stands is that forcing lines carry most of the look-ahead in all
 three networks and the transformer's is about three times as strong.
+
+**06:07. The capture concept substituted in 744706 (sub_744706_capture.json).** 744706's variable 455, defined from its
+own line as three programs (fidelity 0.732), restores 54.9% of its effect on 744706's value at block 10. The capture
+concept is now a substitutable part of all three networks: LD2 50% to 54%, 744706 55%, t1 73%.

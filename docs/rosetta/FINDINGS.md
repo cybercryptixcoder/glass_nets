@@ -69,8 +69,10 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    - matched by a variable of the independently trained 744706 at 0.699;
    - uses the network's own move (a look-ahead primitive); it does not add significantly to predicting game results.
 
-   The same concept is a working part of the transformer too: t1's variable 245, defined by the same kind of three
-   programs (fidelity 0.800), restores 73% of its variable's effect on t1's value when substituted at block 6.
+   The same concept is a working part of the other two networks as well, each defined from its own line and swapped
+   in at the block where it lives: t1's variable 245 (fidelity 0.800) restores 73% of its variable's effect on t1's
+   value at block 6; 744706's variable 455 (fidelity 0.732) restores 55% at block 10 (its effect on 744706's value is
+   small, 0.002 on average).
 
    In chess terms it is a winning-capture detector tied to the move being chosen: all three Leela networks, convolutional
    and transformer, dedicate a variable to "material I can win, especially with the move I am about to play". That is

@@ -35,8 +35,9 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
 
 3. **One of the network's own ideas passes every test we set in advance:** a detector for "the move I am about to
    play wins material: the piece on its target is outnumbered or undefended". Swapped into the network, the rule does
-   about half of the variable's job. All three Leela networks we opened have this variable, including the transformer,
-   where the rule does 73% of the variable's job. It is a known chess idea, now shown to be a real, working part of
+   about half of the variable's job. All three Leela networks we opened have this variable, and in each one the rule
+   can be swapped in for it (it does 50% to 55% of the job in the two convolutional networks and 73% in the
+   transformer). It is a known chess idea, now shown to be a real, working part of
    these networks.
 
 4. **The translated rules carry real knowledge about who wins.** Added to everything textbook chess measures, they

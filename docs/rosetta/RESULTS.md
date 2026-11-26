@@ -168,6 +168,11 @@ Substitution inside t1 (t1_sub_site6.json): variable 245 as three programs ("not
 la_m1_to" 2.90, "not opp_P and not pawn_att_us and outnumbered_opp" 1.82, "hanging_opp and mob_us>=1 and not
 la_m1_to" 1.13), fidelity 0.800, restores 73.1% of the variable's effect on t1's value (bar 50%).
 
+Substitution inside 744706 (sub_744706_capture.json): its variable 455, the best match to LD2's composed variable 174,
+defined from 744706's own line as three programs ("not empty and control>=0 and la_m1_to" 1.80, "opp_R and semiopen_us
+and outnumbered_opp" 1.87, "not pawn_att_us and piece_reach>=5 and hanging_opp" 1.22), fidelity 0.732, restores 54.9%
+of the variable's effect on 744706's value (mean effect of removing it 0.002).
+
 ## 7. Replication in the second network (replicate_744706_s10.json)
 
 22 of 22 LD2 definitions tested (the look-ahead-bound variables, the residual carriers and the 12 strongest) are
