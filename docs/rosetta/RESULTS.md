@@ -287,5 +287,6 @@ variables (16 of 16; rank correlation over all 512 variables 0.992) and gives th
 
 One block earlier (fresh_where_LD2_s8.json; exploratory, no controls run at this block): with LD2's own dictionary at
 block 8 and attribution taken through blocks 9 and 10, the top 8 variables' totals recover 51% of LD2's fresh-game
-gain, the top 16 66%, the top 64 83% (block 10: 71%, 91%, 83%). The evaluation is gathered into a few variables over
-the last two blocks.
+gain, the top 16 66%, the top 64 83% (block 10: 71%, 91%, 83%). At block 6 (fresh_where_LD2_s6.json): 49%, 56%, 69%.
+Across blocks 6, 8 and 10 the top 16 carry 56%, 66% and 91%: the network gathers its judgement into a few variables as
+it nears its output.

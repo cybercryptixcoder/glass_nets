@@ -326,3 +326,7 @@ No extension requested: the work is committed and pushed; the final check is at 
 dictionary at block 8 (fraction of variance unexplained 0.135), attribution taken through blocks 9 and 10: on the
 fresh games the top 8 variables' totals recover 51% of LD2's gain over textbook knowledge, the top 16 66%, the top 64
 83% (block 10: 71%, 91%, 83%). The evaluation is gathered into a few variables over the last two blocks.
+
+**06:44. Block 6 (fresh_where_LD2_s6.json, same recipe, no controls).** Top 8: 49%, top 16: 56%, top 64: 69% of LD2's
+fresh-game gain. Across blocks 6, 8 and 10 the top 16 carry 56%, 66% and 91%: the network gathers its judgement into
+a few variables as it nears its output. Last experiment of the sprint.
