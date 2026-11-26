@@ -260,3 +260,10 @@ block 10 and its own attribution ranking, the same fresh games:
 | control: the 16 least important | +0.04% | -0.11 to 0.19% | 1% |
 
 Replicates: the top 16 beat every control and recover more than half of the network's gain.
+
+Static-tactics control for the line swing (registered before the run, DIARY 06:31; line_swing_static_s10.json).
+Value-weighted totals of outnumbered and attacked-by-lower pieces, both sides (the textbook concepts already hold
+hanging pieces, hanging value, captures available and the best free capture): static tactics add +0.23% (CI -0.10 to
++0.56%); the swing adds +0.61% (CI +0.22 to +1.01%) over textbook plus static tactics, so it is not static tactics.
+Together the two score below the swing alone (+0.84% against +1.18%), so these fitted gains carry noise: the swing's
+share of LD2's extra knowledge is better given as a sixth to a third.

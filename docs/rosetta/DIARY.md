@@ -288,3 +288,15 @@ over textbook concepts; the board totals of its top 8 variables recover 75% of t
 to 3.95%), the top 64 92%, all 512 84%; controls: 16 random variables 35%, 37%, 39%; the 16 least important 1%. Both
 registered conditions hold (top 16 above every control, above half). In both networks the extra knowledge passes
 through a few variables.
+
+**06:31. Registered before the run: is "what LD2's own line wins" only static tactics? (rosetta/line_swing_static.py)**
+Control: value-weighted totals of outnumbered and attacked-by-lower pieces, both sides (the textbook concepts already
+hold hanging pieces, hanging value, captures available and the best free capture). The look-ahead reading stands if
+the swing still adds over textbook plus static tactics with an interval above 0; otherwise the one-third claim is
+reworded as static tactics.
+
+**06:32. Static-tactics control: the look-ahead reading stands (line_swing_static_s10.json).** On the fresh games,
+static tactics add +0.23% over textbook concepts (CI -0.10 to +0.56%), the line swing +1.18%, both together +0.84%
+(CI 0.40 to 1.27%); the swing's addition over static tactics is +0.61% (CI +0.22 to +1.01%), above 0 as registered.
+Caveat: together they score below the swing alone, so the fitted gains carry some noise, and the swing's own share is
+better quoted as between a sixth and a third of LD2's extra knowledge (+0.61% to +1.18% of +3.58%).

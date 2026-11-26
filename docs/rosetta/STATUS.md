@@ -34,8 +34,8 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
 - The evaluation passes through few variables: 16 of LD2's 512 carry 91% of its gain over textbook knowledge on fresh
   games (random 16: 13% to 62%; least important 16: 4.5%); replicated in 744706 (78%; random 16: 35% to 39%). They
   split into win, loss and draw signals, and Rosetta cannot define most of them yet.
-- A third of LD2's knowledge beyond the textbook is the material its own 3-ply line wins (33%; along random moves
-  0.6%); its value already contains it.
+- A sixth to a third of LD2's knowledge beyond the textbook is the material its own 3-ply line wins (33% alone, 17%
+  over static tactics; along random moves 0.6%); its value already contains it.
 
 ## Next (in order of value)
 
@@ -46,5 +46,5 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
    (R2 showed the clean split by architecture does not hold for 744706).
 4. Define the 16 evaluation variables (section 9 of RESULTS.md): they carry 91% of LD2's extra knowledge and put the
    glass model's evaluation from R2 0.06 to 0.70 when exact. Square-level and counted programs fail on most of them, so
-   the vocabulary needs quantities about lines and exchanges (the line's material swing explains a third of the
+   the vocabulary needs quantities about lines and exchanges (the line's material swing explains a sixth to a third of the
    extra knowledge but sits in none of them alone).
