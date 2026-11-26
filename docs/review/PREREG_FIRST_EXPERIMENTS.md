@@ -31,38 +31,43 @@ sampling the network, where every saved copy, disguise and the shuffled-network 
   by restricted languages and must-fail sets alone, with that limit stated on every claim. Do not tune the lines.
 
 **Cases (the T2 sets, `docs/glass/info_measure_T2.txt`).**
-- Must pass: M2,2's account (round 1), M4,3's account (c928), the lc_8_6 census rule (round 2 b).
+- Must pass: M4,3's account (c928, fidelity 0.990) and the lc_8_6 census rule (round 2 b, fidelity 0.922).
+- Reported, but unable to decide anything: M2,2's account. It is the task rule, and the network matches it at
+  fidelity 1.000, so every estimator, copy or not, gets every quantity below exactly right.
 - Must fail: every saved copy and near-copy in the T2 table, the 18 disguises D1–D6, and the lc_3_4 shuffled-network
   account.
 
 **Measurement (frozen before any scoring).**
-- **What is estimated:** each network's accuracy against the task rule on three input distributions: the task's own,
-  and two shifts fixed by someone who has not seen any estimate (for example, one position pinned near the maximum).
+- **What is estimated:** each network's accuracy against the task rule on the task's own input distribution, and on
+  four sub-populations of it fixed now, before any estimate exists (for example: the top two values within 1% of
+  each other; the maximum in the last position). Sub-populations stay inside the domain the accounts claim, so a
+  must-pass account cannot fail for being asked about inputs it never covered, and rare ones are where sampling is
+  expensive.
 - **Estimators:** each must-pass account is written once as an estimator (a procedure that returns an estimate and
-  counts its own floating-point operations), by a session that sees neither the networks' true accuracies nor any
-  score. Copies and disguises are programs that compute the network, so their estimator is sampling them. This step
-  measures the estimator-writer as well as the account; that is the known cost of the measure, stated in every
-  report.
-- **References (the controls that set the line):** Monte Carlo on the network at the same compute, repeated 1,000
-  times to give its error distribution; the task rule used as an estimator; the cheapest T2 copy of matching
-  fidelity, run as a sampler.
-- **"Passes"** means: on all three distributions, the error at its own compute is below the 5th percentile of Monte
-  Carlo's error at that compute, and no worse than the task-rule estimator's error (no worse, not below: M2,2's
-  account is the task rule itself). The task-rule comparison bites on the shifted distributions, where a network
-  departs from the rule. A copy meets the Monte Carlo line only by chance (about 5% per distribution).
+  counts its own floating-point operations) by a session that has the account and the task, and nothing else: not
+  the network, its weights, its accuracies or any score. Running the account itself as a cheap sampler is allowed;
+  a short faithful program is a cheaper sampler than the network, and that is part of what an explanation buys.
+  Copies and disguises compute the network, so their estimator is sampling them. This step measures the
+  estimator-writer as well as the account; that is the known cost of the measure, stated in every report.
+- **The reference (the control that sets the line):** Monte Carlo on the network at the same compute, repeated 1,000
+  times to give its error distribution. Below one forward pass of compute, the reference is the task-rule estimate
+  (the best guess with no samples).
+- **"Passes"** means: on all five quantities, the error at its own compute is below the 5th percentile of the
+  reference's error at that compute. A copy meets this only by chance (about 5% per quantity, so about 3 in 10
+  million for all five).
 
 **Reader arm (cheap; Flash calls, so Shreyas's go).** The same question with a language model as the estimator,
 which removes the estimator-writing step.
 - The reader may not run code. Its token budget per question is set below what hand-executing the copy on one input
   takes (computed from the copy's own forward-pass cost before any call), so a copy gives it nothing it can use.
 - Three conditions per network: given the account; given a copy; given only the task (the floor).
-- **"Passes"** means: given the account, its accuracy estimates on the three distributions beat both the task-only
-  floor and the copy condition by more than the floor's spread over 5 repetitions.
+- **"Passes"** means: given the account, its estimates of the five quantities beat both the task-only floor and the
+  copy condition by more than the floor's spread over 5 repetitions.
 - The copy condition is reported on its own. If it beats the floor, the reader is reading structure off raw weights
   without executing them, which is itself a finding for flagship 4.
 
-**Runs.** One scoring pass over saved material; no network is trained. The reader arm is 3 networks × 3 conditions ×
-5 repetitions of short calls.
+**Runs.** One scoring pass over saved material; no network is trained. The reader arm is 2 deciding networks (plus
+M2,2, reported) × 3 conditions × 5 repetitions of short calls.
 
 **Cost.** None for the main arm beyond a session's time; a few dollars of Flash calls for the reader arm.
 
