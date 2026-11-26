@@ -92,21 +92,28 @@ if __name__ == "__main__":
                 def shuf(rows, c=c, mm=mm):
                     a = run(mm, rows)[1][:, c]; return np.stack([r[rng.permutation(64)] for r in a])
                 d = D.define(shuf); d["unit"] = f"{name} channel {c}, squares shuffled"; ctrl.append(d)
-        mx, q99 = acceptance_line(ctrl)
-        json.dump({"line_max": mx, "line_q99": q99, "controls": ctrl}, open(f"{RES}/yard_controls.json", "w"), indent=1)
-        print("LINE max", round(mx, 4), "q99", round(q99, 4), round(time.time() - t0), "s")
+        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl, "pos")
+        json.dump({"line_max": mx, "line_q99": q99, "line_pos_max": px, "line_pos_q99": pq, "controls": ctrl},
+                  open(f"{RES}/yard_controls.json", "w"), indent=1)
+        print("LINE per-square max", round(mx, 4), "| position-level max", round(px, 4), round(time.time() - t0), "s")
     elif stage == "nets":
-        line = json.load(open(f"{RES}/yard_controls.json"))["line_max"]
-        allout = {"line": line}
+        cj = json.load(open(f"{RES}/yard_controls.json")); line, pline = cj["line_max"], cj["line_pos_max"]
+        allout = {"line": line, "line_pos": pline}
         for name, seed in [("S1", None), ("S2", None), ("S3", None), ("MEM", None), ("UNTRAINED2", 12)]:
             m = load(name if seed is None else "UNTRAINED", seed=seed)
             out, _ = define_net(m, D, name)
+            cands = []
             for u in out["units"]:
-                u["accepted"] = bool(u["program"] is not None and abs(u["heldout_fidelity"]) >= line)
-                u["restore"] = substitution(m, D, u) if u["accepted"] else None
+                u["accepted_sq"] = bool(u["program"] is not None and abs(u["heldout_fidelity"]) >= line)
+                u["accepted_pos"] = bool(u["pos"]["program"] is not None and abs(u["pos"]["heldout_fidelity"]) >= pline)
+                u["accepted"] = u["accepted_sq"] or u["accepted_pos"]
+                u["restore"] = substitution(m, D, u) if u["accepted_sq"] else None
+                if u["accepted_pos"]:
+                    cands.append((u["unit"] == "readout direction", 1, abs(u["pos"]["heldout_fidelity"]), {**u["pos"], "unit": u["unit"], "level": "position"}))
+                if u["accepted_sq"]:
+                    cands.append((u["unit"] == "readout direction", 0, abs(u["heldout_fidelity"]), {"program": u["program"], "text": u["text"], "unit": u["unit"], "level": "square", "heldout_fidelity": u["heldout_fidelity"]}))
             acc = [u for u in out["units"] if u["accepted"]]
-            ro = [u for u in acc if u["unit"] == "readout direction"]
-            out["answer"] = (ro[0] if ro else max(acc, key=lambda u: abs(u["heldout_fidelity"]))) if acc else None
+            out["answer"] = max(cands, key=lambda c: c[:3])[3] if cands else None
             allout[name] = out
             print(name, "accepted", len(acc), "answer:", out["answer"]["text"] if out["answer"] else None, round(time.time() - t0), "s", flush=True)
         json.dump(allout, open(f"{RES}/yard_engine.json", "w"), indent=1)

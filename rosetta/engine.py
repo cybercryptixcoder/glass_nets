@@ -6,7 +6,7 @@ substitute(...)    -> put the program in place of the unit inside the network; s
 """
 import numpy as np
 
-from rosetta.core import literal_specs, literal_matrix, search, program_map, fidelity, describe
+from rosetta.core import literal_specs, literal_matrix, search, search_pos, program_map, fidelity, describe
 
 
 class Defs:
@@ -18,6 +18,7 @@ class Defs:
         Ps = np.asarray(P[self.rs], dtype=np.float32)
         self.specs = literal_specs(Ps, names)
         self.L = literal_matrix(Ps, self.specs)
+        self.L3 = self.L.reshape(len(self.specs), len(self.rs), -1)
         self.Pt = np.asarray(P[self.rt], dtype=np.float32)
 
     def define(self, unit_rows_fn, keep=5, center=True):
@@ -30,8 +31,10 @@ class Defs:
             mu = ys.mean(0, keepdims=True)
             ys, yt = ys - mu, yt - mu
         ys, yt = ys.reshape(-1), yt.reshape(-1)
+        S = ys.size // len(self.rs)
         if ys.std() < 1e-6:
-            return {"program": None, "text": "(dead unit)", "train_corr": 0.0, "heldout_fidelity": 0.0, "runners_up": []}
+            return {"program": None, "text": "(dead unit)", "train_corr": 0.0, "heldout_fidelity": 0.0, "runners_up": [],
+                    "pos": {"program": None, "text": "(dead unit)", "train_corr": 0.0, "heldout_fidelity": 0.0}}
         res = search(ys, self.L, self.specs, keep=keep)
         out = []
         for prog, c in res:
@@ -40,6 +43,13 @@ class Defs:
                         "train_corr": round(c, 4), "heldout_fidelity": round(fidelity(yt, m), 4)})
         best = dict(out[0])
         best["runners_up"] = out[1:]
+        # the same unit at the level the rest of the network can pool: its total per position
+        ts, tt = ys.reshape(len(self.rs), S).sum(1), yt.reshape(len(self.rt), S).sum(1)
+        rp = search_pos(ts, self.L3, self.specs, keep=3)
+        prog, c = rp[0]
+        m = program_map(self.Pt, self.specs, prog).reshape(len(self.rt), S).sum(1)
+        best["pos"] = {"program": [self.specs[i][:3] for i in prog], "text": describe(self.specs, prog),
+                       "train_corr": round(c, 4), "heldout_fidelity": round(fidelity(tt, m), 4)}
         return best
 
 
@@ -53,8 +63,8 @@ def spec_map(P, prog):
     return b.reshape(P.shape[0], P.shape[1])
 
 
-def acceptance_line(control_defs):
-    vals = [abs(d["heldout_fidelity"]) for d in control_defs]
+def acceptance_line(control_defs, level="sq"):
+    vals = [abs(d["heldout_fidelity"] if level == "sq" else d["pos"]["heldout_fidelity"]) for d in control_defs]
     return float(np.max(vals)) if vals else 1.0, float(np.quantile(vals, 0.99)) if vals else 1.0
 
 

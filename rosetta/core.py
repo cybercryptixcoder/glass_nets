@@ -92,6 +92,43 @@ def search(y, L, specs, beam=48, depth=3, keep=10):
     return out
 
 
+def search_pos(yt, L3, specs, beam=48, depth=3, keep=10, min_count=5):
+    """Position-level search: the program's count per position (sum over sites) against the unit's total per
+    position (yt [n]). L3: literal matrix reshaped [M, n, S]."""
+    yc = (yt - yt.mean()).astype(np.float32)
+    sd = yc.std() + 1e-9
+
+    def corr(Cn):                       # Cn: [M, n] counts per position
+        Cc = Cn - Cn.mean(1, keepdims=True)
+        den = np.sqrt((Cc ** 2).sum(1)) * sd * np.sqrt(len(yc))
+        c = (Cc @ yc) / np.maximum(den, 1e-9)
+        c[(Cn > 0).sum(1) < min_count] = 0.0
+        return c
+    c1 = corr(L3.sum(2))
+    cand = {(i,): c1[i] for i in range(len(specs))}
+    frontier = [(i,) for i in np.argsort(-np.abs(c1))[:beam]]
+    for d in range(2, depth + 1):
+        new = {}
+        for prog in frontier:
+            b = np.prod(L3[list(prog)], axis=0)            # [n, S]
+            cr = corr(np.einsum("mns,ns->mn", L3, b))
+            for j in np.argsort(-np.abs(cr))[:beam]:
+                if j in prog:
+                    continue
+                new[tuple(sorted(prog + (int(j),)))] = cr[j]
+        cand.update(new)
+        frontier = [k for k, _ in sorted(new.items(), key=lambda kv: -abs(kv[1]))[:beam]]
+    ranked = sorted(cand.items(), key=lambda kv: -abs(kv[1]))
+    out = []
+    for prog, c in ranked:
+        if any(set(q).issubset(prog) and abs(cq) >= abs(c) - 0.01 for q, cq in out):
+            continue
+        out.append((prog, float(c)))
+        if len(out) >= keep:
+            break
+    return out
+
+
 def program_map(P, specs, prog):
     b = np.ones(P.shape[0] * P.shape[1], dtype=np.float32)
     for i in prog:

@@ -112,12 +112,14 @@ if __name__ == "__main__":
                 a = unit_rows(c)(rr); g = np.random.default_rng(int(c)); return np.stack([x[g.permutation(64)] for x in a])
             d = D.define(shuf); d["unit"] = f"LD2 channel {c}, squares shuffled"; ctrl.append(d)
             print("shuffled", c, d["text"], d["heldout_fidelity"], flush=True)
-        mx, q99 = acceptance_line(ctrl)
-        json.dump({"line_max": mx, "line_q99": q99, "controls": ctrl}, open(f"{RES}/ld2_controls_site{SITE}.json", "w"), indent=1)
-        print("LINE", round(mx, 4), round(q99, 4), round(time.time() - t0), "s")
+        mx, q99 = acceptance_line(ctrl); px, pq = acceptance_line(ctrl, "pos")
+        json.dump({"line_max": mx, "line_q99": q99, "line_pos_max": px, "line_pos_q99": pq, "controls": ctrl},
+                  open(f"{RES}/ld2_controls_site{SITE}.json", "w"), indent=1)
+        print("LINE per-square", round(mx, 4), "position-level", round(px, 4), round(time.time() - t0), "s")
     elif stage == "define":
-        U = json.load(open(f"{RES}/ld2_units_site{SITE}.json")); line = json.load(open(f"{RES}/ld2_controls_site{SITE}.json"))["line_max"]
-        out = {"site": SITE, "line": line, "units": []}
+        U = json.load(open(f"{RES}/ld2_units_site{SITE}.json")); cj = json.load(open(f"{RES}/ld2_controls_site{SITE}.json"))
+        line, pline = cj["line_max"], cj["line_pos_max"]
+        out = {"site": SITE, "line": line, "line_pos": pline, "units": []}
         w = np.array(U["residual_direction"])
         for c in U["top_units"] + ["residual direction"]:
             if c == "residual direction":
@@ -125,9 +127,11 @@ if __name__ == "__main__":
             else:
                 f = unit_rows(c)
             d = D.define(f); d["unit"] = f"channel {c}" if c != "residual direction" else c; d["channel"] = c if c != "residual direction" else None
-            d["accepted"] = bool(d["program"] is not None and abs(d["heldout_fidelity"]) >= line)
+            d["accepted_sq"] = bool(d["program"] is not None and abs(d["heldout_fidelity"]) >= line)
+            d["accepted_pos"] = bool(d["pos"]["program"] is not None and abs(d["pos"]["heldout_fidelity"]) >= pline)
+            d["accepted"] = d["accepted_sq"] or d["accepted_pos"]
             out["units"].append(d)
-            print(d["unit"], "|", d["text"], "| fid", d["heldout_fidelity"], "accepted", d["accepted"], flush=True)
+            print(d["unit"], "| square:", d["text"], d["heldout_fidelity"], d["accepted_sq"], "| position:", d["pos"]["text"], d["pos"]["heldout_fidelity"], d["accepted_pos"], flush=True)
         json.dump(out, open(f"{RES}/ld2_define_site{SITE}.json", "w"), indent=1)
 
 
@@ -146,7 +150,12 @@ def confirm():
     from sklearn.ensemble import HistGradientBoostingRegressor  # noqa: F401
     dd = json.load(open(f"{RES}/ld2_define_site{SITE}.json")); line = dd["line"]
     D = Defs(P, names, TR, TE)
-    acc = [u for u in dd["units"] if u["accepted"]]
+    acc = []
+    for u in dd["units"]:
+        if u.get("accepted_sq"):
+            acc.append({"unit": u["unit"] + " (square level)", "channel": u["channel"], "program": u["program"], "text": u["text"], "heldout_fidelity": u["heldout_fidelity"]})
+        if u.get("accepted_pos"):
+            acc.append({"unit": u["unit"] + " (position level)", "channel": u["channel"], "program": u["pos"]["program"], "text": u["pos"]["text"], "heldout_fidelity": u["pos"]["heldout_fidelity"]})
     out = {"site": SITE, "line": line, "concepts": []}
     m = get_net()
     yo = outcome(); g_tr = TR[~np.isnan(yo[TR])]; g_te = TE[~np.isnan(yo[TE])]
@@ -189,3 +198,56 @@ def confirm():
 
 if __name__ == "__main__" and sys.argv[1] == "confirm":
     confirm()
+
+
+def propose_stage(rounds=2, per_call=15):
+    """Volume proposer (DeepSeek V4.1 Flash, live): for every candidate unit, several calls write expressions; code
+    scores each on training rows (per-square and per-position) and reports held-out fidelity of the training-best."""
+    from rosetta import llm
+    from rosetta.core import expr_map, fidelity
+    dd = json.load(open(f"{RES}/ld2_define_site{SITE}.json"))
+    D = Defs(P, names, TR, TE)
+    fens_s = [items[i]["fen"] for i in D.rs]
+    U = json.load(open(f"{RES}/ld2_units_site{SITE}.json")); w = np.array(U["residual_direction"])
+    jobs, meta = [], []
+    for u in dd["units"]:
+        if u["channel"] is None:
+            f = lambda rr: np.einsum("c,ncs->ns", w, np.asarray(A[rr], dtype=np.float32).reshape(len(rr), 128, 64))
+        else:
+            f = unit_rows(u["channel"])
+        ys = f(D.rs); mu = ys.mean(0, keepdims=True); ys = ys - mu; yt = f(D.rt) - mu
+        attempts = [(u["text"], u["heldout_fidelity"])] + [(r["text"], r["heldout_fidelity"]) for r in u.get("runners_up", [])[:3]] + [(u["pos"]["text"], u["pos"]["heldout_fidelity"])]
+        for r in range(rounds):
+            jobs.append((names, fens_s, ys, attempts, per_call)); meta.append((u, ys, yt))
+    t0 = time.time()
+    props = llm.propose_many(jobs, workers=8)
+    print("proposals", sum(len(p) for p in props), round(time.time() - t0), "s", flush=True)
+    Ps, Pt = np.asarray(P[D.rs], dtype=np.float32), np.asarray(P[D.rt], dtype=np.float32)
+    best = {}
+    for (u, ys, yt), plist in zip(meta, props):
+        key = u["unit"]
+        for e in plist:
+            try:
+                ms, mt = expr_map(Ps, names, e), expr_map(Pt, names, e)
+            except Exception:
+                continue
+            if ms.std() == 0:
+                continue
+            fs = fidelity(ys.reshape(-1), ms)
+            fp = fidelity(ys.sum(1), ms.reshape(len(D.rs), 64).sum(1))
+            for lvl, ftr in (("sq", fs), ("pos", fp)):
+                cur = best.get((key, lvl))
+                if cur is None or abs(ftr) > abs(cur["train_corr"]):
+                    fte = fidelity(yt.reshape(-1), mt) if lvl == "sq" else fidelity(yt.sum(1), mt.reshape(len(D.rt), 64).sum(1))
+                    best[(key, lvl)] = {"unit": key, "channel": u["channel"], "level": lvl, "expression": e,
+                                        "train_corr": round(float(ftr), 4), "heldout_fidelity": round(float(fte), 4)}
+    cj = json.load(open(f"{RES}/ld2_controls_site{SITE}.json"))
+    out = []
+    for (key, lvl), b in sorted(best.items()):
+        b["accepted"] = abs(b["heldout_fidelity"]) >= (cj["line_max"] if lvl == "sq" else cj["line_pos_max"])
+        out.append(b); print(json.dumps(b), flush=True)
+    json.dump({"proposals": [list(p) for p in props], "best": out}, open(f"{RES}/ld2_propose_site{SITE}.json", "w"), indent=1)
+
+
+if __name__ == "__main__" and sys.argv[1] == "propose":
+    propose_stage()
