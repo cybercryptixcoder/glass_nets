@@ -990,6 +990,18 @@ its own internal variables. A definition search scored against a variable the ne
 network's concept, not the model's habit. The two projects meet here: Helix supplies the engine, the network supplies
 the signal, and the toolkit supplies the scorer that connects them.
 
+**Which Helix Evolve parts carry over, and where they go** (from `helix_evolve/docs/VERSIONS.md`):
+
+| Helix Evolve part | What it does there | Its job in the box |
+|---|---|---|
+| Two loops around one exact scorer (v4 onward) | Mutations explore without a plan; planned experiments test one change at a time | The inner volume loop for definitions, laws, closures and experiments |
+| Context store and guidance store (lean, Nov 11–12) | Facts taken as true; approaches kept as refutable hypotheses, each with a record computed from results | The Glass Model's confirmed claims, and its ledger of live rival hypotheses with their records |
+| Register of hills (v8) | Distinct solution families, defined by what programs produce, measured by code | Rival explanations grouped by behaviour: two definitions that agree on every input are one hill. This is a working answer to non-identifiability (§8) |
+| Design map with coordinates (v9) | A codebook of design decisions, a Bayesian model of the landscape, new decisions discovered from residuals | The map of hypothesis spaces (§3.5), and library growth from the residual (§3.3 E) |
+| Side lines judged on their own progress (v7) | Exploration rises when progress stalls; nothing is closed while it climbs | How the director keeps alternative explanations alive while one leads |
+| The Scout (lean) | Web, code and paper searches each generation | The Librarian role |
+| One golden version (lean) | Only one current version, always known | The outer loop's rule: a new box version replaces the old only by raising the discovery score |
+
 **What would show this is wrong.** If a Helix-scale definition search (thousands of programs, exact held-out scorer,
 search primitives allowed) still finds nothing for a variable the network demonstrably computes, then the bottleneck
 is not volume but the library's base language or the variable itself, and the director, not the engine, must do
