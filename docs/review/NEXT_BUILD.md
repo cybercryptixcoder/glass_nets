@@ -995,6 +995,46 @@ search primitives allowed) still finds nothing for a variable the network demons
 is not volume but the library's base language or the variable itself, and the director, not the engine, must do
 that work. X6 is designed to tell these apart.
 
+### 3.12 One run of the agentic box, end to end, and how it knows it is improving
+
+Shreyas asked whether this system can do what the evolutionary system does: run many times and check that it
+verifiably improves. It can, at three timescales, each with its own exact signal.
+
+```
+ OUTER LOOP (days, across versions of the box)        signal: discovery score on the calibration ladder
+ ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+ │  MIDDLE LOOP (hours, one network): the director's cycle    signal: the residual curve        │
+ │  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+ │  │ pick the largest structured residual → state the question → write and freeze its scorer   │ │
+ │  │        │                                                                                 │ │
+ │  │        ▼   INNER LOOP (minutes): Helix volume search      signal: the exact score        │ │
+ │  │   ┌──────────────────────────────────────────────────────────────────────────────┐      │ │
+ │  │   │ exploring loop (vary programs freely) ⇄ reasoning loop (one change at a time) │      │ │
+ │  │   │              └──────────► one exact scorer ◄──────────┘   memory of findings   │      │ │
+ │  │   └──────────────────────────────────────────────────────────────────────────────┘      │ │
+ │  │        │ best candidates                                                                 │ │
+ │  │        ▼                                                                                 │ │
+ │  │ director reads them, sets rivals against each other, runs confirm-mode tests             │ │
+ │  │        │ confirmed claims                                                                │ │
+ │  │        ▼                                                                                 │ │
+ │  │ Glass Model updated; residual re-measured; library grows (abstraction)                   │ │
+ │  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+ │  across networks: what the library learned makes the next network cheaper                     │
+ └───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Loop | Runs on | What improves | How it is verified |
+|---|---|---|---|
+| **Inner** (minutes, many thousands of calls) | A Flash-grade model, Helix's figure-eight | One candidate definition, law or experiment | The exact scorer, fixed by the director before the run: held-out agreement with the network's variable, intervention agreement, length |
+| **Middle** (hours, a few dozen cycles) | A strong agent as director | The Glass Model of one network | The residual curve: the structured residual falls only when a claim passes the frozen confirm tests |
+| **Outer** (days, across versions of the box) | Shreyas and the director | The box itself | The discovery score on the calibration ladder (blind recovery of unpublished algorithms). A new version replaces the old only if it raises that score, one golden version at a time, as lean Helix keeps |
+
+**Why this does not repeat the Goal 2 failure ("the loop optimises whatever score it is shown").** The inner loop is
+*meant* to optimise its score, as Helix's loops do, and that is safe exactly when the score is exact and closed to
+loopholes. The design puts the loophole-closing where Helix learned it belongs: in the scorer, written and frozen by
+the director before the search starts, with the must-fail controls built in (shuffled targets, hash programs, held-out
+positions). Nothing an inner loop produces becomes a claim until the director runs it through confirm mode.
+
 ---
 
 ## 4. What to keep, what to scrap
