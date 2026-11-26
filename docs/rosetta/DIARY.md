@@ -131,3 +131,23 @@ for reference, the current move's own destination: 2.93). Jenner et al. (2024) f
 transformer and built their method on its squares-as-tokens structure; LD2 is a convolutional network. Tightening
 the control (also matched on being attacked by the moved piece after the move, and on attack counts) and running
 blocks 4, 6, 8 and the second network now.
+
+**05:15. Look-ahead, both controls on the same positions (lookahead_causal2_*.json).** With the control square also
+matched on being attacked by the moved piece and on attack counts, the effect shrinks: LD2 block 4 +0.016 (CI -0.002 to
++0.036), block 6 +0.006 (CI -0.015 to +0.027); 744706 block 4 +0.023 (CI +0.004 to +0.041), block 6 (tight control,
+first version) +0.023 (CI +0.007 to +0.040). Split at LD2 block 6: where the follow-up square is attacked by the moved
+piece, +0.079 (CI +0.013 to +0.152, n 268); elsewhere -0.011. The first, looser result (+0.089) was mostly the moved
+piece's attack pattern, not look-ahead. Status: information present (probe), causal role small and only consistent in
+744706.
+
+**05:15. Replication (replicate_744706_s10.json).** 22 of 22 LD2 definitions tested are matched by a variable of
+744706's own dictionary above the line (0.329), with 744706's own line for the look-ahead primitives.
+
+**05:21. The DISCOVERY battery on ten translated variables (battery_s10.json).** None passes all six pre-registered
+checks. Closest: variable 502, "not empty and not open_file and la_m1_to" (the piece the chosen move takes): fidelity
+0.459, not a restatement (R2 0.32), value gain +0.31% (CI +0.04% to +0.59%), replicates (0.592), a look-ahead
+primitive; substitution restores 30% (bar 50%). Substitution restores 21% to 47% across the ten (in check: 47%, but a
+restatement, R2 1.0). Forward selection (residual_curve_s10.json) reached +0.96% of value variance with five concepts.
+
+**05:22. Next.** Compositions of up to three programs for the strongest candidates, with a composition line from the
+untrained dictionary, to see whether substitution clears 50%; fresh-games knowledge test; live teachability.

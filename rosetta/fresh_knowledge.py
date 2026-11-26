@@ -47,7 +47,9 @@ if __name__ == "__main__":
             cur = nxt
             print("ply", ply + 1, round(time.time() - t0), "s", flush=True)
         Pf = build(fens, lines, procs=2).astype(np.float16)
-        CXf = np.array([concepts(chess.Board(f)) for f in fens], dtype=np.float64)
+        np.savez(cache.replace(".npz", "_partial.npz"), P=Pf, q=qf, lines=np.array(json.dumps(lines)))
+        cn = [str(x) for x in np.load(os.path.join(L.C, "LD2", "concepts.npz"))["names"]]
+        CXf = np.array([[float(d[n]) for n in cn] for d in (concepts(chess.Board(f)) for f in fens)], dtype=np.float64)
         np.savez(cache, P=Pf, CX=CXf, q=qf)
     print("fresh features ready", round(time.time() - t0), "s", flush=True)
     E = []
