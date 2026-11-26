@@ -99,6 +99,8 @@ Push access to the repo was refused by the session's permission system, so this 
 - 00:56: read memory on Helix Evolve; cloned `cybercryptixcoder/helix_evolve` read-only; read its README (results table, how it works), `docs/research/RESEARCH_CASE.md`, `docs/VERSIONS.md` open questions, `docs/LEAN_RESULTS.md` (experiments 1–4 and "so far"); in this repo read `docs/V3_JOB.md`, `versions/v1|v2/README.md`, `docs/handoff/03_ANALYSIS.md` §0 and §6.
 - 00:58: Shreyas approved a separate fresh agent for the independent critique, 10-minute updates, and full freedom to rework from scratch.
 - 00:59: wrote NEXT_BUILD §3.11 (the engine question, with the evidence table from all three Helix lines, the four conditions under which a cheap model at volume is strong, a sub-problem-by-sub-problem verdict, the three-layer answer, why interpretability suits Helix, and what would show it wrong); added Q11 and experiment X6; updated §0 and the keep table.
+- 01:00: launched a separate, fresh agent for the independent critique (read-only, writes its report to `/home/claude/review/CRITIQUE.md`); it has not seen this review's reasoning.
+- 01:02: wrote `docs/review/PREREG_FIRST_EXPERIMENTS.md`: X1–X6 in the repository's routine (build step served, question and decisions, frozen measurement, must-pass and must-fail cases, controls, runs, cost; pass lines from controls). Added a pointer entry to `docs/glass/DIARY.md`, as CLAUDE.md asks for every step to be documented there.
 - Messages to Shreyas, for the record: update 1 at 23:34; update 2 with both files at 23:44; update 3 with files at 23:52; update 4 with files at 00:01; the extension request at 00:04 (each time taken from the clock reading just before sending).
 
 ## Findings (numbered, added as they appear)

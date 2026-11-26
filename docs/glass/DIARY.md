@@ -2164,3 +2164,10 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   - Non-abelian: SL(2,3) s2 was still decompiling. D12 s2, Z7⋊Z3, Z5⋊Z4 and D10 were never trained (GPU sessions lost).
 - **Compute:** about 5 h of L4 across dc7, dg1–dg4 (three reclaimed mid-run) and about 8 h of CPU sessions.
 - **Write-up:** `docs/decomp/RESULTS.md` (one page), `DECOMPILER.md`, `FACTOR.md`, `POW_MECHANISM.md`. The catalogue shows every decompiled network, including the A5 and S4 tables.
+
+## Nov 26, 01:02 ET (clock): research review of the whole project (branch `review-next-build`)
+
+- A review of every phase, instrument and run, written to plan the next build, is in `docs/review/`:
+  `NEXT_BUILD.md` (diagnosis and design), `REVIEW_LOG.md` (every step, finding and decision, with clock times) and
+  `PREREG_FIRST_EXPERIMENTS.md` (the first six experiments, pre-registered, none run).
+- No code was changed and no experiment was run. This entry only points to the review's own log.
