@@ -40,3 +40,16 @@ Predictions: (1) t1 looks ahead along quiet follow-ups at both blocks; (2) each 
 has its upper bound below t1's estimate at the same block; (3) all three look ahead along forcing follow-ups.
 Outcome: (1) and (3) held; (2) failed for 744706 at block 4. The architecture split is withdrawn; the strength
 difference and the dominance of forcing lines stand.
+
+## R3 (exploratory; four sub-tests registered in the diary before their runs)
+
+Ledger row R3: where LD2's evaluation and its extra knowledge pass. Exploratory as a whole; these four sub-tests were
+written down, with their yes and no outcomes, before they ran:
+- 06:22, line swing in LD2: yes if the fresh-game interval sits above the random-move control's and recovers a clear
+  share of LD2's gain. Outcome: yes (+1.18%, 33%; random moves +0.02%).
+- 06:27, few-variable knowledge in 744706: yes if its top 16 beat every control set and recover more than half of its
+  gain. Outcome: yes (78%; controls 1% to 39%).
+- 06:31, static-tactics control for the LD2 line swing: the look-ahead reading stands if the swing adds over static
+  tactics with an interval above 0. Outcome: stands (+0.61%, CI +0.22 to +1.01%).
+- 06:33, line swing in 744706: yes if above the random-move control and above static tactics. Outcome: yes (+0.87%;
+  +0.50% over static tactics, CI +0.09 to +0.92%).

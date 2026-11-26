@@ -191,8 +191,9 @@ reader strong enough to apply square-level rules (a frontier model, or people) i
 
 ## 9. Where the evaluation and the extra knowledge pass (glass2_*.json, fresh_where_s10.json, top_pos_s10.json, line_swing*_s10.json)
 
-Exploratory, run after the main tests (diary 06:10 to 06:22). The 512 variables are ranked by attribution: activation
-times the gradient of LD2's value along each variable's decoder direction, on 600 training positions.
+Exploratory, run after the main tests (diary 06:10 to 06:39; ledger R3); four sub-tests were registered in the diary
+before their runs. The 512 variables are ranked by attribution: activation times the gradient of LD2's value along
+each variable's decoder direction, on 600 training positions.
 
 The glass model with the K most important variables put back at their true values and every other variable at its
 single program (1,000 held-out positions):
