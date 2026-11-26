@@ -151,3 +151,27 @@ restatement, R2 1.0). Forward selection (residual_curve_s10.json) reached +0.96%
 
 **05:22. Next.** Compositions of up to three programs for the strongest candidates, with a composition line from the
 untrained dictionary, to see whether substitution clears 50%; fresh-games knowledge test; live teachability.
+
+**05:24. Fresh games (fresh_knowledge_s10.json).** On 16,000 positions from games never used anywhere, the 114
+translated variables add +0.65% (CI +0.13% to +1.17%) to the textbook library's prediction of the result (R2 0.149);
+LD2's own value adds +3.58% (CI +2.89% to +4.22%).
+
+**05:25. Compositions (compose_sub_K3_s10.json; declared in PREREGISTRATION.md).** Three-program definitions, line
+0.388 from the untrained dictionary. Variable 174 reaches fidelity 0.759 and substitution 0.501; 502: 0.353; 43:
+0.328; 166: 0.347.
+
+**05:26. Checks of the marginal pass.** Variable 174's composition on a second, disjoint set of 800 positions:
+substitution 0.536 (CI 0.485 to 0.585); first set 0.501 (CI 0.433 to 0.568). Its composition is matched in 744706
+(variable 455, 0.699). All six pre-registered checks pass, at the margin.
+
+**05:26 to 05:28. Look-ahead in the transformer (lookahead_causal2_t1.json).** Same test on Leela's transformer t1:
++0.075 (CI +0.049 to +0.104) at block 4, +0.086 (CI +0.061 to +0.114) at block 6, +0.054 (CI +0.035 to +0.079) at
+block 8, holding where the follow-up square is attacked by the moved piece and where it is not. Jenner et al.'s known
+answer is recovered; the convolutional networks show 0.006 to 0.023. Strength is a confound: t1 is the stronger net.
+
+**05:28. Teachability, live (teach_dict_s10.json).** Failed: a fresh Flash call without thinking could not apply the
+sentences to FEN positions (hit rates 0.00 to 0.13, chance 0.05; 3 of 10 unparseable). A low-thinking run did not
+return in 11 minutes and was stopped.
+
+**05:29.** Docs written (RESULTS, FINDINGS, DISCOVERY, STATUS, PREREGISTRATION); ledger row R1 closed. Next: Rosetta
+on the transformer's middle layer, to name its look-ahead variable directly.

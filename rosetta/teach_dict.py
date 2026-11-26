@@ -39,7 +39,7 @@ if __name__ == "__main__":
     def run(job):
         f, s, rv, fens, top = job
         def score(sentence):
-            pred = llm.teach(sentence, fens, k=3, effort="low")
+            pred = llm.teach(sentence, fens, k=3, effort="none")
             if len(pred) != len(top):
                 return None
             return float(np.mean([len(set(p[:3]) & t) / 3 for p, t in zip(pred, top)]))

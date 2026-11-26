@@ -64,7 +64,10 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
   own value (CI 2.20% to 5.13%).
 - Forward selection on a training sub-split, scored held-out: see the file (first concepts added: an enemy knight we
   barely control, squares two or more of our moves reach that no enemy pawn covers, the piece our move takes).
-- Fresh games: FRESH_PLACEHOLDER
+- Fresh games (fresh_knowledge_s10.json): 16,000 positions from Lichess games never used anywhere in Rosetta (Kepler's
+  fresh set), fit on the 16,000 original game positions. The textbook library reaches R2 0.149 for the result; the 114
+  translated variables add +0.65% (CI +0.13% to +1.17%); LD2's own value adds +3.58% (CI +2.89% to +4.22%). The
+  translations carry about a fifth of what the network knows about who wins beyond the textbook, on games it never saw.
 
 ## 6. Look-ahead (lookahead_profile.json, lookahead_causal*_site*.json, feats_lookahead_s10.json)
 
@@ -83,9 +86,33 @@ LD2's last block rebuilt from the variables, then run through LD2's own heads, 1
 | LD2, 8 (tight control, first version) | -0.021 | 0.013 | -0.033 (-0.057 to -0.013) |
 | 744706, 4 | 0.042 | 0.019 | +0.023 (+0.004 to +0.041) |
 | 744706, 6 (tight control, first version) | 0.034 | 0.011 | +0.023 (+0.007 to +0.040) |
+| t1 (transformer), 4 | 0.081 | 0.007 | +0.075 (+0.049 to +0.104) |
+| t1 (transformer), 6 | 0.085 | -0.001 | +0.086 (+0.061 to +0.114) |
+| t1 (transformer), 8 | 0.048 | -0.006 | +0.054 (+0.035 to +0.079) |
 
-  For scale, ablating the destination of the current move itself costs 1.6 to 3.4. A first run with a looser control
+  For scale, ablating the destination of the current move itself costs 1.6 to 3.4 (t1: 1.5 to 2.4). In t1 the effect
+  holds where the follow-up square is attacked by the moved piece (+0.16 to +0.20) and where it is not (+0.04 to +0.06,
+  all CIs above zero); in LD2 only the first (block 6: +0.079, CI +0.013 to +0.152, n 268). The transformer is also the
+  stronger network (mate in one: 49 of 50 against LD2's 44, results/kepler/chess/t1_check.json), so architecture and
+  strength are confounded. A first run with a looser control
   (occupancy only) showed +0.089 (CI 0.059 to 0.120) at LD2 block 4; tightening the control removed most of it.
+
+## 6b. The DISCOVERY battery (battery_s10.json, compose_sub_K3_s10.json, rep_compose_K3_s10.json, sub_check_f174_s10.json)
+
+Ten translated variables through the six pre-registered checks (a fidelity above the line, b not a restatement, c
+substitution restores at least 50%, d value gain CI above zero, e replicates in 744706, f game-results gain CI above
+zero or a look-ahead primitive). Single programs: none passes; substitution restores 21% to 47%. Compositions of three
+programs (line for compositions from the untrained dictionary: 0.388), four candidates:
+
+| variable | fidelity | restatement R2 | substitution restores | value gain (CI) | 744706 | results gain (CI) | look-ahead | all six |
+|---|---|---|---|---|---|---|---|---|
+| 174 | 0.759 | 0.72 | 0.501 (0.43 to 0.57); disjoint set 0.536 (0.48 to 0.58) | +0.57% (+0.21% to +0.93%) | 0.699 | +0.61% (-0.23% to +1.41%) | yes | **yes, at the margin** |
+| 502 | 0.499 | 0.40 | 0.353 | +0.30% (-0.00% to +0.61%) | 0.599 | +0.15% (-0.75% to +1.00%) | yes | no |
+| 43 | 0.491 | 0.22 | 0.328 | -0.06% | 0.354 (below) | -0.45% | yes | no |
+| 166 | 0.420 | 0.84 | 0.347 | +0.17% (-0.04% to +0.38%) | 0.349 (below) | -0.72% | no | no |
+
+Variable 174's three programs: "not opp_P and outnumbered_opp and la_m1_to" (weight 1.78), "min_att_us<=3 and
+hanging_opp and not check_from_us" (0.63), "not empty and not opp_N and la_m1_to" (0.51).
 
 ## 7. Replication in the second network (replicate_744706_s10.json)
 
@@ -94,4 +121,8 @@ matched by a variable of 744706's own sparse dictionary above the line (0.329), 
 
 ## 8. Teachability, live (teach_dict_s10.json)
 
-TEACH_PLACEHOLDER
+Five translated variables, plain-English sentences written from the programs alone, 8 held-out positions each, a
+fresh DeepSeek V4.1 Flash call (no thinking; a run with low thinking did not return within 11 minutes and was stopped)
+names the 3 squares where the variable is most active: hit rates 0.00, 0.08 and 0.13 against chance 0.05, rival
+sentences 0.04 to 0.25, and 3 of 10 answers unparseable. The test failed: this reader cannot apply a square-level
+definition to positions given as FEN text. Teachability stays untested; it needs a reader that is shown the board.
