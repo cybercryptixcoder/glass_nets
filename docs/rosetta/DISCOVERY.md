@@ -50,7 +50,9 @@ when a network is thinking ahead. A rule cannot hide a copy of the network insid
 
 6. **The network's judgement runs through about 16 of its 512 internal variables, and a third of what it knows beyond
    the textbook is what its own planned moves win.** Of what the network knows about who wins beyond textbook chess,
-   91% passes through about 16 of the 512 variables in its last layer (16 picked at random carry 13% to 62%). Our
+   91% passes through about 16 of the 512 variables in its last layer (16 picked at random carry 13% to 62%); in a
+   second Leela network the same holds (78%). Those 16 split into "we are winning", "we are losing" and "this is
+   drawish" signals rather than one score. Our
    rules describe only 2 of those 16, which is why the rebuilt layer loses the evaluation. One part we can name: the
    material the network wins along the three moves it plans ahead accounts for a third of its extra knowledge (the
    same count along random moves accounts for almost none).

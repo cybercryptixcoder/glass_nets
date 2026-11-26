@@ -32,7 +32,8 @@ same for 744706, `python3 rosetta/yardstick.py`, `python3 rosetta/sae.py LD2 10`
 - Translated variables carry about a fifth of LD2's extra knowledge about game results, on fresh games, spread thinly.
 - No new chess concept; the textbook gap is mostly unexplained (translations close about 7%).
 - The evaluation passes through few variables: 16 of LD2's 512 carry 91% of its gain over textbook knowledge on fresh
-  games (random 16: 13% to 62%; least important 16: 4.5%), and Rosetta cannot define most of them yet.
+  games (random 16: 13% to 62%; least important 16: 4.5%); replicated in 744706 (78%; random 16: 35% to 39%). They
+  split into win, loss and draw signals, and Rosetta cannot define most of them yet.
 - A third of LD2's knowledge beyond the textbook is the material its own 3-ply line wins (33%; along random moves
   0.6%); its value already contains it.
 

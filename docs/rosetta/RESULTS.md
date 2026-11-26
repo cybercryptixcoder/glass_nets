@@ -245,3 +245,18 @@ LD2's own probabilities). The 16 split into "we are winning" variables (304: win
 193, 415, 50, 0, 184: win +0.34 to +0.46) and "we are losing" variables (434: loss +0.78; 192: +0.59; 303: +0.54; 249:
 +0.53). Three also track drawishness beyond who is ahead (draw probability with W - L removed linearly): 434 -0.49,
 493 -0.40 (decisive positions), 508 +0.34 (drawish). The evaluation is held as separate win, loss and draw signals.
+
+Replication in 744706 (registered before the run, DIARY 06:27; fresh_where_744706_s10.json). Its own dictionary at
+block 10 and its own attribution ranking, the same fresh games:
+
+| added to the textbook concepts | gain | 95% CI | share of 744706's own gain |
+|---|---|---|---|
+| 744706's value (ceiling) | +4.10% | 3.42 to 4.77% | 100% |
+| totals of its 8 most important variables | +3.07% | 2.34 to 3.84% | 75% |
+| totals of its 16 most important | +3.19% | 2.41 to 3.95% | 78% |
+| totals of its 64 most important | +3.77% | 2.93 to 4.54% | 92% |
+| totals of all 512 | +3.44% | 2.63 to 4.23% | 84% |
+| control: 16 random variables (three draws) | +1.44%, +1.51%, +1.59% | | 35%, 37%, 39% |
+| control: the 16 least important | +0.04% | -0.11 to 0.19% | 1% |
+
+Replicates: the top 16 beat every control and recover more than half of the network's gain.

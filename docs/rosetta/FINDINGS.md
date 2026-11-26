@@ -98,7 +98,9 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    loses the evaluation because of a handful of variables: putting back at their true values the 8 that LD2's value
    depends on most lifts the evaluation fit from R2 0.06 to 0.48, and 16 lift it to 0.70; the move choice needs more
    than 128. On 16,000 fresh games, the board-wide totals of those 16 variables carry 91% of LD2's gain over textbook
-   knowledge (16 random variables: 13% to 62%; the 16 least important: 4.5%). Rosetta's programs define only 2 of the
+   knowledge (16 random variables: 13% to 62%; the 16 least important: 4.5%); in the second network 744706, with its
+   own dictionary, its top 16 carry 78% (random 16: 35% to 39%; registered before the run). The 16 split into "we are
+   winning", "we are losing" and "drawish" signals. Rosetta's programs define only 2 of the
    16, square by square or counted over the board. A third of LD2's knowledge beyond the textbook is the material its
    own 3-ply line wins (33%; the same count along random legal moves: 0.6%), and its value already contains it. So the
    translated rules spread their small share of the knowledge thinly (item 4), while the network concentrates its

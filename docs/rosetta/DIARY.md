@@ -275,3 +275,16 @@ keeps win, loss and draw as separate signals rather than one score.
 
 **06:26. Error: the 06:26 update to Shreyas was headed "06:27", a time typed by hand before reading the clock (E8
 again).** The clock read straight after it says 06:26:13. Corrected in the next message.
+
+**06:27. Registered before the run: does the second network 744706 also pass its extra knowledge through a few
+variables? (rosetta/fresh_where_744706.py)** Its own dictionary at block 10 (same recipe), variables ranked by
+attribution to its own value, the same fresh-game comparison and controls as LD2's. Replicates if the top 16 recover
+more than every control set (three random draws of 16 and the 16 least important) and more than half of 744706's own
+gain; fails otherwise.
+
+**06:30. 744706 replication: replicates (fresh_where_744706_s10.json).** Its own dictionary (fraction of variance
+unexplained 0.16), its own attribution. On the 16,000 fresh positions, 744706's value adds +4.10% (CI 3.42 to 4.77%)
+over textbook concepts; the board totals of its top 8 variables recover 75% of that, the top 16 78% (+3.19%, CI 2.41
+to 3.95%), the top 64 92%, all 512 84%; controls: 16 random variables 35%, 37%, 39%; the 16 least important 1%. Both
+registered conditions hold (top 16 above every control, above half). In both networks the extra knowledge passes
+through a few variables.
