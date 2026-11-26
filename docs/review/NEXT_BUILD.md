@@ -1255,6 +1255,10 @@ argued.
   grid, over 4 solver substeps per frame (`kepler/targets/fluid/sim.py`; `scripts/kepler/fluid_build.py`,
   FRAME_DT 0.05 against dt 0.0125). It replaces four solver steps on the solver's own grid: there are no
   unresolved scales for it to model and no long step to integrate, so there is little for it to be cheap *about*.
+  In fact it is not cheap at all. Counting arithmetic from the code (`model.py`: width 32, six dilated 3 × 3 blocks;
+  `sim.py`: RK4 with five FFTs per right-hand side, four substeps per frame), one forward pass costs about 512
+  million floating-point operations per frame, against about 11 million for the solver it imitates: roughly 47×
+  more. This is an arithmetic estimate, not a timing on hardware.
   And the law it was trained on was sealed in the simulator, so the best possible finding was "it implements the
   law". To ask how a network does physics cheaply, train it where
   cheapness is forced:

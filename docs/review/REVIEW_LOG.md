@@ -114,6 +114,7 @@ Push access to the repo was refused by the session's permission system, so this 
 - 02:53: while the critique agent resumed, checked the evidence behind F25 myself (the agent's last note pointed there): `docs/GOAL2_CALIBRATION_RESULT.md` and JOURNAL entries E8, E12, E15, E27 show the "shared related-word operation" comes from real but mispredicted effects of whole-layer edits, while the run verified only two word-table tricks. Qualified the claim in NEXT_BUILD §1b and the lessons table, and in F25.
 - 02:54: consistency pass, part 1: fixed stale counts in the reading guide (six experiments), added §3.11–§3.13 to it, pointed it to BRIEF.md, and renamed §0 "The answer in short" (it has outgrown one page).
 - 02:54: re-checked the Helix Probe FIND row against `docs/handoff/03_ANALYSIS.md` §1: added that mixing chosen and random experiments did best on numeric functions (0.88 against 0.80 all-chosen and 0.75 all-random), which supports both the experimenter role and keeping some unplanned variation, as Helix Evolve's mutations do.
+- 02:55: free check of the fluid claim (no runs, no installs): counted floating-point operations per frame from the code. Network (`kepler/targets/fluid/model.py`: stem, six dilated 3 × 3 residual blocks with 1 × 1 mixes at width 32, head; 64 × 64): about 512 MFLOP. Solver (`kepler/targets/fluid/sim.py`: RK4, 5 real FFTs of 64 × 64 per right-hand side, 4 substeps per frame, plus pointwise work): about 11 MFLOP. Ratio about 47×. Added to flagship 2 in NEXT_BUILD, labelled as an arithmetic estimate, not a hardware timing.
 - Messages to Shreyas, for the record (first run): update 1 at 23:34; update 2 with both files at 23:44; update 3 with files at 23:52; update 4 with files at 00:01; the extension request at 00:04 (each time taken from the clock reading just before sending).
 
 ## Findings (numbered, added as they appear)
@@ -205,6 +206,10 @@ Push access to the repo was refused by the session's permission system, so this 
 
 - **F41. Each flagship has a named open seat, and in three of four the seat is exactly the inside-out step the box adds.** Chess: Jenner et al. state as open how look-ahead is implemented, whether lines are compared, and how it combines with heuristics across positions. Fluid: closures trained as closures are well studied; reading the implicit closure of an end-to-end coarse emulator is not. Lying: a shared sycophancy/lying/instructed-lying head circuit is reported (arXiv 2604.19117); the gate, the no-instruction case and a transferable mechanism-defined fingerprint remain. Weight reading: no work opens the reader model; written networks are 99% zeros (arXiv 2611.16981), which confirms X2's readability check.
 - **F42. LLM-guided program evolution for interpretability exists only against outputs** (LLM-SR for equations; LLMGEN for genomic surrogates; programmatic features; cognitive models). Scoring programs against a network's internal variable and requiring interchange where it lives is the inside-out version, and X6 tests it.
+
+### The fluid model's cost (02:55, after resuming)
+
+- **F43. The current fluid model is about 47× more expensive per frame than the solver it imitates,** by arithmetic count (about 512 MFLOP for the network against about 11 MFLOP for four RK4 pseudo-spectral substeps at 64 × 64). So "how is it cheap?" not only cannot be asked of this target; the target is not cheap. An estimate from the code, not a timing; GPU convolutions and FFT constants change the ratio but not its order of magnitude in favour of the network.
 
 ## Reasoning: how the findings led to the design (written 23:56)
 
