@@ -45,7 +45,9 @@ by a fresh agent is `CRITIQUE.md`, and what survived checking is folded in. Nov 
   - **answering without running**, the test against copies: used to estimate what the network does, does the
     explanation beat simply running the network, or its cheapest copy, for the same compute? A copy can only answer
     by being run. The same test works with a language model as the estimator: barred from running code and given
-    less budget than hand-executing the network would take, it can use an explanation but not a copy. (Length in a
+    less budget than hand-executing the network would take, it can use an explanation but not a copy. The two
+    versions catch different things: the first, copies of the network's own size; the second, opaque programs of
+    any size, such as a small distilled student. (Length in a
     shared vocabulary is reported too, but not as a gate: the repo's own pre-registered test showed that "fewer bits
     than a copy" rejects real explanations of small networks.);
   - whether it makes checking the network cheaper, where the domain allows a proof;
