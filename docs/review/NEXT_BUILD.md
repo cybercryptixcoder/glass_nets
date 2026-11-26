@@ -201,10 +201,13 @@ patching), and it is answerable and testable. But it has three built-in ceilings
    steps the network takes to get there are tested only as far as they hold an analyst's variable.
 3. **It interprets one behaviour at a time.** A templated task, a fixed input set. How the network handles the space
    of inputs as a whole, its regimes and how it switches between them, is outside the question. The project already
-   met the cost of this on Nov 7: **the model is not organised by our behaviour labels.** Qwen's late layers do one
-   shared "turn this word into a related word" job across translation, capitals, word forms and young-animal names,
-   and layers expected to handle arithmetic affected gender words (FINDINGS.md, Goal 2). A behaviour-by-behaviour
-   study slices across the model's own operations.
+   saw a sign of the cost on Nov 7. Edits to whole late MLP layers of Qwen moved translation, capitals,
+   young-animal names and word forms together, and the layers expected to handle arithmetic moved gender forms
+   instead (`docs/GOAL2_CALIBRATION_RESULT.md`, "what it shows" item 4; JOURNAL, entries E8, E12, E15, E27). This
+   is an observation from mispredicted effects, not one of Goal 2's verified discoveries: the run verified only two
+   word-table tricks. Whole-layer edits are coarse, so it suggests a shared "produce a related word" operation
+   rather than showing one. It is still a warning that a behaviour-by-behaviour study can slice across the model's
+   own operations.
 
 ### Today's workflow, drawn
 
@@ -317,7 +320,7 @@ build should treat them as known:
 |---|---|
 | Whether an approximate account *can* be faithful looks measurable in advance: a network's noise tolerance (how much noise flips 5% of its decisions) predicts it. The repo calls this a candidate result, replicated across 13 networks plus 15 training runs | UNITS_FINDINGS F3, P5, U11: AlgZoo nets flip at ~1% noise, the modular nets tolerate ~80× more |
 | A representation can be present and unused: the month circle is readable at R² 1.00 and causally inert for this decision | lab/constructions/gpt2_month_rollover/DISCOVERY.md, E32 |
-| Models are not organised by our behaviour labels; one operation serves many behaviours | FINDINGS.md, Goal 2 |
+| Models may not be organised by our behaviour labels: whole-layer edits moved several "different" behaviours together (an observation from mispredicted effects, not a verified finding) | `docs/GOAL2_CALIBRATION_RESULT.md` item 4; FINDINGS.md, Goal 2 |
 | Editors that do not understand a model fake success by breaking the cue, not the skill | FINDINGS.md, Goal 1 |
 | An optimiser pointed at a score games the score, and every rule written against the gaming gets beaten by a new disguise | Goal 2; LEARNINGS E1, E10, E11 |
 | A good predictor need not implement the law, and whether it does changes by regime (the fluid model follows the law in equilibrium, not in transients or out of distribution) | kepler/FINDINGS §1 |
