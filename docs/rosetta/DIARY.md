@@ -147,7 +147,7 @@ piece's attack pattern, not look-ahead. Status: information present (probe), cau
 checks. Closest: variable 502, "not empty and not open_file and la_m1_to" (the piece the chosen move takes): fidelity
 0.459, not a restatement (R2 0.32), value gain +0.31% (CI +0.04% to +0.59%), replicates (0.592), a look-ahead
 primitive; substitution restores 30% (bar 50%). Substitution restores 21% to 47% across the ten (in check: 47%, but a
-restatement, R2 1.0). Forward selection (residual_curve_s10.json) reached +0.96% of value variance with five concepts.
+restatement, R2 1.0). Forward selection (residual_curve_s10.json) reached +0.96% of value variance with six concepts.
 
 **05:22. Next.** Compositions of up to three programs for the strongest candidates, with a composition line from the
 untrained dictionary, to see whether substitution clears 50%; fresh-games knowledge test; live teachability.
@@ -175,3 +175,17 @@ return in 11 minutes and was stopped.
 
 **05:29.** Docs written (RESULTS, FINDINGS, DISCOVERY, STATUS, PREREGISTRATION); ledger row R1 closed. Next: Rosetta
 on the transformer's middle layer, to name its look-ahead variable directly.
+
+**05:35. Rosetta inside the transformer (t1_rosetta_site6.json).** A sparse dictionary of t1's block 6 (512 variables)
+scanned against t1's own line (line from an untrained t1: 0.041). The strongest look-ahead-bound variable is the same
+concept as LD2's variable 174 and 744706's variable 455: variable 245, "not pawn_att_them and outnumbered_opp and
+la_m1_to", 0.728 (static rival 0.686). Others: variable 354, "opp_K and la_m1_attacks" (the move gives check), 0.665
+(static rival 0.594). No single variable is defined by the reply or the follow-up move: the transformer's look-ahead,
+causal at the square level, is not one variable of this dictionary. (The causal check of variable 354 in that run had
+a seeding bug in its bootstrap, so its interval is not reported; its effect was near zero: 0.001.)
+
+**05:40. The capture concept inside the transformer, substituted (t1_sub_site6.json).** t1's variable 245 as three
+programs ("not pawn_att_them and outnumbered_opp and la_m1_to" 2.90, "not opp_P and not pawn_att_us and
+outnumbered_opp" 1.82, "hanging_opp and mob_us>=1 and not la_m1_to" 1.13): fidelity 0.800; put in place of the variable
+inside t1 at block 6, it restores 73.1% of the variable's effect on the value (bar 50%). The same concept is a working
+part of all three networks: LD2 (restores 50% to 54%), t1 (73%), matched in 744706 (0.70).

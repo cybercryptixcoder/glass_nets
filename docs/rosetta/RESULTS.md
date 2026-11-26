@@ -114,6 +114,24 @@ programs (line for compositions from the untrained dictionary: 0.388), four cand
 Variable 174's three programs: "not opp_P and outnumbered_opp and la_m1_to" (weight 1.78), "min_att_us<=3 and
 hanging_opp and not check_from_us" (0.63), "not empty and not opp_N and la_m1_to" (0.51).
 
+## 6c. Rosetta inside the transformer t1, block 6 (t1_rosetta_site6.json)
+
+Sparse dictionary (512 variables) of t1's block 6, scanned against t1's own line; line from an untrained t1: 0.041.
+
+| variable | definition (full library) | fidelity | static rival | fidelity |
+|---|---|---|---|---|
+| 245 | not pawn_att_them and outnumbered_opp and la_m1_to | 0.728 | not opp_P and mob_us>=1 and outnumbered_opp | 0.686 |
+| 354 | opp_K and la_m1_attacks (the move gives check) | 0.665 | opp_K and dist_own_king<=6 and not outnumbered_opp | 0.594 |
+| 335 | check_from_us and la_m1_to and not la_m2_to | 0.560 | rel_rank>=6 and check_from_us and control>=1 | 0.560 |
+| 341, 444, 110, 291, 353 | static definitions (no look-ahead primitive wins) | 0.64 to 0.80 | same | same |
+
+The capture concept of LD2's variable 174 appears in all three networks (LD2 174, 744706 455, t1 245). No variable is
+defined by the reply or the follow-up move.
+
+Substitution inside t1 (t1_sub_site6.json): variable 245 as three programs ("not pawn_att_them and outnumbered_opp and
+la_m1_to" 2.90, "not opp_P and not pawn_att_us and outnumbered_opp" 1.82, "hanging_opp and mob_us>=1 and not
+la_m1_to" 1.13), fidelity 0.800, restores 73.1% of the variable's effect on t1's value (bar 50%).
+
 ## 7. Replication in the second network (replicate_744706_s10.json)
 
 22 of 22 LD2 definitions tested (the look-ahead-bound variables, the residual carriers and the 12 strongest) are

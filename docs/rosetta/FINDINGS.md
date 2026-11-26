@@ -58,9 +58,13 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
    - matched by a variable of the independently trained 744706 at 0.699;
    - uses the network's own move (a look-ahead primitive); it does not add significantly to predicting game results.
 
-   In chess terms it is a winning-capture detector tied to the move being chosen. That is known chess (capturing an
-   insufficiently defended piece), now as a verified, executable, replicated internal variable of Leela, not new
-   chess knowledge.
+   The same concept is a working part of the transformer too: t1's variable 245, defined by the same kind of three
+   programs (fidelity 0.800), restores 73% of its variable's effect on t1's value when substituted at block 6.
+
+   In chess terms it is a winning-capture detector tied to the move being chosen: all three Leela networks, convolutional
+   and transformer, dedicate a variable to "material I can win, especially with the move I am about to play". That is
+   known chess (capturing an insufficiently defended piece), now as a verified, executable, replicated internal variable
+   of Leela, not new chess knowledge.
 
 4. **The translated vocabulary carries real knowledge about who wins.** The 114 variables Rosetta translated at
    fidelity 0.3 or more, as counts per position, add to the classical library's prediction of the game result:
@@ -79,7 +83,7 @@ A cheap model at volume (DeepSeek V4.1 Flash, live) proposes richer definitions;
 ## What it did not find
 
 - **No new chess concept.** The unexplained 22% of LD2's evaluation is still mostly unexplained: all translated
-  variables together close 6.6% of it (+1.46% of variance), and the best five, chosen on training positions, +0.96%.
+  variables together close 6.6% of it (+1.46% of variance), and the best six, chosen on training positions, +0.96%.
 - **Raw channels cannot be defined well** (best 0.46 with four programs; substitution restores at most 4%); the sparse
   dictionary was needed.
 - **The cheap model at volume added nothing here**: 45 usable proposals from 18 live calls, none better than the
