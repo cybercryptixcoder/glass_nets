@@ -39,3 +39,18 @@ again).** Corrected in the next message. From here every message time is copied 
 
 Process note: the ledger row V0 was written after the vocabulary code, before its first commit; CLAUDE.md asks for the
 row first. Gate 1's row (G1) is written before its code.
+
+**00:52 to 00:58. The checker v0 on public Tracr programs (`box/`; ledger row G1, written before its code).**
+`box/adapters/tracr_net.py` re-implements a compiled Tracr transformer's forward pass in numpy with intervention
+hooks at every residual site; it matches Tracr's own `model.apply` to 2e-6 on every residual of four programs
+(frac_prevs, hist, reverse, sort_unique). `box/blueprint.py` is the data model; `box/verify.py` the checker: form
+(blueprint, wiring, allowed linear locations, vocabulary admissibility, declared upstream), run alone against a line
+the caller supplies, interchange interventions on decisive pairs against a family-wise random-subspace control line,
+substitution (reported), and the typing rule for lookups. Known cases (`box/test_checker.py`, written before the first
+run): 4 true blueprints must be certified; 8 must-fail variants of each must be rejected. First run: 34 of 36. The two
+misses: reverse with a wrong or random location for its `length` part was certified. Cause (a translation error): the
+pairs were drawn among inputs of equal length, so swapping `length` never changed a prediction, and a part with no
+decisive pairs passed silently. Fix: pairs of any lengths, with the blueprint's override mirroring the network's
+aligned swap; a rule part that no intervention can test is not certified. Also corrected one test case (reverse's wrong
+definition referred to a part it had not declared, so form rejected it before run alone was exercised). Second run:
+36 of 36 as expected.
