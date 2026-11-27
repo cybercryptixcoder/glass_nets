@@ -97,6 +97,28 @@ def test_chess():
     check(v[0] == 8, f"north shifts toward the opponent: {list(v)}")
     v = vocab.evaluate("n_legal", d, ctx)
     check(v[0] == 20, f"20 legal moves at the start: {list(v)}")
+    # static exchange ("play out the exchange") on known positions
+    ex = ["4k3/8/8/3q4/8/8/3R4/4K3 w - - 0 1",            # rook takes the undefended queen: +9
+          "4k3/8/4p3/3q4/8/8/3R4/4K3 w - - 0 1",          # the queen is defended by a pawn: R takes Q, pawn retakes: +9 - 5 = +4
+          "4k3/8/4p3/3p4/8/8/3R4/4K3 w - - 0 1",          # a defended pawn: taking loses the rook: 0 (do not capture)
+          "4k3/3r4/8/3p4/8/8/3R4/3RK3 w - - 0 1"]         # pawn on d5 defended by the d7 rook, attacked by two rooks: +1
+    cx = vocab.featurize(ex)
+    v = vocab.evaluate("(max see_us)", d, cx)
+    check(list(v) == [9, 4, 0, 1], f"static exchange values: {list(v)}")
+    # one ply ahead: capture where the exchange is best, then count the side-to-move's (now the opponent's) queens
+    v = vocab.evaluate("(after (or own_R own_Q) (argmax_sq see_us) (count own_Q))", d, vocab.featurize(ex[:1]))
+    check(list(v) == [0], f"after Rxd5 the opponent has no queen: {list(v)}")
+    v = vocab.evaluate("(after own_R (argmax_sq see_us) (count opp_R))", d, vocab.featurize(ex[:1]))
+    check(list(v) == [1], f"after Rxd5, from the opponent's view, there is one enemy rook: {list(v)}")
+    v = vocab.evaluate("(after own_K own_Q (count own_Q))", d, vocab.featurize(ex[:1]))
+    check(list(v) == [0], f"no legal move from the king's square to a non-queen square gives 0: {list(v)}")
+    check(not vocab.admissible("(after own_R see_us (count @p))", d, {"p": "Sq"})[0],
+          "after: a part reference inside the new position's expression is rejected")
+    check(vocab.admissible("(after @move_from @move_to (max see_us))", d, {"move_from": "Sq", "move_to": "Sq"})[0],
+          "after: the move may come from the blueprint's own parts (the network's choice, through a part)")
+    bx = vocab.featurize(["4k3/8/8/3q4/8/8/3R4/4K3 b - - 0 1"])   # black to move: white still threatens the queen
+    check(list(vocab.evaluate("(max see_them)", d, bx)) == [9], "see_them: the opponent's best exchange (+9)")
+    check(list(vocab.evaluate("(min see_us)", d, bx)) == [-4], "see_us can be negative: Qxd2 Kxd2 loses 4")
 
 
 def test_seq():

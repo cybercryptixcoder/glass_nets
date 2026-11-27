@@ -138,3 +138,57 @@ def static_extra(board):
     return out
 
 
+
+
+SEE_NAMES = ["see_us", "see_them"]
+
+
+def _least_attacker(board, color, sq):
+    best = None
+    for a in board.attackers(color, sq):
+        v = V[board.piece_type_at(a)]
+        if best is None or v < best[0]:
+            best = (v, a)
+    return best
+
+
+def see(board, sq, side):
+    """Static exchange evaluation ("play out the exchange"): the material `side` wins by capturing on `sq` with its
+    least valuable attacker, both sides then recapturing with their least valuable attackers and each free to stop
+    (standard swap algorithm; x-rays are seen because attackers are recomputed after each capture; pins and
+    promotions are ignored). 0 when there is nothing of the other side's to capture there, or no attacker."""
+    target = board.piece_at(sq)
+    if target is None or target.color == side:
+        return 0.0
+    b = board.copy(stack=False)
+    first = _least_attacker(b, side, sq)
+    if first is None:
+        return 0.0
+    gain = [float(V[target.piece_type])]
+    on_sq_value, color = first[0], not side
+    ptype = b.piece_type_at(first[1])
+    b.remove_piece_at(first[1]); b.set_piece_at(sq, chess.Piece(ptype, side))
+    while True:
+        nxt = _least_attacker(b, color, sq)
+        if nxt is None:
+            break
+        gain.append(on_sq_value - gain[-1])
+        ptype = b.piece_type_at(nxt[1])
+        b.remove_piece_at(nxt[1]); b.set_piece_at(sq, chess.Piece(ptype, color))
+        on_sq_value, color = nxt[0], not color
+    for d in range(len(gain) - 1, 0, -1):
+        gain[d - 1] = -max(-gain[d - 1], gain[d])
+    return gain[0]
+
+
+def see_features(board):
+    """[64, 2]: see_us (the side to move capturing on the square) and see_them (the opponent capturing there, as if
+    it were its move), in the mover's frame."""
+    us = board.turn
+    flip = us == chess.BLACK
+    out = np.zeros((64, 2), dtype=np.float32)
+    for sq in chess.SQUARES:
+        k = _net_sq(sq, flip)
+        out[k, 0] = see(board, sq, us)
+        out[k, 1] = see(board, sq, not us)
+    return out

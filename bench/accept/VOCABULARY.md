@@ -74,13 +74,20 @@ alone (no part references, no invented primitives), with at most 5 constants who
 recovery line (`SPEC.md` §6). The counts in §8 are the sizes of those searches: expression skeletons by length, with
 each constant one fitted slot. Argument orders of symmetric operations are counted separately, so they are upper
 bounds; pruning expressions that give identical values on a probe set (observational equivalence) cuts them further.
-The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 2.5 to 18 million.
+The chess count at L = 6 (1.9 billion skeletons) is the largest; the others are 2.5 to 18 million.
 
 ## 6. Inputs each domain expects
 
 - `chess`: `vocab.featurize(fens)`, which computes the per-square board features in the mover's frame (row 0 is the
   mover's first rank, square index rank * 8 + file, as in the Leela input planes) and five position features. The
-  feature code is a frozen copy (`chess_board.py`) of Kepler's descriptors and Rosetta's static extras.
+  feature code is a frozen copy (`chess_board.py`) of Kepler's descriptors and Rosetta's static extras, plus the
+  static exchange value of each square for both sides (`see_us`, `see_them`: "play out the exchange", the standard
+  swap algorithm; negative for a losing capture).
+  - **Looking ahead:** `(after FROM TO EXPR)` plays the legal move from the square where FROM is largest to the square
+    where TO is largest and evaluates EXPR in the new position, from the view of the side then to move (0 where the
+    move is not legal). FROM and TO may be base-feature maps (for example `(argmax_sq see_us)`, the best exchange)
+    or the blueprint's own parts, which is how a definition reaches the network's chosen move. EXPR uses base
+    features only (it may contain `after` again, for a second ply); a part reference inside it is rejected.
 - `seq`: `{"x": [N, n] array}`, integers or reals.
 - `tok`: `{"tokens": list of token lists}`. RASP semantics as Tracr implements them: `aggregate` is the numerical
   mean of the selected values (0 if none); `aggregate_cat` is the selected value when every selected key holds the
@@ -92,7 +99,7 @@ The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 
 
 ## 7. Tests (`python3 bench/accept/vocab/test_vocab.py`)
 
-71 checks, all passing at publication:
+79 checks, all passing at publication:
 - the grammar: admissible definitions pass; over-length definitions, a sixth constant (including one hidden in an
   invented expression), unknown symbols, type errors, syntax errors and undeclared part references fail;
 - invented operations: an arithmetic numpy function passes and runs; imports, file reads, `np.load`, network calls,
@@ -100,7 +107,9 @@ The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 
 - the library: a named expression that refers to a part, one longer than L, and circular named expressions fail; a
   checked operation with arguments passes, and its literals count as constants;
 - chess: piece counts, a hanging queen, a checking square, king-zone and shift operations, the 20 legal moves of the
-  start position;
+  start position; static exchange values on four known positions (+9, +4, 0, +1) and from the other side's view (+9,
+  and -4 for a losing capture); one ply ahead with `after`, a move that is not legal giving 0, and part references
+  allowed in the move but rejected inside the new position's expression;
 - numeric sequences: AlgZoo's second-largest position, written as two parts; counts and prefix maxima;
 - token sequences: length, histogram, fraction of previous `x` tokens and reverse, written as chains of parts, give
   exactly the outputs of Tracr's own compiled transformers (`tracr.compiler.lib`) on every test sequence;
@@ -115,7 +124,7 @@ Types: `Sq` (a value on each of the 64 squares, mover's frame); `Pos` (one value
 Root types (what a definition may be): `Sq`, `Pos`. **L = 6.**
 
 Base features:
-- `Sq`: `empty`, `own_P`, `own_N`, `own_B`, `own_R`, `own_Q`, `own_K`, `opp_P`, `opp_N`, `opp_B`, `opp_R`, `opp_Q`, `opp_K`, `rel_rank`, `file`, `edge_dist`, `center_dist`, `att_us`, `att_them`, `min_att_us`, `min_att_them`, `pawn_att_us`, `pawn_att_them`, `dist_own_king`, `dist_opp_king`, `own_king_zone`, `opp_king_zone`, `piece_reach`, `pinned`, `defended`, `attacked`, `passed_pawn`, `isolated_pawn`, `doubled_pawn`, `safe_from_opp_pawns`, `safe_from_own_pawns`, `open_file`, `semiopen_us`, `semiopen_them`, `light_square`, `behind_own_pawn`, `in_front_of_opp_pawn`, `hanging_opp`, `hanging_own`, `opp_att_by_lower`, `own_att_by_lower`, `mob_us`, `mob_them`, `check_from_us`, `check_from_them`, `control`, `outnumbered_own`, `outnumbered_opp`
+- `Sq`: `empty`, `own_P`, `own_N`, `own_B`, `own_R`, `own_Q`, `own_K`, `opp_P`, `opp_N`, `opp_B`, `opp_R`, `opp_Q`, `opp_K`, `rel_rank`, `file`, `edge_dist`, `center_dist`, `att_us`, `att_them`, `min_att_us`, `min_att_them`, `pawn_att_us`, `pawn_att_them`, `dist_own_king`, `dist_opp_king`, `own_king_zone`, `opp_king_zone`, `piece_reach`, `pinned`, `defended`, `attacked`, `passed_pawn`, `isolated_pawn`, `doubled_pawn`, `safe_from_opp_pawns`, `safe_from_own_pawns`, `open_file`, `semiopen_us`, `semiopen_them`, `light_square`, `behind_own_pawn`, `in_front_of_opp_pawn`, `hanging_opp`, `hanging_own`, `opp_att_by_lower`, `own_att_by_lower`, `mob_us`, `mob_them`, `check_from_us`, `check_from_them`, `control`, `outnumbered_own`, `outnumbered_opp`, `see_us`, `see_them`
 - `Pos`: `in_check`, `n_legal`, `castle_us`, `castle_them`, `halfmove`
 
 Operations (name: argument types -> result type):
@@ -141,6 +150,9 @@ Operations (name: argument types -> result type):
 - `knight_any`: (Sq) -> Sq. maximum over the knight-jump neighbours
 - `file_any`: (Sq) -> Sq. maximum over the same file
 - `rank_any`: (Sq) -> Sq. maximum over the same rank
+- `argmax_sq`: (Sq) -> Sq. 1 on the square with the largest value (first by index)
+- `argmin_sq`: (Sq) -> Sq. 1 on the square with the smallest value
+- `after`: (Sq Sq Pos) -> Pos. (after FROM TO EXPR): play the legal move from the square where FROM is largest to the square where TO is largest (promotion to a queen), then evaluate EXPR, an expression of base features only, in the new position, from the view of the side then to move; 0 where there is no such legal move. A special form: EXPR is evaluated in the child position, not the current one
 - `count`: (Sq) -> Pos. number of squares where the value is above 0
 - `sum`: (Sq) -> Pos
 - `max`: (Sq) -> Pos
@@ -151,7 +163,7 @@ Expression skeletons by length (constants as fitted slots; part references and i
 
 | length | 1 | 2 | 3 | 4 | 5 | 6 | total |
 |---|---|---|---|---|---|---|---|
-| count | 58 | 911 | 29,526 | 913,381 | 33,960,650 | 1,263,281,142 | 1,298,185,668 |
+| count | 60 | 1,055 | 34,820 | 1,180,040 | 46,234,545 | 1,839,809,130 | 1,887,259,650 |
 
 ### Domain `seq`
 

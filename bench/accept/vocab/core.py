@@ -216,6 +216,14 @@ def check_library(dom, library):
     return True, "ok"
 
 
+def _after_refs(tree):
+    if isinstance(tree, list):
+        if tree and tree[0] == "after" and len(tree) == 4 and "@" in unparse(tree[3]):
+            return True
+        return any(_after_refs(t) for t in tree)
+    return False
+
+
 def admissible(text, dom, part_types=None, library=None):
     """(ok, reason, type): in the grammar, well typed, root type allowed, within L and the constants budget, and
     every invented primitive it may use well formed (check_library)."""
@@ -229,6 +237,9 @@ def admissible(text, dom, part_types=None, library=None):
         return False, f"not in the grammar: {e}", None
     if dom.roots and t not in dom.roots:
         return False, f"root type {t} not allowed (allowed: {dom.roots})", t
+    bad = _after_refs(tree)
+    if bad:
+        return False, "after: the expression evaluated in the new position may not refer to parts (@id)", t
     n, c = length(tree), constants(tree, library)
     if n > dom.L:
         return False, f"length {n} > L={dom.L}", t
@@ -258,6 +269,8 @@ def evaluate(text_or_tree, dom, ctx, parts=None, part_types=None, library=None, 
                 return ops_code[t[1:]]()
             return dom.atoms[t].fn(ctx)
         head, args = t[0], t[1:]
+        if head == "after" and dom.name == "chess":
+            return _after(args, dom, ctx, ev, library, ops_code)
         vals = [ev(a) for a in args]
         if isinstance(head, str) and head.startswith("$"):
             return ops_code[head[1:]](*vals)
@@ -267,6 +280,22 @@ def evaluate(text_or_tree, dom, ctx, parts=None, part_types=None, library=None, 
                 return o.fn(*vals)
         raise TypeError(f"no overload of {head} for {types}")
     return ev(tree)
+
+
+def _after(args, dom, ctx, ev, library, ops_code):
+    """The chess special form (after FROM TO EXPR): EXPR, with base features only, in the position after the move."""
+    import numpy as np
+    from .domains import child_fens, featurize
+    frm, to, expr = ev(args[0]), ev(args[1]), args[2]
+    if "@" in unparse(expr):
+        raise TypeError("after: the expression evaluated in the new position may not refer to parts")
+    kids = child_fens(ctx["fens"], frm, to)
+    out = np.zeros(len(kids))
+    live = [i for i, k in enumerate(kids) if k is not None]
+    if live:
+        cctx = featurize([kids[i] for i in live])
+        out[live] = np.asarray(evaluate(expr, dom, cctx, library=library, ops_code=ops_code), float)
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------- counting

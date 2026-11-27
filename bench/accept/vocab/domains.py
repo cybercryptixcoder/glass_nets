@@ -15,11 +15,11 @@ def _f(x):
 
 # ====================================================================================================== chess
 def chess_domain():
-    """ctx: {"P": [N, 64, 53] per-square features in the mover's frame, "G": [N, 5] position features} (featurize)."""
-    from .chess_board import DESC_NAMES, EXTRA_NAMES
+    """ctx: {"P": [N, 64, 55] per-square features in the mover's frame, "G": [N, 5] position features} (featurize)."""
+    from .chess_board import DESC_NAMES, EXTRA_NAMES, SEE_NAMES
     d = Domain("chess", {"Sq": "a value on each of the 64 squares, mover's frame", "Pos": "one value per position"},
                roots=("Sq", "Pos"), L=6)
-    for i, n in enumerate(list(DESC_NAMES) + list(EXTRA_NAMES)):
+    for i, n in enumerate(list(DESC_NAMES) + list(EXTRA_NAMES) + list(SEE_NAMES)):
         d.atom(n, "Sq", lambda ctx, i=i: _f(ctx["P"][:, :, i]))
     for j, n in enumerate(POS_NAMES):
         d.atom(n, "Pos", lambda ctx, j=j: _f(ctx["G"][:, j]))
@@ -46,6 +46,13 @@ def chess_domain():
          "maximum over the same file")
     d.op("rank_any", ["Sq"], "Sq", lambda a: np.repeat(a.reshape(-1, 8, 8).max(2, keepdims=True), 8, 2).reshape(-1, 64),
          "maximum over the same rank")
+    d.op("argmax_sq", ["Sq"], "Sq", lambda a: _onehot(np.argmax(a, 1)), "1 on the square with the largest value (first by index)")
+    d.op("argmin_sq", ["Sq"], "Sq", lambda a: _onehot(np.argmin(a, 1)), "1 on the square with the smallest value")
+    d.op("after", ["Sq", "Sq", "Pos"], "Pos", None,
+         "(after FROM TO EXPR): play the legal move from the square where FROM is largest to the square where TO is "
+         "largest (promotion to a queen), then evaluate EXPR, an expression of base features only, in the new position, "
+         "from the view of the side then to move; 0 where there is no such legal move. A special form: EXPR is "
+         "evaluated in the child position, not the current one")
     d.op("count", ["Sq"], "Pos", lambda a: (a > 0).sum(1).astype(float), "number of squares where the value is above 0")
     d.op("sum", ["Sq"], "Pos", lambda a: a.sum(1))
     d.op("max", ["Sq"], "Pos", lambda a: a.max(1))
@@ -57,6 +64,12 @@ def chess_domain():
 POS_NAMES = ["in_check", "n_legal", "castle_us", "castle_them", "halfmove"]
 KING_STEPS = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
 KNIGHT_STEPS = [(1, 2), (2, 1), (-1, 2), (-2, 1), (1, -2), (2, -1), (-1, -2), (-2, -1)]
+
+
+def _onehot(idx):
+    out = np.zeros((len(idx), 64))
+    out[np.arange(len(idx)), idx] = 1.0
+    return out
 
 
 def _shift(a, dr, df):
@@ -76,15 +89,34 @@ def _any(a, steps):
 def featurize(fens, procs=1):
     """FENs -> ctx for the chess domain (per-square features and position features)."""
     import chess
-    from .chess_board import descriptors, static_extra
+    from .chess_board import descriptors, static_extra, see_features
     P, G = [], []
     for f in fens:
         b = chess.Board(f)
-        P.append(np.concatenate([descriptors(b), static_extra(b)], 1))
+        P.append(np.concatenate([descriptors(b), static_extra(b), see_features(b)], 1))
         us = b.turn
         G.append([float(b.is_check()), float(b.legal_moves.count()), float(b.has_castling_rights(us)),
                   float(b.has_castling_rights(not us)), float(b.halfmove_clock)])
-    return {"P": np.asarray(P, np.float32), "G": np.asarray(G, np.float32)}
+    return {"P": np.asarray(P, np.float32), "G": np.asarray(G, np.float32), "fens": list(fens)}
+
+
+def child_fens(fens, frm, to):
+    """The positions after the legal move from argmax(frm) to argmax(to) (mover's frame), or None."""
+    import chess
+    out = []
+    for f, a, b in zip(fens, np.argmax(frm, 1), np.argmax(to, 1)):
+        board = chess.Board(f)
+        flip = board.turn == chess.BLACK
+        sq_from = chess.square_mirror(int(a)) if flip else int(a)
+        sq_to = chess.square_mirror(int(b)) if flip else int(b)
+        mv = next((m for m in board.legal_moves if m.from_square == sq_from and m.to_square == sq_to and
+                   (m.promotion in (None, chess.QUEEN))), None)
+        if mv is None:
+            out.append(None)
+        else:
+            board.push(mv)
+            out.append(board.fen())
+    return out
 
 
 # ====================================================================================================== numeric sequences
