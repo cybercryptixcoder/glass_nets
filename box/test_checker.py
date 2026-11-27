@@ -34,6 +34,7 @@ def programs():
         "hist": (lib.make_hist().named("hist"), ["a", "b", "c"]),
         "reverse": (lib.make_reverse(rasp.tokens).named("reverse"), ["a", "b", "c"]),
         "sort_unique": (lib.make_sort_unique(rasp.tokens, rasp.tokens).named("sort"), [1, 2, 3, 4, 5]),
+        "pair_balance": (lib.make_pair_balance(rasp.tokens, "(", ")").named("pair_balance"), ["(", ")", "a"]),
     }
 
 
@@ -65,6 +66,13 @@ def true_blueprint(name, net, inputs):
                  part("opp_m1", "opp_idx-1", "(map dec @opp_idx)", ["opp_idx"]),
                  part("reverse", "reverse", "(aggregate_cat (select indices @opp_m1 EQ) tokens)", ["opp_m1"])]
         return Blueprint("tok", parts, "reverse", name="reverse (true)")
+    if name == "pair_balance":
+        parts = [part("bo", "bools_open", '(map (eqc "(") tokens)', [], "numerical"),
+                 part("opens", "opens", "(aggregate (select indices indices LEQ) @bo)", ["bo"], "numerical"),
+                 part("bc", "bools_close", '(map (eqc ")") tokens)', [], "numerical"),
+                 part("closes", "closes", "(aggregate (select indices indices LEQ) @bc)", ["bc"], "numerical"),
+                 part("balance", "pair_balance", "(sequence_map minus @opens @closes)", ["opens", "closes"], "numerical")]
+        return Blueprint("tok", parts, "balance", name="pair_balance (true)")
     parts = [part("target_pos", "target_pos", "(selector_width (select tokens tokens LT))", []),
              part("sort", "sort", "(aggregate_cat (select @target_pos indices EQ) tokens)", ["target_pos"])]
     return Blueprint("tok", parts, "sort", name="sort_unique (true)")
@@ -79,7 +87,8 @@ def variants(name, bp, net, rng):
     wrong = {"frac_prevs": "(aggregate (select indices indices LT) @is_x)",
              "hist": "(selector_width (select tokens tokens NEQ))",
              "reverse": "(aggregate_cat (select indices @opp_m1 LT) tokens)",
-             "sort_unique": "(aggregate_cat (select @target_pos indices LT) tokens)"}[name]
+             "sort_unique": "(aggregate_cat (select @target_pos indices LT) tokens)",
+             "pair_balance": "(sequence_map plus @opens @closes)"}[name]
     rule.definition = wrong
     b.name = f"{name}: wrong definition"; out.append(b)
     b = copy.deepcopy(bp)

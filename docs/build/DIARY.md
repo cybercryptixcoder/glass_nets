@@ -112,3 +112,11 @@ three gaps, each closed with tests (79 checks, all pass):
   chosen move. Also `argmax_sq` and `argmin_sq`. Chess at L = 6 is now 1.9 billion skeletons; the exhaustive check
   stays feasible by featurizing each probe position's legal children once (noted in VOCABULARY.md §5).
 Earlier step: one test expectation was wrong (see_them from Black's side is +9, not 0; the code was right).
+
+**01:17 to 01:20. Before the freeze: a fuzz test and a fifth Tracr program.** `bench/accept/vocab/fuzz_vocab.py`
+evaluates random well-typed expressions of every length up to L in every domain: 812 admissible expressions, none
+raised. The checker's known cases now include Tracr's pair_balance (numerical maps compiled into MLPs): its true
+blueprint (five parts) is certified and its eight must-fail variants rejected; 45 of 45 known cases as expected
+(`results/build/s0_tracr_known_cases_session1.txt`). In the token domain the constants budget cannot bind within
+L = 12 (each token constant needs a map and a function symbol), so the "six constants" variants are rejected for
+length; the constants rule itself is exercised in the vocabulary tests.
