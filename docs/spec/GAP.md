@@ -132,7 +132,8 @@ better.
 - **Passes when:** true answers score at the ceiling and every must-fail case scores at the floor. This checks the
   bench itself before anything else is judged by it.
 - **Starts from:**
-  - `rosetta/yardstick.py` and `rosetta/sealed/` (S1);
+  - `rosetta/yardstick.py`'s training code (S1). Its three rules, in `rosetta/sealed/`, are public, so they are not
+    reused;
   - the T2 copies and disguises (S5a), listed with run ids in `scripts/glass/info_measure.py`;
   - InterpBench and Tracr, both public (S0);
   - Leela, GPT-2 and AlgZoo networks with partly known answers (S7).

@@ -491,7 +491,7 @@ beyond the checker and the starting vocabulary.
 | Tier | What it is | What it proves | Requirements tested |
 |---|---|---|---|
 | S0 | Compiled transformers (Tracr) and semi-synthetic transformers with known circuits (InterpBench, 86 models) | The box recovers exactly known circuits in realistic weights | R3, R4, R6 |
-| S1 | Planted rules written in the box's starting vocabulary (Rosetta's yardstick, extended) | Search and scoring work | R2, R3 |
+| S1 | Planted rules written in the box's starting vocabulary (Rosetta's yardstick pattern, with new sealed rules) | Search and scoring work | R2, R3 |
 | S2 | Planted concepts that cannot be written in the starting vocabulary; half of them synthetic, with no human name, scored separately | It can invent, not only recall or search | R8 |
 | S3 | Planted hierarchies: a verdict computed in stages from intermediate concepts, including a search-like step. The chess version is a small value network trained to imitate a sealed evaluation that looks two plies ahead along forcing moves and adds positional terms | It can define verdicts through their ingredients: the exact shape that broke the last build | R6, R7, R8 |
 | S4 | Planted mixtures: part rule, part memorised random table, part dead units; plus networks with two valid accounts | It types honestly, and reports rivals | R4, R5, R12 |
