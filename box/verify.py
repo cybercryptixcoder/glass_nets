@@ -38,7 +38,7 @@ def _same(a, b, numerical, tol=1e-3):
 
 
 class Checker:
-    def __init__(self, net, inputs, seed=0, n_pairs=200, control_reps=200):
+    def __init__(self, net, inputs, seed=0, n_pairs=200, control_reps=300):
         self.net, self.inputs, self.rng = net, inputs, np.random.default_rng(seed)
         self.n_pairs, self.control_reps = n_pairs, control_reps
         self.base = net.outputs(inputs)
@@ -152,7 +152,7 @@ class Checker:
     def control_line(self, bp, tested, decisive_by_part, K):
         """Family-wise: the 99th percentile over repetitions of the best of K random-subspace control scores."""
         best = []
-        for _ in range(self.control_reps // 10):
+        for _ in range(self.control_reps):    # at least 300 draws: the line is a 99th percentile
             scores = []
             for _k in range(K):
                 p = tested[self.rng.integers(len(tested))]

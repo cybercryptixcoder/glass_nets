@@ -49,7 +49,8 @@ def inputs_for(name, voc, n=60, seed=0):
 
 
 def true_blueprint(name, net, inputs):
-    lab = lambda n: next(l.split(":")[0] for l in net.labels if l.split(":")[0].startswith(n))  # noqa: E731
+    names = [l.split(":")[0] for l in net.labels]
+    lab = lambda n: n if n in names else next(x for x in names if x.startswith(n))  # noqa: E731
     def part(pid, sop, definition, upstream, encoding="categorical"):
         labels = net.labels_of(lab(sop))
         return Part(pid, "rule", "SOp", first_site(net, labels, inputs), labels=labels, encoding=encoding,
@@ -62,7 +63,7 @@ def true_blueprint(name, net, inputs):
         return Blueprint("tok", [part("hist", "hist", "(selector_width (select tokens tokens EQ))", [])], "hist", name="hist (true)")
     if name == "reverse":
         parts = [part("length", "length", "(selector_width (select tokens tokens TRUE))", []),
-                 part("opp_idx", "opp_idx_", "(sequence_map minus @length indices)", ["length"]),
+                 part("opp_idx", "opp_idx", "(sequence_map minus @length indices)", ["length"]),
                  part("opp_m1", "opp_idx-1", "(map dec @opp_idx)", ["opp_idx"]),
                  part("reverse", "reverse", "(aggregate_cat (select indices @opp_m1 EQ) tokens)", ["opp_m1"])]
         return Blueprint("tok", parts, "reverse", name="reverse (true)")
@@ -123,7 +124,7 @@ def main():
     for name, (prog, voc) in programs().items():
         net = TracrNet(prog, voc, 5)
         X = inputs_for(name, voc)
-        chk = Checker(net, X, seed=0, n_pairs=120, control_reps=100)
+        chk = Checker(net, X, seed=0, n_pairs=120, control_reps=300)
         bp = true_blueprint(name, net, X)
         own = chk.run_alone(bp)
         # the line is the true blueprint's own run-alone score minus its bootstrap spread over inputs

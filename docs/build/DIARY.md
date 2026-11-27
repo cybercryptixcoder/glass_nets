@@ -120,3 +120,19 @@ blueprint (five parts) is certified and its eight must-fail variants rejected; 4
 (`results/build/s0_tracr_known_cases_session1.txt`). In the token domain the constants budget cannot bind within
 L = 12 (each token constant needs a map and a function symbol), so the "six constants" variants are rejected for
 length; the constants rule itself is exercised in the vocabulary tests.
+
+**01:18 to 01:24. The verifier hook (`box/hook.py`, `box/test_hook.py`; output `results/build/s0_hook_session1.txt`).**
+The Gate 1 entry point: given a task folder, a folder of true blueprints and a folder of accounts, it prints only
+"certified X of N true blueprints, rejected Y of M accounts". Its task-folder and blueprint formats are provisional,
+to be rewritten to `INTERFACE.md` when the bench exists. Run on the five public Tracr programs as task folders:
+- First run, 1 of 5 as expected. Cause (a translation error): Tracr names s-ops with a process-wide counter
+  ("hist_4"), so labels written by one process do not exist in another. Fixed: `TracrNet` uses canonical labels
+  (the counter suffix dropped). The direct known cases stay 45 of 45.
+- The control line had only 10 to 20 draws behind a 99th percentile, too few to estimate it (translation error).
+  The Tracr checker now uses 300 draws. The AlgZoo checker's M2,2 and M4,3 results above used 10 to 20 draws, so
+  their lines are, if anything, underestimates: the near-copy's pass and the real account's failures stand.
+- Second run, 4 of 5 as expected: on hist, one random-location account passes (IIA 0.878 against a line of 0.282).
+  Its random 6-dimensional subspace, in an 18-dimensional residual stream, overlaps the true subspace strongly
+  (singular values 0.97, 0.82, 0.66, 0.60, 0.20, 0.08). This is the chance pass a 99th-percentile line allows: the
+  account is itself a draw from the control distribution. The direct run, with another random draw, rejected it.
+  Must-fail cases built as random locations are not deterministic in small residual streams. Reported, not tuned.

@@ -18,10 +18,12 @@ class TracrNet:
         cfg = self.model.model_config
         self.H, self.ks, self.n_layers = cfg.num_heads, cfg.key_size, cfg.num_layers
         self.P = {k: {kk: np.asarray(vv, dtype=np.float64) for kk, vv in v.items()} for k, v in self.model.params.items()}
-        self.labels = [str(x) for x in self.model.residual_labels]
+        # Tracr names every s-op with a global counter ("hist_4"), which differs between processes; labels are made
+        # canonical by dropping that suffix ("hist", "hist:3"), so a blueprint written in one process reads in another
+        self.labels = [_canonical(str(x)) for x in self.model.residual_labels]
         self.d = len(self.labels)
         self.sites = [f"resid_{k}" for k in range(2 * self.n_layers + 1)]
-        self.out_name = program.label
+        self.out_name = _canonical(program.label)
         self.numerical_output = type(self.model.output_encoder).__name__ == "NumericalEncoder"
 
     # ------------------------------------------------------------------ locations
@@ -110,6 +112,12 @@ class TracrNet:
             for a, b in zip(ours, theirs):
                 worst = max(worst, float(np.abs(a - b).max()))
         return worst
+
+
+def _canonical(label):
+    import re
+    name, sep, val = label.partition(":")
+    return re.sub(r"_\d+$", "", name) + sep + val
 
 
 def _typed(x):
