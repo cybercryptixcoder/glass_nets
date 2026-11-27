@@ -46,6 +46,15 @@ class VecChecker:
                 d = self.sites[p.site].shape[1]
                 if B is None or B.shape[0] != d or not np.isclose(np.linalg.norm(B), 1.0):
                     return False, f"part {p.id}: location must be a unit direction in {p.site} (d={d}) with a scale"
+            if p.site == "input":
+                # only a direct read of the input may sit outside the network: R3 locates every computed variable
+                tree = vocab.parse(p.definition) if isinstance(p.definition, str) else None
+                direct = isinstance(tree, str) or (isinstance(tree, list) and len(tree) == 3 and tree[0] == "at" and
+                                                   tree[1] == "x" and isinstance(tree[2], (int, float)))
+                if not direct or p.upstream:
+                    return False, f"part {p.id}: at site input but not a direct read of the input; computed parts must be located"
+            if p.site == "readout" and any(bp.part(u).site == "input" for u in p.upstream):
+                return False, f"part {p.id}: a readout may use only located parts (or other readouts), not the input"
             if p.type == "rule":
                 ok, why, t = vocab.admissible(p.definition, dom, {u: types[u] for u in p.upstream}, bp.library) \
                     if isinstance(p.definition, str) else (False, "no definition", None)

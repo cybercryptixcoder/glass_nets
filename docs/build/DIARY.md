@@ -136,3 +136,12 @@ to be rewritten to `INTERFACE.md` when the bench exists. Run on the five public 
   (singular values 0.97, 0.82, 0.66, 0.60, 0.20, 0.08). This is the chance pass a 99th-percentile line allows: the
   account is itself a draw from the control distribution. The direct run, with another random draw, rejected it.
   Must-fail cases built as random locations are not deterministic in small residual streams. Reported, not tuned.
+
+**01:26 to 01:28. A loophole closed in the vector-site checker (a translation error found by reading the code, not
+by a case).** A part at site "input" was exempt from location, and any function of the input could be declared there,
+so a whole task rule computed from the input would have passed on run alone alone, with nothing located: against
+R3, which locates every variable. Now a part at site "input" must be a direct read of the input (an atom, or
+`(at x c)`) with no upstream parts, and a "readout" part (the task's decision rule) may use only located parts or
+other readouts. The M2,2 and M4,3 verdicts are unchanged (both test blueprints already complied once their decision
+parts were marked as readouts): M4,3 near-copy certified; real account c928 rejected (22 of 27 parts); M2,2 both
+rejected.

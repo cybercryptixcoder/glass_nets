@@ -30,11 +30,11 @@ def account_blueprint(chk, fit_idx):
              P("rec", "(sub @h1_pos @h1_neg)", ["h1_pos", "h1_neg"], "h1"),
              P("h2_up", "(relu (sub @rec @x1))", ["rec", "x1"], "h2"),
              P("h2_un", "(relu (sub @x1 @rec))", ["x1", "rec"], "h2"),
-             P("decision", "(gt @h2_up @h2_un)", ["h2_up", "h2_un"])]
+             P("decision", "(gt @h2_up @h2_un)", ["h2_up", "h2_un"], "readout")]
     bp = Blueprint("seq", parts, "decision", name="M2,2 real account (a7c8), as a blueprint")
     vals = chk.values(bp, chk.X)
     for p in parts:
-        if p.site != "input":
+        if p.site not in ("input", "readout"):
             p.basis, p.scale = fit_location(chk.sites, p.site, vals[p.id], fit_idx)
     return bp
 
@@ -48,14 +48,13 @@ def int_copy_blueprint(net):
     parts = [P("x0", "(at x 0)", []), P("x1", "(at x 1)", []),
              P("u1_0", f"(max2 (mul @x0 {f(Wx[0])}) (mul @x0 0))", ["x0"], "h1", e(0)),
              P("u1_1", f"(max2 (mul @x0 {f(Wx[1])}) (mul @x0 0))", ["x0"], "h1", e(1)),
-             P("q0", f"(mul @x1 {f(Wx[0])})", ["x1"]), P("q1", f"(mul @x1 {f(Wx[1])})", ["x1"]),
              P("r0", f"(add (mul @u1_0 {f(Wh[0, 0])}) (mul @u1_1 {f(Wh[1, 0])}))", ["u1_0", "u1_1"]),
              P("r1", f"(add (mul @u1_0 {f(Wh[0, 1])}) (mul @u1_1 {f(Wh[1, 1])}))", ["u1_0", "u1_1"]),
-             P("u2_0", "(max2 (add @q0 @r0) (mul @q0 0))", ["q0", "r0"], "h2", e(0)),
-             P("u2_1", "(max2 (add @q1 @r1) (mul @q1 0))", ["q1", "r1"], "h2", e(1)),
+             P("u2_0", f"(relu (add (mul @x1 {f(Wx[0])}) @r0))", ["x1", "r0"], "h2", e(0)),
+             P("u2_1", f"(relu (add (mul @x1 {f(Wx[1])}) @r1))", ["x1", "r1"], "h2", e(1)),
              P("s0", f"(add (mul @u2_0 {f(Wo[0, 0])}) (mul @u2_1 {f(Wo[1, 0])}))", ["u2_0", "u2_1"]),
              P("s1", f"(add (mul @u2_0 {f(Wo[0, 1])}) (mul @u2_1 {f(Wo[1, 1])}))", ["u2_0", "u2_1"]),
-             P("decision", "(gt @s1 @s0)", ["s0", "s1"])]
+             P("decision", "(gt @s1 @s0)", ["s0", "s1"], "readout")]
     # r0, r1 are linear in h1 and s0, s1 linear in h2: locate them too (direction and scale), as the copy would
     for p in parts:
         if p.id in ("r0", "r1"):
