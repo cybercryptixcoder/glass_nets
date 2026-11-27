@@ -333,3 +333,9 @@ scorer are on `bench-v2`; its report never arrived).
 - Three one-layer networks were open. Tabulated by token and position, each outputs (token + index) mod m. Ledger
   row BX6 written first; the definer now also tries a modulus after an arithmetic sequence_map. All three are then
   defined exactly, (map (modc m) (sequence_map plus @v0 @v1)), and certified.
+- Full rerun with the change and the box's own certification: 16 of 30 development networks certified (the 13 from
+  before, all still certified, and the three (token + index) mod m networks); the reference certified; the five public
+  Tracr programs rerun, all five still certified. On three networks whose output the box does not reproduce, the
+  certification step stopped with an error (an empty sampling range); they were not certified before either.
+- Not done in this session: scoring against the sealed answers (refused, above); the 14 remaining S0 networks (six
+  write several variables through one sublayer, which the frame recovery does not split yet); S1 to S7.
