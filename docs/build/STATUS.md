@@ -1,6 +1,6 @@
 # Build status (the finished system, `docs/spec/BUILD.md`)
 
-*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:16.*
+*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:28.*
 
 ## Where things stand
 
@@ -17,7 +17,8 @@
 
 ## Done
 
-- **Starting vocabulary v1** (`bench/accept/VOCABULARY.md`, code `bench/accept/vocab/`, ledger V0): five domains in
+- **Starting vocabulary v1** (`bench/accept/VOCABULARY.md`, code `bench/accept/vocab/`, ledger V0; fuzz test:
+  812 random admissible expressions, none raise): five domains in
   one S-expression language; L = 6 (chess), 7 (numeric sequences), 12 (token sequences), 6 (fluid), 6 (weights);
   5 constants after expansion; part references (the only route to the network's own choice); invented primitives
   checked; chess static exchange values and one-ply look-ahead (`after`). 79 of 79 known-case checks pass, including
@@ -31,8 +32,9 @@
     admissibility, declared upstream), run alone, interchange interventions on decisive pairs (a hit is a change to
     the predicted output) against family-wise lines from random-direction and weight-shuffled controls, substitution
     (reported), the lookup typing rule.
-  - Known cases: Tracr S0-kind, 36 of 36 as expected (4 true blueprints certified, 32 must-fail variants rejected;
-    `results/build/s0_tracr_known_cases_session1.txt`). Saved S5a cases: every saved account, as given, is code and
+  - Known cases: Tracr S0-kind, 45 of 45 as expected (5 true blueprints certified, 40 must-fail variants rejected;
+    `results/build/s0_tracr_known_cases_session1.txt`). Verifier hook (`box/hook.py`, counts only): 4 of 5 programs
+    as expected; one chance pass of a random-location account on hist (`results/build/s0_hook_session1.txt`). Saved S5a cases: every saved account, as given, is code and
     rejected (the three real ones too, until written as blueprints); M2,2 cannot discriminate (two dimensions, two
     classes: control lines 0.95 to 1.00); M4,3: near-copy certified, real account c928 rejected (see the decision
     above).

@@ -27,6 +27,23 @@ and saved cases.*
   fall below the random-direction line of about 0.90). A copy is true, so truth tests cannot reject it (SPEC R9);
   counting constants does not help (copy 32, account about 50).
 
+## The verifier hook
+
+`box/hook.py` is the Gate 1 entry point (counts only). On the five public Tracr programs as task folders it prints
+the expected counts for four; on hist one random-location account passes by chance (its random subspace overlaps the
+true one at 0.97 in an 18-dimensional residual stream), the kind of pass a 99th-percentile line allows. Its formats
+are provisional until `INTERFACE.md` exists.
+
+## A tension to settle with the bench-writer
+
+`BUILD.md` §5 says the saved list holds three real accounts that must pass. Under `SPEC.md` R3 every variable an
+account names must be located in the network and pass interventions. Of the three: M2,2 cannot be decided (its
+control lines are 0.95 to 1.00); M4,3's account is approximate and fails at five parts; lc_8_6's census rule (not yet
+translated) locates only the token identities at the embedding and computes everything else from them, so as a
+blueprint its census quantities would have to be located before R3 could pass. These accounts were judged under the
+old measure (fidelity and bits, T2); they may not be blueprints in the spec's sense. Whether they stay must-pass
+cases is a question for Shreyas and the bench-writer, not something the checker should be loosened for.
+
 ## What this means for Gate 1
 
 The checker's truth tests work as designed: they certify true blueprints and reject false ones, and they rejected
