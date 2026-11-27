@@ -73,8 +73,9 @@ when all five of these hold, each by test.
 3. **Runs on its own, and is faithful at every level.**
    - **Run alone**, with every definition standing in at once, lookups as their tables, and unresolved parts
      resampled and charged to the ledger, the blueprint reproduces the network's outputs and its intermediate states,
-     level by level. Substituting one definition at a time is not enough: Rosetta's definitions passed one by one,
-     but run together they kept almost none of the evaluation (R² 0.06; `docs/rosetta/RESULTS.md` §4, §9).
+     level by level. Checking one definition at a time is not enough: Rosetta wrote programs for 485 of LD2's 512
+     last-layer variables one by one, but run together they kept almost none of the evaluation (R² 0.06;
+     `docs/rosetta/RESULTS.md` §4, §9).
    - Every variable the blueprint names exists in the network, and intervening on it in the network has the effect
      the blueprint predicts.
 4. **Navigable, though not necessarily short.**
