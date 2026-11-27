@@ -2200,3 +2200,25 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   all led to changes (GAP.md §8). The largest: the blueprint must run on its own, the sealed suite must be a generator
   with a fresh certification draw, and planted networks must be checked to compute their sealed mechanism.
 - No code was changed and no experiment was run.
+
+## Nov 26, 19:53 ET (clock): the spec made ready to hand to a builder
+
+- Shreyas asked whether handing these documents to a builder with the single word "Build" would get the system
+  built. A cold read by a fresh agent, playing the builder, found it would stall at Gate 1. The main reasons: the
+  builder and the bench-writer had no agreed way to connect, the interface was loose, the starting vocabulary had no
+  defined content, and "done" needed matched-architecture rehearsals that no tier contained.
+- `docs/spec/BUILD.md` is now the builder's start-here brief, and `docs/spec/BENCH_BRIEF.md` the brief for the separate
+  session that writes the sealed suite. The changes:
+  - how the two sessions connect: a shared branch, the order of pushes, a `vocab-frozen` tag, a private repository
+    for sealed material, and draw requests through `docs/build/STATUS.md`;
+  - an executable interface: allowed map classes, definitions as grammar expressions, a verifier hook for Gate 1,
+    and a reference true blueprint;
+  - the must-fail tier split into S5a (accounts to reject) and S5b (networks that must get no story);
+  - matched-architecture rehearsals for LD2, t1 and GPT-2 small, added to S6;
+  - the remaining numbers fixed in `SPEC.md` §6: domains, the constants budget, the irrelevance line, flip size,
+    calibration bins, formal attempts, and the reader model;
+  - gates passed on development draws, with certification as a separate, final step;
+  - the X0 fallback for R9.
+- For this build, `SPEC.md` is the intent the code serves. `CLAUDE.md` item 0 says so, and `docs/glass/INTENT.md` is
+  unchanged until Shreyas approves replacing it.
+- No code was changed and no experiment was run.

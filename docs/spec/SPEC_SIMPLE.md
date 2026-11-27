@@ -133,7 +133,8 @@ networks where the answer is known.
 
 1. **The test bench:** sealed test networks with known answers. These include ones built around ideas outside the
    system's vocabulary (half of them ideas with no human name), ones that compute verdicts in stages, and ones that
-   mix rules with memorised tables. Also disguised copies that must fail. This is the finish line.
+   mix rules with memorised tables. Also disguised copies that must fail, and networks with no structure that must
+   get no story. This is the finish line.
    - It is sealed as a generator. The build practises on some networks; the final exam is a fresh set, scored once.
    - The pass marks are fixed before the build starts.
 2. **The checker:** every test in one place.
@@ -171,7 +172,7 @@ Then the real questions: chess strategy, the fluid model, lying, and weight read
   all. This is the most important missing piece.
 - **GPU time.**
 - **A budget per step.**
-- **A separate session to write the sealed answers.**
+- **A separate session to write the sealed answers,** and a private place to keep them, since the repo is public.
 - **Days, not hours.**
 
 ## The honest answer
@@ -184,7 +185,7 @@ Then the real questions: chess strategy, the fluid model, lying, and weight read
 They repair what broke. "Fully interpretable" also needs the parts that were never built: complete accounts,
 traces, usability, edits, and running unaided.
 
-**Build all fifteen, and pass every gate on the fresh final exam at the pass marks fixed in advance, and yes, you
+**Build all fifteen, pass every gate, then pass the fresh final exam at the pass marks fixed in advance, and yes, you
 have the system,** for the networks in our scope: small algorithmic networks, chess engines, the rebuilt fluid model,
 and GPT-2 once it passes its known answers. "Fully interpretable" is then defined, tested, and true of every
 blueprint it gives you. Where it cannot finish, it says exactly where and how much is left.

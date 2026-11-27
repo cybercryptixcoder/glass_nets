@@ -4,7 +4,7 @@
 showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_REVIEW.md` §7).*
 
 ## Read before doing anything
-0. **CURRENT WORK (Nov 26 onward): `docs/spec/BUILD.md`.** Build the finished system defined in `docs/spec/SPEC.md` (plain words: `docs/spec/SPEC_SIMPLE.md`; the gap and gates: `docs/spec/GAP.md`; the sealed test suite is written by a separate session from `docs/spec/BENCH_BRIEF.md`). Keep `docs/build/STATUS.md` current after every step.
+0. **CURRENT WORK (Nov 26 onward): `docs/spec/BUILD.md`.** Build the finished system defined in `docs/spec/SPEC.md` (plain words: `docs/spec/SPEC_SIMPLE.md`; the gap and gates: `docs/spec/GAP.md`; the sealed test suite is written by a separate session from `docs/spec/BENCH_BRIEF.md`). Keep `docs/build/STATUS.md` current after every step. For this build, `docs/spec/SPEC.md` is the intent the code serves; `docs/glass/INTENT.md` (item 1) stays as the record of the earlier target until Shreyas approves replacing it.
    - Earlier current work, now background: the Rosetta build (`docs/rosetta/`, Nov 26) and the mechanism atlas (`docs/glass/ATLAS.md`, Nov 19 onward), with `docs/glass/UNITS_FINDINGS.md` and `docs/glass/UNITS_PROGRAM.md`.
 1. `docs/glass/INTENT.md`: what we are building and why. The code serves this document.
 2. `docs/glass/CHECKLIST.md`: current state.

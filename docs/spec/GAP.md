@@ -34,7 +34,7 @@ Several of the others are only partly built, and some have never been built at a
 - running the whole loop unaided (R14: never built).
 
 **You get the system you described for the Tier A networks** (the narrow realm, `SPEC.md` §3) **only if Gates 2 to 6
-all pass** on the certification draw, at pass counts fixed before the build. "Fully interpretable" then means what
+all pass, and the certification draw then passes**, at pass counts fixed before the build. "Fully interpretable" then means what
 `SPEC.md` §2 defines and tests: complete, honestly typed, runnable on its own, faithful at every level, navigable,
 and usable by a mind.
 
@@ -83,7 +83,7 @@ So the attempt ends in one of two definite states: the suite passes, or a named 
 | R6 | Layered, from purpose to parts | None automated. Month rollover was traced by hand. Rosetta measured how the evaluation concentrates across blocks (56%, 66%, 91%) but defined only the last layer | Defining variables in terms of the variables that feed them, through the network, up to an overview | **Research: the member that broke** |
 | R7 | Trace any decision | Rosetta's attribution to the value | Per-input traces with predicted flips, and behaviour fingerprints usable as detectors, scored against baselines | Engineering |
 | R8 | Name what nobody named | None. Rosetta's "vocabulary growth" only recombined its 61 features. The one new kind of quantity (material along the network's own line) was added by hand. The cheap-model proposer: 45 proposals from 18 calls, none better than exhaustive search | A component that adds new kinds of concept when the vocabulary runs out, proven on planted concepts outside the vocabulary | **Research: the core of discovery** |
-| R9 | Not fooled | The restricted program language; partial must-fail sets; the bits measure (T2) failed as a gate; X0 designed, not run | The full must-fail suite, and the two copy tests run and passing | Engineering, with one open question (X0) |
+| R9 | Not fooled | The restricted program language; partial must-fail sets; the bits measure (T2) failed as a gate; X0 designed, not run | The full must-fail suite (S5a and S5b), and the two copy tests run and passing. Answering without running gates only if X0's main arm separates real accounts from copies on the saved runs | Engineering, with one open question (X0) |
 | R10 | Usable by a mind | Two reader tries, both weak: with positions as text, the cheap model applied board rules at 0.00 to 0.13 against 0.05 chance; with boards drawn as grids, one rule reached 0.21 against a rival's 0.04. Rosetta calls teachability "essentially untested" | A reader that can perceive the domain, the reader test passing at the true blueprint's line, and a human study for chess | Resource (a frontier model; people) and engineering |
 | R11 | Control by edits | Steering experiments (liar sprint, `lab/steer_calendar.py`). Attribution patching beat the project's construction on held-out interventions (E7) | Edits through the blueprint with predicted effects, beating attribution patching | Engineering |
 | R12 | Calibrated confidence | Controls and pre-registration are strong habits. Evidence types are not assigned systematically, and nothing has been calibrated | Evidence labels on every claim, and calibration on the suite | Engineering |
@@ -103,14 +103,17 @@ So the attempt ends in one of two definite states: the suite passes, or a named 
 
 ## 3. The components the next build must deliver
 
-Ten components. For each: what it must deliver (fixed), which requirements it carries, the test it must pass
-(from `SPEC.md` §6), and what in the repo it can start from. Leads are suggestions from the evidence; the builder may
-find better.
+Ten default components. Only the tests are fixed: any design that passes every requirement's test is acceptable
+(`SPEC.md`, header), so the builder may split, merge or replace these components, as long as every requirement is
+still carried and tested. For each: what it delivers, which requirements it carries, the test it must pass (from
+`SPEC.md` §6), and what in the repo it can start from. Leads are suggestions from the evidence; the builder may find
+better.
 
 ### C1. The test bench: the finish line
 - **Delivers:** the acceptance suite S0 to S7, with sealed answers, and a scorer.
   - The answers are written by a separate session that never shares context with the builder.
-  - The scorer is plain code with no model calls.
+  - The scorer is plain code. Its one model call is the reader test (R10), with a reader model the bench fixes for
+    the whole build.
   - What is sealed is a generator. Development draws are used during the build; certification uses one fresh draw,
     scored once; every retry gets a new draw.
   - Planted networks are trained with interchange objectives (as InterpBench's SIIT does), and every sealed
@@ -119,14 +122,18 @@ find better.
     - synthetic concepts with no human name (half of S2);
     - networks with two valid accounts (S4);
     - a fluid rehearsal with a sealed shortcut (S6);
+    - matched-architecture networks for LD2, t1 and GPT-2 small (S6), without which those real networks are not
+      called complete;
+    - must-fail cases in two kinds: accounts to reject (S5a) and networks that must get no story (S5b);
     - the pass counts, fixed before the build.
-  - The training for S6 (the fluid rehearsal and the planted language model) is budgeted inside this gate.
+  - The training for S6 (the fluid rehearsal, the planted language model and the matched-architecture networks) is
+    budgeted inside this gate.
 - **Carries:** every requirement's test.
 - **Passes when:** true answers score at the ceiling and every must-fail case scores at the floor. This checks the
   bench itself before anything else is judged by it.
 - **Starts from:**
   - `rosetta/yardstick.py` and `rosetta/sealed/` (S1);
-  - the T2 copies and disguises (S5);
+  - the T2 copies and disguises (S5a);
   - InterpBench and Tracr, both public (S0);
   - Leela, GPT-2 and AlgZoo networks with partly known answers (S7).
 
@@ -142,7 +149,8 @@ find better.
   - the copy tests (answering without running; the bounded reader);
   - evidence labels and calibration.
 - **Carries:** R3, R4, R5, R9, R12.
-- **Passes when:** on S0, S1, S4 and S5 it certifies the true blueprints and rejects every must-fail case.
+- **Passes when:** through the bench's verifier hook (`BENCH_BRIEF.md` §6), it certifies the sealed true blueprints of
+  S0, S1 and S4 and rejects every S5a account. The builder sees only the counts.
 - **Starts from:** `lab/judge.py`, `lab/lmjudge.py`, Rosetta's substitution (`rosetta/engine.py`), `lab/atlas.py`
   (rule against lookup), and the X0 design (`docs/review/PREREG_FIRST_EXPERIMENTS.md`).
 - **If it fails:** stop. The measurement is wrong, as T2 was, and nothing built on it would count.
@@ -165,7 +173,8 @@ find better.
     on a square", "a spatial derivative", "at the previous token".
 - **Carries:** R6, R3.
 - **Passes when:** on S1 and S3, every sealed variable, including the intermediate ones, is defined at the recovery
-  line (correlation 0.9 on held-out inputs) and passes substitution.
+  line: correlation and substitution on held-out inputs, each at the sealed definition's own score minus its spread
+  (`SPEC.md` §6).
 - **Starts from:** `rosetta/core.py` and `rosetta/engine.py` (exhaustive search over restricted programs, control
   lines, substitution), and `rosetta/chess_lib.py`.
 - **Why this should repair the break:** Rosetta could not define the verdict variables from the board (2 of 16).
@@ -197,20 +206,28 @@ find better.
 ### C6. The assembler: the blueprint
 - **Delivers:**
   - the systems and the one-page overview, assembled from defined parts;
-  - the ledger;
+  - the account of what the network does, with the knowledge split (R2);
+  - the ledger, with every part's type;
   - per-input traces;
-  - rival accounts.
-- **Carries:** R4, R6, R7, R12.
+  - rival accounts;
+  - stated confidences on every claim;
+  - where a reference method exists, the cost map: which parts stand in for which of its steps, with cost and error
+    (R15).
+- **Carries:** R2, R4, R5 (assigning the types, which C2 tests), R6, R7, R12, R15.
 - **Passes when:**
   - on S0 to S4, blueprints run on their own and are complete within the line, input by input, on every output;
+  - on S1 to S4, the behaviour account (R2), the types (R5) and calibration (R12) pass;
+  - no S5b network gets a story;
   - on S3, the overview matches the sealed top level;
-  - on bench-chosen decisions, traces' predicted flips beat attribution patching and "no change".
+  - on bench-chosen decisions, traces' predicted flips beat attribution patching and "no change";
+  - on S6's fluid rehearsal, the cost map names the sealed shortcut, its parts, and its cost and error (R15).
 - **Starts from:** Rosetta's glass model (`rosetta/glass2.py`), the residual curve (`rosetta/residual_curve.py`), and
   the atlas's certificate.
 
 ### C7. The reader interface: blueprints for minds
-- **Delivers:** the blueprint rendered for a reader, with plain-language definitions, examples and contrast pairs, and
-  the reader and human tests run on it.
+- **Delivers:** the blueprint rendered for a reader, with plain-language definitions, examples and contrast pairs. The
+  scorer runs the reader test on that rendering, with the bench's fixed reader model. The human study runs after the
+  build, on findings.
 - **Carries:** R10.
 - **Passes when:**
   - the bounded-reader test passes on S1 to S4 and on S7's known answers;
@@ -236,7 +253,8 @@ find better.
 
   Plus a 7–8B adapter with a sparse replacement for Tier B.
 - **Carries:** R1, R13.
-- **Passes when:** S6's four rehearsals and S7's real networks run through the same core.
+- **Passes when:** S6's rehearsals, including the matched-architecture networks, and S7's real networks run through
+  the same core.
 - **Starts from:**
   - `kepler/targets/chess/leela.py` and `leela_t.py`;
   - `lab/lm.py` (GPT-2);
@@ -266,12 +284,16 @@ that failed, the way an engineer names the member that gave way.
 
 | Gate | Components | Pass test | Why here |
 |---|---|---|---|
-| 1. The finish line exists | C1, C2 | The bench scores true answers at the ceiling and must-fail cases at the floor; the verifier certifies S0, S1 and S4 and rejects S5 | Nothing can be judged without it, and the record shows measurements must be proven before use (T2) |
+| 1. The finish line exists | C1, C2 | The bench scores true answers at the ceiling and must-fail cases at the floor; through the bench's verifier hook, the builder's checker certifies the sealed true blueprints of S0, S1 and S4 and rejects every S5a account | Nothing can be judged without it, and the record shows measurements must be proven before use (T2) |
 | 2. **The make-or-break** | C3, C4, C5 | S2 (concepts outside the vocabulary) and S3 (verdicts through their ingredients) are recovered | This is where the last build broke, and it is the only research-grade part. Testing it second keeps the uncertain spend bounded and early |
-| 3. Complete blueprints | C6 | S0 to S4 run on their own and are complete within the line; S6's rehearsals pass their R3 to R7 parts | Assembling defined parts into levels, with a ledger. The full S6 comes at Gate 6, once readers, editors and adapters exist |
+| 3. Complete blueprints | C6 | S0 to S4 run on their own and are complete within the line; on S1 to S4, R2, R5 and R12 pass; no S5b network gets a story; S6's rehearsals pass their R3 to R7 parts, and the fluid rehearsal passes R15 | Assembling defined parts into levels, with a ledger. The full S6 comes at Gate 6, once readers, editors and adapters exist |
 | 4. Real known answers | C9 with C2 to C6 | S7: look-ahead along forcing lines and the capture variable in LD2 and t1; month rollover; modular multiplication; M4,3 | Proves the box on real weights before any unknown target |
 | 5. Minds and hands | C7, C8 | Reader and editor tests | Usability and control on blueprints that already pass |
-| 6. No hands | C10 | The full suite, including the full S6, on the certification draw, with no human input | The box, not an agent working by hand |
+| 6. No hands | C10 | The full suite, including the full S6, on a fresh development draw, end to end from one start configuration, with no human input | The box, not an agent working by hand |
+
+**Then certification:** one fresh draw, generated by a separate session from Shreyas's seed and scored once
+(`BENCH_BRIEF.md` §8). Gates are passed on development draws; only certification says the system is done
+(`SPEC.md` §7).
 
 **Then the flagships:**
 - chess t1 and LD2;
@@ -317,7 +339,7 @@ that failed, the way an engineer names the member that gave way.
 
 ## 6. What passing guarantees, and what it does not
 
-**If Gates 1 to 6 pass on the certification draw, then for any Tier A network and behaviour in scope** the box
+**If Gates 1 to 6 pass, and the certification draw then passes, for any Tier A network and behaviour in scope** the box
 returns a blueprint that is:
 - complete;
 - honestly typed;
@@ -357,9 +379,13 @@ before the bench is sealed.
    Everything downstream depends on this.
 2. **The scope.** Is Tier A the right narrow realm, with Tier B run and reported but not required to be complete?
 3. **The resources.** A frontier-model key, a GPU budget, and a budget per gate.
-4. **The intent.** Whether this spec becomes the project's intent (a change to `docs/glass/INTENT.md`, which needs your
-   approval), so that every agent builds to it.
-5. **Who writes the sealed suite.** A separate session, so that the builder never sees the answers.
+4. **The intent.** By default, `SPEC.md` is this build's intent: its header says so, and `CLAUDE.md` item 0 points to
+   it. `docs/glass/INTENT.md` is left unchanged as the record of the earlier target. Replacing it is your call.
+5. **Who writes the sealed suite.** A separate session, so that the builder never sees the answers. By default you
+   start it with `BENCH_BRIEF.md` as its whole brief; or you tell the builder to launch it as a fresh agent
+   (`BUILD.md` §5).
+6. **A private repository** for the sealed material (default name `glass_nets_bench_sealed`), and, at the end, the
+   certification seed.
 
 ---
 
