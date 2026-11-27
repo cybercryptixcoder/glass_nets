@@ -269,3 +269,32 @@ program (length, length minus position, minus one, read the token there). For se
   be defined from the board within L (held-out correlation 0.05 to 0.43 against a control line of 0.46): all four are
   unresolved. Next level down started: block 8 (`box/leela_levels.py`).
 - `box/run.py`: one entry point (`python3 -m box.run tracr <program> | staged | leela`).
+
+**06:06 to 06:50. The box on a trained network with a known answer (Gate 2 rehearsal; the development analog of
+S3).**
+- First attempt (`box/learned_staged.py`): an MLP on all 3,525 input features of 6,000 positions, trained only on the
+  staged verdict relu(g2 - g1) * g3 (hanging pieces, passed pawns). It did not learn the verdict (held-out R2 -0.49;
+  on ten planes, -0.01). Cause: the verdict is zero on 95% of positions (309 of 6,000 are not). A test case the network
+  cannot learn says nothing about the box, so it was replaced, not tuned.
+- The known case (`box/learned_net.py`): a 640-32-32-1 ReLU MLP on ten per-square planes of 20,000 positions (seven
+  are distractors), trained only on v = relu(A - B) * C, with A = (sum att_us), B = (sum att_them) (all attacks by the
+  mover and by the opponent) and C = (count own_P); v is non-zero on 40%. Held-out R2 0.990, error 1.85 points against
+  a spread of 18.6; the rounded output equals v on 68.6% of held-out positions.
+- The measurement first, on the known answer (checker v0, `results/build/learned_truth_session2.json`): the true
+  account (A, B and C at layer 1 by their probe directions, the verdict through them) is rejected: interventions on A
+  score 0.011 and on B 0.000 against a line of 0.077; C passes (0.097). The must-fail accounts (locations permuted; A
+  and B exchanged) are rejected. The probe directions of A and B have cosine 0.96: the network holds their difference
+  (probe R2 0.9975) much better than either (0.94, 0.95).
+- **A translation error in the vector-site checker:** an intervention on one part moved the readout of another part
+  at the same site. Ledger row C2 was written first (06:46) and `box/test_joint.py` before the change. Checker v1
+  writes the smallest change that sets the part's readout to the source's and holds every other part at the site. On a
+  toy with a non-orthogonal code (z = (A, A + B), output A * B), v0 moves B's readout on 89% of pairs when it swaps A
+  and scores the exact mechanism at 0.10 and 0.11; v1 moves it on none and scores 1.000 and 1.000; locations exchanged,
+  a wrong definition and a random direction are rejected under both. The test as first written also expected v0 to
+  reject the toy's true account; v0 certifies it at 0.10 against a line of 0.08, so the defect shows in the scores, not
+  in v0's verdict, on that toy (recorded in C2). Session 1's vector-site cases are being rerun under v1.
+- A translation error in the harness: the checker was given training positions too, so the run-alone agreement it
+  reported (0.855) mixed training and held-out positions. It now sees held-out positions only (0.686).
+- Leela block 8: the first run died after training the block-8 dictionary; the untrained-network control on all
+  20,000 positions, run on the CPU, did not finish inside the time limit. Restarted with caching and a 4,000-position
+  control (2,800 training, 1,200 held-out).

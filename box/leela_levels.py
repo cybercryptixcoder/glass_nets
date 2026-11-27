@@ -51,39 +51,62 @@ def dictionary(H):
 
 
 H8 = np.asarray(np.load(os.path.join(K, "chess", "LD2", "acts_site8.npy"), mmap_mode="r"), dtype=np.float32).reshape(N, 128, 64)
-sae8, T8, (V8, I8) = dictionary(H8)
-print("block-8 dictionary trained", round(time.time() - t0), "s", flush=True)
+CACHE = "/tmp/leela_levels_sae8.pt"
+if os.path.exists(CACHE):
+    sae8 = torch.load(CACHE, weights_only=False)  # this script's own file, written below
+    vs, is_ = [], []
+    V = H8.transpose(0, 2, 1).reshape(-1, 128).astype(np.float32)
+    with torch.no_grad():
+        for j in range(0, len(V), 65536):
+            v, i = sae8.codes(torch.tensor(V[j:j + 65536])); vs.append(v.numpy()); is_.append(i.numpy())
+    V8 = np.concatenate(vs).reshape(N, 64, -1); I8 = np.concatenate(is_).reshape(N, 64, -1); T8 = totals(V8, I8)
+    del V
+else:
+    sae8, T8, (V8, I8) = dictionary(H8)
+    torch.save(sae8, CACHE)
+print("block-8 dictionary ready", round(time.time() - t0), "s", flush=True)
+# the untrained-network control, on a subset of positions (the untrained network is run on the CPU; the full set did
+# not finish inside the first run's time limit, DIARY 06:25): 2,800 training and 1,200 held-out positions
+SUB_TR, SUB_TE = TR[:2800], TE[:1200]
+sub = np.concatenate([SUB_TR, SUB_TE])
 mu = L.get_net(untrained_seed=0)
-Hu = L.site_acts(mu, np.arange(N), site=8).reshape(N, 128, 64).astype(np.float32)
-_, T8u, _ = dictionary(Hu)
+Hu = np.zeros((N, 128, 64), np.float32)
+for j in range(0, len(sub), 400):
+    Hu[sub[j:j + 400]] = L.site_acts(mu, sub[j:j + 400], site=8).reshape(-1, 128, 64).astype(np.float32)
+    print("   untrained activations", j + 400, "of", len(sub), round(time.time() - t0), "s", flush=True)
+_, T8u_sub, _ = dictionary(Hu[sub])
+T8u = np.zeros((N, T8u_sub.shape[1]), T8u_sub.dtype); T8u[sub] = T8u_sub
 print("untrained control dictionary", round(time.time() - t0), "s", flush=True)
 
 
-def greedy(Tsrc, y, k=4):
+def greedy(Tsrc, y, k=4, tr=TR, te=TE):
     S = []
     for _ in range(k):
         best = (-9, None)
         for g in range(Tsrc.shape[1]):
-            if g in S or Tsrc[TR, g].std() == 0:
+            if g in S or Tsrc[tr, g].std() == 0:
                 continue
-            A = np.column_stack([Tsrc[TR][:, S + [g]], np.ones(len(TR))])
-            w, *_ = np.linalg.lstsq(A, y[TR], rcond=None)
-            s = r2(A @ w, y[TR])
+            A = np.column_stack([Tsrc[tr][:, S + [g]], np.ones(len(tr))])
+            w, *_ = np.linalg.lstsq(A, y[tr], rcond=None)
+            s = r2(A @ w, y[tr])
             if s > best[0]:
                 best = (s, g)
         S.append(best[1])
-    A = np.column_stack([Tsrc[TR][:, S], np.ones(len(TR))])
-    w, *_ = np.linalg.lstsq(A, y[TR], rcond=None)
-    return S, w, r2(np.column_stack([Tsrc[TE][:, S], np.ones(len(TE))]) @ w, y[TE])
+    A = np.column_stack([Tsrc[tr][:, S], np.ones(len(tr))])
+    w, *_ = np.linalg.lstsq(A, y[tr], rcond=None)
+    return S, w, r2(np.column_stack([Tsrc[te][:, S], np.ones(len(te))]) @ w, y[te])
 
 
 links = {}
 for c in top:
     y = T10[:, c].astype(float)
     S, w, s = greedy(T8, y)
-    _, _, su = greedy(T8u, y)
-    links[c] = {"parts": [int(g) for g in S], "weights": [float(x) for x in w], "heldout_r2": s, "control_r2_untrained": su}
-    print(f"f{c} (block 10) = readout of block-8 {S}: held-out R2 {s:.3f}; untrained-network control {su:.3f}"
+    _, _, su = greedy(T8u, y, tr=SUB_TR, te=SUB_TE)
+    _, _, ss = greedy(T8, y, tr=SUB_TR, te=SUB_TE)
+    links[c] = {"parts": [int(g) for g in S], "weights": [float(x) for x in w], "heldout_r2": s, "control_r2_untrained": su,
+                "heldout_r2_same_subset": ss}
+    print(f"f{c} (block 10) = readout of block-8 {S}: held-out R2 {s:.3f} (on the control's subset {ss:.3f}); "
+          f"untrained-network control {su:.3f}"
           f"  [{round(time.time() - t0)} s]", flush=True)
 
 # ---- interventions at block 8, effect on the block-10 totals

@@ -15,9 +15,15 @@ from box.blueprint import Blueprint, TYPES  # noqa: E402
 
 
 class VecChecker:
-    def __init__(self, net, X, test_idx=None, seed=0, n_pairs=400, control_reps=200, ctx_fn=None):
+    VERSION = "v1"
+
+    def __init__(self, net, X, test_idx=None, seed=0, n_pairs=400, control_reps=200, ctx_fn=None, joint=True):
         """ctx_fn(X) builds the vocabulary context for a batch of inputs X (default: numeric sequences, {"x": X});
-        for other domains X may be indices into a dataset the adapter and ctx_fn both read."""
+        for other domains X may be indices into a dataset the adapter and ctx_fn both read.
+        joint (v1, CHANGES.md C2): an intervention on a part writes the smallest change at its site that sets the
+        part's readout to the source's value and holds the readout of every other located part at that site; with
+        one part at a site this is v0's orthogonal swap. joint=False reproduces v0."""
+        self.joint = joint
         self.net, self.X = net, np.asarray(X, np.float64)
         self.ctx_fn = ctx_fn or (lambda X: {"x": X})
         self.rng = np.random.default_rng(seed)
@@ -102,6 +108,21 @@ class VecChecker:
             return h - np.outer(h @ u, u) + np.outer(sites[site][src_rows] @ u, u)
         return fn
 
+    def _swap_joint(self, bp, p, u, src_rows, sites=None):
+        """v1: the write that sets p's readout (along u) to the source's and leaves the readout of every other located
+        part at p's site unchanged: the minimum-norm solution, a column of the pseudo-inverse of the site's located
+        directions (p's own replaced by u)."""
+        u = np.asarray(u, float).reshape(-1)
+        sites = self.sites if sites is None else sites
+        others = [np.asarray(q.basis, float).reshape(-1) for q in bp.parts
+                  if q.id != p.id and q.site == p.site and q.type in ("rule", "lookup") and q.basis is not None]
+        U = np.vstack([u] + others)
+        e = np.linalg.pinv(U, rcond=1e-6)[:, 0]
+
+        def fn(h):
+            return h + np.outer(sites[p.site][src_rows] @ u - h @ u, e)
+        return fn
+
     def _iia(self, bp, p, u, net=None, sites=None):
         """Agreement of the network's decision under a swap along u with the blueprint's predicted decision, on the
         pairs where the blueprint predicts that swapping part p changes the decision. net/sites: a control network."""
@@ -114,7 +135,8 @@ class VecChecker:
         if not dec.any():
             return None, 0
         rows = np.nonzero(dec)[0]
-        got = net.outputs(Xa[rows], {p.site: self._swap(u, p.site, self.pb[rows], sites)})
+        swap = self._swap_joint(bp, p, u, self.pb[rows], sites) if self.joint else self._swap(u, p.site, self.pb[rows], sites)
+        got = net.outputs(Xa[rows], {p.site: swap})
         before = net.outputs(Xa[rows])
         # a hit is a change, to the predicted value: a network that ignores the swap scores nothing
         return float(np.mean((got == pred[rows]) & (got != before))), len(rows)
