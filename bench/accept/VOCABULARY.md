@@ -81,7 +81,8 @@ The chess count at L = 6 (1.9 billion skeletons) is the largest; the others are 
 Two notes for the exhaustive check:
 - `after` needs the positions one move ahead. The child depends only on the squares where FROM and TO are largest,
   so each input has at most its legal moves as children: featurize every legal child of every probe position once
-  (about 35 per position), and evaluate `after` by lookup.
+  (about 35 per position), and evaluate `after` by lookup. Of chess's 1,887,259,650 skeletons at L = 6, 57,102,500
+  use `after`.
 - Broadcast values (`bcast` in `seq` and `fluid`) keep a length-1 axis; numpy broadcasting gives them the full shape
   when they meet a full value.
 
