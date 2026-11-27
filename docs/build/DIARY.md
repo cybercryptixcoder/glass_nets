@@ -165,3 +165,8 @@ inputs, three as equivalent or affine-equivalent expressions (for example `(or d
 minus the planted `(and opp_N (not defended))`). Chess at length 5: 77,248 distinct square-valued expressions below
 length 5, 14 seconds. This is the definer's search, not yet the definer: it fits no scale and offset, skips `after`,
 and has not met a network.
+
+**01:33 to 01:35.** The definer's search now fits scale and offset (held-out affine R2 1.0 on all six planted
+targets). The verifier hook, run on the M4,3 saved cases as a task folder (c928 offered as the true blueprint, the
+near-copy as an account), prints "certified 0 of 1 true blueprints, rejected 0 of 1 accounts": the same verdicts as
+the direct test, through the Gate 1 entry point.
