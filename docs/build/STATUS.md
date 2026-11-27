@@ -1,6 +1,6 @@
 # Build status (the finished system, `docs/spec/BUILD.md`)
 
-*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 02:03.*
+*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 02:15.*
 
 ## Where things stand
 
@@ -30,7 +30,8 @@
   observational-equivalence pruning, fitted scale and offset, upstream parts as atoms; 7 of 7 planted definitions
   recovered at held-out correlation 1.0. **Staged rehearsal** (`box/rehearse_staged.py`, builder-made network): the
   three planted ingredients defined exactly, the five distractors not; the verdict defined through the ingredients at
-  held-out R2 0.98, where the board alone gives -0.97.
+  held-out R2 0.98, where the board alone gives -0.97; the blueprint the search produced is then certified by the
+  checker's interventions, and a swapped-location variant rejected (`box/rehearse_staged_check.py`).
 - **Checker v0** (`box/`, ledger G1, in progress):
   - Tracr adapter (`box/adapters/tracr_net.py`): numpy forward pass with interventions, equal to Tracr's own within
     2e-6 on four programs.

@@ -15,8 +15,11 @@ from box.blueprint import Blueprint, TYPES  # noqa: E402
 
 
 class VecChecker:
-    def __init__(self, net, X, test_idx=None, seed=0, n_pairs=400, control_reps=200):
+    def __init__(self, net, X, test_idx=None, seed=0, n_pairs=400, control_reps=200, ctx_fn=None):
+        """ctx_fn(X) builds the vocabulary context for a batch of inputs X (default: numeric sequences, {"x": X});
+        for other domains X may be indices into a dataset the adapter and ctx_fn both read."""
         self.net, self.X = net, np.asarray(X, np.float64)
+        self.ctx_fn = ctx_fn or (lambda X: {"x": X})
         self.rng = np.random.default_rng(seed)
         self.base = net.outputs(self.X)
         _, self.sites = net.run(self.X, return_sites=True)
@@ -80,7 +83,7 @@ class VecChecker:
         vals, types = {}, {}
         for p in bp.order():
             vals[p.id] = overrides[p.id] if p.id in overrides else \
-                np.asarray(vocab.evaluate(p.definition, dom, {"x": X}, vals, types, bp.library, ops), np.float64)
+                np.asarray(vocab.evaluate(p.definition, dom, self.ctx_fn(X), vals, types, bp.library, ops), np.float64)
             types[p.id] = p.vtype
         return vals
 
@@ -124,10 +127,13 @@ class VecChecker:
         reps = self.control_reps // 10
         out = {}
         best = []
-        for _ in range(reps):
+        # a random direction is a control only where it can differ from the part's own: at a one-dimensional site the
+        # only directions are the part's own and its negative, so no random-direction control exists there
+        roomy = [p for p in located if self.sites[p.site].shape[1] > 1]
+        for _ in range(reps if roomy else 0):
             sc = []
             for _k in range(K):
-                p = located[self.rng.integers(len(located))]
+                p = roomy[self.rng.integers(len(roomy))]
                 v = self.rng.normal(size=self.sites[p.site].shape[1]); v /= np.linalg.norm(v)
                 s_, _n = self._iia(bp, p, v)
                 if s_ is not None:

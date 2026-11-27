@@ -204,3 +204,15 @@ clamps against a constant in chess, and the token function `relu1`). v1 had been
 reached origin, and no bench session had written anything against it, so nothing is voided. 80 vocabulary checks and
 the fuzz test (826 expressions) pass; the search's seven cases still pass. The tag `vocab-frozen` now sits locally on
 f0b3b680; pushing it is still refused (HTTP 403).
+
+**02:05 to 02:15. The loop closed on the rehearsal (`box/rehearse_staged_check.py`; output
+`results/build/rehearse_staged_check_session1.txt`).** The blueprint the search produced (the three ingredients at
+layer-1 units, the verdict through them at the output) was put to the checker's interventions on the rehearsal
+network, with a must-fail variant written before the run (u0 and u1's locations swapped). First run: the true
+blueprint was rejected, because the random-direction line was 1.0: the verdict part sits at the one-dimensional output
+site, where a "random" direction is the part's own (a translation error: such a draw is not a control). Fixed: random-
+direction controls are drawn only at sites of more than one dimension. Second run: the true blueprint is certified
+(run alone 0.998; ingredient IIA 0.80, 0.94, 0.95 against lines of 0.54 from random directions and 0.08 from
+weight-shuffled networks); the swapped variant is rejected (IIA 0.13 and 0.03). M4,3's verdicts are unchanged after
+the fix (near-copy certified; c928 rejected, 22 of 27 parts). So, on a toy: found by the search, certified by the
+checker, end to end.
