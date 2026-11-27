@@ -23,7 +23,11 @@ for every beam. This is the same thing for a network:
 
 **What it tells you**
 
-2. **Say what the network does,** including its mistakes and what it knows beyond the textbook.
+2. **Say what the network does,** including:
+   - its mistakes;
+   - what it knows beyond the textbook;
+   - the shortcuts it takes compared with a standard method;
+   - where it will break on unusual inputs.
 3. **Show how it does it, from the inside.** Every part it names really exists in the network: change that part in
    the network, and the network changes exactly as the blueprint says it will.
 4. **Account for everything.** Nothing that matters is left out. Whatever is not explained is measured and pointed
@@ -38,6 +42,7 @@ for every beam. This is the same thing for a network:
 6. **Go from the big picture to the parts, and back.** It gives the strategy, then the systems, then the parts, and
    each level is explained by the one below.
 7. **Trace any single decision:** which parts produced it, and the smallest change that would have changed it.
+   **And fingerprint any behaviour,** such as a lie: the parts whose activity gives it away.
 8. **Name things nobody has named.** When the network uses an idea we have no word for, the system invents the word
    and the definition, and proves it.
 

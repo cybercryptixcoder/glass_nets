@@ -142,14 +142,19 @@ when all five of these hold, each by test.
 
 **R2. It says what the network does.**
 - *Must:* state the network's input-to-output behaviour on the inputs given, in the task's own terms, including where
-  the network departs from the task. That means its mistakes, its quirks, and what it knows beyond the reference
-  rules.
+  the network departs from the task. That covers:
+  - its mistakes, and its quirks;
+  - what it knows beyond the reference rules;
+  - the shortcuts it takes compared with a reference method, where there is one (for example, a fluid emulator
+    against the solver it imitates);
+  - where it will hold up, and where it will fail, on unusual inputs outside the ones it was given.
 - *Why:* a network's real behaviour can differ from the task it was trained on. Rosetta found that 22% of LD2's
   evaluation is beyond textbook chess. The review asked whether that part is knowledge or the network's own error
   (`docs/review/NEXT_BUILD.md`, flagship 1).
 - *Test:*
   - agreement with the network on held-out inputs, with an interval;
   - agreement on the worst slice, and on the network's own mistakes;
+  - predictions, made before running, of where the network fails on a pre-registered set of unusual inputs;
   - the **knowledge split**: of the network's departures from the reference, the share that predicts ground truth
     (game results, the fine simulation, true facts) and the share that does not.
 
@@ -185,7 +190,8 @@ when all five of these hold, each by test.
     when only what the explanation names is kept (Redwood Research, 2022).
   - Averaging over resampling choices can hide a wrong account through cancellation, so the worst case must be
     reported, not only the mean (Practical Pitfalls of Causal Scrubbing).
-- *Test:* the worst case, over a fixed set of resampling choices, of the share of the network's performance that
+- *Test:* the worst case, over a set of resampling choices fixed before the run (resampling from other inputs, mean
+  values, and values matched on what the blueprint says matters), of the share of the network's performance that
   survives, plus the unresolved share by layer. The completeness line is set on the planted networks: the true
   blueprint's own worst-case recovery, minus its spread. A real network is "complete" when its unresolved share is
   below the largest unresolved share any true blueprint shows on the planted rehearsal network of the same domain.
@@ -221,17 +227,24 @@ when all five of these hold, each by test.
 - *Test:*
   - **Planted networks:** on networks whose sealed mechanism has intermediate variables computed in stages, every
     intermediate variable is recovered (its definition matches the sealed one at the recovery line), and so is the
-    wiring between them.
+    wiring between them. The overview matches the sealed top level.
   - **Real networks:** every level passes R3, and the overview alone predicts the behaviour better than the task-rule
     baseline.
 
-**R7. It traces any single decision.**
-- *Must:* for any input, show the path of parts that produced the output, how much each contributed, and the smallest
-  change (to the input, or to one part) that would flip the decision.
+**R7. It traces any single decision, and fingerprints any behaviour.**
+- *Must:*
+  - for any input, show the path of parts that produced the output, how much each contributed, and the smallest
+    change (to the input, or to one part) that would flip the decision;
+  - for a named behaviour (a lie, a blunder, a planted trigger), list the parts whose activity marks it: its
+    fingerprint, usable as a detector.
 - *Why:* when a structure fails, an engineer can name the member that gave way. The box must do the same for any
   decision: debugging, auditing a specific lie, explaining a specific move.
-- *Test:* predicted flips come true more often than the baselines' predictions: attribution patching, and "no
-  change". Reported per domain.
+- *Test:*
+  - predicted flips come true more often than the baselines' predictions: attribution patching, and "no change";
+  - a fingerprint detects its behaviour on held-out cases better than a probe trained on the raw activations without
+    the blueprint (the explanation-free baseline).
+
+  Both are reported per domain.
 
 **R8. It names what nobody has named.**
 - *Must:* when a variable cannot be defined in the current vocabulary, the box adds to the vocabulary:
