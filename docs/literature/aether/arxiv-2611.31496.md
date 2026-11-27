@@ -1,0 +1,48 @@
+# Reading Between the Layers: Where Representation Quality Lives, and What Geometry Reveals
+
+- **Key:** arxiv-2611.31496
+- **Authors / organisation:** Arnesh Batra, Aniket Khandelwal, Arush Gumber, Krish Thukral, Kushagra Agrawal, Dev Sharma; Indraprastha Institute of Information Technology, Delhi (with Manipal University Jaipur)
+- **Date:** 2026-11-23
+- **Link:** https://arxiv.org/abs/2611.31496
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+
+Practitioners almost always read a pretrained language model at its last layer, but the layer that carries the most task-relevant information is usually somewhere inside the network. Picking the right layer normally means training a probe at every depth on labelled data, which defeats the point of cheap probing and is impossible before labels exist. The paper asks two questions: across architectures, pretraining objectives and task types, where does readable representation quality actually live, and can that location be found from unlabelled geometry alone. The larger goal is a selector that runs on unlabelled forward passes, so that a layer can be chosen for probing, truncation or distillation before any downstream task is fixed.
+
+## What they studied
+
+25 pretrained models in the main cohort — 12 masked-language encoders, 4 contrastive sentence encoders, 4 encoder–decoders, 4 causal decoders, and one state-space model (Mamba-130M) — spanning 66.4M to 581.1M parameters, plus a separate scaling probe of four larger checkpoints up to 4B (DeBERTa-v3-large, XLM-RoBERTa-large, Mamba-2.8B, Qwen3.5-4B). 13 MTEB and related datasets across four task families (single-sentence classification, pair classification, semantic textual similarity, multiple-choice QA), four readout positions (CLS, last token, mean pooling over non-padding tokens, sentence-pair pooling), and 11 pretraining objectives or variants. The unit of analysis is the **layer**, treated as a point cloud of pooled representations; the quantity being predicted is the probe score at that layer.
+
+## How they did it
+
+Representations are extracted from every non-embedding layer at maximum sequence length 512 with float16 extraction, and linear plus two-layer nonlinear probes are trained per (model, dataset, task, readout, split) group with a fully specified recipe (AdamW, lr 1e-3, weight decay 0.01, 20 epochs, early stopping). For every group the empirical best layer and the near-best plateau are recorded, and a normalised depth position is computed for each peak. In parallel, four geometry statistics are computed per layer on a 10% sample of each split: spectral capacity (exponentiated Shannon entropy of the normalised singular-value spectrum, i.e. effective rank), power-law fit quality (the coefficient of determination from regressing log singular value on log index), condition number, and a local intrinsic dimension estimated with the TwoNN nearest-neighbour ratio. Each trace is normalised across the layers of its own group (min-max, rank, or log-min-max depending on the trace's dynamics), and the four normalised terms are summed into the Stable Geometry Index, with a fixed weak depth prior that peaks at 4/5 of depth; the selected layer is the latest maximiser. Selectors are compared on gain over the final layer, gap to the oracle best layer, Hit@1 and Hit@3, aggregated over evaluation groups, with paired bootstrap and Wilcoxon tests; a supervised ELMo-style learned scalar layer mix is run on the matched CLS subset as an information-richness control, and single-term removals plus reweighting and a multiplicative-variant arm form the ablation set.
+
+## What counts as an explanation here
+
+A **closed-form score over a layer's spectrum and neighbourhood geometry**, used as a predictor of which layer will probe best. It is not an account of what a layer computes: the paper's own framing is that geometry is the label-free signal while downstream probe performance defines the quality being predicted. The claim is deliberately partial — one number per layer, no directions, no features, no units inside a layer — and the authors describe the index as a "phase detector": it is expected to be useful where representations reorganise across depth and neutral where they do not.
+
+## How they judged success
+
+Primary metric = mean gain in the task's primary metric over the last-layer baseline (`M(layer) - M(L)`, accuracy for classification-style tasks, Spearman for STS), plus gap to the oracle best layer, Hit@1 and Hit@3 against the supervised oracle ranking. Significance by paired bootstrap 95% CIs and paired Wilcoxon over the full 383-group encoder set with no model or dataset filtering. Controls: a last-layer baseline, twelve single-signal label-free geometry baselines (effective rank, RankMe, IsoScore, participation ratio, stable rank, low-anisotropy, low-condition, intrinsic dimension, entropy, and others), a supervised all-layer scalar mix on the matched CLS subset, a leave-one-term-out and reweighting ablation, and a separate 57-row scaling probe held apart from the main result.
+
+## What they found
+
+Peak layers are structured, not arbitrary. On the 383-group encoder evaluation the index gains 1.20 points over the last layer (95% CI [0.85, 1.54]) and raises Hit@3 from 0.389 to 0.517 (+12.79 points, CI [6.79, 18.80]), both at p < 1e-4, recovering about 40% of the 3.00-point oracle gain. The best single-signal geometric baseline reaches 0.45 points of gain and Hit@3 0.428, so the combination is worth roughly 2.7x the strongest single signal. On the matched CLS subset the index scores 0.697 against a supervised learned layer mix at 0.683 and the final layer at 0.692, i.e. it beats a labeller-trained mix by 1.41 points without using any labels — but the same table's oracle best single layer is 0.715, so the whole axis being contested is about 2.3 points wide. Peak depth depends on architecture and readout far more than on task alone: mean pooling peaks in the first third in 61.1% of runs while CLS peaks in the final third in 66.8%; encoder–decoder median peak depth is 0.167 against encoder 0.727 and sentence-transformer 0.917; span-corruption models are early-accessible on 100% of classification and STS runs, masked-language models on 60.4% of classification but only 3.1% of STS runs. By family, the gain is 6.51 points for encoder–decoders and 2.33 for sentence transformers, 1.20 for encoders, 4.57 for the single state-space model, and 0.11 for decoder-only models. In the larger-checkpoint probe the mean gain is positive for all four (+5.11 DeBERTa-v3-large, +4.96 Mamba-2.8B, +2.78 XLM-RoBERTa-large, +0.89 Qwen3.5-4B). Ablations: removing the capacity term collapses the gain to 0.00, removing any other term costs 0.26 to 0.48 points; replacing the additive stability–depth pair with a product drops the gain to −0.17, below the do-nothing baseline; the linear capacity parameterisation loses 0.24 points. The matcher for practical use is depth: the shallowest bin of selected layers (below 0.2 of normalised depth, 84 of 383 encoder groups, the 22% of encoder workload the paper quotes) carries the largest mean gain, 2.30 points, which the authors read as a label-free truncation prior for removing the upper 80% of an encoder's layers.
+
+## Limits and open problems they name
+
+The index is weakest on multiple-choice QA where the last layer is already competitive, and the decoder-only gain of 0.11 points is not a family-level result. The state-space result is one model over eight groups. The terms are not statistically independent and the additive form is empirically supported rather than derived. Geometry alone does not guarantee that downstream labels are linearly separable. The scaling check is a probe, not a scaling law. They propose using the index as an initialisation for learned layer mixing rather than as a hard selector.
+
+## What we take from it
+
+Two transfers and one warning. **(1) A named, unfitted score, reported against the do-nothing default, is exactly the format our read-site rule should take.** Run 882's mechanical rule — choose a read site with an explicit two-term score and print the runner-up — had no concrete instantiation in the folder until this paper: here the score is closed-form, has no tuned coefficients, is applied unchanged across every model and task, and every result is quoted as gain over the last layer alongside the oracle ceiling. **(2) The "which readout" and "which depth" questions are one variable, not two**, and the paper prints the confound: CLS readouts peak late (66.8%) and mean-pooled readouts peak early (61.1%), while within matched groups mean pooling still wins 97.2% of classification comparisons — so a layer choice made under one readout does not transfer to another, and any claim of the form "layer k is where feature X lives" in our model must name the pooling and declare it fixed. **(3) The warning is the one this folder keeps re-learning, and the ablation table is the sharpest instance on disk:** a single geometric signal (effective rank) already buys 0.45 of the 1.20 points, i.e. more than a third of the whole benefit comes from the crude term, and the sum-of-four form's advantage over the best single signal (roughly +0.75 points) sits in the same range as the width of the axis it is measured on. Reporting an aggregate selector without the single-term rows beside it would have overstated how much the composition contributed — so any composite score our model publishes gets the highest-scoring single component printed in the same row.
+
+## Tags
+unit: layer
+form: probe
+method: probing
+eval: downstream-task
+goal: evaluation-of-methods
