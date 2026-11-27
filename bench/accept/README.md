@@ -37,6 +37,21 @@ requirement, pass or fail with the box's score and the line, and, for Gate 2's d
 intermediate variables were recovered and which of the box's own parts matched one. On the certification draw it
 prints only pass or fail, per requirement and per tier. It never prints a sealed definition, a family or a mechanism.
 
+## How each tier is scored
+
+- **Planted tiers (S0, S1):** every requirement's line is the network's own true blueprint's score on the draw being
+  scored, minus the tier's spread (frozen from dev-001 to dev-003). Interchange is also held to a family-wise line
+  from random subspaces at the same sites (the 99th percentile of the best of K controls, K the parts tested); a part
+  is interchange-tested only on at least 20 decisive pairs. A sealed variable is recovered when one of the box's parts
+  reaches its own agreement (or correlation) and substitution scores at the sealed location, minus the spread.
+- **S5a (accounts to reject):** fed to the builder's checker through `--hook`, which prints only counts. The scorer
+  also applies its own checks (run alone against the task-rule baseline; a part typed lookup at the decision must be
+  at chance on fresh inputs; interchange of sampled parts against the family-wise line). R10 and R9's estimator test
+  are pending.
+- **S5b (no story):** the box explains the network; it passes when no part typed rule is above the family-wise
+  interchange line, and every lookup's keys are verified training items where the task lists them
+  (`train_items.json`).
+
 ## Draws
 
 | draw | tiers | networks |
@@ -50,6 +65,24 @@ and the tiers S1 to S4, S5b, S6 and S7 are not built yet.
 
 Draw requests go in `docs/build/STATUS.md` as "Draw request: <gate>, <tiers>". A ready draw is announced there as
 "Draw <id> ready: <tiers>". Every formal gate attempt needs a draw that no earlier formal attempt used.
+
+## The bench's self-check (Gate 1, first half)
+
+`python3 bench/accept/scorer/selfcheck.py <draw> --variants` prints counts only.
+- **dev-001, S0:** true blueprints passing every requirement at its line: 10 of 10; known-wrong blueprints (every
+  part at a random location of the same dimension; the output's definition replaced by a type-correct wrong one; the
+  true blueprint on the weight-shuffled network) failing at least one requirement: 30 of 30.
+- **dev-001, S5a:** accounts rejected by the scorer's automatic tests: 31 of 31 (none fails only the format check).
+
+## R9's estimator test (X0)
+
+X0's main arm (`docs/review/PREREG_FIRST_EXPERIMENTS.md`, X0) was run on Nov 27 on the saved runs, with the estimators
+written by a model given only the accounts and the tasks (DeepSeek V4.1 Flash; no other model was available). Neither
+must-pass account beat sampling on every quantity: M4,3's (c928) estimator used millions of forward passes of compute
+and lost to Monte Carlo by factors of 228 to 13,125; the lc_8_6 census rule beat sampling on 4 of 5 quantities
+(ratios 0.07 to 0.27, lines about 1.0) and lost on the fifth (ratio 61, a population its rule never predicts). So
+answering without running did not separate real accounts from copies here: **R9's estimator test is reported and does
+not gate**; R9 gates on the must-fail set (S5a, S5b) and the bounded reader (R10, pending a key).
 
 ## The reader model (R10)
 

@@ -32,7 +32,7 @@ python3 bench/accept/interface.py <task folder> <blueprint.json>
 | `interface` | `"bench-accept/v1"` |
 | `id`, `draw`, `tier` | the network's id, its draw, its tier (S0 to S7) |
 | `domain` | the vocabulary domain definitions are written in: `tok`, `seq`, `chess`, `fluid`, `weights` |
-| `network` | `{"format", "path", "n_params", "multiply_adds"}`; formats: `tracr_np`, `rnn_relu`, `transformer` (more are added as tiers need them, each with a loader in `netlib.py`) |
+| `network` | `{"format", "path", "n_params", "multiply_adds"}`; formats: `tracr_np`, `rnn_relu`, `transformer`, `mlp_relu` (more are added as tiers need them, each with a loader in `netlib.py` and a row in `CHANGES.md`) |
 | `behaviour` | `{"description", "outputs": [{"name", "kind", "values", "positions"}], "metric", "decision"}`: which outputs, which metric (`accuracy` for categorical outputs, `r2` for numbers, `kl` for distributions), and how a decision is read (`argmax`, `sign`, or a `threshold`) |
 | `inputs` | `{"path", "n"}`: the inputs the behaviour is explained on. The scorer's held-out inputs are separate and sealed |
 | `train_items` | `{"path", "n"}` where the training items are known (R5's lookup keys must be among them), else `null` |

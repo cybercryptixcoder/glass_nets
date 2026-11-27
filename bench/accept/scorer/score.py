@@ -43,8 +43,11 @@ def statistics(task_dir, bp_path, sealed_dir=None, seed=0, controls=True):
         return {"format": 0.0}, problems
     net = netlib.load_network(task_dir, task)
     dom = task["domain"]
-    held_path = os.path.join(sealed_dir, "heldout.json") if sealed_dir else None
-    H = I.load_inputs(task_dir, task) if not (held_path and os.path.exists(held_path)) else _load_ctx(held_path, dom)
+    held_path = None
+    for name in ("heldout.json", "heldout.npz"):
+        if sealed_dir and os.path.exists(os.path.join(sealed_dir, name)):
+            held_path = os.path.join(sealed_dir, name)
+    H = I.load_inputs(task_dir, task) if held_path is None else _load_ctx(held_path, dom)
     rng = np.random.default_rng(seed)
     st = {"format": 1.0}
     run = net.run(H, return_sites=True)
@@ -66,22 +69,25 @@ def statistics(task_dir, bp_path, sealed_dir=None, seed=0, controls=True):
     # R3: interchange interventions on decisive pairs, family-wise random-subspace controls
     pairs = core.make_pairs(H, dom, N_PAIRS, rng, equal_len=False)
     tested, preps = [], {}
+    pe = core.PairEval(task, bp, H, pairs, given, choice)
     for p in bp["parts"]:
         if p["location"]["map"]["class"] == "param_component" or p["type"] != "rule":
             continue
-        prep = core.iia_prepare(task, bp, H, pairs, p, given, choice)
+        prep = core.iia_prepare_fast(pe, p)
         if len(prep["decisive"]) >= MIN_DECISIVE:
             tested.append(p)
             preps[p["id"]] = prep
     scores = {}
+    src_run_all = net.run(pe.cs, return_sites=True) if tested else None
     for p in tested:
-        scores[p["id"]] = core.iia_score(net, task, preps[p["id"]], p["location"], bp_dir)
+        scores[p["id"]] = core.iia_score(net, task, preps[p["id"]], p["location"], bp_dir, src_run=src_run_all)
     st["iia_parts"] = len(tested)
     st["iia_min"] = float(np.nanmin(list(scores.values()))) if scores else np.nan
     st["iia_mean"] = float(np.nanmean(list(scores.values()))) if scores else np.nan
     if controls and tested:
         crng = np.random.default_rng(10_000 + seed)
-        src_runs = {pid: net.run(preps[pid]["cs"], return_sites=True) for pid in preps}
+        src_run_all = net.run(pe.cs, return_sites=True)
+        src_runs = {pid: src_run_all for pid in preps}
         best = []
         for _ in range(CONTROL_REPS):
             m = -np.inf
@@ -244,6 +250,17 @@ def score_one(task_dir, bp_path, draw=None):
     draw = draw or task.get("draw")
     sdir = task_dir if draw == "reference" else os.path.join(SEALED, draw, task["id"])   # the public reference
     cert = os.path.exists(os.path.join(SEALED, draw, "CERTIFICATION"))
+    if task["tier"] == "S5a":
+        print(f"  {task['id']}  S5a: the accounts to reject are scored through the verifier hook (--hook)")
+        return True
+    if task["tier"] == "S5b":
+        res = s5b_check(task_dir, bp_path, sdir)
+        for name, ok, sc, line in res:
+            if cert:
+                print(f"  {task['id']}  {name}: {'pass' if ok else 'fail'}")
+            else:
+                print(f"  {task['id']}  {name}: {'pass' if ok else 'fail'}  score {_f(sc)}  line {_f(line)}")
+        return all(ok for _n, ok, _s, _l in res)
     st, problems = statistics(task_dir, bp_path, sdir if os.path.isdir(sdir) else None)
     if problems:
         print(f"  {task['id']}  format: fail ({len(problems)} problems; first: {problems[0][:160]})")
@@ -304,8 +321,9 @@ def s5a_check(task_dir, acc_path, sealed_dir, seed=0, n_iia=30):
         pick = [rules[i] for i in sorted(rng.choice(len(rules), min(n_iia, len(rules)), replace=False))] if rules else []
         pairs = core.make_pairs(H, dom, 400, rng, equal_len=False)
         tested, preps, scores = [], {}, {}
+        pe = core.PairEval(task, acc, H, pairs, given, choice)
         for p in pick:
-            prep = core.iia_prepare(task, acc, H, pairs, p, given, choice)
+            prep = core.iia_prepare_fast(pe, p)
             if len(prep["decisive"]) >= MIN_DECISIVE:
                 tested.append(p); preps[p["id"]] = prep
                 scores[p["id"]] = core.iia_score(net, task, prep, p["location"], adir)
@@ -326,6 +344,58 @@ def s5a_check(task_dir, acc_path, sealed_dir, seed=0, n_iia=30):
             out.append(("_iia_detail", None, {pid: round(v, 3) for pid, v in scores.items()}, len(tested)))
     out.append(("R10 bounded reader", None, np.nan, np.nan))
     out.append(("R9 answering without running (X0)", None, np.nan, np.nan))
+    return out
+
+
+# ====================================================================================================== S5b: no story
+def s5b_check(task_dir, bp_path, sealed_dir, seed=0):
+    """A network with no planted structure (shuffled, untrained, memoriser, no structure): passes when no part typed
+    rule is above the family-wise interchange line, and every lookup's keys are verified training items where the
+    task lists them. Returns [(test, passed, score, line)]."""
+    task = I.load_task(task_dir)
+    bp = I.load_blueprint(bp_path)
+    bdir = os.path.dirname(os.path.abspath(bp_path))
+    problems = I.validate_blueprint(bp, task, bdir)
+    if problems:
+        return [("format", False, len(problems), 0)]
+    out = []
+    if task.get("train_items"):
+        items = json.load(open(os.path.join(task_dir, task["train_items"]["path"])))["items"]
+        known = {it["key"] for it in items} | {it["id"] for it in items}
+        bad = sum(1 for p in bp["parts"] if p["type"] == "lookup"
+                  for k, _ in p["table"]["entries"] if str(k) not in known)
+        out.append(("R5 lookup keys are training items", bad == 0, bad, 0))
+    net = netlib.load_network(task_dir, task)
+    dom = task["domain"]
+    H = _load_ctx(os.path.join(sealed_dir, "heldout.npz"), dom)
+    rng = np.random.default_rng(seed)
+    given, choice = core.given_from_network(net, task, bp, H, bdir)
+    pairs = core.make_pairs(H, dom, 400, rng, equal_len=False)
+    tested, preps, scores = [], {}, {}
+    pe = core.PairEval(task, bp, H, pairs, given, choice)
+    for p in bp["parts"]:
+        if p["type"] != "rule" or p["location"]["map"]["class"] == "param_component":
+            continue
+        prep = core.iia_prepare_fast(pe, p)
+        if len(prep["decisive"]) >= MIN_DECISIVE:
+            tested.append(p); preps[p["id"]] = prep
+            scores[p["id"]] = core.iia_score(net, task, prep, p["location"], bdir)
+    if tested:
+        crng = np.random.default_rng(10_000 + seed)
+        src_runs = {pid: net.run(preps[pid]["cs"], return_sites=True) for pid in preps}
+        best = []
+        for _ in range(CONTROL_REPS):
+            m = -np.inf
+            for p in tested:
+                v = core.iia_score(net, task, preps[p["id"]], core.random_subspace_loc(p["location"], task, crng), bdir,
+                                   src_run=src_runs[p["id"]])
+                m = max(m, v if np.isfinite(v) else -np.inf)
+            best.append(m)
+        line = float(np.percentile(best, 99))
+        top = float(np.nanmax(list(scores.values())))
+        out.append(("R9 no rule above the family-wise line", top <= line, top, line))
+    else:
+        out.append(("R9 no rule above the family-wise line", True, np.nan, np.nan))
     return out
 
 

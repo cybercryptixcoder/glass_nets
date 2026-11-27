@@ -58,15 +58,14 @@ def shuffled_task(task_dir, rng, tmp):
     t = os.path.join(tmp, "shuffled_task")
     shutil.copytree(task_dir, t)
     task = I.load_task(t)
-    if task["network"]["format"] == "tracr_np":
-        f = os.path.join(t, "network", "params.npz")
-        P = dict(np.load(f))
-        for k in P:
-            if k not in ("readout", "token_embed", "pos_embed"):
-                a = P[k].ravel().copy()
-                rng.shuffle(a)
-                P[k] = a.reshape(P[k].shape)
-        np.savez(f, **P)
+    f = os.path.join(t, "network", "params.npz" if task["network"]["format"] == "tracr_np" else "weights.npz")
+    P = dict(np.load(f))
+    for k in P:
+        if k not in ("readout", "token_embed", "pos_embed", "seq_len", "out_positions"):
+            a = P[k].ravel().copy()
+            rng.shuffle(a)
+            P[k] = a.reshape(P[k].shape)
+    np.savez(f, **P)
     return t
 
 

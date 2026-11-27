@@ -295,6 +295,66 @@ def _swap_edit(loc, task, src_act, bp_dir):
     return netlib.write_edit(loc, task, coords, bp_dir)
 
 
+class PairEval:
+    """The blueprint evaluated once on the base and source inputs of a pair set, so that each part's interchange
+    prediction recomputes only that part's descendants."""
+
+    def __init__(self, task, bp, ctx, pairs, given, choice):
+        dom = task["domain"]
+        self.task, self.bp = task, bp
+        B = [a for a, _ in pairs]
+        S = [b for _, b in pairs]
+        self.cb, self.cs = subset(ctx, dom, B), subset(ctx, dom, S)
+        self.gb, self.chb = _take_all(given, B), _take_all(choice, B)
+        self.base = evaluate_blueprint(bp, task, self.cb, given=self.gb, choice_values=self.chb)
+        self.src = evaluate_blueprint(bp, task, self.cs, given=_take_all(given, S), choice_values=_take_all(choice, S))
+        self.order = I.order_parts(bp["parts"])
+        kids = {p["id"]: [] for p in bp["parts"]}
+        for p in bp["parts"]:
+            for u in p.get("upstream", []):
+                kids[u].append(p["id"])
+        self.kids = kids
+        self.dom = vocab.get(dom)
+        self.lib = json.loads(json.dumps(bp.get("library") or {}))
+        vocab.check_library(self.dom, self.lib)
+        self.ops = compile_library(bp)
+        self.types = {p["id"]: p["vtype"] for p in bp["parts"]}
+
+    def descendants(self, pid):
+        seen, stack = set(), list(self.kids[pid])
+        while stack:
+            k = stack.pop()
+            if k not in seen:
+                seen.add(k)
+                stack += self.kids[k]
+        return seen
+
+    def predict(self, pid, value):
+        """The output when part pid takes value on the base inputs, its descendants recomputed."""
+        vals = dict(self.base)
+        vals[pid] = value
+        desc = self.descendants(pid)
+        for p in self.order:
+            q = p["id"]
+            if q not in desc or q in self.chb:
+                continue
+            if p["type"] == "rule":
+                vals[q] = vocab.evaluate(p["definition"], self.dom, self.cb, parts=vals, part_types=self.types,
+                                         library=self.lib, ops_code=self.ops)
+        return vals[self.bp["output"]]
+
+
+def iia_prepare_fast(pe, part):
+    pid = part["id"]
+    ov = pe.src[pid]
+    if pe.task["domain"] == "tok" and part["location"].get("positions", "all") == "all":
+        ov = [[s_[j] if j < len(s_) else b_[j] for j in range(len(b_))] for s_, b_ in zip(pe.src[pid], pe.base[pid])]
+    pred = pe.predict(pid, ov)
+    changed = agreement(pred, pe.base[pe.bp["output"]]) < 1.0
+    decisive = [i for i in range(len(changed)) if changed[i]]
+    return {"cb": pe.cb, "cs": pe.cs, "pred": pred, "decisive": decisive}
+
+
 def iia_prepare(task, bp, ctx, pairs, part, given, choice):
     """The blueprint's own predictions for swapping one part between the inputs of each pair, and the decisive pairs
     (those where it predicts a change of output)."""

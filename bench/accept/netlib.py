@@ -8,6 +8,8 @@ Formats (task.json "network.format"):
   through the published readout (`readout` [d, k]) as categorical values or one number.
 - "rnn_relu": AlgZoo's one-layer ReLU RNN, `network/weights.npz` (W_x, W_h, W_o, seq_len). Sites h1 .. hT, each
   [1, hidden], and out [1, classes]. The decision is the argmax of out.
+- "mlp_relu": the lab's ReLU MLP (`network/weights.npz`: W1, b1, W2, b2, ...). Sites h1, h2, ... (after ReLU), each
+  [1, width], and out [1, classes]. The decision is the argmax of out.
 - "transformer": the lab's general transformer without layer norm (`bench/accept/vendor/lab_nets.py`), weights in
   `network/weights.npz`. Sites embed, attn<l>.out, resid<l>.mid, mlp<l>.pre, mlp<l>.post, mlp<l>.out, resid<l>.post,
   each [positions, width], and out [n_out_positions, classes].
@@ -38,6 +40,8 @@ def load_network(task_dir, task=None):
         return RNNReLU(path, task)
     if fmt == "transformer":
         return LabTransformer(path, task)
+    if fmt == "mlp_relu":
+        return LabMLP(path, task)
     raise ValueError(f"unknown network format {fmt}")
 
 
@@ -144,6 +148,30 @@ class RNNReLU:
         hook = {k: (lambda a, f=f: f(a[:, None, :])[:, 0, :]) for k, f in (edits or {}).items()}
         acts = {} if return_sites else None
         raw = lab_nets.rnn_relu(W, np.asarray(ctx["x"], np.float64), hook, acts)
+        res = {"outputs": [int(i) for i in raw.argmax(1)], "raw": raw}
+        if return_sites:
+            res["sites"] = {k: v[:, None, :] for k, v in acts.items()}
+        return res
+
+
+# ====================================================================================================== MLP
+class LabMLP:
+    """The lab's ReLU MLP (W1, b1, W2, b2, ...; lab_nets.mlp). Sites h1, h2, ... (after ReLU), each [1, width], and
+    out [1, classes]; the decision is the argmax of out."""
+
+    def __init__(self, path, task):
+        self.task = task
+        W = np.load(os.path.join(path, "weights.npz"))
+        self.W = {k: np.asarray(W[k], np.float64) for k in W.files}
+        self.sites = task["sites"]
+
+    def run(self, ctx, edits=None, param_edits=None, return_sites=False):
+        W = dict(self.W)
+        if param_edits:
+            W.update({k: np.asarray(v, np.float64) for k, v in param_edits.items()})
+        hook = {k: (lambda a, f=f: f(a[:, None, :])[:, 0, :]) for k, f in (edits or {}).items()}
+        acts = {} if return_sites else None
+        raw = lab_nets.mlp(W, np.asarray(ctx["x"], np.float64), "relu", hook, acts)
         res = {"outputs": [int(i) for i in raw.argmax(1)], "raw": raw}
         if return_sites:
             res["sites"] = {k: v[:, None, :] for k, v in acts.items()}
