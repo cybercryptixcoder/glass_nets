@@ -1,0 +1,61 @@
+# Teacher Forcing as Generalized Bayes: Optimization Geometry Mismatch in Switching Surrogates for Chaotic Dynamics
+
+- **Key:** arxiv-2604.25904
+- **Authors / organisation:** Andre Herz, Daniel Durstewitz, Georgia Koppe; Heidelberg University (IWR and Dept. of Theoretical Neuroscience), CIMH Mannheim, and the Hertie Institute for AI in Brain Health, University of Tubingen
+- **Date:** 2026-04-28 (v1); workshop paper, Optimization and Post-Bayesian Inference in Machine Learning, AISTATS 2026
+- **Link:** https://arxiv.org/abs/2604.25904
+- **Kind:** paper (short workshop paper with a full technical appendix)
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+
+Surrogate models of chaotic dynamical systems are trained on short-horizon prediction error, usually with some form of teacher forcing that injects data-derived state into the rollout so gradients survive. That training loss is not the likelihood of the model the surrogate is finally run as, because the forcing is an intervention on the rollout distribution. The authors want to say precisely how far apart the two objectives sit, and whether training better on the forced objective or on a likelihood-based one tells you anything about the thing they actually care about, which is the long-run invariant behaviour of the free-running model (attractor occupancy, Lyapunov exponents). Their larger aim is a stance they call post-Bayesian: there may be no canonical posterior for this problem, only an update rule and the geometry it induces, chosen with the downstream quantity of interest in view. They also want the question to be answerable with a closed-form quantity rather than a battery of training runs.
+
+## What they studied
+
+Almost-linear recurrent networks (AL-RNNs) used as dynamical-systems-reconstruction surrogates on Lorenz-63. The unit of analysis is a **parameter block of the drift map** (the diagonal decay matrix, the full gated matrix and the bias), and the object of study is the local curvature of a training objective with respect to those parameters. The reference geometry comes from a probabilistic augmentation of the same network (PAL-RNN): the ReLU gate bits become latent Bernoulli variables drawn through a probit of the gate coordinate, and isotropic process and observation noise are added, so that conditioning on a gate path leaves a linear-Gaussian state-space model. A separate two-state switching AR(1) toy model is used to isolate the mechanism with closed-form posteriors.
+
+## How they did it
+
+Step one, framing: the teacher-forcing loss is written as a Gibbs (generalized Bayes) posterior, the loss itself acting as the scoring rule and a free temperature set aside, and its local geometry is read as a generalized Gauss-Newton/Fisher matrix. Because that matrix propagates sensitivities along the *forced* rollout, it is conditioned on exactly one realised gate sequence. Step two, reference: in the PAL-RNN, the curvature of the marginal likelihood is the observed information, which by Louis' identity splits into the expected complete-data information minus a missing-information term, a covariance of the complete-data score taken over the posterior of the latent explanation. Step three, closed form: for a scalar two-regime gate the missing-information term is a rank-one matrix - the product of the posterior ambiguity of the gate and the outer product of the difference between the two regimes' scores - so ambiguity is maximal at an even posterior and the correction vanishes when one explanation is certain. Step four, measurement: the toy model sweeps the gate-noise scale across twenty-five logarithmically spaced values with closed-form gate posteriors, and the AL-RNN checkpoints (twelve initialisations across three process-noise and four observation-noise regimes, forcing interval fixed at sixteen for the fine-tuning arm) are run under a Rao-Blackwellized particle filter that samples gate paths and Kalman-filters the continuous state, giving a Monte-Carlo observed information and a filtering gate entropy. Step five, intervention: the same checkpoints are then fine-tuned by particle stochastic-approximation EM on a windowed conditional log evidence, in three configurations - nothing updated, noise scales only, and noise plus drift - and each is scored on held-out evidence plus two long-rollout dynamical quantities. Step six, matrix diagnostics: because trace gaps can hide cancellation, they also compute a ridge-stabilised log-determinant gap, the distribution of generalized eigenvalues of one curvature matrix against the other, and the overlap between their leading fifty-dimensional eigenspaces.
+
+## What counts as an explanation here
+
+A statistical-geometric account, not a mechanistic one. The explanation of a training objective is a curvature matrix, and the explanation of a disagreement between two objectives is the identity that generates one from the other (Louis' decomposition) plus a scalar summary of the gap (the logarithm of the ratio of traces, and its matrix-level refinements). It is partial by construction: local, second-order, around one fitted parameter value. The paper is explicit that it predicts nothing about *which* parameters a training run will land on, only how sensitive a neighbourhood is. For the question of how one should train, the explanation is a decomposition of the loss into an intervention term, a marginal term, and a correction whose size is the posterior ambiguity of the latent regime path.
+
+## How they judged success
+
+Four separate verdicts. (i) Mechanism check in the toy model: does raising the gate-noise scale raise the mean posterior gate entropy *and* the missing-information ratio while lowering the log trace of the observed information, averaged over twenty random seeds of six-hundred-step trajectories. (ii) Curvature gap in the real model: the base-ten logarithm of the ratio of the teacher-forcing trace to the per-step ambiguity-aware trace, plotted against filtering gate entropy, swept over noise levels and checkpoints. (iii) Evidence against dynamical quantities of interest: held-out windowed conditional log evidence, normalised per step and per observed dimension and estimated by the particle filter's normalising constant, beside a state-space divergence between generated and reference histograms (thirty bins per dimension, Laplace-smoothed) and the signed error of the largest Lyapunov exponent against the literature value for Lorenz-63, both on free-running rollouts of ten thousand steps after a thousand-step burn-in. (iv) Robustness: per-process-noise strata with bootstrap intervals on the rank correlation, partial correlations after rank-residualising on observation noise, and particle-filter diagnostics (effective sample size, resampling events, time-resolved entropy) to rule out particle collapse producing the entropy numbers.
+
+## What they found
+
+The mechanism is demonstrated cleanly in the toy model: as the gate becomes noisier, mean gate entropy and the missing-information ratio rise together and the observed curvature falls, so latent ambiguity flattens the marginal likelihood geometry by the amount Louis' correction says it should.
+
+In the Lorenz-63 checkpoints, the teacher-forcing curvature exceeds the ambiguity-aware observed information by gaps spanning roughly one decade up to about three decades on the log-trace scale, and the gap tends to grow with filtering gate entropy. The matrix diagnostics, however, cut against the simple story: the log-determinant gap is negative and fewer than one direction in ten is sharper under teacher forcing, so the trace gap is not a uniform inflation of the whole matrix - most generalized-eigenvalue directions are actually flatter under teacher forcing, while a concentrated subset is much sharper, and the leading-subspace overlap of the two curvatures is low and shrinks as switching entropy grows. The authors' own reading is a subspace-dependent mismatch rather than broad overconfidence.
+
+The entropy-gap association is also weaker than the headline suggests: stratified by process-noise level, the filter entropy and the curvature gap remain positively rank-correlated within each stratum, but after partialling out the observation-noise level those partial correlations are near zero in two strata and clearly negative in the third, so the within-stratum association is largely carried by observation noise rather than by a residual checkpoint-to-checkpoint entropy effect.
+
+The fine-tuning result is the one with the sharpest consequence and the fewest numbers in the main text. Both the noise-only and the noise-plus-drift configurations raise held-out windowed evidence, the noise-only one leaves the hard-gated dynamical quantities unchanged by construction, and the drift-updating one pushes the signed largest-Lyapunov error strongly negative - the model stops being chaotic and settles into an over-contracted orbit, visible in the appendix as an attractor plot collapsing to a periodic loop. Higher likelihood on a windowed conditional objective and long-run dynamical fidelity therefore point in opposite directions when the drift moves.
+
+## Limits and open problems they name
+
+Curvature is a local summary and only reads as posterior precision under approximate-normality arguments that non-convex switching models do not generally satisfy; global multimodality and flat directions are outside the picture. The evidence objective is a fixed-length windowed conditional quantity rather than the marginal likelihood of one long free-running trajectory, which the authors say is exactly why it can rise while invariants fall. The observed information is a Monte-Carlo estimate whose accuracy depends on particle and smoothing budgets. The noise model is isotropic with a fixed gate-noise scale that is set, not learned, and the dynamical quantities are computed from deterministic hard-gated rollouts with noise switched off, so invariants of the full stochastic model are not evaluated. Extension to graded (interpolated) forcing strength, and intervention-aligned curvature for surrogate classes without AL-RNN structure, are named as future work.
+
+## What we take from it
+
+**A decomposition to reuse whenever a training objective and an evaluation object differ.** The paper's contribution to us is a template: write the objective we actually optimise as a scoring rule, write the object we are judged on as a likelihood, and compute the missing-information term that separates them. That term is an outer product of a posterior ambiguity and a score difference, so it is computable from two quantities our predictor already needs - the posterior over latent explanations and the gradient of the complete-data log density under each explanation. A white-box model that reports a single curvature or confidence number without saying whether latent ambiguity was marginalised is reporting a property of one assumed explanation path.
+
+**Concrete measure:** the ratio of traces of the two curvature matrices, quoted in decades, *and* the fraction of generalized-eigenvalue directions in which the training objective is sharper. This entry is the cleanest available demonstration that the trace ratio and the direction-resolved result can disagree in sign, because a few very sharp directions can carry the trace while the majority of the spectrum is flatter.
+
+**A warning that generalises past this domain:** if our model is fitted under an intervention (masking, patching, prefix injection, any forced condition), its measured confidence is a confidence under that intervention, and the intervention inflates it precisely on the inputs where more than one explanation remains plausible. The magnitude is not a nuisance constant either - it is tied to the entropy of the explanation posterior, which is the same quantity our predictor needs.
+
+**A second warning about the success metric:** evidence on held-out windows improved while the invariant behaviour the model is for degraded, and only the arm that updated drift parameters showed it. A metric that is not the downstream quantity of interest is not a guard against damaging it.
+
+## Tags
+
+unit: weights
+form: causal-abstraction
+method: decomposition
+eval: prediction/simulation
+goal: understanding
