@@ -115,6 +115,11 @@ The bench is the finish line, so you must not be able to fit to it.
 - **Preferred:** Shreyas starts that session himself.
 - **Acceptable,** if he asks you to: launch a fresh agent with `BENCH_BRIEF.md` as its entire prompt, and accept only
   its final report, which describes the interface and nothing sealed.
+- **If no bench session exists when you begin,** ask Shreyas in your first message which he prefers. Until he
+  answers, do the work that needs no sealed material:
+  - publish the starting vocabulary;
+  - build your checker against S0, whose circuits are public, and against the saved copies and disguises of S5,
+    which are not sealed.
 
 **What you get from it:**
 - development draws, which you use freely while building;
