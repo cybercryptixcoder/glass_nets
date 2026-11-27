@@ -54,3 +54,21 @@ decisive pairs passed silently. Fix: pairs of any lengths, with the blueprint's 
 aligned swap; a rule part that no intervention can test is not certified. Also corrected one test case (reverse's wrong
 definition referred to a part it had not declared, so form rejected it before run alone was exercised). Second run:
 36 of 36 as expected.
+
+**01:00 to 01:05. The saved S5a cases, first contact (`box/adapters/algzoo_rnn.py`, `box/verify_vec.py`,
+`box/test_algzoo.py`).** As given, every saved account is a Python program, so the checker rejects all of them at the
+form check, the three real accounts included: none can pass until it is written as a blueprint. M2,2's real account
+(run a7c8) was translated by hand into a blueprint of the starting vocabulary (eight parts, locations fitted by least
+squares on half the inputs, interventions on pairs from the other half), and the integer copy of the network was
+written as a blueprint of its own units (13 parts, each within L = 7 and two constants). Findings:
+- Using the vocabulary showed a gap before the freeze: numeric sequences had no `relu` and no clamp with a constant,
+  so a ReLU took five symbols. Added `relu` and `max2`/`min2` with a constant to `seq` (vocabulary still v1, not yet
+  frozen); `seq` at L = 7 is now 17.6 million skeletons; the 66 vocabulary checks still pass.
+- Translation error found and fixed in both checkers: a hit in an interchange intervention counted any output equal to
+  the prediction, so a network that ignored the swap could score. A hit is now a change of the output, to the predicted
+  value. The Tracr known cases still give 36 of 36.
+- On M2,2 the intervention test cannot discriminate: the hidden state has two dimensions and the decision two classes,
+  so the best of K random directions, and the same directions in weight-shuffled copies of the network, already score
+  0.95 to 1.00 (family-wise lines 0.998 and 0.987 for the real account). Neither the real account nor the copy clears
+  them; the copy also fails run alone (0.986 against the real account's 0.9995). This agrees with X0, which reports
+  M2,2 as unable to decide anything. The deciding saved cases are M4,3 (hidden 4, three classes) and lc_8_6 (residual 8).

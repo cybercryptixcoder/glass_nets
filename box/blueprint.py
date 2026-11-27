@@ -22,6 +22,7 @@ class Part:
     labels: list = None            # residual-basis labels spanning its subspace, or
     basis: np.ndarray = None       # an explicit orthonormal basis [d, k]
     encoding: str = "categorical"  # how its value sits in the subspace
+    scale: float = 1.0             # for a one-direction numerical location: value = scale * (h . u)
     definition: str = None         # rules: an expression of the starting vocabulary (or the box's library)
     table: dict = None             # lookups: key -> value
     upstream: list = field(default_factory=list)

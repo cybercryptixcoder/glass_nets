@@ -135,11 +135,14 @@ class Checker:
         return out
 
     def _iia(self, B, site, decisive):
+        """A hit is a change of the network's output to the predicted value (an output that ignores the swap scores
+        nothing)."""
         hits = []
         for a, b, pred in decisive:
             edit = {site: _swap(B, self.sites[site][b:b + 1])}
             got = self.net.outputs([self.inputs[a]], edit)[0]
-            hits.append(_same(got, pred, self.net.numerical_output))
+            changed = not _same(got, self.base[a], self.net.numerical_output)
+            hits.append(changed and _same(got, pred, self.net.numerical_output))
         return float(np.mean(hits)) if hits else None
 
     def iia(self, bp, p):

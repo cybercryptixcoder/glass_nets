@@ -65,7 +65,7 @@ alone (no part references, no invented primitives), with at most 5 constants who
 recovery line (`SPEC.md` §6). The counts in §8 are the sizes of those searches: expression skeletons by length, with
 each constant one fitted slot. Argument orders of symmetric operations are counted separately, so they are upper
 bounds; pruning expressions that give identical values on a probe set (observational equivalence) cuts them further.
-The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 2.5 to 15 million.
+The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 2.5 to 18 million.
 
 ## 6. Inputs each domain expects
 
@@ -155,14 +155,15 @@ Operations (name: argument types -> result type):
 - `add`: (Seq Seq) -> Seq; (Seq C) -> Seq; (Num Num) -> Num; (Num C) -> Num
 - `sub`: (Seq Seq) -> Seq; (Num Num) -> Num
 - `mul`: (Seq Seq) -> Seq; (Seq C) -> Seq; (Num Num) -> Num; (Num C) -> Num
-- `max2`: (Seq Seq) -> Seq; (Num Num) -> Num
-- `min2`: (Seq Seq) -> Seq; (Num Num) -> Num
+- `max2`: (Seq Seq) -> Seq; (Seq C) -> Seq; (Num Num) -> Num; (Num C) -> Num
+- `min2`: (Seq Seq) -> Seq; (Seq C) -> Seq; (Num Num) -> Num; (Num C) -> Num
 - `gt`: (Seq Seq) -> Seq; (Num Num) -> Num
 - `eq`: (Seq Seq) -> Seq; (Num Num) -> Num
 - `neg`: (Seq) -> Seq; (Num) -> Num
 - `abs`: (Seq) -> Seq; (Num) -> Num
 - `ge`: (Seq C) -> Seq; (Num C) -> Num
 - `le`: (Seq C) -> Seq; (Num C) -> Num
+- `relu`: (Seq) -> Seq; (Num) -> Num. max(a, 0)
 - `mod`: (Seq C) -> Seq; (Num C) -> Num. remainder (integers)
 - `floordiv`: (Seq C) -> Seq; (Num C) -> Num
 - `where`: (Seq Seq Seq) -> Seq
@@ -187,7 +188,7 @@ Expression skeletons by length (constants as fitted slots; part references and i
 
 | length | 1 | 2 | 3 | 4 | 5 | 6 | 7 | total |
 |---|---|---|---|---|---|---|---|---|
-| count | 3 | 33 | 362 | 4,403 | 56,250 | 750,459 | 10,338,063 | 11,149,573 |
+| count | 3 | 36 | 437 | 5,713 | 78,191 | 1,113,975 | 16,363,487 | 17,561,842 |
 
 ### Domain `tok`
 
