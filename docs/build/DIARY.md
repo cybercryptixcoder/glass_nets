@@ -170,3 +170,8 @@ and has not met a network.
 targets). The verifier hook, run on the M4,3 saved cases as a task folder (c928 offered as the true blueprint, the
 near-copy as an account), prints "certified 0 of 1 true blueprints, rejected 0 of 1 accounts": the same verdicts as
 the direct test, through the Gate 1 entry point.
+
+**01:35 to 01:36.** The search can now use the blueprint's upstream parts as one-symbol atoms (`@id`): definitions
+through ingredients. Known case: a target of length 7 in board terms (above chess's L = 6), the number of best
+exchanges that take a queen or rook, is found as `(sum @ing)` from an ingredient part, held-out correlation 1.0.
+7 of 7 search cases pass.

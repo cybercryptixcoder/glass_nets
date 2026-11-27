@@ -26,6 +26,15 @@ for planted, L in [("(count (and own_P (not defended)))", 5), ("(and opp_N (not 
     ok = out and out[0]["heldout_corr"] > 0.9999
     fails += not ok
     print(("PASS " if ok else "FAIL ") + f"chess planted {planted}: best {out[0]} | distinct {sizes} | {time.time() - t0:.0f} s")
+# through an ingredient part: the target is simple in terms of a part, and too long in terms of the board
+ing = "(and (argmax_sq see_us) (or opp_Q opp_R))"                       # the best exchange, when it takes a queen or rook
+tgt = "(count (and (argmax_sq see_us) (or opp_Q opp_R)))"
+pf = {"ing": ("Sq", vocab.evaluate(ing, d, cf))}; pt = {"ing": ("Sq", vocab.evaluate(ing, d, ct))}
+out, sizes = best_definitions(d, cf, vocab.evaluate(tgt, d, cf), 2, "Pos", k=3, ctx_test=ct,
+                              target_test=vocab.evaluate(tgt, d, ct), parts_fit=pf, parts_test=pt)
+ok = out and out[0]["heldout_corr"] > 0.9999 and "@ing" in out[0]["definition"]
+fails += not ok
+print(("PASS " if ok else "FAIL ") + f"chess through a part: target {tgt} (length 7 > L) found as {out[0]}")
 ds = vocab.get("seq")
 rng = np.random.default_rng(0)
 xf, xt = {"x": rng.normal(size=(200, 5))}, {"x": rng.normal(size=(300, 5))}

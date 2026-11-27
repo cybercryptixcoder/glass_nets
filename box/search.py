@@ -25,10 +25,15 @@ def _key(v):
     return hash(np.round(a, 6).tobytes())
 
 
-def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000):
-    """Distinct expressions by type and length: {type: [(text, value, length)]}."""
+def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000, parts=None):
+    """Distinct expressions by type and length: {type: [(text, value, length)]}. parts: {id: (type, value)}, the
+    blueprint's upstream parts, offered as one-symbol atoms `@id` (definitions through ingredients)."""
     pool = {t: [] for t in list(dom.types) + [CONST]}
     seen = set()
+    for pid, (ptype, pv) in (parts or {}).items():
+        k = _key(pv)
+        if k is not None and (ptype, k) not in seen:
+            seen.add((ptype, k)); pool[ptype].append(("@" + pid, pv, 1))
     for c in grid:
         pool[CONST].append((repr(c), c, 1))
     for a in dom.atoms.values():
@@ -67,12 +72,16 @@ def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000):
     return pool
 
 
-def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, target_test=None, cap=60000):
+def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, target_test=None, cap=60000,
+                     parts_fit=None, parts_test=None):
     """Top-k expressions of the root type by |correlation| with the target on the probe inputs (ctx_fit). Expressions
     up to max_len - 1 are enumerated and stored; those of length max_len are streamed and scored without storing
     (memory). The top k are re-scored on held-out inputs when given."""
-    pool = enumerate_exprs(dom, ctx_fit, max_len - 1, cap=cap)
+    pool = enumerate_exprs(dom, ctx_fit, max_len - 1, cap=cap, parts=parts_fit)
     y = np.asarray(target, float).ravel()
+    ptypes = {pid: t for pid, (t, _v) in (parts_fit or {}).items()}
+    pvals_fit = {pid: v for pid, (_t, v) in (parts_fit or {}).items()}
+    pvals_test = {pid: v for pid, (_t, v) in (parts_test or {}).items()}
     yc = (y - y.mean()) / (y.std() + 1e-12)
     top = []
 
@@ -109,11 +118,11 @@ def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, ta
     out = []
     for r, text, n in top[:k]:
         row = {"definition": text, "length": n, "probe_corr": round(r, 4)}
-        xp = np.asarray(vocab.evaluate(text, dom, ctx_fit), float).ravel()
+        xp = np.asarray(vocab.evaluate(text, dom, ctx_fit, pvals_fit, ptypes), float).ravel()
         slope, offset = np.polyfit(xp, y, 1) if xp.std() > 0 else (0.0, float(y.mean()))
         row["scale"], row["offset"] = round(float(slope), 6), round(float(offset), 6)   # target = scale * value + offset
         if ctx_test is not None:
-            xv = np.asarray(vocab.evaluate(text, dom, ctx_test), float).ravel()
+            xv = np.asarray(vocab.evaluate(text, dom, ctx_test, pvals_test, ptypes), float).ravel()
             yt = np.asarray(target_test, float).ravel()
             row["heldout_corr"] = round(float(abs(np.corrcoef(xv, yt)[0, 1])), 4) if xv.std() > 0 else 0.0
             row["heldout_r2_affine"] = round(float(1 - np.mean((slope * xv + offset - yt) ** 2) / np.var(yt)), 4) if np.var(yt) > 0 else None
