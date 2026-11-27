@@ -1,6 +1,6 @@
 # Build status (the finished system, `docs/spec/BUILD.md`)
 
-*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:32.*
+*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:38.*
 
 ## Where things stand
 
@@ -22,8 +22,9 @@
   one S-expression language; L = 6 (chess), 7 (numeric sequences), 12 (token sequences), 6 (fluid), 6 (weights);
   5 constants after expansion; part references (the only route to the network's own choice); invented primitives
   checked; chess static exchange values and one-ply look-ahead (`after`). 79 of 79 known-case checks pass, including
-  four Tracr circuits that equal Tracr's compiled models. **Not yet tagged `vocab-frozen`** (planned about 01:40
-  unless Shreyas says hold).
+  four Tracr circuits that equal Tracr's compiled models. **Frozen at commit 87642926 (01:38).** The tag
+  `vocab-frozen` exists locally on that commit; pushing it gets HTTP 403 from this session's proxy, so **Shreyas is
+  asked to create `vocab-frozen` on origin at 876429269fc490f8bd81062c2df59a7d6e8b852b.**
 - **Definer's search v0** (`box/search.py`, ledger G2, groundwork): bottom-up enumeration with
   observational-equivalence pruning; 6 of 6 planted definitions recovered at held-out correlation 1.0.
 - **Checker v0** (`box/`, ledger G1, in progress):
@@ -57,7 +58,7 @@ GPT-2 small and medium: not downloaded yet (needed from Gate 4, S7 month rollove
 
 ## Next
 
-1. **Freeze:** tag the vocabulary commit `vocab-frozen` and push the tag (01:40, unless Shreyas said hold).
+1. **Freeze:** done at commit 87642926; the tag must be created on origin by Shreyas (tag push refused here, 403).
 2. **Waiting on Shreyas:** who writes the bench (and the two private repositories); the frontier-model key; GPU and
    per-gate budgets; the go for formal Gate 1 attempts; the copy-rejection decision (R9's own tests, or a new named
    version of R9 / Gate 1); whether the T2 real accounts stay must-pass under R3.

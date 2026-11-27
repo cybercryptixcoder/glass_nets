@@ -175,3 +175,10 @@ the direct test, through the Gate 1 entry point.
 through ingredients. Known case: a target of length 7 in board terms (above chess's L = 6), the number of best
 exchanges that take a queen or rook, is found as `(sum @ing)` from an ingredient part, held-out correlation 1.0.
 7 of 7 search cases pass.
+
+**01:38. The starting vocabulary is frozen at commit 87642926** (no hold from Shreyas since the 00:41 notice; the
+vocabulary files are unchanged since dcd9a1bb; 79 checks and the fuzz test pass on it). The annotated tag
+`vocab-frozen` was created on that commit here, but pushing it was refused: HTTP 403 from this session's git proxy
+(branch pushes work; tag pushes are denied). Per the proxy's rules this is reported, not worked around. Shreyas is
+asked to create the tag `vocab-frozen` on origin at 876429269fc490f8bd81062c2df59a7d6e8b852b (or allow tag pushes).
+From now on the vocabulary is treated as frozen: no change of meaning; any bug fix gets a ledger row.
