@@ -97,3 +97,18 @@ parameters, the account (as translated) about 50. Gate 1's requirement that the 
 reject every copy cannot be met by truth tests on networks this small. It needs R9's own tests (answering without
 running, which X0 decides; the bounded reader, which needs the frontier key) or a change to the spec. Reported to
 Shreyas as a decision.
+
+**01:12 to 01:16. Vocabulary additions before the freeze (still v1, untagged).** Testing what later tiers need showed
+three gaps, each closed with tests (79 checks, all pass):
+- invented primitives were not validated: `vocab.check_library` now requires a named expression to be a closed
+  definition within L and 5 constants after expansion, with no circular use and no part references, and an invented
+  operation (with declared argument and result types) to pass `check_operation`, its literals counting as constants;
+- chess had no "play out the exchange": `see_us` and `see_them`, static exchange values per square (standard swap
+  algorithm), checked on four known positions (+9, +4, 0, +1) and a losing capture (-4);
+- chess could not look ahead at all, so S3's chess rehearsal (an evaluation two plies ahead along forcing moves) and
+  S7's look-ahead answers would have been inexpressible: `(after FROM TO EXPR)` plays the legal move from the
+  largest square of FROM to the largest of TO and evaluates EXPR (base features only, nestable once more) in the new
+  position, from the view of the side then to move; FROM and TO may be parts, which is the route to the network's own
+  chosen move. Also `argmax_sq` and `argmin_sq`. Chess at L = 6 is now 1.9 billion skeletons; the exhaustive check
+  stays feasible by featurizing each probe position's legal children once (noted in VOCABULARY.md §5).
+Earlier step: one test expectation was wrong (see_them from Black's side is +9, not 0; the code was right).

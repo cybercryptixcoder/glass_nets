@@ -76,6 +76,13 @@ each constant one fitted slot. Argument orders of symmetric operations are count
 bounds; pruning expressions that give identical values on a probe set (observational equivalence) cuts them further.
 The chess count at L = 6 (1.9 billion skeletons) is the largest; the others are 2.5 to 18 million.
 
+Two notes for the exhaustive check:
+- `after` needs the positions one move ahead. The child depends only on the squares where FROM and TO are largest,
+  so each input has at most its legal moves as children: featurize every legal child of every probe position once
+  (about 35 per position), and evaluate `after` by lookup.
+- Broadcast values (`bcast` in `seq` and `fluid`) keep a length-1 axis; numpy broadcasting gives them the full shape
+  when they meet a full value.
+
 ## 6. Inputs each domain expects
 
 - `chess`: `vocab.featurize(fens)`, which computes the per-square board features in the mover's frame (row 0 is the
