@@ -5,8 +5,8 @@
 > requirements, each with a test, and a sealed acceptance suite that is the finish line. `docs/spec/GAP.md` lists what
 > exists, what is missing, and the gates to build through.
 >
-> What to build is no longer open. How to build it still is. Read the spec first; this handoff remains the background
-> on why.
+> What to build is no longer open. How to build it still is. **If you are building, start at `docs/spec/BUILD.md`.**
+> This handoff remains the background on why.
 
 *For the agent who will build the next version. Written Nov 26, 2026, 03:59 ET (clock), at the end of a two-run
 research review of the whole project. This is not a specification. It gives you the picture, the reasons behind it,

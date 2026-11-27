@@ -8,6 +8,8 @@ build starts, so the finish line cannot move during the build.*
 *Companions:*
 - *`SPEC_SIMPLE.md`: the same thing in plain words.*
 - *`GAP.md`: what exists today, what is missing, and the one build that closes the gap.*
+- *`BUILD.md`: the builder's brief (start here if you are building).*
+- *`BENCH_BRIEF.md`: the brief for the separate session that writes the sealed acceptance suite.*
 
 *Revised the same evening after an independent critique (`docs/spec/SPEC_CRITIQUE.md`); every change it led to is
 listed in `GAP.md` §8.*
@@ -369,8 +371,9 @@ when all five of these hold, each by test.
     share of the gap between the task-only floor and the network that the blueprint closes.
   - **The copy condition** is a sanity check, not a discriminating test, because the budget is set so a copy cannot
     be run.
-  - **Teaching new chess concepts:** for any new chess concept, a study modelled on Schut et al. (players improve on
-    prototype positions after learning the concept).
+  - **Teaching new chess concepts:** for any new chess concept the box finds, a study modelled on Schut et al.
+    (players improve on prototype positions after learning the concept). This is run on findings after the build,
+    with players Shreyas arranges. It does not gate the build.
 
 **R11. You can change the network on purpose with it.**
 - *Must:* make targeted edits through the blueprint (switch off, strengthen or redirect a part or a capability) and
@@ -393,7 +396,7 @@ when all five of these hold, each by test.
   - Mechanistic interpretability is not identifiable in general: several accounts can pass the same tests (Méloux et
     al. 2025, cited in `docs/glass/EVIDENCE_LADDER.md`).
 - *Test:*
-  - calibration on the acceptance suite;
+  - calibration on the certification draw: an expected calibration error of at most 0.10;
   - the suite includes planted networks with two valid accounts, and both must be reported.
 
 ### Practical requirements
@@ -401,7 +404,8 @@ when all five of these hold, each by test.
 **R13. It works at the real size, in every domain in scope.**
 - *Must:*
   - Tier A networks become fully interpretable (R1 to R12, and R15 where a reference method exists, pass).
-  - Tier B behaviours run end to end, with completeness and cost reported.
+  - Tier B behaviours run end to end, with completeness and cost reported, if GPU time is supplied. Without it, Tier
+    B is marked "blocked", not counted as failed.
   - Each network stays within a compute budget stated before it is run.
 - *Why:* the flagships Shreyas named are real networks: a chess engine, a learned fluid model, a lying language
   model, a model that reads weights.
@@ -429,7 +433,8 @@ when all five of these hold, each by test.
 
 ## 5. What a blueprint contains
 
-The content, not a file format:
+The content, not a file format. The bench's `bench/INTERFACE.md` (written by the bench-writer, `BENCH_BRIEF.md` §6)
+states how the scorer reads each item:
 
 1. **Overview.** The network's strategy in the task's own terms, on one page, with how much of the behaviour that
    page alone predicts.
@@ -493,8 +498,32 @@ The suite is the certification. It is built, and its answers sealed, before the 
 - **Must-fail:** family-wise, the 99th percentile of the best control score (R3).
 - **Usability:** the true blueprint's reader score, minus its spread (R10).
 
-**Pass counts, fixed before the build.** These are defaults for Shreyas to confirm or change before the bench is
-sealed; partial passes are failures:
+**Defaults, fixed before the build** (Shreyas may change any of them before the bench is sealed; never after):
+- **Sizes per draw:**
+  - S0: 10 Tracr programs and 10 InterpBench models;
+  - S1: 10 rules;
+  - S2: 10 concepts, 5 named and 5 synthetic, drawn from families, with at least 3 families held out of every
+    development draw for certification;
+  - S3: 5 staged computations, one of them the chess rehearsal;
+  - S4: 5 mixtures and 2 networks with two valid accounts;
+  - S5: as listed above;
+  - S6: the 4 rehearsals;
+  - S7: the listed networks.
+- **At least three development draws.**
+- **Admission of a planted network:**
+  - outputs match the sealed mechanism on at least 98% of held-out inputs (R² at least 0.95 for continuous outputs);
+  - every sealed intermediate variable passes interchange interventions on at least 90% of held-out pairs.
+
+  Otherwise it is dropped and redrawn.
+- **Intervals:** 95% bootstrap intervals, 1,000 resamples. "Spread" means the standard deviation across
+  development draws.
+- **The bounded reader's budget,** in output tokens per question, is at most 10% of the multiply-adds in one forward
+  pass of the smallest opaque program compared. Where that program needs fewer than 10,000 multiply-adds, the reader
+  test is reported but does not gate.
+- **Calibration (R12)** passes at an expected calibration error of at most 0.10 on the certification draw.
+
+**Pass counts, fixed before the build** (defaults, for Shreyas to confirm or change before the bench is sealed);
+partial passes are failures:
 - S0, S1, S3, S4 and S5: every case passes, and every must-fail case is rejected;
 - S2: at least 80% of the named concepts, and at least 80% of the synthetic ones, each scored separately;
 - S6: every rehearsal passes every requirement it tests;
@@ -505,7 +534,8 @@ sealed; partial passes are failures:
 ## 7. When the build is done
 
 - **Done** means:
-  - on the certification draw, every requirement passes on S0 to S6 at the pass counts fixed in §6;
+  - on the certification draw, which a separate session generates from Shreyas's seed and scores once
+    (`BENCH_BRIEF.md` §8), every requirement passes on S0 to S6 at the pass counts fixed in §6;
   - S7 reproduces its known answers, with completeness reported;
   - the full suite runs end to end with no human input (R14).
 - **Then the real flagships are run.** What they produce are findings, not pass or fail: the chess strategies, the

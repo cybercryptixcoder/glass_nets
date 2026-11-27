@@ -1,7 +1,7 @@
 # The finished system, in plain words
 
 *The short version of `SPEC.md` (the full specification) and `GAP.md` (where we are and how to get there). Nov 26,
-2026.*
+2026. A builder starts at `BUILD.md`; the separate session that writes the sealed tests starts at `BENCH_BRIEF.md`.*
 
 ## What it is
 

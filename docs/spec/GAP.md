@@ -11,6 +11,9 @@ document:*
 *It names what each component must achieve and how it is checked. It does not prescribe how to build any of them;
 where the evidence points to a promising route, that is marked as a lead, not a requirement.*
 
+*If you are the builder, start at `BUILD.md`. The sealed suite is written by a separate session from
+`BENCH_BRIEF.md`.*
+
 ---
 
 ## 1. The short answer
@@ -341,6 +344,11 @@ Or it states exactly where, and how much, is unresolved, with no silent gaps. Th
 ---
 
 ## 7. Decisions for Shreyas
+
+Defaults for every number are fixed in `SPEC.md` §6, and `BUILD.md` says what the builder does about each missing
+resource. So "Build" can start without answers to the questions below. The defaults hold unless Shreyas changes them
+before the bench is sealed.
+
 
 1. **The definition.** Is `SPEC.md` §2 what you mean by "fully interpretable"? In particular, do you accept:
    - "navigable, not necessarily short";

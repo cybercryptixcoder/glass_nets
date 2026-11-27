@@ -4,8 +4,8 @@
 showed what happens without them (`docs/glass/LEARNINGS.md` E12, `docs/PROJECT_REVIEW.md` §7).*
 
 ## Read before doing anything
-0. **CURRENT WORK (Nov 19 onward): `docs/glass/ATLAS.md`.** The mechanism atlas build (decompose → explain → certify): why the plan changed, intent, components, status and the ordered next steps. Keep its Status and Next sections current after every step.
-   - Background for it: `docs/glass/UNITS_FINDINGS.md` (what the units program established; one-page summary first) and `docs/glass/UNITS_PROGRAM.md` (that program's plan and status; concluded Nov 19).
+0. **CURRENT WORK (Nov 26 onward): `docs/spec/BUILD.md`.** Build the finished system defined in `docs/spec/SPEC.md` (plain words: `docs/spec/SPEC_SIMPLE.md`; the gap and gates: `docs/spec/GAP.md`; the sealed test suite is written by a separate session from `docs/spec/BENCH_BRIEF.md`). Keep `docs/build/STATUS.md` current after every step.
+   - Earlier current work, now background: the Rosetta build (`docs/rosetta/`, Nov 26) and the mechanism atlas (`docs/glass/ATLAS.md`, Nov 19 onward), with `docs/glass/UNITS_FINDINGS.md` and `docs/glass/UNITS_PROGRAM.md`.
 1. `docs/glass/INTENT.md`: what we are building and why. The code serves this document.
 2. `docs/glass/CHECKLIST.md`: current state.
 3. `docs/glass/CHANGES.md`: the change ledger.
