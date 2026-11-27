@@ -1,6 +1,6 @@
 # Build status (the finished system, `docs/spec/BUILD.md`)
 
-*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:28.*
+*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 01:32.*
 
 ## Where things stand
 
@@ -24,6 +24,8 @@
   checked; chess static exchange values and one-ply look-ahead (`after`). 79 of 79 known-case checks pass, including
   four Tracr circuits that equal Tracr's compiled models. **Not yet tagged `vocab-frozen`** (planned about 01:40
   unless Shreyas says hold).
+- **Definer's search v0** (`box/search.py`, ledger G2, groundwork): bottom-up enumeration with
+  observational-equivalence pruning; 6 of 6 planted definitions recovered at held-out correlation 1.0.
 - **Checker v0** (`box/`, ledger G1, in progress):
   - Tracr adapter (`box/adapters/tracr_net.py`): numpy forward pass with interventions, equal to Tracr's own within
     2e-6 on four programs.
@@ -55,8 +57,12 @@ GPT-2 small and medium: not downloaded yet (needed from Gate 4, S7 month rollove
 
 ## Next
 
-1. Tag the vocabulary `vocab-frozen` and push the tag (unless Shreyas says hold).
-2. Gate 1: once a bench exists, wire the checker to the bench's verifier hook (`INTERFACE.md`); meanwhile, write
-   lc_8_6's real account as a blueprint (the third saved must-pass case) with an attention-only transformer adapter.
-3. Follow Shreyas's decision on copy rejection; if R9's own tests gate, prepare the estimator interface (answering
-   without running) for X0's outcome.
+1. **Freeze:** tag the vocabulary commit `vocab-frozen` and push the tag (01:40, unless Shreyas said hold).
+2. **Waiting on Shreyas:** who writes the bench (and the two private repositories); the frontier-model key; GPU and
+   per-gate budgets; the go for formal Gate 1 attempts; the copy-rejection decision (R9's own tests, or a new named
+   version of R9 / Gate 1); whether the T2 real accounts stay must-pass under R3.
+3. **Gate 1, when the bench exists:** rewrite `box/hook.py`'s loaders to `INTERFACE.md`; run the hook on the
+   development draw's S0, S1, S4 and S5a.
+4. **Gate 2 groundwork (no resources needed):** the definer's search with fitted scale and offset and with `after`;
+   the map-maker (variables at every layer, located by interventions rather than by fitting, as M4,3 showed); a
+   builder-made staged planted network (not sealed) to rehearse S3's shape; locate lc_8_6's census quantities.
