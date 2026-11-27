@@ -97,6 +97,8 @@ def test_chess():
     check(v[0] == 8, f"north shifts toward the opponent: {list(v)}")
     v = vocab.evaluate("n_legal", d, ctx)
     check(v[0] == 20, f"20 legal moves at the start: {list(v)}")
+    v = vocab.evaluate("(relu (sub (count opp_P) (count own_P)))", d, ctx)
+    check(list(v) == [0, 0, 0, 0], f"chess relu: {list(v)}")
     # static exchange ("play out the exchange") on known positions
     ex = ["4k3/8/8/3q4/8/8/3R4/4K3 w - - 0 1",            # rook takes the undefended queen: +9
           "4k3/8/4p3/3q4/8/8/3R4/4K3 w - - 0 1",          # the queen is defended by a pawn: R takes Q, pawn retakes: +9 - 5 = +4

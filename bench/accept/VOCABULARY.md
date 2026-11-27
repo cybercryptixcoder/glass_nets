@@ -1,6 +1,13 @@
-# The starting vocabulary (version v1)
+# The starting vocabulary (version v2)
 
 **Frozen at the git tag `vocab-frozen` (see `docs/build/STATUS.md` for the commit).** After the freeze, §9 applies.
+
+*Why v2.* v1 was frozen at commit 87642926 at 01:38, but its tag never reached origin (tag pushes are refused from the
+builder's session) and no bench session had written anything against it. At 02:00 a builder's rehearsal of a staged
+verdict (`box/rehearse_staged.py`) showed that chess, fluid scalars and token functions lacked `relu` and clamps
+against a constant, so a verdict of the form relu(a - b) * c could not be written within L even through its
+ingredients. v2 adds `relu` (and, in chess, `max2` and `min2` with a constant) to every numeric type that lacked them,
+and the token function `relu1`. Nothing else changed. No S1 or S2 existed, so nothing was voided.
 
 *Written by the builder, session 1, Nov 27, 2026 (`docs/build/DIARY.md`). Required by `docs/spec/SPEC.md` §6 and
 `docs/spec/BUILD.md` §4 step 4: the primitives the box begins with, published and frozen (git tag `vocab-frozen`)
@@ -76,13 +83,13 @@ alone (no part references, no invented primitives), with at most 5 constants who
 recovery line (`SPEC.md` §6). The counts in §8 are the sizes of those searches: expression skeletons by length, with
 each constant one fitted slot. Argument orders of symmetric operations are counted separately, so they are upper
 bounds; pruning expressions that give identical values on a probe set (observational equivalence) cuts them further.
-The chess count at L = 6 (1.9 billion skeletons) is the largest; the others are 2.5 to 18 million.
+The chess count at L = 6 (2.1 billion skeletons) is the largest; the others are 2.5 to 19 million.
 
 Two notes for the exhaustive check:
 - `after` needs the positions one move ahead. The child depends only on the squares where FROM and TO are largest,
   so each input has at most its legal moves as children: featurize every legal child of every probe position once
-  (about 35 per position), and evaluate `after` by lookup. Of chess's 1,887,259,650 skeletons at L = 6, 57,102,500
-  use `after`.
+  (about 35 per position), and evaluate `after` by lookup. Of chess's 2,145,569,675 skeletons at L = 6, a few percent
+  use `after` (57,102,500 in v1).
 - Broadcast values (`bcast` in `seq` and `fluid`) keep a length-1 axis; numpy broadcasting gives them the full shape
   when they meet a full value.
 
@@ -109,7 +116,7 @@ Two notes for the exhaustive check:
 
 ## 7. Tests (`python3 bench/accept/vocab/test_vocab.py`)
 
-79 checks, all passing at publication (and `fuzz_vocab.py`: 812 random admissible expressions across the five
+80 checks, all passing at publication (and `fuzz_vocab.py`: 826 random admissible expressions across the five
 domains, none raising):
 - the grammar: admissible definitions pass; over-length definitions, a sixth constant (including one hidden in an
   invented expression), unknown symbols, type errors, syntax errors and undeclared part references fail;
@@ -149,6 +156,9 @@ Operations (name: argument types -> result type):
 - `ge`: (Sq C) -> Sq; (Pos C) -> Pos
 - `le`: (Sq C) -> Sq; (Pos C) -> Pos
 - `eq`: (Sq C) -> Sq; (Pos C) -> Pos
+- `relu`: (Sq) -> Sq; (Pos) -> Pos. max(a, 0)
+- `max2`: (Sq C) -> Sq; (Pos C) -> Pos
+- `min2`: (Sq C) -> Sq; (Pos C) -> Pos
 - `north`: (Sq) -> Sq. value at the square (+1 rank, +0 file)
 - `south`: (Sq) -> Sq. value at the square (-1 rank, +0 file)
 - `east`: (Sq) -> Sq. value at the square (+0 rank, +1 file)
@@ -174,7 +184,7 @@ Expression skeletons by length (constants as fitted slots; part references and i
 
 | length | 1 | 2 | 3 | 4 | 5 | 6 | total |
 |---|---|---|---|---|---|---|---|
-| count | 60 | 1,055 | 34,820 | 1,180,040 | 46,234,545 | 1,839,809,130 | 1,887,259,650 |
+| count | 60 | 1,115 | 37,110 | 1,291,885 | 51,378,035 | 2,092,861,470 | 2,145,569,675 |
 
 ### Domain `seq`
 
@@ -232,7 +242,7 @@ Root types (what a definition may be): `SOp`. **L = 12.**
 Base features:
 - `SOp`: `tokens`, `indices`
 - `Pred`: `EQ`, `NEQ`, `LT`, `LEQ`, `GT`, `GEQ`, `TRUE`, `FALSE`
-- `Fn1`: `id`, `inc`, `dec`, `neg`, `not1`, `abs1`
+- `Fn1`: `id`, `inc`, `dec`, `neg`, `not1`, `abs1`, `relu1`
 - `Fn2`: `plus`, `minus`, `times`, `equal`, `less`, `greater`, `larger`, `smaller`, `both`, `either`
 
 Operations (name: argument types -> result type):
@@ -257,7 +267,7 @@ Expression skeletons by length (constants as fitted slots; part references and i
 
 | length | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | total |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| count | 2 | 0 | 12 | 54 | 104 | 1,048 | 3,706 | 17,192 | 103,876 | 430,622 | 2,394,096 | 12,365,968 | 15,316,680 |
+| count | 2 | 0 | 14 | 54 | 130 | 1,196 | 4,056 | 21,466 | 120,844 | 523,766 | 3,016,714 | 15,228,054 | 18,916,296 |
 
 ### Domain `fluid`
 
@@ -274,6 +284,7 @@ Operations (name: argument types -> result type):
 - `neg`: (Field) -> Field; (Num) -> Num
 - `abs`: (Field) -> Field; (Num) -> Num
 - `sq`: (Field) -> Field; (Num) -> Num
+- `relu`: (Field) -> Field; (Num) -> Num
 - `dx`: (Field) -> Field. central difference along x
 - `dy`: (Field) -> Field. central difference along y
 - `lap`: (Field) -> Field. five-point Laplacian
@@ -283,7 +294,6 @@ Operations (name: argument types -> result type):
 - `smooth`: (Field) -> Field. 3 x 3 mean
 - `shx`: (Field) -> Field. value one cell along +x
 - `shy`: (Field) -> Field. value one cell along +y
-- `relu`: (Field) -> Field
 - `gt`: (Field Field) -> Field
 - `ge`: (Field C) -> Field
 - `bcast`: (Num) -> Field
@@ -296,7 +306,7 @@ Expression skeletons by length (constants as fitted slots; part references and i
 
 | length | 1 | 2 | 3 | 4 | 5 | 6 | total |
 |---|---|---|---|---|---|---|---|
-| count | 7 | 98 | 1,407 | 22,547 | 395,969 | 7,366,968 | 7,786,996 |
+| count | 7 | 98 | 1,435 | 23,051 | 404,117 | 7,510,552 | 7,939,260 |
 
 ### Domain `weights`
 

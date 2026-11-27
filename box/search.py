@@ -25,7 +25,7 @@ def _key(v):
     return hash(np.round(a, 6).tobytes())
 
 
-def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000, parts=None):
+def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000, parts=None, only_types=None):
     """Distinct expressions by type and length: {type: [(text, value, length)]}. parts: {id: (type, value)}, the
     blueprint's upstream parts, offered as one-symbol atoms `@id` (definitions through ingredients)."""
     pool = {t: [] for t in list(dom.types) + [CONST]}
@@ -37,11 +37,14 @@ def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000, p
     for c in grid:
         pool[CONST].append((repr(c), c, 1))
     for a in dom.atoms.values():
+        if only_types and a.type not in only_types:
+            continue
         v = a.fn(ctx)
         k = _key(v)
         if k is not None and (a.type, k) not in seen:
             seen.add((a.type, k)); pool[a.type].append((a.name, v, 1))
-    ops = [o for ov in dom.ops.values() for o in ov if o.name not in skip and o.fn is not None]
+    ops = [o for ov in dom.ops.values() for o in ov if o.name not in skip and o.fn is not None and
+           (not only_types or (o.ret in only_types and all(t in only_types or t == CONST for t in o.args)))]
     for n in range(2, max_len + 1):
         new = {t: [] for t in pool}
         for o in ops:
@@ -73,11 +76,11 @@ def enumerate_exprs(dom, ctx, max_len, skip=("after",), grid=GRID, cap=200000, p
 
 
 def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, target_test=None, cap=60000,
-                     parts_fit=None, parts_test=None):
+                     parts_fit=None, parts_test=None, only_types=None):
     """Top-k expressions of the root type by |correlation| with the target on the probe inputs (ctx_fit). Expressions
     up to max_len - 1 are enumerated and stored; those of length max_len are streamed and scored without storing
     (memory). The top k are re-scored on held-out inputs when given."""
-    pool = enumerate_exprs(dom, ctx_fit, max_len - 1, cap=cap, parts=parts_fit)
+    pool = enumerate_exprs(dom, ctx_fit, max_len - 1, cap=cap, parts=parts_fit, only_types=only_types)
     y = np.asarray(target, float).ravel()
     ptypes = {pid: t for pid, (t, _v) in (parts_fit or {}).items()}
     pvals_fit = {pid: v for pid, (_t, v) in (parts_fit or {}).items()}
@@ -93,12 +96,13 @@ def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, ta
         if sd == 0 or not np.isfinite(sd):
             return
         r = abs(float(((x - x.mean()) / sd) @ yc) / len(y))
-        top.append((r, text, n))
-        if len(top) > 4 * k:
-            top.sort(reverse=True); del top[k:]
+        top.append((round(r, 9), -n, text))       # ties on the probes go to the shorter definition
+        if len(top) > 50 * k:
+            top.sort(reverse=True); del top[10 * k:]
     for text, v, n in pool[root]:
         consider(text, v, n)
-    ops = [o for ov in dom.ops.values() for o in ov if o.ret == root and o.fn is not None and o.name != "after"]
+    ops = [o for ov in dom.ops.values() for o in ov if o.ret == root and o.fn is not None and o.name != "after" and
+           (not only_types or all(t in only_types or t == CONST for t in o.args))]
     for o in ops:
         m = len(o.args)
         for sizes in itertools.product(range(1, max_len), repeat=m):
@@ -116,7 +120,8 @@ def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, ta
                 consider("(" + " ".join([o.name] + [c[0] for c in combo]) + ")", v, max_len)
     top.sort(reverse=True)
     out = []
-    for r, text, n in top[:k]:
+    for r, negn, text in top[:k]:
+        n = -negn
         row = {"definition": text, "length": n, "probe_corr": round(r, 4)}
         xp = np.asarray(vocab.evaluate(text, dom, ctx_fit, pvals_fit, ptypes), float).ravel()
         slope, offset = np.polyfit(xp, y, 1) if xp.std() > 0 else (0.0, float(y.mean()))

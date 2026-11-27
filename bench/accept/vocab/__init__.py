@@ -10,4 +10,4 @@ from .core import (Domain, Op, Atom, parse, unparse, length, constants, typechec
                    check_operation, compile_operation, MAX_CONSTANTS, MAX_OPERATION_NODES, CONST)
 from .domains import DOMAINS, get, featurize, POS_NAMES, FLUID_FIELDS, WEIGHT_ATOMS
 
-VERSION = "v1"
+VERSION = "v2"

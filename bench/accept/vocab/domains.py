@@ -36,6 +36,9 @@ def chess_domain():
         d.op("ge", [T, C], T, lambda a, c: (a >= c).astype(float))
         d.op("le", [T, C], T, lambda a, c: (a <= c).astype(float))
         d.op("eq", [T, C], T, lambda a, c: (np.abs(a - c) < 1e-6).astype(float))
+        d.op("relu", [T], T, lambda a: np.maximum(a, 0.0), "max(a, 0)")
+        d.op("max2", [T, C], T, lambda a, c: np.maximum(a, c))
+        d.op("min2", [T, C], T, lambda a, c: np.minimum(a, c))
     # spatial: the value at the neighbouring square (0 off the board); "north" is toward the opponent
     for name, (dr, df) in {"north": (1, 0), "south": (-1, 0), "east": (0, 1), "west": (0, -1), "ne": (1, 1),
                            "nw": (1, -1), "se": (-1, 1), "sw": (-1, -1)}.items():
@@ -204,7 +207,7 @@ def tok_domain():
     for n, f in preds.items():
         d.atom(n, "Pred", lambda ctx, f=f: f, f"predicate(key, query): {n}")
     f1 = {"id": lambda x: x, "inc": lambda x: x + 1, "dec": lambda x: x - 1, "neg": lambda x: -x,
-          "not1": lambda x: not x, "abs1": abs}
+          "not1": lambda x: not x, "abs1": abs, "relu1": lambda x: max(x, 0)}
     for n, f in f1.items():
         d.atom(n, "Fn1", lambda ctx, f=f, n=n: _Fn(f, n))
     f2 = {"plus": lambda a, b: a + b, "minus": lambda a, b: a - b, "times": lambda a, b: a * b,
@@ -289,6 +292,7 @@ def fluid_domain():
         d.op("neg", [T], T, lambda a: -a)
         d.op("abs", [T], T, np.abs)
         d.op("sq", [T], T, lambda a: a * a)
+        d.op("relu", [T], T, lambda a: np.maximum(a, 0.0))
         d.op("add", [T, C], T, lambda a, c: a + c)
         d.op("mul", [T, C], T, lambda a, c: a * c)
     d.op("dx", ["Field"], "Field", dx, "central difference along x")
@@ -301,7 +305,6 @@ def fluid_domain():
          "3 x 3 mean")
     d.op("shx", ["Field"], "Field", lambda a: np.roll(a, -1, 2), "value one cell along +x")
     d.op("shy", ["Field"], "Field", lambda a: np.roll(a, -1, 1), "value one cell along +y")
-    d.op("relu", ["Field"], "Field", lambda a: np.maximum(a, 0))
     d.op("gt", ["Field", "Field"], "Field", lambda a, b: (a > b).astype(float))
     d.op("ge", ["Field", C], "Field", lambda a, c: (a >= c).astype(float))
     d.op("bcast", ["Num"], "Field", lambda v: np.asarray(v, float)[:, None, None])
