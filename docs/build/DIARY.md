@@ -145,3 +145,12 @@ R3, which locates every variable. Now a part at site "input" must be a direct re
 other readouts. The M2,2 and M4,3 verdicts are unchanged (both test blueprints already complied once their decision
 parts were marked as readouts): M4,3 near-copy certified; real account c928 rejected (22 of 27 parts); M2,2 both
 rejected.
+
+**01:28 to 01:31. Exploratory, for Gate 1 planning: can lc_8_6's census account be completed as a blueprint?
+(`box/explore_lc86.py`; `results/build/explore_lc86_session1.txt`).** The account locates only the token identities.
+Its census quantities, read by least squares from the last position's residual (fit on half the 46,656 inputs,
+scored on the other half), against the same on a weight-shuffled network: 2-cycles R2 0.68 after layer 1 (shuffled
+0.01); fixed points 0.39 (0.12); the largest preimage count at a fixed point 0.35 (0.06); all near the shuffled
+values at the embedding. So the 2-cycle count is largely present by layer 1, and the other two only partly (perhaps
+spread over positions, or not linear). The account cannot yet be written as a blueprint whose census parts pass R3;
+locating them is map-maker work (Gate 2's component). No verdict is drawn from this.
