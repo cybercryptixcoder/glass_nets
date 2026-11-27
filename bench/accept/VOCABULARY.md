@@ -1,5 +1,7 @@
 # The starting vocabulary (version v1)
 
+**Frozen at the git tag `vocab-frozen` (see `docs/build/STATUS.md` for the commit).** After the freeze, §9 applies.
+
 *Written by the builder, session 1, Nov 27, 2026 (`docs/build/DIARY.md`). Required by `docs/spec/SPEC.md` §6 and
 `docs/spec/BUILD.md` §4 step 4: the primitives the box begins with, published and frozen (git tag `vocab-frozen`)
 before the bench-writer writes S1 and S2. The code is `bench/accept/vocab/` (importable; `test_vocab.py` holds its
@@ -106,7 +108,8 @@ Two notes for the exhaustive check:
 
 ## 7. Tests (`python3 bench/accept/vocab/test_vocab.py`)
 
-79 checks, all passing at publication:
+79 checks, all passing at publication (and `fuzz_vocab.py`: 812 random admissible expressions across the five
+domains, none raising):
 - the grammar: admissible definitions pass; over-length definitions, a sixth constant (including one hidden in an
   invented expression), unknown symbols, type errors, syntax errors and undeclared part references fail;
 - invented operations: an arithmetic numpy function passes and runs; imports, file reads, `np.load`, network calls,
