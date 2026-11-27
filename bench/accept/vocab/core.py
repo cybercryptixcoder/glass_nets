@@ -175,8 +175,53 @@ def typecheck(text_or_tree, dom, part_types=None, library=None):
     return _type_of(tree, dom, part_types or {}, library or {})
 
 
+def check_library(dom, library):
+    """(ok, reason): every invented primitive is well formed. A named expression ({"kind": "expression",
+    "definition": text}) is itself a definition: closed (no part references), within L and the constants budget after
+    expansion, with no circular use. A new operation ({"kind": "operation", "source": python, "args": [types],
+    "ret": type}) passes check_operation, and its numeric literals are its constants."""
+    library = library or {}
+    for name, e in library.items():
+        if e.get("kind") == "expression":
+            text = e.get("definition", "")
+            if "@" in text:
+                return False, f"${name}: a named expression may not refer to parts (@id); use a new operation with arguments"
+            seen, stack = set(), [name]
+            while stack:
+                n = stack.pop()
+                if n in seen:
+                    return False, f"${name}: circular use of named expressions"
+                seen.add(n)
+                d = library.get(n, {}).get("definition", "")
+                stack += [t[1:] for t in re.findall(r"\$[A-Za-z_][A-Za-z0-9_]*", d) if t[1:] in library and
+                          library[t[1:]].get("kind") == "expression"]
+            try:
+                tree = parse(text)
+                _type_of(tree, dom, {}, library)
+            except (SyntaxError, TypeError, KeyError) as err:
+                return False, f"${name}: not in the grammar: {err}"
+            if length(tree) > dom.L:
+                return False, f"${name}: length {length(tree)} > L={dom.L}"
+            if constants(tree, library) > MAX_CONSTANTS:
+                return False, f"${name}: more than {MAX_CONSTANTS} constants after expansion"
+        elif e.get("kind") == "operation":
+            ok, why, _n, lits = check_operation(e.get("source", ""))
+            if not ok:
+                return False, f"${name}: {why}"
+            if lits > MAX_CONSTANTS:
+                return False, f"${name}: {lits} numeric literals > {MAX_CONSTANTS}"
+            e["constants"] = lits
+        else:
+            return False, f"${name}: kind must be 'expression' or 'operation'"
+    return True, "ok"
+
+
 def admissible(text, dom, part_types=None, library=None):
-    """(ok, reason, type): in the grammar, well typed, root type allowed, within L and the constants budget."""
+    """(ok, reason, type): in the grammar, well typed, root type allowed, within L and the constants budget, and
+    every invented primitive it may use well formed (check_library)."""
+    okl, whyl = check_library(dom, library)
+    if not okl:
+        return False, f"library: {whyl}", None
     try:
         tree = parse(text)
         t = typecheck(tree, dom, part_types, library)
@@ -330,5 +375,5 @@ def human(n):
     return f"{n:.3g}" if n >= 1e6 else str(n)
 
 
-__all__ = ["Domain", "Op", "Atom", "parse", "unparse", "length", "constants", "typecheck", "admissible", "evaluate",
+__all__ = ["Domain", "Op", "Atom", "parse", "unparse", "length", "constants", "typecheck", "admissible", "check_library", "evaluate",
            "count", "check_operation", "compile_operation", "MAX_CONSTANTS", "MAX_OPERATION_NODES", "CONST", "math"]

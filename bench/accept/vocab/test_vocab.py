@@ -40,6 +40,16 @@ def test_grammar():
     check(vocab.admissible("(add $six mob_us)", vocab.get("chess"), library={"six": {"kind": "expression",
           "definition": "(add mob_us 1)"}})[0], "an invented expression counts as one symbol")
     check(not vocab.admissible("(count banana)", d)[0], "unknown symbol rejected")
+    check(not vocab.admissible("(count $p)", d, {"q": "Sq"}, {"p": {"kind": "expression", "definition": "(and @q own_P)"}})[0],
+          "a named expression that refers to a part is rejected")
+    long_lib = {"p": {"kind": "expression", "definition": "(count (and own_P (and (not defended) (and attacked pinned))))"}}
+    check(not vocab.admissible("(add $p 1)", d, library=long_lib)[0], "a named expression longer than L is rejected")
+    circ = {"p": {"kind": "expression", "definition": "(add $q 1)"}, "q": {"kind": "expression", "definition": "(add $p 1)"}}
+    check(not vocab.admissible("(add $p 1)", vocab.get("chess"), library=circ)[0], "circular named expressions are rejected")
+    op_lib = {"lin": {"kind": "operation", "source": "def lin(a, b):\n    return 2 * a - 3 * b + 1\n", "args": ["Pos", "Pos"], "ret": "Pos"}}
+    check(vocab.admissible("($lin n_legal halfmove)", vocab.get("chess"), library=op_lib)[0],
+          "a checked new operation with arguments is admissible")
+    check(vocab.constants(vocab.parse("($lin n_legal halfmove)"), op_lib) == 3, "a new operation's literals are its constants")
     check(not vocab.admissible("(count (count own_P))", d)[0], "type error rejected")
     check(not vocab.admissible("(and own_P", d)[0], "syntax error rejected")
     check(vocab.admissible("(and @move_to (not defended))", d, {"move_to": "Sq"})[0],

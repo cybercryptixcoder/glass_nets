@@ -49,14 +49,23 @@ here; they exist only as parts the blueprint must compute itself (`BUILD.md` §4
 
 ## 4. Invented primitives (R8)
 
-The box may add two kinds, each recorded with its provenance (which run made it, from which evidence):
-- **A named expression:** a definition in this grammar, used later as the one symbol `$name`. Its constants count,
-  after expansion, against the budget of every definition that uses it.
-- **A new operation:** one Python function, using only arithmetic, control flow and `np.<function>` calls, with no
-  imports, no input or output, no string literals and no access to the network, its weights or its activations, of
-  at most **200 AST nodes** (the `BENCH_BRIEF.md` §6 default; `INTERFACE.md` may fix another number before S2 is
-  written). Its numeric literals count against the constants budget. `vocab.check_operation(src)` is the builder's
-  check; `vocab.compile_operation(src)` compiles a checked operation.
+The box may add two kinds, each recorded with its provenance (which run made it, from which evidence). Both are
+checked by `vocab.check_library(domain, library)`, which `vocab.admissible` runs on the library a definition uses.
+- **A named expression** (`{"kind": "expression", "definition": text}`): a closed definition in this grammar, used
+  later as the one symbol `$name`. It is itself a definition: at most L symbols, at most 5 constants after expanding
+  the named expressions it uses, no circular use, and no part references (a named expression is a reusable concept,
+  not a piece of one blueprint; a quantity with inputs is a new operation). Its constants count, after expansion,
+  against the budget of every definition that uses it.
+- **A new operation** (`{"kind": "operation", "source": python, "args": [types], "ret": type}`): one Python function,
+  using only arithmetic, control flow and `np.<function>` calls, with no imports, no input or output, no string
+  literals and no access to the network, its weights or its activations, of at most **200 AST nodes** (the
+  `BENCH_BRIEF.md` §6 default; `INTERFACE.md` may fix another number before S2 is written). It is applied as
+  `($name arg ...)`, one symbol plus its arguments, and its numeric literals are its constants: at most 5, and they
+  count against the budget of every definition that uses it. `vocab.check_operation(src)` checks one;
+  `vocab.compile_operation(src)` compiles it.
+
+What binds is the constants budget. Named expressions and operations let a definition be long, but never let it carry
+more than 5 fitted numbers.
 
 ## 5. Outside the vocabulary
 
@@ -83,11 +92,13 @@ The chess count at L = 6 (1.3 billion skeletons) is the largest; the others are 
 
 ## 7. Tests (`python3 bench/accept/vocab/test_vocab.py`)
 
-66 checks, all passing at publication:
+71 checks, all passing at publication:
 - the grammar: admissible definitions pass; over-length definitions, a sixth constant (including one hidden in an
   invented expression), unknown symbols, type errors, syntax errors and undeclared part references fail;
 - invented operations: an arithmetic numpy function passes and runs; imports, file reads, `np.load`, network calls,
   dunder access, printing, two functions, string literals and a function over 200 nodes fail;
+- the library: a named expression that refers to a part, one longer than L, and circular named expressions fail; a
+  checked operation with arguments passes, and its literals count as constants;
 - chess: piece counts, a hanging queen, a checking square, king-zone and shift operations, the 20 legal moves of the
   start position;
 - numeric sequences: AlgZoo's second-largest position, written as two parts; counts and prefix maxima;
