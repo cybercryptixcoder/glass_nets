@@ -72,3 +72,28 @@ written as a blueprint of its own units (13 parts, each within L = 7 and two con
   0.95 to 1.00 (family-wise lines 0.998 and 0.987 for the real account). Neither the real account nor the copy clears
   them; the copy also fails run alone (0.986 against the real account's 0.9995). This agrees with X0, which reports
   M2,2 as unable to decide anything. The deciding saved cases are M4,3 (hidden 4, three classes) and lc_8_6 (residual 8).
+
+**01:05 to 01:11. The deciding saved case, M4,3 (`box/test_algzoo_m43.py`; output `results/build/s5a_m43_session1.txt`).**
+Round 1's real account c928 and a near-copy of the network (its own units with its exact weights) were both written in
+the starting vocabulary. Three translation errors in the test harness were found and fixed on the way, none in the
+checker's rules:
+- Locations fitted by least squares were wrong where units move together on the data (M4,3's first-step units are
+  exact multiples of each other): the fit spread a part over several units, and even the network's own unit then
+  failed the interventions (IIA 0.05). Units the account names are now declared, and parts linear in located parts
+  get the location their definition implies.
+- Splitting a unit's weighted sum into partial sums (to fit L) makes parts that are not variables of the network: a
+  swap along one moves every unit that reads the same inputs, so they fail (IIA 0.15 to 0.38). This is the checker
+  working. Each unit is now one part through an invented operation (five constants: within the budget).
+- Class scores located as directions at the last hidden state are not independent either; they are now located at
+  the output site, one logit each.
+Result (lines from controls: random directions 0.90 to 0.92, weight-shuffled networks 0.31 to 0.39; run-alone line from
+the real account's own held-out agreement, 0.9885 minus its spread 0.0024):
+- **the near-copy is certified:** run alone 0.9998, all 15 located parts above the line;
+- **the real account is rejected:** run alone 0.9902 passes, 22 of its 27 located parts pass, but its channel
+  magnitudes m1 and m2 (IIA 0.71 to 0.88) and one class score (0.84) fall below the line.
+So on the saved cases the truth tests do what SPEC R9 says they will: a copy is true, so it passes them, while a real
+but approximate account can fail them. Counting constants does not rescue this either: the copy uses the network's 32
+parameters, the account (as translated) about 50. Gate 1's requirement that the checker certify the real accounts and
+reject every copy cannot be met by truth tests on networks this small. It needs R9's own tests (answering without
+running, which X0 decides; the bounded reader, which needs the frontier key) or a change to the spec. Reported to
+Shreyas as a decision.

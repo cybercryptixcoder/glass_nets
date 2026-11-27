@@ -1,7 +1,8 @@
 """The checker v0 for networks whose sites are plain vectors and whose parts are numbers per input (AlgZoo RNNs and
 other numeric-sequence networks; vocabulary domain `seq`). Same checks as box/verify.py: form, run alone,
 interchange interventions against a family-wise random-direction line, substitution (reported), the lookup typing
-rule. A part at site "input" is a function of the input alone and is not located in the network."""
+rule. A part at site "input" is a function of the input alone, and a part at site "readout" applies the task's
+decision rule to the network's outputs (argmax); neither is a variable inside the network, so neither is located."""
 import os
 import sys
 
@@ -38,7 +39,7 @@ class VecChecker:
         for p in order:
             if p.type not in TYPES:
                 return False, f"part {p.id}: type {p.type!r} not allowed"
-            if p.site != "input":
+            if p.site not in ("input", "readout"):
                 if p.site not in self.site_names:
                     return False, f"part {p.id}: unknown site {p.site}"
                 B = None if p.basis is None else np.asarray(p.basis, float).reshape(-1, 1)
@@ -55,13 +56,22 @@ class VecChecker:
             types[p.id] = p.vtype
         return (True, "ok") if bp.output in types else (False, "no output part")
 
+    def _ops(self, bp):
+        key = id(bp)
+        if getattr(self, "_ops_key", None) != key:
+            self._ops_key = key
+            self._ops_code = {n: vocab.compile_operation(e["source"]) for n, e in (bp.library or {}).items()
+                              if e.get("kind") == "operation"}
+        return self._ops_code
+
     def values(self, bp, X, overrides=None):
         overrides = overrides or {}
         dom = vocab.get(bp.domain)
+        ops = self._ops(bp)
         vals, types = {}, {}
         for p in bp.order():
             vals[p.id] = overrides[p.id] if p.id in overrides else \
-                np.asarray(vocab.evaluate(p.definition, dom, {"x": X}, vals, types, bp.library), np.float64)
+                np.asarray(vocab.evaluate(p.definition, dom, {"x": X}, vals, types, bp.library, ops), np.float64)
             types[p.id] = p.vtype
         return vals
 
@@ -141,7 +151,7 @@ class VecChecker:
             rep["verdict"] = "rejected"; return rep
         ra = self.run_alone(bp)
         rep["checks"].append(("run alone", ra >= run_alone_line, f"agreement {ra:.4f} against line {run_alone_line:.4f}"))
-        located = [p for p in bp.parts if p.site != "input" and p.type in ("rule", "lookup")]
+        located = [p for p in bp.parts if p.site not in ("input", "readout") and p.type in ("rule", "lookup")]
         scores = {}
         for p in located:
             scores[p.id] = self._iia(bp, p, np.asarray(p.basis, float))
@@ -161,10 +171,26 @@ class VecChecker:
         return rep
 
 
-def fit_location(sites, site, values, idx):
-    """Least-squares direction and scale mapping a site's activations to a part's values (an allowed linear map),
-    fitted on the rows idx only."""
+def fit_location(sites, site, values, idx, prefer_units=True):
+    """A direction and scale mapping a site's activations to a part's values (an allowed linear map), fitted on the
+    rows idx only. When one unit alone reproduces the values (R^2 > 0.9999), that unit is the location: on inputs
+    where units move together (collinear on the data), least squares would otherwise spread the location over them,
+    and interventions on that mixture test a different variable from the one the account names."""
     H = sites[site][idx]
-    w, *_ = np.linalg.lstsq(H, np.asarray(values)[idx], rcond=None)
+    v = np.asarray(values)[idx]
+    if prefer_units and np.var(v) > 0:
+        best = None
+        for k in range(H.shape[1]):
+            h = H[:, k]
+            if np.var(h) == 0:
+                continue
+            c = float(h @ v / (h @ h))
+            r2 = 1 - np.var(v - c * h) / np.var(v)
+            if r2 > 0.9999 and (best is None or r2 > best[0]):
+                best = (r2, k, c)
+        if best is not None:
+            u = np.zeros(H.shape[1]); u[best[1]] = 1.0
+            return u, best[2]
+    w, *_ = np.linalg.lstsq(H, v, rcond=None)
     n = float(np.linalg.norm(w))
     return (w / n if n > 0 else w), n
