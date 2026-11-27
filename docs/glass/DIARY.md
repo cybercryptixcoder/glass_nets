@@ -2254,3 +2254,12 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
   by the session's safety check as reducing oversight. `BUILD.md` now follows `CLAUDE.md` instead: every gate needs
   Shreyas's go before its first formal attempt, and the builder keeps building while it waits.
 - No code was changed and no experiment was run.
+
+## Nov 27, 2026, 00:38 to 02:04: build v2, session 1 (pointer)
+
+The finished-system build began on branch `rosetta-v2` (`docs/spec/BUILD.md`). Its own diary is
+`docs/build/DIARY.md`; its state is `docs/build/STATUS.md`; Gate 1's progress is `docs/build/GATE_1.md`. In short: the
+starting vocabulary was published and frozen (v2, f0b3b680; the tag could not be pushed from the session); the
+checker v0 passes 45 of 45 public Tracr known cases; on the saved M4,3 cases it certifies a near-copy and rejects the
+approximate real account, so copy rejection needs R9's own tests (put to Shreyas); Gate 2 groundwork (the definer's
+search) defined a staged verdict through its ingredients in a builder-made rehearsal. Ledger rows V0, G1, G2.
