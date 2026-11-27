@@ -154,3 +154,14 @@ scored on the other half), against the same on a weight-shuffled network: 2-cycl
 values at the embedding. So the 2-cycle count is largely present by layer 1, and the other two only partly (perhaps
 spread over positions, or not linear). The account cannot yet be written as a blueprint whose census parts pass R3;
 locating them is map-maker work (Gate 2's component). No verdict is drawn from this.
+
+**01:28 to 01:31. Gate 2 groundwork: the definer's first search (`box/search.py`, `box/test_search.py`; output
+`results/build/search_planted_session1.txt`).** Bottom-up enumeration of the vocabulary by length, dropping any
+expression whose values on the probe inputs repeat an earlier one's, constants from a small grid, the last length
+streamed rather than stored (the first version stored everything and was killed for memory at 600 probe positions;
+now 60 chess positions or 200 sequences as probes). Planted targets, each the value of a known expression, on real
+positions (LD2's Lichess data) and random sequences: 6 of 6 recovered at held-out correlation 1.0 on 300 other
+inputs, three as equivalent or affine-equivalent expressions (for example `(or defended (not opp_N))`, which is one
+minus the planted `(and opp_N (not defended))`). Chess at length 5: 77,248 distinct square-valued expressions below
+length 5, 14 seconds. This is the definer's search, not yet the definer: it fits no scale and offset, skips `after`,
+and has not met a network.
