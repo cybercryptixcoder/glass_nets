@@ -1,0 +1,314 @@
+# From where we are to the finished system: the gap, and the one build that closes it
+
+*Written Nov 26, 2026, from 19:03 ET (clock). It reads against `SPEC.md`, which defines the finished system as 14
+requirements (R1 to R14), each with a test. This document:*
+- *lists, requirement by requirement, what exists today and what is missing;*
+- *defines the components the next build must deliver;*
+- *orders them so the uncertain part is tested first;*
+- *states plainly what passing would and would not guarantee.*
+
+*It names what each component must achieve and how it is checked. It does not prescribe how to build any of them;
+where the evidence points to a promising route, that is marked as a lead, not a requirement.*
+
+---
+
+## 1. The short answer
+
+**The three fixes named earlier are not enough on their own.** Those fixes were:
+- defining verdicts through their ingredients, layer by layer;
+- a language of operations rather than static features;
+- an inventor with an observer that can perceive the domain.
+
+They repair the member that broke in Rosetta, which is R6 and R8 in the spec. But the spec has 14 requirements, and
+six of the others have never been built at all:
+- complete, honestly typed accounting of a real network (R4, R5);
+- tracing single decisions (R7);
+- usability by a mind (R10);
+- control through edits (R11);
+- running the whole loop unaided (R14).
+
+**A build that delivers all fourteen and passes the acceptance suite does give the system you described, for the
+Tier A networks** (the narrow realm, `SPEC.md` §3). What "fully interpretable" then means is defined and tested in
+`SPEC.md` §2: complete, honestly typed, faithful at every level, navigable, and usable by a mind.
+
+**What no build can promise in advance** is the content of what it finds:
+- how much of a given network will turn out to be rules rather than tables;
+- whether a chess engine holds a strategy nobody has named;
+- whether completeness is reached within budget on 7–8B language models (Tier B).
+
+The box measures those things. It cannot decide them.
+
+**How the next attempt avoids being open-ended:**
+- The finish line, the acceptance suite, is built and sealed first.
+- The one genuinely uncertain part is tested second, before anything is polished.
+- Every component has its own pass test.
+
+So the attempt ends in one of two definite states: the suite passes, or a named component fails a named test. It
+cannot end in "marginally better".
+
+---
+
+## 2. Where we are, requirement by requirement
+
+| Req | What it asks | What exists today | What is missing | Kind of gap |
+|---|---|---|---|---|
+| R1 | Any network in scope, adapter only | Rosetta's core (`rosetta/core.py`, `engine.py`) is meant to be domain-agnostic. But each domain still has its own pipeline (`lab/` for AlgZoo and GPT-2, `kepler/` for chess and fluid, `rosetta/` for chess) | One core with adapters; the separate pipelines folded in | Engineering |
+| R2 | What it does, with the knowledge split | Kepler's behaviour rules and fluid law; Rosetta's residual against textbook chess, and its fresh-games knowledge tests (`docs/rosetta/FINDINGS.md` 4, 6) | A standard knowledge-versus-error split, and predictions of the network's own mistakes, in every domain | Engineering |
+| R3 | Faithful inside | Strong: the judge's interchange tests (`lab/judge.py`, `lab/lmjudge.py`), Rosetta's substitution, the atlas | Applied at every level of a hierarchy, not one layer at a time | Engineering |
+| R4 | Complete, with the remainder measured | Rosetta's one-layer glass model (top move kept 41%, value R² 0.06); the atlas certified 5 of 6 held-out small RNNs | Whole-network, worst-case completeness accounting on real networks | Research at Tier B; engineering at Tier A |
+| R5 | Honest types | The atlas's rule-versus-lookup labels on small networks, with the memoriser test passing on a count of one | Typing at real scale, tested on planted mixtures | Engineering |
+| R6 | Layered, from purpose to parts | None automated. Month rollover was traced by hand. Rosetta measured how the evaluation concentrates across blocks (56%, 66%, 91%) but defined only the last layer | Defining variables in terms of the variables that feed them, through the network, up to an overview | **Research: the member that broke** |
+| R7 | Trace any decision | Rosetta's attribution to the value | Per-input traces with predicted flips, scored against baselines | Engineering |
+| R8 | Name what nobody named | None. Rosetta's "vocabulary growth" only recombined its 61 features. The one new kind of quantity (material along the network's own line) was added by hand. The cheap-model proposer: 45 proposals from 18 calls, none better than exhaustive search | A component that adds new kinds of concept when the vocabulary runs out, proven on planted concepts outside the vocabulary | **Research: the core of discovery** |
+| R9 | Not fooled | The restricted program language; partial must-fail sets; the bits measure (T2) failed as a gate; X0 designed, not run | The full must-fail suite, and the two copy tests run and passing | Engineering, with one open question (X0) |
+| R10 | Usable by a mind | The reader test failed: the cheap model applied board rules at 0.00 to 0.13 against 0.05 chance | A reader that can perceive the domain, the reader test passing, and a human study for chess | Resource (a frontier model; people) and engineering |
+| R11 | Control by edits | Steering experiments (liar sprint, `lab/steer_calendar.py`). Attribution patching beat the project's construction on held-out interventions (E7) | Edits through the blueprint with predicted effects, beating attribution patching | Engineering |
+| R12 | Calibrated confidence | Controls and pre-registration are strong habits. Evidence types are not assigned systematically, and nothing has been calibrated | Evidence labels on every claim, and calibration on the suite | Engineering |
+| R13 | Real sizes, all domains | Chess (three Leela networks), AlgZoo, GPT-2 small. The fluid emulator must be rebuilt (as built it costs about 47× its solver's arithmetic). 7–8B models only probed (liar sprint), never decomposed | The fluid rebuild; a GPT-2 adapter on the new core; 7–8B decomposition (transcoders) for Tier B | Engineering and resource (GPUs) |
+| R14 | Does the research itself | The hard results came from a strong agent by hand. `probe/` (the Helix Probe loop) and `helix_evolve` (volume search) exist | A director that runs the loop end to end on the suite | Engineering and resource (a frontier model) |
+
+**In one line:**
+- Verifying is strong (R3).
+- Six requirements are partly built (R1, R2, R5, R9, R12, R13).
+- Two are research-grade and decide everything (R6, R8).
+- The rest are engineering that has never been done here, plus two missing resources: a model that can perceive the
+  domain, and GPUs.
+
+---
+
+## 3. The components the next build must deliver
+
+Ten components. For each: what it must deliver (fixed), which requirements it carries, the test it must pass
+(from `SPEC.md` §6), and what in the repo it can start from. Leads are suggestions from the evidence; the builder may
+find better.
+
+### C1. The test bench: the finish line
+- **Delivers:** the acceptance suite S0 to S7, with sealed answers, and a scorer.
+  - The answers are written by a separate session that never shares context with the builder.
+  - The scorer is plain code with no model calls.
+- **Carries:** every requirement's test.
+- **Passes when:** true answers score at the ceiling and every must-fail case scores at the floor. This checks the
+  bench itself before anything else is judged by it.
+- **Starts from:**
+  - `rosetta/yardstick.py` and `rosetta/sealed/` (S1);
+  - the T2 copies and disguises (S5);
+  - InterpBench and Tracr, both public (S0);
+  - Leela, GPT-2 and AlgZoo networks with partly known answers (S7).
+
+  S2, S3, S4 and S6 are new.
+
+### C2. The verifier: one place for every test
+- **Delivers:** every check a blueprint needs, at any level of a hierarchy:
+  - behaviour agreement;
+  - interchange interventions;
+  - substitution;
+  - worst-case completeness;
+  - the four-way typing;
+  - the copy tests (answering without running; the bounded reader);
+  - evidence labels and calibration.
+- **Carries:** R3, R4, R5, R9, R12.
+- **Passes when:** on S0, S1, S4 and S5 it certifies the true blueprints and rejects every must-fail case.
+- **Starts from:** `lab/judge.py`, `lab/lmjudge.py`, Rosetta's substitution (`rosetta/engine.py`), `lab/atlas.py`
+  (rule against lookup), and the X0 design (`docs/review/PREREG_FIRST_EXPERIMENTS.md`).
+- **If it fails:** stop. The measurement is wrong, as T2 was, and nothing built on it would count.
+
+### C3. The map-maker: the network's own parts, and their wiring
+- **Delivers:** the network's variables at every layer, plus the wiring between them. It works backward from the
+  behaviour: which variables carry it at the last layer, which variables feed those, and so on down to the inputs.
+- **Carries:** R6 (the structure), R7.
+- **Passes when:** on S0 and S3 it locates every sealed intermediate variable and the sealed wiring.
+- **Starts from:** `rosetta/sae.py` (sparse dictionaries), `lab/spd.py` (exact decomposition), and Rosetta's value
+  attribution and cross-block concentration (`rosetta/glass2.py`, `fresh_where_site.py`).
+- **Lead:** attribution graphs over a sparse replacement (Anthropic's circuit tracing) do this per prompt for language
+  models. The same backward reading of which parts feed a verdict applies to any network.
+
+### C4. The definer: each part in terms of what feeds it
+- **Delivers:** a definition for each variable in terms of the variables upstream of it, or the inputs, working from
+  the bottom of the map upward.
+  - The definitions are written in a restricted language: no weights, no fitted sub-models, a budget of constants.
+  - The language contains operations as well as features: for example, "play out", "for each reply", "the exchange
+    on a square", "a spatial derivative", "at the previous token".
+- **Carries:** R6, R3.
+- **Passes when:** on S1 and S3, every sealed variable, including the intermediate ones, is defined at the recovery
+  line (correlation 0.9 on held-out inputs) and passes substitution.
+- **Starts from:** `rosetta/core.py` and `rosetta/engine.py` (exhaustive search over restricted programs, control
+  lines, substitution), and `rosetta/chess_lib.py`.
+- **Why this repairs the break:** Rosetta could not define the verdict variables from the board (2 of 16). A verdict
+  defined from its ingredients is a short weighted combination of defined parts.
+
+### C5. The inventor: new kinds of concept when the vocabulary runs out
+- **Delivers:** when C4 cannot define a variable at the line, C5 adds to the language:
+  - new primitives or new operations, each with a name and a definition, and with its provenance recorded;
+  - every proposal is scored only by C2, never accepted on a model's say-so.
+- **Carries:** R8.
+- **Passes when:** on S2 it recovers the sealed concepts, none of which can be written in the starting vocabulary. The
+  starting vocabulary is published before S2 is written.
+- **Starts from:** `rosetta/llm.py` (a proposer), `rosetta/line.py` (the one hand-added kind of quantity that worked),
+  and `kepler/targets/fluid/library.py` (physics terms).
+- **Leads, in order of evidence:**
+  - **Library learning:** compress the definitions already found into reusable abstractions, as DreamCoder grows its
+    own language from solved problems.
+  - **Search over operations, not only features:** the planned-line material was one such composition, and it moved a
+    sixth to a third of LD2's extra knowledge at once.
+  - **An observer that can perceive the domain:** a strong model, shown boards rendered as images or contrast pairs
+    (positions where the variable is high against low, with material matched), names what differs. Its proposal is
+    then written in the language and scored. MAIA is the precedent for an agent that runs such experiments.
+  - **Directions found without labels, kept only if teachable:** Schut et al. found new concepts inside AlphaZero
+    this way, filtered them by whether a weaker network could learn them, and taught them to grandmasters.
+
+### C6. The assembler: the blueprint
+- **Delivers:**
+  - the systems and the one-page overview, assembled from defined parts;
+  - the ledger;
+  - per-input traces;
+  - rival accounts.
+- **Carries:** R4, R6, R7, R12.
+- **Passes when:**
+  - on S0 to S4, blueprints are complete within the line;
+  - on S3, the overview predicts behaviour above the task rule;
+  - traces' predicted flips beat attribution patching and "no change".
+- **Starts from:** Rosetta's glass model (`rosetta/glass2.py`), the residual curve (`rosetta/residual_curve.py`), and
+  the atlas's certificate.
+
+### C7. The reader interface: blueprints for minds
+- **Delivers:** the blueprint rendered for a reader, with plain-language definitions, examples and contrast pairs, and
+  the reader and human tests run on it.
+- **Carries:** R10.
+- **Passes when:**
+  - the bounded-reader test passes on S1 to S4 and on S7's known answers;
+  - for any new chess concept, a small human study follows the Schut et al. design.
+- **Starts from:** `rosetta/teach_dict.py`. It needs a reader that can perceive boards, which the cheap model could
+  not.
+
+### C8. The editor: control through the blueprint
+- **Delivers:** edits made through blueprint parts (switch off, strengthen, redirect), each with its effect and side
+  effects predicted before it is run.
+- **Carries:** R11.
+- **Passes when:** on S3 and S6 its predictions beat attribution patching and "no change", including one "remove a
+  capability" edit per domain: switch off look-ahead in the chess rehearsal; switch off the planted false-answer gate.
+- **Starts from:** the liar sprint's steering code, and `lab/steer_calendar.py`.
+
+### C9. Adapters: every domain through one core
+- **Delivers:** adapters for each Tier A domain:
+  - chess (exists, `kepler/targets/chess/`);
+  - small algorithmic networks (exists, `lab/`);
+  - the rebuilt fluid emulator;
+  - GPT-2.
+
+  Plus a 7–8B adapter with a sparse replacement for Tier B.
+- **Carries:** R1, R13.
+- **Passes when:** S6's four rehearsals and S7's real networks run through the same core.
+- **Starts from:**
+  - `kepler/targets/chess/leela.py` and `leela_t.py`;
+  - `lab/lm.py` (GPT-2);
+  - `kepler/targets/fluid/` (to be retrained on coarse-grained frames of a finer simulation, the known-answer setting
+    that Kochkov et al. 2021 showed works).
+
+### C10. The director: no hands
+- **Delivers:** the loop run end to end, with every experiment logged and a stop when the blueprint is complete or the
+  budget is spent:
+  - pick the largest unresolved share;
+  - map it, define it, invent where needed;
+  - verify;
+  - update the ledger.
+- **Carries:** R14.
+- **Passes when:** the full suite runs with no human input after the start.
+- **Starts from:** `probe/` (the Helix Probe loop: predict first, then experiment), and `helix_evolve` for volume
+  search where a score is closed to loopholes.
+- **Note:** a strong model takes the judgment roles (director, observer, critic). A cheap model at volume fits only
+  where the scorer is closed (`docs/review/NEXT_BUILD.md` §3.11).
+
+---
+
+## 4. The order, and why it makes this one attempt rather than twenty
+
+The build runs as six gates. Each gate has a pass test from the suite, and a failure at any gate names the component
+that failed, the way an engineer names the member that gave way.
+
+| Gate | Components | Pass test | Why here |
+|---|---|---|---|
+| 1. The finish line exists | C1, C2 | The bench scores true answers at the ceiling and must-fail cases at the floor; the verifier certifies S0, S1 and S4 and rejects S5 | Nothing can be judged without it, and the record shows measurements must be proven before use (T2) |
+| 2. **The make-or-break** | C3, C4, C5 | S2 (concepts outside the vocabulary) and S3 (verdicts through their ingredients) are recovered | This is where the last build broke, and it is the only research-grade part. Testing it second keeps the uncertain spend bounded and early |
+| 3. Complete blueprints | C6 | S0 to S4 complete within the line; S6's four rehearsals pass | Assembling defined parts into levels, with a ledger |
+| 4. Real known answers | C9 with C2 to C6 | S7: look-ahead along forcing lines and the capture variable in LD2 and t1; month rollover; modular multiplication; M4,3 | Proves the box on real weights before any unknown target |
+| 5. Minds and hands | C7, C8 | Reader and editor tests | Usability and control on blueprints that already pass |
+| 6. No hands | C10 | The full suite with no human input | The box, not an agent working by hand |
+
+**Then the flagships:**
+- chess t1 and LD2;
+- the rebuilt fluid emulator;
+- the lying mechanism in a 7–8B model (Tier B);
+- how a model reads weights (Tier B).
+
+**What happens if a gate fails:**
+- **Gate 1 fails:** the measurement is wrong. Fix the intent, not the code (`CLAUDE.md`), before anything else.
+- **Gate 2 fails:** it fails at a named place. Either:
+  - the map-maker did not find the ingredients;
+  - the definer could not define them even with operations;
+  - the inventor could not add the missing kind.
+
+  Each points at different work, and none needs the rest of the build redone.
+- **Gates 3 to 6:** these are engineering on methods the field has demonstrated, with references in `SPEC.md` §10. A
+  failure there is a translation error to fix in that component.
+
+**The spec and the suite are frozen during the build.** A change is a new, named version with its evidence.
+
+---
+
+## 5. What must be in place before starting
+
+1. **A strong model that can perceive the domain,** for the observer, the reader, the director and the critic.
+   - The only key in this workspace is DeepSeek V4.1 Flash. It could not apply board rules at all, and its proposals
+     added nothing (`docs/rosetta/RESULTS.md` §8, `FINDINGS.md`).
+   - This is the single most important missing resource. Without it, C5 is limited to library learning and search,
+     and C7 and C10 cannot pass.
+2. **GPU time**, for:
+   - decomposition at chess and language-model scale;
+   - the fluid rebuild;
+   - the planted language-model rehearsal;
+   - 7–8B models (Tier B).
+3. **Shreyas's approval for the spend,** with a budget per gate, so that Gate 2's cost is known before it starts.
+4. **A separate session to write the sealed answers** (C1), so that the builder never sees them.
+5. **Time measured in days, not hours.** Rosetta's three hours built one chain for one network. This is ten components
+   and a sealed suite. Gates 1 and 2 come first, so the time at risk is spent where the uncertainty is.
+
+---
+
+## 6. What passing guarantees, and what it does not
+
+**If the suite passes, then for any Tier A network and behaviour in scope** the box returns a blueprint that is:
+- complete;
+- honestly typed;
+- faithful at every level;
+- navigable from a one-page overview down to components;
+- usable by a reader;
+- calibrated about its own confidence.
+
+Or it states exactly where, and how much, is unresolved, with no silent gaps. That is "fully interpretable" as
+`SPEC.md` §2 defines it, and it is testable by anyone.
+
+**It does not guarantee:**
+- **That a network is simple.** A mostly memorised network gets a complete but table-heavy blueprint.
+- **That a network contains new knowledge.** The box finds it if it is there.
+- **Completeness at Tier B within budget.** The field's best tools still leave substantial unexplained error at that
+  scale; the box reports where completeness stops.
+
+**The remaining risk after passing:**
+- Real networks could hold structure unlike anything in the suite.
+- S7 (real networks with known answers) and S6 (rehearsals shaped like each flagship) exist to shrink that risk
+  before the unknown targets are run. They cannot remove it.
+
+---
+
+## 7. Decisions for Shreyas
+
+1. **The definition.** Is `SPEC.md` §2 what you mean by "fully interpretable"? In particular, do you accept:
+   - "navigable, not necessarily short";
+   - the four honest types (rule, lookup, irrelevant, unresolved)?
+
+   Everything downstream depends on this.
+2. **The scope.** Is Tier A the right narrow realm, with Tier B run and reported but not required to be complete?
+3. **The resources.** A frontier-model key, a GPU budget, and a budget per gate.
+4. **The intent.** Whether this spec becomes the project's intent (a change to `docs/glass/INTENT.md`, which needs your
+   approval), so that every agent builds to it.
+5. **Who writes the sealed suite.** A separate session, so that the builder never sees the answers.
