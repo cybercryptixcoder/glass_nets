@@ -110,8 +110,8 @@ class TracrNP:
             row = raw[i, 1:len(s) + 1]
             if self.out_kind == "numerical":
                 outs.append([float(r[0]) for r in row])
-            else:
-                outs.append([self.out_values[int(np.argmax(r))] for r in row])
+            else:   # an output location with no active direction has no value (Tracr's "nothing selected")
+                outs.append([self.out_values[int(np.argmax(r))] if np.max(r) >= 0.5 else None for r in row])
         res = {"outputs": outs, "raw": raw}
         if return_sites:
             res["sites"] = sites

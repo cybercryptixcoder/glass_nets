@@ -21,6 +21,10 @@ logged in `bench/accept/CHANGES.md`.*
 # score one blueprint against one development network (prints pass or fail, the score and the line per requirement)
 python3 bench/accept/scorer/score.py --task bench/accept/draws/<draw>/<net> --blueprint <out>/blueprint.json
 
+# the interface's reference (passes at the ceiling)
+python3 bench/accept/scorer/score.py --task bench/accept/reference/frac_prevs \
+    --blueprint bench/accept/reference/frac_prevs/true_blueprint.json
+
 # score every network of a draw that has a blueprint in <out dir>/<net>/blueprint.json
 python3 bench/accept/scorer/score.py --draw <draw> --blueprints <out dir>
 
@@ -34,6 +38,15 @@ intermediate variables were recovered and which of the box's own parts matched o
 prints only pass or fail, per requirement and per tier. It never prints a sealed definition, a family or a mechanism.
 
 ## Draws
+
+| draw | tiers | networks |
+|---|---|---|
+| dev-001 | S0 (Tracr half), S5a (the saved cases) | S0-tracr-00 to 09; S5a-00 to 07 (the eight saved targets, with 31 sealed accounts to reject) |
+| dev-002 | S0 (Tracr half) | S0-tracr-00 to 09 |
+| dev-003 | S0 (Tracr half) | S0-tracr-00 to 09 |
+
+The first three development draws set the tiers' spreads, which are now frozen for S0. The InterpBench half of S0
+and the tiers S1 to S4, S5b, S6 and S7 are not built yet.
 
 Draw requests go in `docs/build/STATUS.md` as "Draw request: <gate>, <tiers>". A ready draw is announced there as
 "Draw <id> ready: <tiers>". Every formal gate attempt needs a draw that no earlier formal attempt used.

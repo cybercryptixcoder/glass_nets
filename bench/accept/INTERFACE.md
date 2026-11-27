@@ -164,4 +164,26 @@ or system, which it opens on demand within its budget. The scorer's reader is th
 
 ## 8. The reference true blueprint
 
-*Added when S0's first draw exists (§9 of the README).*
+The reference is a public S0 model: Tracr's own library program `make_frac_prevs` on `tokens == "x"`, compiled by
+Tracr, with its residual basis as compiled and its labels published. Its task folder and full true blueprint are in
+`bench/accept/reference/frac_prevs/` (built by `bench/accept/reference/make_reference.py`). The scorer passes it at the
+ceiling: every statistic is 1.000 (run alone, every level, interchange, substitution, kept parts), with interchange
+above its family-wise random-subspace line (0.301). Check it with:
+
+```
+python3 bench/accept/scorer/score.py --task bench/accept/reference/frac_prevs \
+    --blueprint bench/accept/reference/frac_prevs/true_blueprint.json
+```
+
+Its parts (long label and value lists shortened here with "..."; each part also carries `claims` and `evidence`):
+
+```
+{"id": "tokens", "type": "rule", "vtype": "SOp", "location": {"site": "resid_0", "positions": "all", "map": {"class": "subspace", "labels": ["tokens:a", "tokens:b", "tokens:x"]}}, "encoding": {"kind": "categorical", "values": ["a", "b", "x"], "null_below": 0.5}, "definition": "tokens", "upstream": []}
+{"id": "indices", "type": "rule", "vtype": "SOp", "location": {"site": "resid_0", "positions": "all", "map": {"class": "subspace", "labels": ["indices:0", "indices:1", "indices:2", "..."]}}, "encoding": {"kind": "categorical", "values": [0, 1, 2, "..."], "null_below": 0.5}, "definition": "indices", "upstream": []}
+{"id": "is_x", "type": "rule", "vtype": "SOp", "location": {"site": "resid_2", "positions": "all", "map": {"class": "subspace", "labels": ["is_x"]}}, "encoding": {"kind": "numerical", "scale": 1.0, "offset": 0.0}, "definition": "(map (eqc \"x\") @tokens)", "upstream": ["tokens"]}
+{"id": "frac_prevs", "type": "rule", "vtype": "SOp", "location": {"site": "resid_3", "positions": "all", "map": {"class": "subspace", "labels": ["frac_prevs"]}}, "encoding": {"kind": "numerical", "scale": 1.0, "offset": 0.0}, "definition": "(aggregate (select @indices @indices LEQ) @is_x)", "upstream": ["indices", "is_x"]}
+```
+
+with `"output": "frac_prevs"`, an overview whose predictor is `@frac_prevs`, and two systems (marking the x tokens;
+averaging the marks over the prefix). In the sealed S0 networks the residual basis is an arbitrary orthonormal one and
+no labels are published, so the same parts are located by `basis` maps instead of `labels`.

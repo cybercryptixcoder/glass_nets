@@ -166,6 +166,8 @@ class Encoding(TypedDict, total=False):
     offset: float
     values: List[Any]                # categorical: one basis direction per value, value = values[argmax]
     magnitude: float                 # categorical: coordinate written for the chosen value (default 1)
+    null_below: float                # categorical, optional: a reading whose largest coordinate is below this has no
+                                     # value (None); "no value" agrees only with "no value"
 
 
 class Claim(TypedDict):

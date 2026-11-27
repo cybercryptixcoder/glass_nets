@@ -1,0 +1,194 @@
+{
+ "interface": "bench-accept/v1",
+ "task": "REF-frac_prevs",
+ "domain": "tok",
+ "library": {},
+ "parts": [
+  {
+   "id": "tokens",
+   "type": "rule",
+   "vtype": "SOp",
+   "location": {
+    "site": "resid_0",
+    "positions": "all",
+    "map": {
+     "class": "subspace",
+     "labels": [
+      "tokens:a",
+      "tokens:b",
+      "tokens:x"
+     ]
+    }
+   },
+   "encoding": {
+    "kind": "categorical",
+    "values": [
+     "a",
+     "b",
+     "x"
+    ],
+    "null_below": 0.5
+   },
+   "definition": "tokens",
+   "upstream": [],
+   "claims": [
+    {
+     "claim": "type",
+     "value": "rule",
+     "p": 0.99,
+     "evidence": "exhaustive"
+    }
+   ],
+   "evidence": {
+    "type": "exhaustive"
+   }
+  },
+  {
+   "id": "indices",
+   "type": "rule",
+   "vtype": "SOp",
+   "location": {
+    "site": "resid_0",
+    "positions": "all",
+    "map": {
+     "class": "subspace",
+     "labels": [
+      "indices:0",
+      "indices:1",
+      "indices:2",
+      "indices:3",
+      "indices:4",
+      "indices:5"
+     ]
+    }
+   },
+   "encoding": {
+    "kind": "categorical",
+    "values": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "null_below": 0.5
+   },
+   "definition": "indices",
+   "upstream": [],
+   "claims": [
+    {
+     "claim": "type",
+     "value": "rule",
+     "p": 0.99,
+     "evidence": "exhaustive"
+    }
+   ],
+   "evidence": {
+    "type": "exhaustive"
+   }
+  },
+  {
+   "id": "is_x",
+   "type": "rule",
+   "vtype": "SOp",
+   "location": {
+    "site": "resid_2",
+    "positions": "all",
+    "map": {
+     "class": "subspace",
+     "labels": [
+      "is_x"
+     ]
+    }
+   },
+   "encoding": {
+    "kind": "numerical",
+    "scale": 1.0,
+    "offset": 0.0
+   },
+   "definition": "(map (eqc \"x\") @tokens)",
+   "upstream": [
+    "tokens"
+   ],
+   "claims": [
+    {
+     "claim": "type",
+     "value": "rule",
+     "p": 0.99,
+     "evidence": "exhaustive"
+    }
+   ],
+   "evidence": {
+    "type": "exhaustive"
+   }
+  },
+  {
+   "id": "frac_prevs",
+   "type": "rule",
+   "vtype": "SOp",
+   "location": {
+    "site": "resid_3",
+    "positions": "all",
+    "map": {
+     "class": "subspace",
+     "labels": [
+      "frac_prevs"
+     ]
+    }
+   },
+   "encoding": {
+    "kind": "numerical",
+    "scale": 1.0,
+    "offset": 0.0
+   },
+   "definition": "(aggregate (select @indices @indices LEQ) @is_x)",
+   "upstream": [
+    "indices",
+    "is_x"
+   ],
+   "claims": [
+    {
+     "claim": "type",
+     "value": "rule",
+     "p": 0.99,
+     "evidence": "exhaustive"
+    }
+   ],
+   "evidence": {
+    "type": "exhaustive"
+   }
+  }
+ ],
+ "output": "frac_prevs",
+ "overview": {
+  "text": "At each position, the share of the tokens so far (this one included) that are 'x': an MLP marks the x tokens, then one attention head averages the marks over the earlier positions.",
+  "predictor": "@frac_prevs"
+ },
+ "systems": [
+  {
+   "id": "mark",
+   "role": "mark the x tokens",
+   "parts": [
+    "tokens",
+    "is_x"
+   ],
+   "fed_by": [],
+   "feeds": [
+    "average"
+   ]
+  },
+  {
+   "id": "average",
+   "role": "average the marks over the prefix",
+   "parts": [
+    "indices",
+    "frac_prevs"
+   ],
+   "fed_by": [
+    "mark"
+   ],
+   "feeds": []
+  }
+ ]
+}

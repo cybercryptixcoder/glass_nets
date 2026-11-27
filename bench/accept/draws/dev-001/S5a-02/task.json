@@ -1,0 +1,196 @@
+{
+ "interface": "bench-accept/v1",
+ "id": "S5a-02",
+ "draw": "dev-001",
+ "tier": "S5a",
+ "domain": "seq",
+ "network": {
+  "format": "transformer",
+  "path": "network",
+  "n_params": 378,
+  "multiply_adds": 378
+ },
+ "behaviour": {
+  "description": "A 2-layer attention-only transformer: no MLPs, no LayerNorm, no biases, one head per layer, no attention mask (every position attends to every position). Vocabulary 5 tokens, sequences of 5 tokens, residual width 6. Each input is a function f on {0..4}: token i is f(i). Output class c stands for 'the longest cycle of f has length c + 1' (follow i -> f(i) -> f(f(i)) ... until it returns).",
+  "outputs": [
+   {
+    "name": "out",
+    "kind": "categorical",
+    "values": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "positions": "per_input"
+   }
+  ],
+  "metric": "accuracy",
+  "reference_rule": "length of the longest cycle of the input function, minus 1",
+  "decision": {
+   "kind": "argmax"
+  }
+ },
+ "inputs": {
+  "path": "inputs.npz",
+  "n": 1500
+ },
+ "train_items": null,
+ "sites": [
+  {
+   "name": "embed",
+   "shape": [
+    5,
+    6
+   ],
+   "order": 0,
+   "value_offset": 0,
+   "stream": "resid",
+   "description": "token + position embeddings, all 5 positions (index = position * 6 + dimension)"
+  },
+  {
+   "name": "attn0.out",
+   "shape": [
+    5,
+    6
+   ],
+   "order": 2,
+   "value_offset": 0,
+   "stream": null,
+   "description": "what layer 0's attention adds to the residual stream, all positions"
+  },
+  {
+   "name": "resid0.mid",
+   "shape": [
+    5,
+    6
+   ],
+   "order": 3,
+   "value_offset": 0,
+   "stream": "resid",
+   "description": "residual stream after layer 0's attention, all positions"
+  },
+  {
+   "name": "attn1.out",
+   "shape": [
+    5,
+    6
+   ],
+   "order": 5,
+   "value_offset": 0,
+   "stream": null,
+   "description": "what layer 1's attention adds to the residual stream, all positions"
+  },
+  {
+   "name": "resid1.mid",
+   "shape": [
+    5,
+    6
+   ],
+   "order": 6,
+   "value_offset": 0,
+   "stream": "resid",
+   "description": "residual stream after layer 1's attention, all positions"
+  },
+  {
+   "name": "out",
+   "shape": [
+    1,
+    5
+   ],
+   "order": 7,
+   "value_offset": 0,
+   "stream": null,
+   "description": "the network's output"
+  }
+ ],
+ "params": [
+  {
+   "name": "W_E",
+   "shape": [
+    5,
+    6
+   ]
+  },
+  {
+   "name": "W_pos",
+   "shape": [
+    5,
+    6
+   ]
+  },
+  {
+   "name": "W_U",
+   "shape": [
+    6,
+    5
+   ]
+  },
+  {
+   "name": "L0.W_Q",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L0.W_K",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L0.W_V",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L0.W_O",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L1.W_Q",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L1.W_K",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L1.W_V",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  },
+  {
+   "name": "L1.W_O",
+   "shape": [
+    1,
+    6,
+    6
+   ]
+  }
+ ],
+ "notes": "Saved target lc_6_5 (rounds 1 and 2): AlgZoo longest-cycle transformer (hidden 6, length 5)."
+}
