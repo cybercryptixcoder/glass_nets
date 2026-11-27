@@ -91,17 +91,36 @@ class Checker:
         return True, "ok"
 
     # ------------------------------------------------------------------ evaluation of the blueprint alone
+    def _ops(self, bp):
+        """Invented operations, compiled. On token sequences an operation acts position by position on its s-op
+        arguments (as map and sequence_map do); an undefined value stays undefined."""
+        if getattr(self, "_ops_for", None) is bp:
+            return self._ops_code
+        code = {}
+        for n, e in (bp.library or {}).items():
+            if e.get("kind") != "operation":
+                continue
+            f = vocab.compile_operation(e["source"])
+            if bp.domain == "tok":
+                code[n] = (lambda f: lambda *xs: [[None if any(v is None for v in vs) else float(f(*[np.float64(v) for v in vs]))
+                                                   for vs in zip(*rows)] for rows in zip(*xs)])(f)
+            else:
+                code[n] = f
+        self._ops_for, self._ops_code = bp, code
+        return code
+
     def values(self, bp, idx, overrides=None):
         """Every part's value on the inputs idx, with optional overrides {part id: values on idx}."""
         overrides = overrides or {}
         dom = vocab.get(bp.domain)
+        ops = self._ops(bp)
         ctx = {"tokens": [self.inputs[i] for i in idx]}
         vals, types = {}, {}
         for p in bp.order():
             if p.id in overrides:
                 vals[p.id] = overrides[p.id]
             elif p.type == "rule":
-                vals[p.id] = vocab.evaluate(p.definition, dom, ctx, vals, types, bp.library)
+                vals[p.id] = vocab.evaluate(p.definition, dom, ctx, vals, types, bp.library, ops)
             elif p.type == "lookup":
                 vals[p.id] = [[p.table.get((tuple(self.inputs[i]), j)) for j in range(len(self.inputs[i]))] for i in idx]
             else:
@@ -205,7 +224,11 @@ class Checker:
         ra = self.run_alone(bp)
         ok = ra >= run_alone_line
         report["checks"].append(("run alone", ok, f"agreement {ra:.3f} against line {run_alone_line:.3f}"))
-        located = [p for p in bp.parts if p.type in ("rule", "lookup")]
+        inputs_ = [p for p in bp.parts if p.type == "rule" and p.site == self.net.sites[0] and
+                   (p.definition or "").strip() in ("tokens", "indices")]
+        for p in inputs_:
+            report["checks"].append((f"input {p.id}", True, f"the network's input ({p.definition}), at the embedding"))
+        located = [p for p in bp.parts if p.type in ("rule", "lookup") and p not in inputs_]
         dec, iias = {}, {}
         for p in located:
             iias[p.id], dec[p.id] = self.iia(bp, p)

@@ -26,6 +26,18 @@ class TracrNet:
         self.out_name = _canonical(program.label)
         self.numerical_output = type(self.model.output_encoder).__name__ == "NumericalEncoder"
 
+    def reads(self, k):
+        """Residual directions sublayer k reads (k = 1, 2, ...: attention of layer 0, MLP of layer 0, ...): the rows
+        of its input weights that are not zero. Read from the weights, not from labels."""
+        layer, is_mlp = (k - 1) // 2, (k - 1) % 2 == 1
+        p = f"transformer/layer_{layer}"
+        mats = [self.P[f"{p}/mlp/linear_1"]["w"]] if is_mlp else \
+            [self.P[f"{p}/attn/{n}"]["w"] for n in ("query", "key", "value")]
+        rows = np.zeros(self.d, bool)
+        for W in mats:
+            rows |= np.abs(W).max(1) > 1e-9
+        return set(np.nonzero(rows)[0].tolist())
+
     # ------------------------------------------------------------------ locations
     def subspace(self, labels):
         """Orthonormal basis [d, k] for the named residual directions."""
