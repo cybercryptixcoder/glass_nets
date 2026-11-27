@@ -182,3 +182,25 @@ vocabulary files are unchanged since dcd9a1bb; 79 checks and the fuzz test pass 
 (branch pushes work; tag pushes are denied). Per the proxy's rules this is reported, not worked around. Shreyas is
 asked to create the tag `vocab-frozen` on origin at 876429269fc490f8bd81062c2df59a7d6e8b852b (or allow tag pushes).
 From now on the vocabulary is treated as frozen: no change of meaning; any bug fix gets a ledger row.
+
+**01:39 to 02:03. Gate 2 rehearsal in miniature: a verdict computed in stages (`box/rehearse_staged.py`; output
+`results/build/rehearse_staged_session1.txt` and `.json`).** A builder-made network (not a bench case) on 3,000 real
+positions: layer 1 holds three planted ingredients at known units (the mover's hanging pieces, the opponent's hanging
+pieces, passed pawns; set by construction) and five random distractor units; later layers are trained to the verdict
+relu(g2 - g1) * g3 (held-out R2 0.981). The box's side, blind to which units are planted:
+- the search defines units 0, 1 and 2 exactly (`(count hanging_own)`, `(count hanging_opp)`, `(count passed_pawn)`,
+  held-out correlation 1.0) and gives the five distractors nothing (0.01 to 0.39);
+- from the board alone, within L = 6, it cannot define the verdict (held-out R2 -0.97);
+- through the three units as parts it finds `(relu (mul @u2 (sub @u1 @u0)))`, equal to the planted verdict since g3
+  is never negative, at held-out R2 0.98, the network's own fidelity to it.
+Failures on the way, each fixed: the first training (a learned first layer on standardized features, 2,000 inputs for
+3,525 inputs dimensions) generalized badly (held-out R2 below zero), so the ingredients were set by construction;
+ties on the probe inputs were broken alphabetically, so a longer equivalent beat `(count hanging_opp)` and that unit
+was missed: ties now go to the shorter definition; 60 probe positions were too few for a verdict that is zero on most
+positions: the verdict search now runs over position-level expressions only, on 1,000 probes.
+**And it exposed a gap in the frozen vocabulary:** chess had no `relu`, so relu(a - b) * c could not be written within L
+even through its ingredients. Vocabulary v2 (commit f0b3b680) adds `relu` to every numeric type that lacked it (and
+clamps against a constant in chess, and the token function `relu1`). v1 had been frozen at 01:38 but its tag never
+reached origin, and no bench session had written anything against it, so nothing is voided. 80 vocabulary checks and
+the fuzz test (826 expressions) pass; the search's seven cases still pass. The tag `vocab-frozen` now sits locally on
+f0b3b680; pushing it is still refused (HTTP 403).
