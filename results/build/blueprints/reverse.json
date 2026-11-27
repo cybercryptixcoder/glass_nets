@@ -1,0 +1,138 @@
+{
+ "domain": "tok",
+ "output": "v6",
+ "library": {
+  "inv_recip_inc": {
+   "kind": "operation",
+   "args": [
+    "SOp"
+   ],
+   "ret": "SOp",
+   "source": "def inv_recip_inc(x):\n    return 1.0 / (x + 1.0)\n",
+   "provenance": "operation search, to define v2 (exact affine fit R2 1.0000)",
+   "constants": 2
+  },
+  "inv_recip_dec": {
+   "kind": "operation",
+   "args": [
+    "SOp"
+   ],
+   "ret": "SOp",
+   "source": "def inv_recip_dec(x):\n    return 1.0 / x - 1.0\n",
+   "provenance": "operation search, to define v3 (exact affine fit R2 1.0000)",
+   "constants": 2
+  }
+ },
+ "parts": [
+  {
+   "id": "v0",
+   "type": "rule",
+   "site": "resid_0",
+   "encoding": "categorical",
+   "definition": "indices",
+   "upstream": [],
+   "directions": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "id": "v1",
+   "type": "rule",
+   "site": "resid_0",
+   "encoding": "categorical",
+   "definition": "tokens",
+   "upstream": [],
+   "directions": [
+    37,
+    38,
+    39
+   ]
+  },
+  {
+   "id": "v2",
+   "type": "rule",
+   "site": "resid_1",
+   "encoding": "numerical",
+   "definition": "($inv_recip_inc (selector_width (select @v1 @v1 TRUE)))",
+   "upstream": [
+    "v1"
+   ],
+   "directions": [
+    11
+   ]
+  },
+  {
+   "id": "v3",
+   "type": "rule",
+   "site": "resid_2",
+   "encoding": "categorical",
+   "definition": "($inv_recip_dec (map id @v2))",
+   "upstream": [
+    "v2"
+   ],
+   "directions": [
+    6,
+    7,
+    8,
+    9,
+    10
+   ]
+  },
+  {
+   "id": "v4",
+   "type": "rule",
+   "site": "resid_4",
+   "encoding": "categorical",
+   "definition": "(sequence_map minus @v3 @v0)",
+   "upstream": [
+    "v0",
+    "v3"
+   ],
+   "directions": [
+    28,
+    29,
+    30,
+    31,
+    32
+   ]
+  },
+  {
+   "id": "v5",
+   "type": "rule",
+   "site": "resid_6",
+   "encoding": "categorical",
+   "definition": "(map dec @v4)",
+   "upstream": [
+    "v4"
+   ],
+   "directions": [
+    18,
+    19,
+    20,
+    21,
+    22
+   ]
+  },
+  {
+   "id": "v6",
+   "type": "rule",
+   "site": "resid_7",
+   "encoding": "categorical",
+   "definition": "(aggregate_cat (select @v0 @v5 EQ) @v1)",
+   "upstream": [
+    "v0",
+    "v1",
+    "v5"
+   ],
+   "directions": [
+    33,
+    34,
+    35
+   ]
+  }
+ ]
+}

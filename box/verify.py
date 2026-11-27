@@ -158,7 +158,8 @@ class Checker:
         nothing)."""
         hits = []
         for a, b, pred in decisive:
-            edit = {site: _swap(B, self.sites[site][b:b + 1])}
+            # only b's real positions (BOS and its tokens): beyond them a keeps its own values, as the blueprint assumes
+            edit = {site: _swap(B, self.sites[site][b:b + 1, :len(self.inputs[b]) + 1])}
             got = self.net.outputs([self.inputs[a]], edit)[0]
             changed = not _same(got, self.base[a], self.net.numerical_output)
             hits.append(changed and _same(got, pred, self.net.numerical_output))
