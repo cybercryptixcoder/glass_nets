@@ -2186,3 +2186,17 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 
 - `docs/review/HANDOFF.md` is the starting point for the agent who builds the next version: the vision, the reasons,
   the reading order and what is left to the builder's judgement. It is not a specification.
+
+## Nov 26, 19:21 ET (clock): the finished system, defined as a capability specification
+
+- After the Rosetta build, Shreyas asked for the dream system to be defined as capabilities (what it must do, not how),
+  for the gap to it, and for one build that closes the gap.
+- `docs/spec/SPEC.md` defines it: a verified blueprint of how a network produces a behaviour, "fully interpretable"
+  defined and testable, 15 requirements (R1 to R15) each with a test, scope tiers, and a sealed acceptance suite
+  (S0 to S7) that is the finish line. `docs/spec/SPEC_SIMPLE.md` is the plain-words version.
+- `docs/spec/GAP.md` gives the gap requirement by requirement, ten components, six gates (the research-grade one
+  second), preconditions, and what passing does and does not guarantee.
+- An independent critique by a fresh agent (`docs/spec/SPEC_CRITIQUE.md`) found eleven problems; all were checked and
+  all led to changes (GAP.md §8). The largest: the blueprint must run on its own, the sealed suite must be a generator
+  with a fresh certification draw, and planted networks must be checked to compute their sealed mechanism.
+- No code was changed and no experiment was run.

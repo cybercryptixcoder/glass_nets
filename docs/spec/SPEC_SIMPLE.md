@@ -29,7 +29,8 @@ for every beam. This is the same thing for a network:
    - the shortcuts it takes compared with a standard method;
    - where it will break on unusual inputs.
 3. **Show how it does it, from the inside.** Every part it names really exists in the network: change that part in
-   the network, and the network changes exactly as the blueprint says it will.
+   the network, and the network changes exactly as the blueprint says it will. And the blueprint runs on its own:
+   with all its definitions working together, it reproduces what the network does, step by step.
 4. **Account for everything.** Nothing that matters is left out. Whatever is not explained is measured and pointed
    to.
 5. **Say honestly what each part is:**
@@ -45,30 +46,33 @@ for every beam. This is the same thing for a network:
    **And fingerprint any behaviour,** such as a lie: the parts whose activity gives it away.
 8. **Name things nobody has named.** When the network uses an idea we have no word for, the system invents the word
    and the definition, and proves it.
+9. **Explain where the network's efficiency comes from.** When the network does a job a known method also does (a
+   fluid model and the solver it imitates), say which steps it skips or approximates, and what that costs.
 
 **How it guarantees what it says**
 
-9. **Never be fooled.** A disguised copy of the network, or a fitted imitation, never counts as an explanation. A
-   network with no structure gets "no structure found", not a story.
-10. **Be usable by a person.** Someone holding the blueprint, or an AI that is not allowed to run code, predicts the
+10. **Never be fooled.** A disguised copy of the network, or a fitted imitation, never counts as an explanation. A
+    network with no structure gets "no structure found", not a story.
+11. **Be usable by a person.** Someone holding the blueprint, or an AI that is not allowed to run code, predicts the
     network better than without it. If the network knows something people don't, the blueprint can teach it.
-11. **Let you change the network on purpose:** switch a part off, or strengthen it, and know the effects beforehand.
-12. **Say how sure it is, and be right about that.**
+12. **Let you change the network on purpose:** switch a part off, or strengthen it, and know the effects beforehand.
+13. **Say how sure it is, and be right about that.**
 
 **Practical**
 
-13. **Work at real sizes in all our domains:**
+14. **Work at real sizes in all our domains:**
     - small algorithmic networks;
     - chess engines;
     - learned physics simulators;
     - small language models, for named behaviours;
-    - 7–8B language models, with how far it got reported.
-14. **Do the research itself,** from start to finish, without a person choosing each step.
+    - 7–8B language models, with how far it got reported. That is where the lying and weight-reading questions sit,
+      so those two get measured, partial accounts in this build.
+15. **Do the research itself,** from start to finish, without a person choosing each step.
 
 ## What "fully interpretable" means
 
 A network is fully interpretable for a behaviour when its blueprint meets five conditions:
-- **Complete:** nothing that matters is missing.
+- **Complete:** nothing that matters is missing, and the blueprint runs on its own.
 - **Honest about types:** every part is labelled rule, table, unused or not yet understood, by a test.
 - **True at every level:** every named part checks out inside the network.
 - **Navigable:** short at the top, every detail below it.
@@ -109,25 +113,29 @@ networks where the answer is known.
   - stated confidence;
   - real sizes.
 - **Never built:**
-  - complete accounts of real networks;
+  - complete accounts of real networks, with the blueprint running on its own;
   - big-picture-to-parts;
   - tracing single decisions;
   - inventing new concepts;
   - usability by people;
   - control through edits;
+  - explaining where efficiency comes from;
   - doing the research unaided.
 - **What broke last time** is big-picture-to-parts (item 6) and inventing new concepts (item 8).
   - Rosetta tried to explain the chess network's verdicts ("we are winning") directly from board features, and could
     define 2 of the 16 that matter.
   - It never went backward through the layers to the ingredients.
   - It had no way to invent a new kind of ingredient. The one new kind it was given by hand (material won along the
-    network's planned line) explained a sixth to a third of what the network knows beyond the textbook.
+    network's planned line) carried a sixth to a third of what the network knows beyond the textbook, though no single
+    part of the network holds it: a pointer to the missing kind of ingredient, not a finished concept.
 
 ## What the next build must deliver
 
 1. **The test bench:** sealed test networks with known answers. These include ones built around ideas outside the
-   system's vocabulary, ones that compute verdicts in stages, and ones that mix rules with memorised tables. Also
-   disguised copies that must fail. This is the finish line.
+   system's vocabulary (half of them ideas with no human name), ones that compute verdicts in stages, and ones that
+   mix rules with memorised tables. Also disguised copies that must fail. This is the finish line.
+   - It is sealed as a generator. The build practises on some networks; the final exam is a fresh set, scored once.
+   - The pass marks are fixed before the build starts.
 2. **The checker:** every test in one place.
 3. **The map-maker:** finds the network's parts at every layer, and which parts feed which.
 4. **The definer:** defines each part from the parts that feed it, using operations ("play out the exchange") as well
@@ -149,7 +157,7 @@ networks where the answer is known.
 3. **Complete blueprints** on every test network.
 4. **Real networks with known answers:**
    - chess look-ahead;
-   - the capture idea Rosetta verified;
+   - the capture idea Rosetta found (it passed its checks at the margin);
    - GPT-2's month rollover;
    - modular multiplication.
 5. **People and edits.**
@@ -159,8 +167,8 @@ Then the real questions: chess strategy, the fluid model, lying, and weight read
 
 ## What you need before starting
 
-- **A strong AI model that can actually see a chess board.** The only one we have could not. This is the most
-  important missing piece.
+- **A strong AI model that can actually see a chess board.** The only one we have could barely use board rules at
+  all. This is the most important missing piece.
 - **GPU time.**
 - **A budget per step.**
 - **A separate session to write the sealed answers.**
@@ -176,9 +184,14 @@ Then the real questions: chess strategy, the fluid model, lying, and weight read
 They repair what broke. "Fully interpretable" also needs the parts that were never built: complete accounts,
 traces, usability, edits, and running unaided.
 
-**Build all fourteen and pass the bench, and yes, you have the system,** for the networks in our scope. "Fully
-interpretable" is then defined, tested, and true of every blueprint it gives you. Where it cannot finish, it says
-exactly where and how much is left.
+**Build all fifteen, and pass every gate on the fresh final exam at the pass marks fixed in advance, and yes, you
+have the system,** for the networks in our scope: small algorithmic networks, chess engines, the rebuilt fluid model,
+and GPT-2 once it passes its known answers. "Fully interpretable" is then defined, tested, and true of every
+blueprint it gives you. Where it cannot finish, it says exactly where and how much is left.
+
+**Step 2 of the build answers, early, whether this approach works at all.** It is the only genuinely uncertain step.
+The later steps use methods with precedent in the field, but some have never been shown to this standard, so they can
+fail too. If one does, it fails at a named part.
 
 **What no build can promise is what you'll find.**
 - A network that mostly memorises gets an honest blueprint that is mostly tables.
@@ -192,6 +205,7 @@ risk before the unknown targets are run. They cannot remove it.
 
 **Why this attempt can't end up open-ended:**
 - the finish line is built first and sealed;
+- the pass marks are fixed before the build, so a partial pass counts as a fail;
 - the uncertain part is tested second;
 - every part has its own test.
 

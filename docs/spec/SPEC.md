@@ -9,6 +9,9 @@ build starts, so the finish line cannot move during the build.*
 - *`SPEC_SIMPLE.md`: the same thing in plain words.*
 - *`GAP.md`: what exists today, what is missing, and the one build that closes the gap.*
 
+*Revised the same evening after an independent critique (`docs/spec/SPEC_CRITIQUE.md`); every change it led to is
+listed in `GAP.md` §8.*
+
 *This supersedes `docs/review/NEXT_BUILD.md` §3 as the definition of the target. NEXT_BUILD, its review log, and
 Rosetta's write-ups (`docs/rosetta/`) remain the evidence it rests on.*
 
@@ -63,11 +66,17 @@ when all five of these hold, each by test.
 2. **Honestly typed.** Every part is exactly one of four types, and a test assigns the type, not the box's
    preference:
    - a **rule**: a definition that holds on inputs it was never fitted on;
-   - a **lookup**: a memorised table, listed, with its size;
-   - **irrelevant**: removing it changes nothing beyond the network's own noise;
-   - **unresolved**: the measured gap.
-3. **Faithful at every level.** Every variable the blueprint names exists in the network. Intervening on it in the
-   network has the effect the blueprint predicts.
+   - a **lookup**: a memorised table, listed, with its size, whose effect does not carry over to fresh inputs;
+   - **irrelevant**: removing it changes the behaviour less than the irrelevance line (set on planted networks by
+     the effect of removing their sealed unused parts);
+   - **unresolved**: the measured gap. The lookup and unresolved shares appear in the headline of every blueprint.
+3. **Runs on its own, and is faithful at every level.**
+   - **Run alone**, with every definition standing in at once, lookups as their tables, and unresolved parts
+     resampled and charged to the ledger, the blueprint reproduces the network's outputs and its intermediate states,
+     level by level. Substituting one definition at a time is not enough: Rosetta's definitions passed one by one,
+     but run together they kept almost none of the evaluation (R² 0.06; `docs/rosetta/RESULTS.md` §4, §9).
+   - Every variable the blueprint names exists in the network, and intervening on it in the network has the effect
+     the blueprint predicts.
 4. **Navigable, though not necessarily short.**
    - The top level fits on a page, and each level is defined in terms of the level below.
    - The bottom level reaches the network's actual components.
@@ -86,7 +95,8 @@ when all five of these hold, each by test.
 **What the definition deliberately does not require:**
 - **That the network be simple.** The box reports the network's real shape and never invents a neater one.
 - **That the network contain new human knowledge.** Whether a chess engine knows a strategy nobody has named is a
-  fact about the engine. The box's job is to find it if it is there, and to show it is absent if it is not.
+  fact about the engine. The box's job is to find it if it is there. If it is not, the box can say so only within
+  the explained share, with the unresolved share stated.
 - **That every unit be explained for every behaviour.** The scope is the behaviour asked about.
 
 **Why this definition, and not "a short program equal to the network":**
@@ -114,9 +124,15 @@ when all five of these hold, each by test.
 - **Tier A is the "narrow realm".** When the build is done, the box must make Tier A networks fully interpretable in
   the sense of §2, for the behaviours listed.
 - **Tier B must run end to end,** with completeness measured and reported. "Fully" is not required there yet.
-  - The reason is evidence, not caution. On Claude 3.5 Haiku, the best published tools gave satisfying insight on
-    about a quarter of prompts; their replacement layers match the model's output in about half of cases; and they
-    leave uninterpretable error terms (Anthropic, circuit tracing, 2025).
+  - The reason is evidence, not caution.
+    - On Claude 3.5 Haiku, the best published tools gave satisfying insight on about a quarter of prompts, and their
+      replacement left about 22% reconstruction error.
+    - On the smaller research model in the same work, the replacement matched the model's output in about half of
+      cases.
+    - Both leave error terms that cannot be interpreted (Anthropic, circuit tracing, 2025).
+  - So the two language-model flagships (lying; reading weights) will get measured, partial accounts at Tier B, not
+    complete ones, until Tier B completes.
+- **GPT-2 behaviours count as Tier A only after S7 passes on GPT-2** (month rollover). Until then they are Tier B.
   - Tier B is where the box should be pushing the frontier, not where its completion is judged.
 - **Out of scope for this build:** models above about 8B; accounts of everything a language model does at once;
   vision models (one can be added later by adapter).
@@ -135,8 +151,11 @@ when all five of these hold, each by test.
   - optionally, a starting vocabulary and domain operations (legal moves, spatial derivatives, token positions).
 - *Why:* every sprint in this project built a new, bespoke pipeline (`docs/PROJECT_REVIEW.md`;
   `docs/review/NEXT_BUILD.md` §1). "Hand it any model" means one box.
-- *Test:* every network in the acceptance suite (§6), across all domains, goes through the same box with no change
-  to its core between networks. Reported: the size of each adapter.
+- *Test:*
+  - Every network in the acceptance suite (§6), across all domains, goes through the same box, with one start
+    configuration and no change to its core between networks.
+  - An adapter may contain only the four items above. A domain vocabulary is a list of primitives, not a pipeline.
+  - Reported: the size and contents of each adapter.
 
 ### What it tells you
 
@@ -148,8 +167,9 @@ when all five of these hold, each by test.
   - the shortcuts it takes compared with a reference method, where there is one (for example, a fluid emulator
     against the solver it imitates);
   - where it will hold up, and where it will fail, on unusual inputs outside the ones it was given.
-- *Why:* a network's real behaviour can differ from the task it was trained on. Rosetta found that 22% of LD2's
-  evaluation is beyond textbook chess. The review asked whether that part is knowledge or the network's own error
+- *Why:* a network's real behaviour can differ from the task it was trained on. In LD2, about 22% of the variance
+  in the evaluation is left unexplained by a surrogate fitted on 61 textbook concepts; that share includes the
+  surrogate's own error (`docs/rosetta/RESULTS.md` §2). The review asked whether that part is knowledge or the network's own error
   (`docs/review/NEXT_BUILD.md`, flagship 1).
 - *Test:*
   - agreement with the network on held-out inputs, with an interval;
@@ -175,39 +195,57 @@ when all five of these hold, each by test.
   - interchange-intervention accuracy for each variable;
   - substitution, as the share of the variable's effect restored.
 
-  Both are reported against untrained networks, shuffled activity and random directions. The line is the 99th
-  percentile of those controls, and the true account's spread on planted networks.
+  Both are reported against untrained networks, shuffled activity and random directions. The line is family-wise:
+  the 99th percentile of the best control score among as many control variables as real ones tested. A
+  per-variable line lets chance passes through when thousands are tested, and Rosetta's untrained network already
+  produced one (`docs/rosetta/FINDINGS.md` 1). On planted networks the true account's spread also applies.
 
 **R4. It accounts for everything, and says exactly what is left.**
-- *Must:* cover the whole computation behind the behaviour. If everything the blueprint calls irrelevant, or does not
-  mention, is replaced by its value on other inputs, the behaviour survives. What does not survive is the unresolved
-  share, and it is measured and located by layer and by part.
+- *Must:* cover the whole computation behind the behaviour, in two senses:
+  - **Kept parts suffice.** If everything the blueprint calls irrelevant, or does not mention, is replaced by its
+    value on other inputs, the behaviour survives.
+  - **The blueprint alone suffices.** Run on its own (§2, condition 3), it reproduces the behaviour.
+
+  What does not survive is the unresolved share, and it is measured and located by layer and by part.
 - *Why:*
   - Partial accounts look complete.
   - Attribution graphs reach exact equivalence only by adding error terms that are unlabelled, not sparse, and never
     broken down further.
   - Redwood's causal scrubbing turned completeness into a number: how much of the network's performance survives
     when only what the explanation names is kept (Redwood Research, 2022).
-  - Averaging over resampling choices can hide a wrong account through cancellation, so the worst case must be
-    reported, not only the mean (Practical Pitfalls of Causal Scrubbing).
-- *Test:* the worst case, over a set of resampling choices fixed before the run (resampling from other inputs, mean
-  values, and values matched on what the blueprint says matters), of the share of the network's performance that
-  survives, plus the unresolved share by layer. The completeness line is set on the planted networks: the true
-  blueprint's own worst-case recovery, minus its spread. A real network is "complete" when its unresolved share is
-  below the largest unresolved share any true blueprint shows on the planted rehearsal network of the same domain.
+  - An average over inputs can hide a wrong account by cancellation: better on some inputs, worse on others. The
+    fix is to look at recovery input by input (Practical Pitfalls of Causal Scrubbing).
+- *Test:*
+  - **Resampling.** The bench, not the box, fixes the sets before the run. They include sets that respect the
+    blueprint and adversarial sets.
+  - **What is measured.** Recovery input by input, on every output the network has (both heads of a chess network,
+    for example), as KL divergence or squared error.
+  - **Reported:** the lower tail of recovery input by input (its 5th percentile), the mean, the joint run of §2
+    condition 3, and the unresolved share by layer.
+  - **The completeness line** is set on the planted networks: the 5th percentile of the true blueprints' recovery
+    across the bench's development draws, minus its spread.
+  - **For a real network,** "complete" is judged only against a rehearsal network of matched size and architecture
+    (for LD2, a planted network with LD2's own architecture). Without one, its unresolved share is reported with an
+    interval, and the word "complete" is not used.
 
 **R5. It types every part honestly: rule, lookup, irrelevant or unresolved.**
 - *Must:* assign each part's type by test:
   - **rule:** its definition holds on held-out inputs at the fidelity line;
-  - **lookup:** it agrees with its table on the memorised items and is at chance elsewhere; its table is listed;
-  - **irrelevant:** replacing it changes the behaviour less than the network's own noise;
+  - **lookup:** it agrees with its table on the memorised items and is at chance elsewhere. The table is listed.
+    Its keys must be verified training items where the training data is known. A part whose causal effect on fresh
+    inputs is above the control line can never be typed lookup, whatever its keys;
+  - **irrelevant:** replacing it changes the behaviour less than the irrelevance line;
   - **unresolved:** anything that is none of the above.
-- *Why:* networks memorise, and they use bags of heuristics. The atlas already labels rule against lookup on small
-  networks, but its memoriser test passed on a count of one (`docs/glass/ATLAS_RESULTS.md`, A41).
+- *Why:*
+  - Networks memorise, and they use bags of heuristics.
+  - The atlas already labels rule against lookup on small networks, but its memoriser test passed on a count of one
+    (`docs/glass/ATLAS_RESULTS.md`, A41).
+  - Without the rules above, any part the box cannot define could be filed as a table over the inputs it was shown.
 - *Test:*
-  - on planted networks that mix a rule with a memorised table, the box's types match the sealed types;
+  - on planted networks that mix a rule, a memorised table and unused parts, the box's types match the sealed types;
   - memoriser controls come out as lookup;
-  - no sealed rule is labelled lookup, and no table is labelled rule.
+  - no sealed rule is labelled lookup, and no table is labelled rule;
+  - at least 20 cases per type, per tier.
 
 **R6. It goes from purpose to parts, and back.**
 - *Must:* give at least three levels:
@@ -219,11 +257,14 @@ when all five of these hold, each by test.
   be zoomed into, down to the units that carry it.
 - *Why:* this is where the last build broke.
   - Rosetta defined each of LD2's last-layer variables directly from board features in one leap.
-  - The variables behind the network's evaluation are verdicts ("we are winning", "we are losing", "drawish"),
-    assembled over many layers: the top 16 carry 56%, 66% and 91% of the extra knowledge at blocks 6, 8 and 10.
+  - The variables behind the network's evaluation are verdicts ("we are winning", "we are losing", "drawish"). They
+    appear to be assembled over many layers: the top 16 carry 56%, 66% and 91% of the extra knowledge at blocks 6, 8
+    and 10. That figure is exploratory, with no controls run at blocks 6 and 8.
   - Only 2 of those 16 could be defined, and the rebuilt layer kept almost none of the evaluation (R² 0.06;
     `docs/rosetta/RESULTS.md` §9).
-  - A verdict is simple in terms of its ingredients and nearly impossible to state in terms of the board.
+  - The working hypothesis is that a verdict is simple in terms of its ingredients and nearly impossible to state in
+    terms of the board. Rosetta's evidence is consistent with this but does not prove it; Gate 2 of `GAP.md` tests
+    it.
 - *Test:*
   - **Planted networks:** on networks whose sealed mechanism has intermediate variables computed in stages, every
     intermediate variable is recovered (its definition matches the sealed one at the recovery line), and so is the
@@ -240,9 +281,12 @@ when all five of these hold, each by test.
 - *Why:* when a structure fails, an engineer can name the member that gave way. The box must do the same for any
   decision: debugging, auditing a specific lie, explaining a specific move.
 - *Test:*
-  - predicted flips come true more often than the baselines' predictions: attribution patching, and "no change";
-  - a fingerprint detects its behaviour on held-out cases better than a probe trained on the raw activations without
-    the blueprint (the explanation-free baseline).
+  - **Flips.** The bench, not the box, chooses at least 20 decisions per domain. Predicted flips come true more
+    often than the baselines' predictions (attribution patching, and "no change"). The bench's own search checks
+    that each flip found is minimal.
+  - **Fingerprints.** A fingerprint detects its behaviour on held-out cases better than a probe trained on the raw
+    activations without the blueprint, the explanation-free baseline. For lying, that includes lies the network was
+    not instructed to tell, where such cases exist.
 
   Both are reported per domain.
 
@@ -256,16 +300,34 @@ when all five of these hold, each by test.
   - Kepler's chess concept library left about a fifth of the value unexplained;
   - Rosetta's translations closed about 7% of that gap.
 
-  The one new kind of quantity added by hand in the last build, the material won along the network's own planned
-  line, at once accounted for a sixth to a third of LD2's extra knowledge (`docs/rosetta/FINDINGS.md`). Discovery
-  means adding new concepts. Concepts found inside AlphaZero have been taught to grandmasters, so the step can be
+  The one new kind of quantity added by hand in the last build was the material won along the network's own planned
+  line. It carried a sixth to a third of LD2's extra knowledge, yet no single one of the 16 evaluation variables
+  holds it (correlations −0.12 to +0.13; `docs/rosetta/RESULTS.md` §9). So it is not a passing concept: it would
+  fail R3. It is evidence that the missing ingredients are of a new kind. Discovery means adding such concepts. Concepts found inside AlphaZero have been taught to grandmasters, so the step can be
   done and tested (Schut et al., PNAS 2025).
 - *Test:*
   - **Planted networks:** on networks built around concepts that cannot be written in the box's starting vocabulary,
     the concepts are recovered at the recovery line. The starting vocabulary is fixed and published before a
     separate session writes the sealed concepts.
+  - **Half of those concepts are synthetic, with no human name,** and they are scored separately. A strong model can
+    name a known chess idea from memory, which is recall, not invention.
   - **Real networks:** on each Tier A real network, the vocabulary-growth curve is reported: the unresolved share
     after each concept the box adds.
+
+**R15. It explains what the network's efficiency comes from.**
+- *Must:* where the network does a job that a known method also does, say which parts of the network stand in for
+  which steps of the known method, which steps it skips or approximates, and what that costs in compute and in
+  error. A fluid emulator against the solver it imitates is the example.
+- *Why:*
+  - "Why is the fluid model so cheap?" is one of the four questions this system exists to answer.
+  - The current emulator is not cheap at all: by an arithmetic count it costs about 47 times its solver's work per
+    frame (`docs/review/REVIEW_LOG.md`, F43). So the answer depends on a rebuilt target and on this capability.
+  - No other requirement deals with compute.
+- *Test:*
+  - **Rehearsal (S6):** an emulator trained with a sealed shortcut, such as a longer time step with a sealed
+    correction. The blueprint must name the shortcut, the parts that carry it, and its cost and error, at the
+    recovery line.
+  - **Real network:** the rebuilt emulator's blueprint is reported against the solver.
 
 ### How it guarantees what it says
 
@@ -294,12 +356,18 @@ when all five of these hold, each by test.
   - Interpretability is for understanding: human-grounded evaluation is one of the field's three standard kinds
     (Doshi-Velez and Kim, 2017).
   - A correct blueprint nobody can use is a copy by another name.
-  - Rosetta's only reader test failed: the cheap model could not apply board rules at all (0.00 to 0.13 against 0.05
-    chance; `docs/rosetta/RESULTS.md` §8). Readability has to be measured, not assumed.
+  - Rosetta's reader tests barely worked: with positions as text, the cheap model applied board rules at 0.00 to
+    0.13 against 0.05 chance; with boards drawn as grids, one rule reached 0.21 against a rival's 0.04. Its own
+    write-up calls teachability "essentially untested" (`docs/rosetta/RESULTS.md` §8). Readability has to be
+    measured, not assumed.
 - *Test:*
   - **The reader test:** the reader may not run code, and its budget per question is below the cost of
-    hand-executing the smallest opaque program in the comparison. It must beat the task-only floor and the copy
-    condition.
+    hand-executing the smallest opaque program in the comparison. It may open parts of the blueprint on demand
+    within that budget, so a long blueprint is navigated, not read whole.
+  - **The line** is the true blueprint's reader score on the planted networks, minus its spread. Also reported: the
+    share of the gap between the task-only floor and the network that the blueprint closes.
+  - **The copy condition** is a sanity check, not a discriminating test, because the budget is set so a copy cannot
+    be run.
   - **Teaching new chess concepts:** for any new chess concept, a study modelled on Schut et al. (players improve on
     prototype positions after learning the concept).
 
@@ -310,8 +378,10 @@ when all five of these hold, each by test.
   It must beat explanation-free methods. On held-out interventions, attribution patching once predicted the
   network's decision better than the project's own construction: 90.8% against 82.3% overall, and 57.0% against
   13.9% when the decision changed (`docs/EXPERIMENT_LOG.md`, E7).
-- *Test:* pre-registered predictions of each edit's effect, against the outcome, beating attribution patching and "no
-  change". The edits must include at least one "remove a capability" edit per domain.
+- *Test:*
+  - The bench, not the box, chooses at least 20 edits per domain, including "remove a capability" edits.
+  - Each edit's effect is predicted before it is run, and compared with the outcome.
+  - The predictions must beat attribution patching and "no change".
 
 **R12. It says how sure it is, and it is right about that.**
 - *Must:* every claim carries its kind of evidence: exhaustive, proven bound, statistical with an interval, or
@@ -321,13 +391,15 @@ when all five of these hold, each by test.
   - The project's history of over-claims (`docs/review/REVIEW_LOG.md`).
   - Mechanistic interpretability is not identifiable in general: several accounts can pass the same tests (Méloux et
     al. 2025, cited in `docs/glass/EVIDENCE_LADDER.md`).
-- *Test:* calibration on the acceptance suite, and the rival accounts reported wherever they exist.
+- *Test:*
+  - calibration on the acceptance suite;
+  - the suite includes planted networks with two valid accounts, and both must be reported.
 
 ### Practical requirements
 
 **R13. It works at the real size, in every domain in scope.**
 - *Must:*
-  - Tier A networks become fully interpretable (R1 to R12 pass).
+  - Tier A networks become fully interpretable (R1 to R12, and R15 where a reference method exists, pass).
   - Tier B behaviours run end to end, with completeness and cost reported.
   - Each network stays within a compute budget stated before it is run.
 - *Why:* the flagships Shreyas named are real networks: a chess engine, a learned fluid model, a lying language
@@ -349,7 +421,8 @@ when all five of these hold, each by test.
     (`docs/review/NEXT_BUILD.md` §1).
   - Agents that design and run interpretability experiments themselves have been built for vision models (MAIA,
     ICML 2024).
-- *Test:* the whole acceptance suite run end to end with no human input after the start, with a full log.
+- *Test:* the whole acceptance suite run end to end, from one start configuration, with no human input after the
+  start, with a full log.
 
 ---
 
@@ -378,18 +451,29 @@ The content, not a file format:
 The suite is the certification. It is built, and its answers sealed, before the build starts.
 - The sealed answers are written by a separate session that never shares context with the builder.
 - The box never reads them.
-- Final scores are computed once.
+- **What is sealed is a generator, not a fixed set of networks.**
+  - The build works on development draws.
+  - Certification uses one fresh draw, scored once.
+  - Every retry of a gate gets a new draw, so no sealed answer leaks through repeated scoring. The atlas did the same,
+    giving each retry fresh seeds.
+- **Planted networks must actually compute their sealed mechanism.** Training a network on outputs does not make
+  the sealed intermediate variables exist inside it.
+  - Planted networks are trained with interchange objectives, as InterpBench's strict interchange-intervention
+    training (SIIT) does.
+  - Each sealed intermediate variable is checked by intervention before sealing.
+  - Any network below a fixed fidelity is dropped. Rosetta's own planted network learned its rule only to R² 0.656
+    (`docs/rosetta/RESULTS.md` §1).
 
 | Tier | What it is | What it proves | Requirements tested |
 |---|---|---|---|
 | S0 | Compiled transformers (Tracr) and semi-synthetic transformers with known circuits (InterpBench, 86 models) | The box recovers exactly known circuits in realistic weights | R3, R4, R6 |
 | S1 | Planted rules written in the box's starting vocabulary (Rosetta's yardstick, extended) | Search and scoring work | R2, R3 |
-| S2 | Planted concepts that cannot be written in the starting vocabulary | It can invent, not only search | R8 |
+| S2 | Planted concepts that cannot be written in the starting vocabulary; half of them synthetic, with no human name, scored separately | It can invent, not only recall or search | R8 |
 | S3 | Planted hierarchies: a verdict computed in stages from intermediate concepts, including a search-like step. The chess version is a small value network trained to imitate a sealed evaluation that looks two plies ahead along forcing moves and adds positional terms | It can define verdicts through their ingredients: the exact shape that broke the last build | R6, R7, R8 |
-| S4 | Planted mixtures: part rule, part memorised random table, part dead units | It types honestly | R4, R5 |
+| S4 | Planted mixtures: part rule, part memorised random table, part dead units; plus networks with two valid accounts | It types honestly, and reports rivals | R4, R5, R12 |
 | S5 | Must-fail cases (below) | It cannot be fooled | R9 |
-| S6 | One rehearsal per flagship, sealed: chess (S3's network); a fluid emulator trained on data with a sealed closure term; a small language model with a planted gate that switches it to false answers; a small reader network trained to report a property of another network's weights by a sealed method | Each flagship's shape is handled before the real target | all |
-| S7 | Real networks with partly known answers: LD2 and t1 (look-ahead along forcing lines; the capture variable that passed in Rosetta); GPT-2 month rollover; modular multiplication; AlgZoo M4,3 | It reproduces what is already known about real networks | all except R8 |
+| S6 | One rehearsal per flagship, sealed: chess (S3's network); a fluid emulator trained on data with a sealed closure term and a sealed shortcut; a small language model with a planted gate that switches it to false answers; a small reader network trained to report a property of another network's weights by a sealed method | Each flagship's shape is handled before the real target | all, including R15 |
+| S7 | Real networks with partly known answers: LD2 and t1 (look-ahead along forcing lines; the capture variable that passed Rosetta's checks, at the margin and after a declared second step); GPT-2 month rollover; modular multiplication; AlgZoo M4,3 | It reproduces what is already known about real networks | all except R8 |
 
 **The must-fail set (S5):**
 - every saved copy and disguise from rounds 1 and 2;
@@ -399,19 +483,28 @@ The suite is the certification. It is built, and its answers sealed, before the 
 - programs carrying literal tables tuned by selection;
 - networks with no structure (which must return lookup or unresolved, not a story).
 
-**How lines are set.**
-- **Recovery:** a sealed concept counts as recovered when the box's definition matches it on held-out inputs at a
-  correlation of at least 0.9, the line Rosetta registered before its runs (`docs/rosetta/PREREGISTRATION.md`).
-- **Completeness:** the true blueprint's worst-case recovery minus its spread.
-- **Must-fail:** the 99th percentile of the controls.
-- **Usability:** the task-only floor, plus the floor's spread.
+**How lines are set.** Every line comes from the true answer or from controls, never from the results it judges.
+- **Recovery:** a sealed concept counts as recovered when the box's definition passes two tests on held-out inputs:
+  correlation, and substitution in the network. Each must reach the sealed definition's own score minus its spread
+  across development draws. A fixed constant such as Rosetta's 0.9 correlation is not used: it ignores scale, offset
+  and rare decisive cases.
+- **Completeness:** the 5th percentile of the true blueprints' recovery, input by input, minus its spread (R4).
+- **Must-fail:** family-wise, the 99th percentile of the best control score (R3).
+- **Usability:** the true blueprint's reader score, minus its spread (R10).
+
+**Pass counts, fixed before the build.** These are defaults for Shreyas to confirm or change before the bench is
+sealed; partial passes are failures:
+- S0, S1, S3, S4 and S5: every case passes, and every must-fail case is rejected;
+- S2: at least 80% of the named concepts, and at least 80% of the synthetic ones, each scored separately;
+- S6: every rehearsal passes every requirement it tests;
+- S7: every known answer is reproduced.
 
 ---
 
 ## 7. When the build is done
 
 - **Done** means:
-  - every requirement passes on S0 to S6;
+  - on the certification draw, every requirement passes on S0 to S6 at the pass counts fixed in §6;
   - S7 reproduces its known answers, with completeness reported;
   - the full suite runs end to end with no human input (R14).
 - **Then the real flagships are run.** What they produce are findings, not pass or fail: the chess strategies, the
