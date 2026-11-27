@@ -1,7 +1,7 @@
 # Blueprint: hist
 
 **Verdict: certified.** run alone: agreement 1.000 against line 1.000
-Family-wise control line for the intervention tests: 0.400.
+Family-wise control line for the intervention tests: 0.500.
 
 ## Top level
 
@@ -13,8 +13,8 @@ The network's output is part `v3`: `($inv_recip_dec (map id @v2))`.
 |---|---|---|---|---|---|
 | `v0` | resid_0, 5 direction(s) | categorical | `indices` | the input | pass: the network's input (indices), at the embedding |
 | `v1` | resid_0, 3 direction(s) | categorical | `tokens` | the input | pass: the network's input (tokens), at the embedding |
-| `v2` | resid_1, 1 direction(s) | numerical | `($inv_recip_inc (selector_width (select @v1 @v1 EQ)))` | `v1` | pass: IIA 0.560 against family-wise line 0.400 |
-| `v3` | resid_2, 4 direction(s) | categorical | `($inv_recip_dec (map id @v2))` | `v2` | pass: IIA 0.560 against family-wise line 0.400 |
+| `v2` | resid_1, 1 direction(s) | numerical | `($inv_recip_inc (selector_width (select @v1 @v1 EQ)))` | `v1` | pass: IIA 1.000 against family-wise line 0.500 |
+| `v3` | resid_2, 4 direction(s) | categorical | `($inv_recip_dec (map id @v2))` | `v2` | pass: IIA 0.989 against family-wise line 0.500 |
 
 ## Invented primitives
 

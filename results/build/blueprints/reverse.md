@@ -1,7 +1,7 @@
 # Blueprint: reverse
 
 **Verdict: certified.** run alone: agreement 1.000 against line 1.000
-Family-wise control line for the intervention tests: 0.150.
+Family-wise control line for the intervention tests: 0.200.
 
 ## Top level
 
@@ -13,11 +13,11 @@ The network's output is part `v6`: `(aggregate_cat (select @v0 @v5 EQ) @v1)`.
 |---|---|---|---|---|---|
 | `v0` | resid_0, 5 direction(s) | categorical | `indices` | the input | pass: the network's input (indices), at the embedding |
 | `v1` | resid_0, 3 direction(s) | categorical | `tokens` | the input | pass: the network's input (tokens), at the embedding |
-| `v2` | resid_1, 1 direction(s) | numerical | `($inv_recip_inc (selector_width (select @v1 @v1 TRUE)))` | `v1` | pass: IIA 0.213 against family-wise line 0.150 |
-| `v3` | resid_2, 5 direction(s) | categorical | `($inv_recip_dec (map id @v2))` | `v2` | pass: IIA 0.213 against family-wise line 0.150 |
-| `v4` | resid_4, 5 direction(s) | categorical | `(sequence_map minus @v3 @v0)` | `v0`, `v3` | pass: IIA 0.213 against family-wise line 0.150 |
-| `v5` | resid_6, 5 direction(s) | categorical | `(map dec @v4)` | `v4` | pass: IIA 0.213 against family-wise line 0.150 |
-| `v6` | resid_7, 3 direction(s) | categorical | `(aggregate_cat (select @v0 @v5 EQ) @v1)` | `v0`, `v1`, `v5` | pass: IIA 0.640 against family-wise line 0.150 |
+| `v2` | resid_1, 1 direction(s) | numerical | `($inv_recip_inc (selector_width (select @v1 @v1 TRUE)))` | `v1` | pass: IIA 0.506 against family-wise line 0.200 |
+| `v3` | resid_2, 5 direction(s) | categorical | `($inv_recip_dec (map id @v2))` | `v2` | pass: IIA 0.506 against family-wise line 0.200 |
+| `v4` | resid_4, 5 direction(s) | categorical | `(sequence_map minus @v3 @v0)` | `v0`, `v3` | pass: IIA 0.506 against family-wise line 0.200 |
+| `v5` | resid_6, 5 direction(s) | categorical | `(map dec @v4)` | `v4` | pass: IIA 0.506 against family-wise line 0.200 |
+| `v6` | resid_7, 3 direction(s) | categorical | `(aggregate_cat (select @v0 @v5 EQ) @v1)` | `v0`, `v1`, `v5` | pass: IIA 1.000 against family-wise line 0.200 |
 
 ## Invented primitives
 

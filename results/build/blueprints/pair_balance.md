@@ -13,11 +13,11 @@ The network's output is part `v6`: `(sequence_map minus @v5 @v4)`.
 |---|---|---|---|---|---|
 | `v0` | resid_0, 5 direction(s) | categorical | `indices` | the input | pass: the network's input (indices), at the embedding |
 | `v1` | resid_0, 3 direction(s) | categorical | `tokens` | the input | pass: the network's input (tokens), at the embedding |
-| `v2` | resid_2, 1 direction(s) | numerical | `(map (eqc ")") @v1)` | `v1` | pass: IIA 0.864 against family-wise line 0.000 |
-| `v3` | resid_2, 1 direction(s) | numerical | `(map (eqc "(") @v1)` | `v1` | pass: IIA 0.658 against family-wise line 0.000 |
-| `v4` | resid_3, 1 direction(s) | numerical | `(aggregate (select @v0 @v0 LEQ) @v2)` | `v0`, `v2` | pass: IIA 0.568 against family-wise line 0.000 |
-| `v5` | resid_3, 1 direction(s) | numerical | `(aggregate (select @v0 @v0 LEQ) @v3)` | `v0`, `v3` | pass: IIA 0.605 against family-wise line 0.000 |
-| `v6` | resid_4, 1 direction(s) | numerical | `(sequence_map minus @v5 @v4)` | `v4`, `v5` | pass: IIA 0.566 against family-wise line 0.000 |
+| `v2` | resid_2, 1 direction(s) | numerical | `(map (eqc ")") @v1)` | `v1` | pass: IIA 1.000 against family-wise line 0.000 |
+| `v3` | resid_2, 1 direction(s) | numerical | `(map (eqc "(") @v1)` | `v1` | pass: IIA 1.000 against family-wise line 0.000 |
+| `v4` | resid_3, 1 direction(s) | numerical | `(aggregate (select @v0 @v0 LEQ) @v2)` | `v0`, `v2` | pass: IIA 1.000 against family-wise line 0.000 |
+| `v5` | resid_3, 1 direction(s) | numerical | `(aggregate (select @v0 @v0 LEQ) @v3)` | `v0`, `v3` | pass: IIA 1.000 against family-wise line 0.000 |
+| `v6` | resid_4, 1 direction(s) | numerical | `(sequence_map minus @v5 @v4)` | `v4`, `v5` | pass: IIA 1.000 against family-wise line 0.000 |
 
 ## Unresolved ledger
 
