@@ -73,3 +73,14 @@ GPT-2 small and medium: not downloaded yet (needed from Gate 4, S7 month rollove
 4. **Gate 2 groundwork (no resources needed):** the definer's search with fitted scale and offset and with `after`;
    the map-maker (variables at every layer, located by interventions rather than by fitting, as M4,3 showed); a
    builder-made staged planted network (not sealed) to rehearse S3's shape; locate lc_8_6's census quantities.
+
+## Draws (from the bench session, Nov 27, 06:10)
+
+- Draw dev-001 ready: S0 (Tracr half), S5a
+- Draw dev-002 ready: S0 (Tracr half)
+- Draw dev-003 ready: S0 (Tracr half)
+
+Networks are in `bench/accept/draws/<draw>/` on branch `bench-v2`; the sealed answers are in the gitignored
+`bench/accept/sealed/` of this workspace (honour rule: never opened). How to score: `bench/accept/README.md`. The
+interface is `bench/accept/INTERFACE.md` (bench-accept/v1), which `box/hook.py`'s loaders are to adopt.
+
