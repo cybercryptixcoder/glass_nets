@@ -576,7 +576,8 @@ def recovery_scores(net, task, bp, sealed_bp, ctx, rng, bp_dir=".", sealed_dir="
         sid = sp["id"]
         target = sealed_net[sid]
         own_a = _agree_or_corr(own_vals[sid], target, sp)
-        own_s = subst_at(net, task, sp, own_vals[sid], ctx, rng, sealed_dir)
+        vseed = int(rng.integers(1 << 30))          # the same pairs for the sealed definition and the box's part
+        own_s = subst_at(net, task, sp, own_vals[sid], ctx, np.random.default_rng(vseed), sealed_dir)
         best = (None, -np.inf, np.nan)
         for p in bp["parts"]:
             if p["vtype"] != sp["vtype"] or box_vals.get(p["id"]) is None:
@@ -584,7 +585,7 @@ def recovery_scores(net, task, bp, sealed_bp, ctx, rng, bp_dir=".", sealed_dir="
             a = _agree_or_corr(box_vals[p["id"]], target, sp)
             if np.isfinite(a) and a > best[1]:
                 best = (p["id"], a, np.nan)
-        s = subst_at(net, task, sp, box_vals[best[0]], ctx, rng, sealed_dir) if best[0] else np.nan
+        s = subst_at(net, task, sp, box_vals[best[0]], ctx, np.random.default_rng(vseed), sealed_dir) if best[0] else np.nan
         out[sid] = {"agree": best[1], "subst": s, "match": best[0], "own_agree": own_a, "own_subst": own_s}
     return out
 

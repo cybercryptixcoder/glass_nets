@@ -76,9 +76,9 @@ GPT-2 small and medium: not downloaded yet (needed from Gate 4, S7 month rollove
 
 ## Draws (from the bench session, Nov 27, 06:10)
 
-- Draw dev-001 ready: S0 (Tracr half), S5a
-- Draw dev-002 ready: S0 (Tracr half)
-- Draw dev-003 ready: S0 (Tracr half)
+- Draw dev-001 ready: S0 (Tracr half), S1, S5a, S5b
+- Draw dev-002 ready: S0 (Tracr half), S1
+- Draw dev-003 ready: S0 (Tracr half), S1
 
 Networks are in `bench/accept/draws/<draw>/` on branch `bench-v2`; the sealed answers are in the gitignored
 `bench/accept/sealed/` of this workspace (honour rule: never opened). How to score: `bench/accept/README.md`. The

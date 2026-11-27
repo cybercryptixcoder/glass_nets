@@ -1,6 +1,6 @@
 """The bench's self-check (Gate 1, first half): true answers at the ceiling, must-fail cases at the floor.
 
-  selfcheck.py <draw id> [--variants]
+  selfcheck.py <draw id> [--variants] [--tiers=S0,S1,S5a]
 
 For every planted network with a true blueprint: the true blueprint must pass every requirement at its line, and
 (with --variants) three known-wrong blueprints built from it must each fail at least one: every part at a random
@@ -72,6 +72,8 @@ def shuffled_task(task_dir, rng, tmp):
 def main():
     draw = sys.argv[1]
     with_variants = "--variants" in sys.argv
+    only = [a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--tiers=")]
+    only = only[0] if only else None
     spreads = score.load_spreads()
     ddir = os.path.join(score.SEALED, draw)
     rng = np.random.default_rng(20261127)
@@ -83,6 +85,8 @@ def main():
         if not os.path.isfile(os.path.join(task_dir, "task.json")):
             continue
         tier = I.load_task(task_dir)["tier"]
+        if only and tier not in only:
+            continue
         tb = os.path.join(sdir, "true_blueprint.json")
         if os.path.exists(tb) and not os.path.exists(os.path.join(sdir, "DROPPED")):
             own = json.load(open(os.path.join(sdir, "own.json")))
@@ -102,10 +106,21 @@ def main():
                     var_n[tier] = var_n.get(tier, 0) + 1
                     var_fail[tier] = var_fail.get(tier, 0) + (ok is False)
         adir = os.path.join(sdir, "accounts")
-        if os.path.isdir(adir):
+        if os.path.isdir(adir) and (not only or "S5a" in only):
+            planted = os.path.exists(os.path.join(sdir, "own.json"))
             for a in sorted(os.listdir(adir)):
-                res = score.s5a_check(task_dir, os.path.join(adir, a), sdir)
                 s5a["n"] += 1
+                if planted:     # an account of a planted network is held to that network's lines
+                    own = json.load(open(os.path.join(sdir, "own.json")))
+                    ok = verdict_pass(task_dir, os.path.join(adir, a), sdir, own, spreads, tier)
+                    if ok is None:
+                        s5a["format_only"] += 1
+                    elif ok is False:
+                        s5a["rejected"] += 1
+                    else:
+                        s5a["pending_only"] += 1
+                    continue
+                res = score.s5a_check(task_dir, os.path.join(adir, a), sdir)
                 if res[0][0] == "format":
                     s5a["format_only"] += 1
                 elif any(r for _, r, _, _ in res if r):

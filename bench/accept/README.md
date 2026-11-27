@@ -56,23 +56,31 @@ prints only pass or fail, per requirement and per tier. It never prints a sealed
 
 | draw | tiers | networks |
 |---|---|---|
-| dev-001 | S0 (Tracr half), S5a (the saved cases) | S0-tracr-00 to 09; S5a-00 to 07 (the eight saved targets, with 31 sealed accounts to reject) |
-| dev-002 | S0 (Tracr half) | S0-tracr-00 to 09 |
-| dev-003 | S0 (Tracr half) | S0-tracr-00 to 09 |
+| dev-001 | S0 (Tracr half), S1 (numeric sequences), S5a, S5b | S0-tracr-00 to 09; S1-seq-00 to 09; S5a-00 to 07 (the eight saved targets; the S5a accounts of the S1 networks are sealed with them); S5b-00 to 32 |
+| dev-002 | S0 (Tracr half), S1 (numeric sequences) | S0-tracr-00 to 09; S1-seq-00 to 09 |
+| dev-003 | S0 (Tracr half), S1 (numeric sequences) | S0-tracr-00 to 09; S1-seq-00 to 09 |
 
-The first three development draws set the tiers' spreads, which are now frozen for S0. The InterpBench half of S0
-and the tiers S1 to S4, S5b, S6 and S7 are not built yet.
+The first three development draws set the tiers' spreads, now frozen for S0 and S1. Not built yet: the InterpBench
+half of S0, S1 on chess boards, S2, S3, S4, S6 and S7, and the bench-chosen probes (flips, edits, unusual inputs).
 
 Draw requests go in `docs/build/STATUS.md` as "Draw request: <gate>, <tiers>". A ready draw is announced there as
 "Draw <id> ready: <tiers>". Every formal gate attempt needs a draw that no earlier formal attempt used.
 
 ## The bench's self-check (Gate 1, first half)
 
-`python3 bench/accept/scorer/selfcheck.py <draw> --variants` prints counts only.
-- **dev-001, S0:** true blueprints passing every requirement at its line: 10 of 10; known-wrong blueprints (every
+`python3 bench/accept/scorer/selfcheck.py <draw> --variants [--tiers=S0,S1,S5a]` and
+`python3 bench/accept/scorer/selfcheck_s5b.py <draw>` print counts only. Results (scorer-v1.2):
+- **S0 (dev-001):** true blueprints passing every requirement at its line: 10 of 10; known-wrong blueprints (every
   part at a random location of the same dimension; the output's definition replaced by a type-correct wrong one; the
   true blueprint on the weight-shuffled network) failing at least one requirement: 30 of 30.
-- **dev-001, S5a:** accounts rejected by the scorer's automatic tests: 31 of 31 (none fails only the format check).
+- **S1 (dev-001; dev-002):** true blueprints at their lines 10 of 10 (10 of 10); known-wrong blueprints failing 30 of
+  30 (30 of 30).
+- **S5a (dev-001):** accounts rejected: 51 of 51 (the 31 saved copies and disguises by the scorer's automatic tests;
+  the 10 distilled students and 10 tuned tables of the S1 networks at those networks' lines); none fails only the
+  format check.
+- **S5b (dev-001):** a borrowed story (the parent's true blueprint) shows no rule above the family-wise line on the
+  shuffled, untrained and memoriser networks: 30 of 30; the same stories are caught as rules above the line on their
+  own networks (the check's positive control): 10 of 10.
 
 ## R9's estimator test (X0)
 

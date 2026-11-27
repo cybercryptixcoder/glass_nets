@@ -84,20 +84,27 @@ def statistics(task_dir, bp_path, sealed_dir=None, seed=0, controls=True):
     st["iia_parts"] = len(tested)
     st["iia_min"] = float(np.nanmin(list(scores.values()))) if scores else np.nan
     st["iia_mean"] = float(np.nanmean(list(scores.values()))) if scores else np.nan
-    if controls and tested:
+    def full_site(p):
+        site = core.site_spec(task, p["location"]["site"])
+        pos = p["location"].get("positions", "all")
+        d = int(np.prod(site["shape"])) if pos == "flat" else site["shape"][-1]
+        return I.location_dim(p["location"], task) >= d
+    ctl = [p for p in tested if not full_site(p)]   # a whole-site location has no random-subspace control
+    st["iia_parts_controlled"] = len(ctl)
+    if controls and ctl:
         crng = np.random.default_rng(10_000 + seed)
         src_run_all = net.run(pe.cs, return_sites=True)
         src_runs = {pid: src_run_all for pid in preps}
         best = []
         for _ in range(CONTROL_REPS):
             m = -np.inf
-            for p in tested:
+            for p in ctl:
                 loc = core.random_subspace_loc(p["location"], task, crng)
                 v = core.iia_score(net, task, preps[p["id"]], loc, bp_dir, src_run=src_runs[p["id"]])
                 m = max(m, v if np.isfinite(v) else -np.inf)
             best.append(m)
         st["control_line"] = float(np.percentile(best, 99))
-        st["iia_above_control"] = float(np.mean([scores[p["id"]] > st["control_line"] for p in tested]))
+        st["iia_above_control"] = float(np.mean([scores[p["id"]] > st["control_line"] for p in ctl]))
     # R3: substitution
     subs = [core.substitution(net, task, bp, H, p, rng, bp_dir, given, choice) for p in tested]
     st["subst_mean"] = float(np.nanmean(subs)) if subs and np.isfinite(subs).any() else np.nan
@@ -133,10 +140,8 @@ def _r2(pred, ref):
 
 
 def _agree_any(a, b, p):
-    if p["encoding"]["kind"] == "numerical":
-        x, y = core._flat_num(a), core._flat_num(b)
-        ok = np.isfinite(x) & np.isfinite(y)
-        return float(np.mean(np.abs(x[ok] - y[ok]) <= core.NUM_TOL * np.maximum(1, np.abs(y[ok])))) if ok.any() else np.nan
+    if p["encoding"]["kind"] == "numerical":        # numbers: R2 of the blueprint's value against the network's
+        return _r2(a, b)
     ag = core.agreement(a, b)
     return float(np.nanmean(ag)) if np.isfinite(ag).any() else np.nan
 
@@ -169,6 +174,14 @@ def _load_ctx(path, dom):
         c = json.load(open(path))
         return c if dom in ("tok", "chess") else {k: np.asarray(v) for k, v in c.items()}
     return {k: v for k, v in np.load(path).items()}
+
+
+def whole_site(task, p):
+    """A location spanning its whole site: random subspaces of its dimension are the site itself, so it has no control."""
+    site = core.site_spec(task, p["location"]["site"])
+    pos = p["location"].get("positions", "all")
+    d = int(np.prod(site["shape"])) if pos == "flat" else site["shape"][-1]
+    return I.location_dim(p["location"], task) >= d
 
 
 # ====================================================================================================== verdicts
@@ -324,7 +337,7 @@ def s5a_check(task_dir, acc_path, sealed_dir, seed=0, n_iia=30):
         pe = core.PairEval(task, acc, H, pairs, given, choice)
         for p in pick:
             prep = core.iia_prepare_fast(pe, p)
-            if len(prep["decisive"]) >= MIN_DECISIVE:
+            if len(prep["decisive"]) >= MIN_DECISIVE and not whole_site(task, p):
                 tested.append(p); preps[p["id"]] = prep
                 scores[p["id"]] = core.iia_score(net, task, prep, p["location"], adir)
         if tested:
@@ -377,7 +390,7 @@ def s5b_check(task_dir, bp_path, sealed_dir, seed=0):
         if p["type"] != "rule" or p["location"]["map"]["class"] == "param_component":
             continue
         prep = core.iia_prepare_fast(pe, p)
-        if len(prep["decisive"]) >= MIN_DECISIVE:
+        if len(prep["decisive"]) >= MIN_DECISIVE and not whole_site(task, p):
             tested.append(p); preps[p["id"]] = prep
             scores[p["id"]] = core.iia_score(net, task, prep, p["location"], bdir)
     if tested:
