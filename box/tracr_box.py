@@ -154,7 +154,13 @@ def candidates(atoms, valid, codec, consts, symbolic, kind="any"):
             if (a in symbolic or b in symbolic) and f not in ("equal", "less", "greater"):
                 continue
             with np.errstate(all="ignore"):
-                yield f"(sequence_map {f} {a} {b})", np.where(valid, F.FN2[f](atoms[a], atoms[b]), np.nan), False
+                sm = F.FN2[f](atoms[a], atoms[b])
+                yield f"(sequence_map {f} {a} {b})", np.where(valid, sm, np.nan), False
+                # one composition (CHANGES.md BX6): a modulus after an arithmetic sequence_map, still one MLP
+                if f in ("plus", "minus", "times") and a in num and b in num:
+                    top = int(max(abs(float(c)) for c in list(consts["int"]) + list(consts.get("token", [0])) if not isinstance(c, str))) + 2
+                    for c in range(2, top + 1):
+                        yield f"(map (modc {c}) (sequence_map {f} {a} {b}))", np.where(valid, F.FN1C["modc"](c)(sm), np.nan), False
     for kq in (itertools.product(names, names) if mixing else []):
         for p in F.PREDS:
             sel = F.select(atoms[kq[0]], atoms[kq[1]], p)

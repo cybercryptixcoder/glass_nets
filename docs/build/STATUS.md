@@ -1,8 +1,31 @@
 # Build status (the finished system, `docs/spec/BUILD.md`)
 
-*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 1, Nov 27, 02:15.*
+*Kept current after every step. Times from the clock. Branch: `rosetta-v2`. Last updated: session 2, Nov 27, 15:32.*
 
-## Where things stand
+## Session 2 result (Nov 27, 05:21 to 07:40 and 15:26 to 15:56)
+
+What the box does now, end to end: it takes a network and returns a blueprint (variables, where each sits, what each
+computes in the frozen vocabulary or through earlier parts or an operation it invents, the wiring, the certification
+by interventions against control lines, and what stays unresolved). Plain description: `docs/build/BOX.md`.
+
+| Target | What the box returned | Certification |
+|---|---|---|
+| The bench's S0 networks (Tracr, arbitrary basis, no labels), dev-001 to dev-003, 30 networks | frame recovered on 30; output reproduced exactly on 16 | 16 of 30 certified by the box's own checker on fresh inputs (`results/build/bench_s0_session2.json`); not scored against the sealed answers (the permission system refused pointing the scorer at them) |
+| The bench's public reference network | the true blueprint, blind | the bench's own scorer: every requirement at the line; 4 of 4 sealed variables recovered |
+| Five public Tracr programs (blind) | all five recovered | 5 of 5 certified; live reader test (DeepSeek V4.1 Flash): 100% with the blueprint, controls 0% to 67% |
+| A trained network with a known answer, relu(A - B) * C | (sum control) = A - B, (count own_P) = C, top level relu(part 1) * part 2 | certified by checker v1 (0.424 and 0.102 against 0.078; run alone at the true account's agreement) |
+| Leela LD2 | top level: four block-10 variables, R2 0.806; block 8: each top-level variable a readout of four block-8 variables (R2 0.71 to 0.97) | top level certified (0.75 to 0.81 against 0.19); 11 of 16 block-8 links certified; the parts' board definitions unresolved |
+
+Checker changes this session: the vector-site checker v1 (CHANGES.md C2: an intervention holds the other parts at its
+site; session 1's verdicts unchanged). Box changes: BX1 to BX6.
+
+Missing against the vision (SPEC.md): scores against the sealed answers (the scorer needs them and this session may not
+point it there); S0's remaining 14 networks (six write several variables through one sublayer, which the frame
+recovery does not split yet; the rest need definitions the search does not reach); the S1 to S7 tiers (no adapter
+runs on them yet); R9's copy tests; the frontier reader; the director and editor; the fluid and weights domains; the
+bench-writer's report (it stopped at a usage limit; its draws and scorer are on `bench-v2`).
+
+## Where things stood after session 1
 
 - **Bench session:** none yet. Shreyas was asked at 00:41 whether he starts it or the builder launches it with
   `docs/spec/BENCH_BRIEF.md` as its whole prompt, and whether the private repositories `glass_nets_bench_sealed` and

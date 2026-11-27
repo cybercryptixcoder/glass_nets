@@ -6,11 +6,16 @@ given the verdict's formula. Its steps:
    4 (distinct on 60 probe positions), then compositions of the 20 best read (differences, sums, and the relu of each
    difference; up to length 6). Each is read from the site by a linear probe fitted on training positions and scored on
    validation positions.
-2. Located candidates: probe R2 above a control line (the same probes on a copy of the network with layer 1's weights
-   permuted; the 99th percentile over the 200 best candidates).
-3. The network's own variables among them, ranked by how much the network's output depends on them (the output's
-   gradient at the site, along the change that moves the candidate's readout by one standard deviation), keeping six
-   that are not near-copies of one another (|correlation| below 0.9).
+2. The network's own variables at the site: the directions the output depends on, the top eigenvectors of the
+   covariance of the output's gradient there (the active subspace; as many as hold 95% of the gradient's energy, at
+   most six). A candidate is located if a linear probe of the site's activity in that subspace reads it, above a
+   control line (the same probes on a copy of the network with layer 1's weights permuted, in that copy's own active
+   subspace; the 99th percentile over the 200 best candidates).
+3. The parts: located candidates taken shortest first (then by probe R2), each added only if the parts already chosen
+   do not predict it (R2 below 0.9), until the parts read the whole active subspace (R2 0.95) or six are chosen.
+   (A first version ranked candidates by the output's sensitivity to each and kept six that were not near-copies; it
+   chose mixtures such as (add (sum control) (count (west own_P))) over the variables themselves, and the verdict
+   through them failed; DIARY 07:10.)
 4. The verdict defined through them (the vocabulary search, L = 6, the parts as atoms), against the network's own
    output on validation positions.
 5. The blueprint, certified by the vector-site checker v1 on held-out positions the box never used. The run-alone line
@@ -67,8 +72,28 @@ for t in base:
 
 report = {"network": info, "sites": {}}
 best_bp, best_score = None, -9
+# the control network's sites and gradients (layer 1 permuted)
+z2c = np.maximum(Zc, 0) @ p["W2"].T + p["b2"]
+Jc = {"h1": (p["W3"][0] * (z2c > 0)) @ p["W2"]}
+Jc["z1"] = Jc["h1"] * (Zc > 0)
+
+
+def active(Jm):
+    C = Jm[TR].T @ Jm[TR] / len(TR)
+    ev_, V = np.linalg.eigh(C)
+    ev_, V = ev_[::-1], V[:, ::-1]
+    k = int(min(6, np.searchsorted(np.cumsum(ev_) / ev_.sum(), 0.95) + 1))
+    return V[:, :k], k
+
+
+def length(t):
+    return len(t.replace("(", " ").replace(")", " ").split())
+
+
 for site in ("z1", "h1"):
     S = sites[site]
+    Q, k = active(J[site]); Qc, _ = active(Jc[site])
+    Sa, Sca = S @ Q, csites[site] @ Qc
     scored = sorted(((probe(S, y)[1], t) for t, y in values.items()), reverse=True)
     top = [t for _s, t in scored[:20]]
     comp = {}
@@ -81,27 +106,31 @@ for site in ("z1", "h1"):
                     if y[TR].std() > 0 and y[VA].std() > 0:
                         comp[t] = y
     cand = dict(values); cand.update(comp)
-    rows = []
-    for t, y in cand.items():
-        w, s = probe(S, y)
-        e = w / max(np.dot(w, w), 1e-12)                         # the change that moves the readout by one unit
-        rel = float(np.mean(np.abs(J[site][TR] @ e)) * y[TR].std())   # output change per standard deviation
-        rows.append((s, rel, t, w))
-    rows.sort(key=lambda z: -z[0])
-    ctrl = sorted((probe(csites[site], cand[t])[1] for _s, _r, t, _w in rows[:200]), reverse=True)
+    rows = sorted(((probe(Sa, y)[1], t) for t, y in cand.items()), reverse=True)
+    ctrl = sorted((probe(Sca, cand[t])[1] for _s, t in rows[:200]), reverse=True)
     line = float(np.quantile(ctrl, 0.99))
-    located = [r for r in rows if r[0] > line]
-    located.sort(key=lambda z: -z[1])
-    kept = []
-    for s, rel, t, w in located:
-        if any(abs(np.corrcoef(cand[t][TR], cand[k[2]][TR])[0, 1]) > 0.9 for k in kept):
-            continue
-        kept.append((s, rel, t, w))
-        if len(kept) >= 6:
+    located = [(s_, t) for s_, t in rows if s_ > line]
+    located.sort(key=lambda z: (length(z[1]), -z[0]))
+    kept, cover = [], 0.0
+    for s_, t in located:
+        y = cand[t]
+        if kept:
+            A = np.column_stack([np.column_stack([cand[q][TR] for _s, q in kept]), np.ones(len(TR))])
+            w_, *_ = np.linalg.lstsq(A, y[TR], rcond=None)
+            if r2(A @ w_, y[TR]) >= 0.9:
+                continue
+        kept.append((s_, t))
+        A = np.column_stack([np.column_stack([cand[q][TR] for _s, q in kept]), np.ones(len(TR))])
+        W_, *_ = np.linalg.lstsq(A, Sa[TR], rcond=None)
+        res = Sa[TR] - A @ W_
+        cover = float(1 - (res ** 2).sum() / ((Sa[TR] - Sa[TR].mean(0)) ** 2).sum())
+        if cover >= 0.95 or len(kept) >= 6:
             break
-    print(f"site {site}: {len(cand)} candidates, {len(located)} above the probe line {line:.3f}; the six the output depends on most:", flush=True)
-    for s, rel, t, w in kept:
-        print(f"   {t}: probe R2 {s:.3f}, output change per sd {rel:.2f}", flush=True)
+    kept = [(s_, None, t, probe(S, cand[t])[0]) for s_, t in kept]
+    print(f"site {site}: active subspace {k} directions; {len(cand)} candidates, {len(located)} above the probe line "
+          f"{line:.3f}; parts (they read {cover:.3f} of the active subspace):", flush=True)
+    for s_, _rel, t, w in kept:
+        print(f"   {t}: probe R2 in the active subspace {s_:.3f}", flush=True)
     fit = np.arange(0, 2000)
     pf = {f"v{i}": ("Pos", cand[k[2]][fit]) for i, k in enumerate(kept)}
     pv = {f"v{i}": ("Pos", cand[k[2]][VA]) for i, k in enumerate(kept)}
@@ -115,18 +144,18 @@ for site in ("z1", "h1"):
     defs.sort(key=lambda o: -o["heldout_r2_exact"])
     top_def = defs[0]
     print(f"   verdict through them: {top_def['definition']} (validation R2 against the output, as is: {top_def['heldout_r2_exact']:.3f})", flush=True)
-    report["sites"][site] = {"probe_line": line, "n_candidates": len(cand), "n_located": len(located),
-                             "kept": [{"definition": t, "probe_r2": s, "output_change_per_sd": rel} for s, rel, t, w in kept],
+    report["sites"][site] = {"active_dims": k, "probe_line": line, "n_candidates": len(cand), "n_located": len(located),
+                             "active_subspace_read": cover,
+                             "kept": [{"definition": t, "probe_r2_active": s_} for s_, _r, t, w in kept],
                              "verdict_candidates": defs}
     if top_def["heldout_r2_exact"] > best_score:
         best_score = top_def["heldout_r2_exact"]
         used = sorted({int(x[2:]) for x in top_def["definition"].replace("(", " ").replace(")", " ").split() if x.startswith("@v")})
         parts = []
         for j in used:
-            s, rel, t, w = kept[j]
+            s_, _rel, t, w = kept[j]
             parts.append(Part(f"v{j}", "rule", "Pos", site, basis=w / np.linalg.norm(w), encoding="numerical",
-                              scale=float(np.linalg.norm(w)), definition=t,
-                              evidence={"probe_r2": s, "output_change_per_sd": rel}))
+                              scale=float(np.linalg.norm(w)), definition=t, evidence={"probe_r2_active": s_}))
         parts.append(Part("verdict", "rule", "Pos", "out", basis=np.array([1.0]), encoding="numerical",
                           definition=top_def["definition"], upstream=[f"v{j}" for j in used]))
         best_bp = Blueprint("chess", parts, "verdict", name="trained staged network (blind box)")

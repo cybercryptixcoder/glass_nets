@@ -298,3 +298,38 @@ S3).**
 - Leela block 8: the first run died after training the block-8 dictionary; the untrained-network control on all
   20,000 positions, run on the CPU, did not finish inside the time limit. Restarted with caching and a 4,000-position
   control (2,800 training, 1,200 held-out).
+
+**06:50 to 07:05. The box, blind, on the trained network.** `box/learned_box.py`. A first version ranked candidate
+variables by the output's sensitivity to each and chose mixtures such as (add (sum control) (count (west own_P))); the
+verdict through them failed (validation R2 -197). The map now takes the directions the output depends on (the top
+eigenvectors of the output gradient's covariance at the site) and chooses the shortest expressions that read them. Result
+at layer 1: (sum control), which equals A - B on all 20,000 positions, and (count own_P), which is C; the verdict
+(mul @v1 (relu @v0)), validation R2 0.989 against the network's own output. Checker v1 certifies it on held-out
+positions the box never used: interventions 0.424 and 0.102 against a line of 0.078, run alone 0.686, the true
+account's own agreement. The network holds A - B as one variable, not A and B, and the box reports that variable.
+
+**07:05 to 07:40. The box on the bench's S0 networks (`box/bench_s0.py`).** The bench-writer pushed development draws
+to branch `bench-v2`: S0 Tracr networks with the residual stream in an arbitrary orthonormal basis and no labels. The
+box now recovers a frame from the weights and the given inputs, runs the same box in it, and writes the blueprint in
+the bench's format with every location turned back into the network's basis. First attempt wrong: I assumed the shared
+constant direction lies in the span of the token embeddings; it does not (frame error 0.25 on the reference). Fixed:
+the smallest vector with unit inner product with every embedding, plus the one direction nothing else uses, its sign
+chosen by how sparse the input weights become. On the bench's public reference network the blind blueprint passes every
+requirement of the bench's own scorer at the line and recovers 4 of 4 sealed variables. On the 30 development
+networks: frame recovered on all 30 (error below 1e-14); output reproduced exactly on 13. Two format problems caught by
+the bench's checks: provenance must name the run and the evidence; the bench's vocabulary passes invented operations
+whole sequences (and does not allow `is`), so they are written position by position.
+
+**07:40 to 15:26.** Interrupted: this session paused, and the bench-writer agent stopped at a usage limit (its draws and
+scorer are on `bench-v2`; its report never arrived).
+
+**15:26 onward (Shreyas: thirty more minutes, then stop).**
+- Tried to score the development draws against their sealed answers by pointing the bench's scorer at the sealed
+  folder, the flow the bench's README describes (the scorer reads them, the builder never opens them). The permission
+  system refused it as unauthorized access. Not worked around. Without the sealed answers the scorer checks format
+  only, so no sealed-answer score exists for the development networks.
+- Instead, the box's own step 5: its checker on 150 fresh inputs: all 13 exact blueprints certified (run alone 1.000;
+  interventions 0.913 to 1.000 against family-wise lines 0.000 to 0.651).
+- Three one-layer networks were open. Tabulated by token and position, each outputs (token + index) mod m. Ledger
+  row BX6 written first; the definer now also tries a modulus after an arithmetic sequence_map. All three are then
+  defined exactly, (map (modc m) (sequence_map plus @v0 @v1)), and certified.
