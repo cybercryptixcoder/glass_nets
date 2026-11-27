@@ -109,9 +109,13 @@ def best_definitions(dom, ctx_fit, target, max_len, root, k=5, ctx_test=None, ta
     out = []
     for r, text, n in top[:k]:
         row = {"definition": text, "length": n, "probe_corr": round(r, 4)}
+        xp = np.asarray(vocab.evaluate(text, dom, ctx_fit), float).ravel()
+        slope, offset = np.polyfit(xp, y, 1) if xp.std() > 0 else (0.0, float(y.mean()))
+        row["scale"], row["offset"] = round(float(slope), 6), round(float(offset), 6)   # target = scale * value + offset
         if ctx_test is not None:
             xv = np.asarray(vocab.evaluate(text, dom, ctx_test), float).ravel()
             yt = np.asarray(target_test, float).ravel()
             row["heldout_corr"] = round(float(abs(np.corrcoef(xv, yt)[0, 1])), 4) if xv.std() > 0 else 0.0
+            row["heldout_r2_affine"] = round(float(1 - np.mean((slope * xv + offset - yt) ** 2) / np.var(yt)), 4) if np.var(yt) > 0 else None
         out.append(row)
     return out, {t: len(v) for t, v in pool.items()}
