@@ -2222,3 +2222,35 @@ entry is at the bottom. Its companion is `docs/glass/CHECKLIST.md` (what to do n
 - For this build, `SPEC.md` is the intent the code serves. `CLAUDE.md` item 0 says so, and `docs/glass/INTENT.md` is
   unchanged until Shreyas approves replacing it.
 - No code was changed and no experiment was run.
+
+## Nov 27, 00:32 ET (clock): second cold read folded into the build documents
+
+- A second fresh agent read the build documents cold, as both the builder and the bench-writer
+  (`/home/claude/review/COLD_READ_2.md`, outside the repo). It found that the builder could start but would stall at
+  its first scoring run:
+  - 2 blockers;
+  - 10 ambiguities;
+  - 9 contradictions;
+  - 3 places where a gate could not be reached as written.
+
+  Each was checked against the files before fixing.
+- **Blockers fixed:**
+  - Sealed development answers now go in their own private repository (`glass_nets_bench_dev`), separate from the
+    generator's (`glass_nets_bench_sealed`). The builder pulls them into the gitignored `bench/accept/sealed/` when
+    `docs/build/STATUS.md` says a draw is ready.
+  - The chess data now has a recipe in `BUILD.md` §4, step 3: the exact file names the code expects, where they come
+    from, and the checks to run. The setup script named in `kepler/targets/chess/leela.py` was never committed, and
+    the Kepler diary records no URLs, so the builder asks Shreyas for the original files first.
+- **Rules now fixed:**
+  - how invented primitives are bounded (length counts each as one symbol, constants are counted after expansion);
+  - what the frozen vocabulary must express (Tracr's operations, real-valued sequences, network weights);
+  - what Gate 2 counts, and how S7's known answers are matched;
+  - how a definition may refer to the network's own move (only through a part of the blueprint that computes it);
+  - lines computed per network from the true answer's own score, moved by a tier spread, so they exist for held-out
+    families too;
+  - draws that hold only the tiers a gate scores;
+  - a scorer of record kept privately, so the builder's edits cannot move the measurement.
+- **Not changed:** an edit to `CLAUDE.md`, saying that "Build" would count as Shreyas's go for every gate, was blocked
+  by the session's safety check as reducing oversight. `BUILD.md` now follows `CLAUDE.md` instead: every gate needs
+  Shreyas's go before its first formal attempt, and the builder keeps building while it waits.
+- No code was changed and no experiment was run.

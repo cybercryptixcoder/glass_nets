@@ -1,5 +1,8 @@
 # Glass Networks
 
+**Current work (Nov 26 onward): start at [`docs/spec/BUILD.md`](docs/spec/BUILD.md).** The rest of this page
+describes the earlier Glass Networks line.
+
 **On this branch (`glass-networks`) the project is Glass Networks.** An AI reader studies a trained network and
 writes a **construction**: a small Python program that stands in for the whole network, with its variables placed
 at the network's internal sites. An independent judge then certifies it with measured tests. Certified

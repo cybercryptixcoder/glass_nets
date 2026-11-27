@@ -1,5 +1,8 @@
 # Glass Networks: the working checklist
 
+**Stale since Nov 25.** For the current build, start at `docs/spec/BUILD.md`; its state is `docs/build/STATUS.md`.
+This file records the earlier Glass Networks work.
+
 **Read this first after any interruption or context reset.** This file is the instruction sheet and the to-do list.
 Its companion `docs/glass/DIARY.md` is the time-stamped log of every step, decision, result and failure. Keep both
 accurate to within about 10 minutes: update them at every check-in and after every finished step, then commit and

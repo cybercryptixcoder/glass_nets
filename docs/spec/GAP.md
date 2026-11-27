@@ -89,13 +89,13 @@ So the attempt ends in one of two definite states: the suite passes, or a named 
 | R12 | Calibrated confidence | Controls and pre-registration are strong habits. Evidence types are not assigned systematically, and nothing has been calibrated | Evidence labels on every claim, and calibration on the suite | Engineering |
 | R13 | Real sizes, all domains | Chess (three Leela networks), AlgZoo, GPT-2 small. The fluid emulator must be rebuilt (as built it costs about 47× its solver's arithmetic). 7–8B models only probed (liar sprint), never decomposed | The fluid rebuild; a GPT-2 adapter on the new core; 7–8B decomposition (transcoders) for Tier B | Engineering and resource (GPUs) |
 | R15 | Explains where efficiency comes from | Only an arithmetic count: the current fluid emulator costs about 47× its solver per frame (REVIEW_LOG F43) | The rebuilt emulator, a rehearsal with a sealed shortcut, and a component that maps network parts to solver steps | Engineering, after the rebuild |
-| R14 | Does the research itself | The hard results came from a strong agent by hand. `probe/` (the Helix Probe loop) and `helix_evolve` (volume search) exist | A director that runs the loop end to end on the suite | Engineering and resource (a frontier model) |
+| R14 | Does the research itself | The hard results came from a strong agent by hand. `probe/` (the Helix Probe loop) and `helix_evolve` (volume search; a separate repo, `cybercryptixcoder/helix_evolve`) exist | A director that runs the loop end to end on the suite | Engineering and resource (a frontier model) |
 
 **In one line:**
 - Verifying is strong (R3).
 - Six requirements are partly built (R1, R2, R5, R9, R12, R13).
 - Two are research-grade and decide everything (R6, R8).
-- Seven have never been built or shown here (R4 on real networks, R7, R10, R11, R14, R15, and R6/R8 above).
+- Six more have never been built or shown here: R4 on real networks, R7, R10, R11, R14 and R15.
 - The rest are engineering that has never been done here, plus two missing resources: a model that can perceive the
   domain, and GPUs.
 
@@ -133,7 +133,7 @@ better.
   bench itself before anything else is judged by it.
 - **Starts from:**
   - `rosetta/yardstick.py` and `rosetta/sealed/` (S1);
-  - the T2 copies and disguises (S5a);
+  - the T2 copies and disguises (S5a), listed with run ids in `scripts/glass/info_measure.py`;
   - InterpBench and Tracr, both public (S0);
   - Leela, GPT-2 and AlgZoo networks with partly known answers (S7).
 
@@ -161,7 +161,7 @@ better.
 - **Carries:** R6 (the structure), R7.
 - **Passes when:** on S0 and S3 it locates every sealed intermediate variable and the sealed wiring.
 - **Starts from:** `rosetta/sae.py` (sparse dictionaries), `lab/spd.py` (exact decomposition), and Rosetta's value
-  attribution and cross-block concentration (`rosetta/glass2.py`, `fresh_where_site.py`).
+  attribution and cross-block concentration (`rosetta/glass2.py`, `rosetta/fresh_where_site.py`).
 - **Lead:** attribution graphs over a sparse replacement (Anthropic's circuit tracing) do this per prompt for language
   models. The same backward reading of which parts feed a verdict applies to any network.
 
@@ -242,7 +242,7 @@ better.
 - **Passes when:** on S3 and S6, on at least 20 bench-chosen edits per domain, its predictions beat attribution
   patching and "no change". The edits include "remove a capability" edits, such as switching off look-ahead in the
   chess rehearsal and switching off the planted false-answer gate.
-- **Starts from:** the liar sprint's steering code, and `lab/steer_calendar.py`.
+- **Starts from:** the liar sprint's steering code (`scripts/liar/`), and `lab/steer_calendar.py`.
 
 ### C9. Adapters: every domain through one core
 - **Delivers:** adapters for each Tier A domain:
@@ -270,8 +270,8 @@ better.
   - update the ledger.
 - **Carries:** R14.
 - **Passes when:** the full suite runs with no human input after the start.
-- **Starts from:** `probe/` (the Helix Probe loop: predict first, then experiment), and `helix_evolve` for volume
-  search where a score is closed to loopholes.
+- **Starts from:** `probe/` (the Helix Probe loop: predict first, then experiment), and `helix_evolve` (a separate repo,
+  `cybercryptixcoder/helix_evolve`) for volume search where a score is closed to loopholes.
 - **Note:** a strong model takes the judgment roles (director, observer, critic). A cheap model at volume fits only
   where the scorer is closed (`docs/review/NEXT_BUILD.md` §3.11).
 
@@ -285,7 +285,7 @@ that failed, the way an engineer names the member that gave way.
 | Gate | Components | Pass test | Why here |
 |---|---|---|---|
 | 1. The finish line exists | C1, C2 | The bench scores true answers at the ceiling and must-fail cases at the floor; through the bench's verifier hook, the builder's checker certifies the sealed true blueprints of S0, S1 and S4 and rejects every S5a account | Nothing can be judged without it, and the record shows measurements must be proven before use (T2) |
-| 2. **The make-or-break** | C3, C4, C5 | S2 (concepts outside the vocabulary) and S3 (verdicts through their ingredients) are recovered | This is where the last build broke, and it is the only research-grade part. Testing it second keeps the uncertain spend bounded and early |
+| 2. **The make-or-break** | C3, C4, C5 | S2 (concepts outside the vocabulary) meets its pass counts; on S3 (verdicts through their ingredients), every sealed intermediate variable is recovered and the sealed wiring found; S0's circuits are located and S1's rules defined. The exact counting rule is in `BUILD.md` §6 | This is where the last build broke, and it is the only research-grade part. Testing it second keeps the uncertain spend bounded and early |
 | 3. Complete blueprints | C6 | S0 to S4 run on their own and are complete within the line; on S1 to S4, R2, R5 and R12 pass; no S5b network gets a story; S6's rehearsals pass their R3 to R7 parts, and the fluid rehearsal passes R15 | Assembling defined parts into levels, with a ledger. The full S6 comes at Gate 6, once readers, editors and adapters exist |
 | 4. Real known answers | C9 with C2 to C6 | S7: look-ahead along forcing lines and the capture variable in LD2 and t1; month rollover; modular multiplication; M4,3 | Proves the box on real weights before any unknown target |
 | 5. Minds and hands | C7, C8 | Reader and editor tests | Usability and control on blueprints that already pass |

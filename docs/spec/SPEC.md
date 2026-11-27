@@ -2,8 +2,8 @@
 
 *Written Nov 26, 2026, from 19:03 ET (clock). This document defines **what** the finished interpretability system
 must be able to do, and **how each capability is tested**. It never says how to build anything: any design that
-passes the tests is acceptable. The tests, and the networks they run on, are to be built and sealed **before** the
-build starts, so the finish line cannot move during the build.*
+passes the tests is acceptable. The tests, and the networks they run on, are built and sealed **first** (Gate 1),
+before any component beyond the checker and the starting vocabulary, so the finish line cannot move during the build.*
 
 *Companions:*
 - *`SPEC_SIMPLE.md`: the same thing in plain words.*
@@ -257,7 +257,7 @@ when all five of these hold, each by test.
   - on planted networks that mix a rule, a memorised table and unused parts, the box's types match the sealed types;
   - memoriser controls come out as lookup;
   - no sealed rule is labelled lookup, and no table is labelled rule;
-  - at least 20 cases per type, per tier.
+  - at least 20 cases per type, on S4 (§6).
 
 **R6. It goes from purpose to parts, and back.**
 - *Must:* give at least three levels:
@@ -411,8 +411,8 @@ when all five of these hold, each by test.
   - Mechanistic interpretability is not identifiable in general: several accounts can pass the same tests (Méloux et
     al. 2025, cited in `docs/glass/EVIDENCE_LADDER.md`).
 - *Test:*
-  - calibration on the certification draw: an expected calibration error of at most 0.10, over 10 equal-width bins
-    of stated probability. The claims scored are each part's type and each predicted test outcome (a test passing,
+  - calibration: an expected calibration error of at most 0.10, over 10 equal-width bins of stated probability, on
+    each scored draw (the certification draw decides "done"). The claims scored are each part's type and each predicted test outcome (a test passing,
     a flip, an edit's effect), each with its stated probability;
   - the suite includes planted networks with two valid accounts, and both must be reported.
 
@@ -471,7 +471,8 @@ states how the scorer reads each item:
 
 ## 6. The acceptance suite: the finish line, built first
 
-The suite is the certification. It is built, and its answers sealed, before the build starts.
+The suite is the certification. It is built, and its answers sealed, first: during Gate 1, before any component
+beyond the checker and the starting vocabulary.
 - The sealed answers are written by a separate session that never shares context with the builder.
 - The box never reads them.
 - **What is sealed is a generator, not a fixed set of networks.**
@@ -496,7 +497,7 @@ The suite is the certification. It is built, and its answers sealed, before the 
 | S4 | Planted mixtures: part rule, part memorised random table, part dead units; plus networks with two valid accounts | It types honestly, and reports rivals | R4, R5, R12 |
 | S5 | Must-fail cases, in two kinds (below): S5a, accounts the checker must reject; S5b, networks that must get no story | It cannot be fooled | R9 |
 | S6 | One rehearsal per flagship, sealed: chess (S3's network); a fluid emulator trained on data with a sealed closure term and a sealed shortcut; a small language model with a planted gate that switches it to false answers; a small reader network trained to report a property of another network's weights by a sealed method. Plus matched-architecture networks: planted networks with LD2's, t1's and GPT-2 small's architectures, each trained to a sealed mechanism, without which those real networks are not called complete (R4) | Each flagship's shape is handled before the real target | all, including R15 |
-| S7 | Real networks with partly known answers: LD2 and t1 (look-ahead along forcing lines; the capture variable that passed Rosetta's checks, at the margin and after a declared second step); GPT-2 month rollover; modular multiplication; AlgZoo M4,3 | It reproduces what is already known about real networks | all except R8 |
+| S7 | Real networks with partly known answers: LD2 and t1 (look-ahead along forcing lines; the capture variable that passed Rosetta's checks, at the margin and after a declared second step); GPT-2 month rollover; modular multiplication; AlgZoo M4,3 | It reproduces what is already known about real networks | reproduction and R10 gate; the others are reported |
 
 **The must-fail set (S5), in two kinds:**
 - **S5a, accounts the checker must reject:**
@@ -512,47 +513,63 @@ The suite is the certification. It is built, and its answers sealed, before the 
   line.
 
 **How lines are set.** Every line comes from the true answer or from controls, never from the results it judges.
+- **Each line is the true answer's own score on the same network,** on the draw being scored, moved by the tier's
+  spread. Spread is the standard deviation, across the first three development draws, of the tier-level statistic.
+  So every line exists for held-out families too, and a true answer never fails its own network's line.
 - **Recovery:** a sealed concept counts as recovered when the box's definition passes two tests on held-out inputs:
-  correlation, and substitution in the network. Each must reach the sealed definition's own score minus its spread
-  across development draws. A fixed constant such as Rosetta's 0.9 correlation is not used: it ignores scale, offset
-  and rare decisive cases.
-- **Completeness:** the 5th percentile of the true blueprints' recovery, input by input, minus its spread (R4).
+  correlation, and substitution in the network. Each must reach the sealed definition's own score minus the tier's
+  spread. A fixed constant such as Rosetta's 0.9 correlation is not used: it ignores scale, offset and rare decisive
+  cases.
+- **Completeness,** per network: the 5th percentile, over its inputs, of its own true blueprint's recovery, minus the
+  tier's spread (R4).
 - **Must-fail:** family-wise, the 99th percentile of the best control score (R3).
-- **Usability:** the true blueprint's reader score, minus its spread (R10).
-- **Irrelevance:** the 95th percentile of the behaviour change caused by resampling the sealed unused parts, plus its
-  spread (R5).
+- **Usability,** per network: its true blueprint's reader score, with the scorer's own plain rendering, minus the
+  tier's spread (R10).
+- **Irrelevance,** per network: the 95th percentile of the behaviour change caused by resampling its sealed unused
+  parts, plus the tier's spread (R5).
 - **Overview match:** the top-level predictor's agreement with the sealed top level, at the recovery line (R6).
-- **Frozen after three draws.** The lines are computed from the first three development draws and then frozen.
+- **Frozen after three draws.** The spreads and the control lines are computed from the first three development
+  draws, and then frozen. A planted network whose own true blueprint does not clear every line is dropped and
+  redrawn.
 
 **Defaults, fixed before the build** (Shreyas may change any of them before the bench is sealed; never after):
 - **Sizes per draw:**
   - S0: 10 Tracr programs and 10 InterpBench models;
   - S1: 10 rules;
   - S2: 10 concepts, 5 named and 5 synthetic, drawn from families, with at least 3 families held out of every
-    development draw for certification;
+    development draw for certification. On the certification draw, at least 5 of the 10 come from those families;
   - S3: 5 staged computations, one of them the chess rehearsal;
   - S4: 5 mixtures and 2 networks with two valid accounts;
   - S5: as listed above;
-  - S6: the 4 rehearsals, plus the 3 matched-architecture networks;
+  - S6: the 4 rehearsals, plus the 3 matched-architecture networks. If those three cannot be built, they are left
+    out of S6 for every gate and for certification, and the real networks they match are reported with an interval
+    and not called complete;
   - S7: the listed networks.
 - **At least three development draws.**
 - **Formal attempts.** Exploratory scoring on development draws is allowed while building and never counts as a
   pass. A formal gate attempt uses a fresh draw that no earlier formal attempt used.
-- **Domains.** S1 to S4 are built on chess boards and on integer sequences (as in AlgZoo). S0 is token sequences.
-  S6 adds fluid fields and token sequences.
+- **Domains.** S1 to S4 are built on chess boards and on numeric sequences, integer and real-valued (as in AlgZoo).
+  S0 is token sequences. S6 adds fluid fields, token sequences and network weights (the weight-reading rehearsal).
 - **The starting vocabulary** is `bench/accept/VOCABULARY.md`, written by the builder and frozen (git tag
   `vocab-frozen`) before S1 and S2 are written.
   - A definition may use at most 5 numeric constants, counting every literal and every table entry, and at most the
     maximum length L fixed in that file.
   - A concept is outside the vocabulary when no expression within those limits reaches the recovery line. The
     bench-writer checks this for every S2 concept.
-- **Cases per type (R5):** "at least 20 per type" counts parts, pooled across a tier's networks in one draw.
+  - Invented primitives (R8) are named expressions, or new operations within a fixed code size that never call the
+    network. Length counts each as one symbol; constants are counted after expansion (`BENCH_BRIEF.md` §6).
+  - A definition refers to the network's own choice (its chosen move, its planned line) only through a part of the
+    blueprint that computes it (`BENCH_BRIEF.md` §6).
+- **Cases per type (R5):** "at least 20 per type" applies to S4, over the three types a planted network can contain
+  (rule, lookup, irrelevant), counting parts pooled across S4's networks in one draw. On S1 to S3, R5 is scored on
+  the parts present. "Unresolved" is scored through the ledger (R4) and on S5b.
 - **Flips (R7):** flip size is the number of changed input elements (squares, tokens) for discrete inputs, and L2
   distance for continuous ones. For a continuous output, the bench defines the decision per network, as a sign or a
   threshold.
 - **Admission of a planted network:**
   - outputs match the sealed mechanism on at least 98% of held-out inputs (R² at least 0.95 for continuous outputs);
-  - every sealed intermediate variable passes interchange interventions on at least 90% of held-out pairs.
+  - every sealed intermediate variable passes interchange interventions on at least 90% of held-out pairs;
+  - for a lookup variable, both checks use its memorised items instead.
 
   Otherwise it is dropped and redrawn.
 - **Intervals:** 95% bootstrap intervals, 1,000 resamples. "Spread" means the standard deviation across
@@ -562,8 +579,8 @@ The suite is the certification. It is built, and its answers sealed, before the 
   test is reported but does not gate.
 - **The reader model** is fixed by the bench for the whole build: by default, the frontier model whose key Shreyas
   supplies, at a recorded version. The scorer runs the reader test; the box supplies only the rendering.
-- **Calibration (R12)** passes at an expected calibration error of at most 0.10, over 10 equal-width bins, on the
-  certification draw.
+- **Calibration (R12)** passes at an expected calibration error of at most 0.10, over 10 equal-width bins, on each
+  draw it is scored on. The certification draw is the one that decides "done".
 - **The concept library** the box grew during development may be carried into certification.
 
 **Pass counts, fixed before the build** (defaults, for Shreyas to confirm or change before the bench is sealed);
