@@ -216,3 +216,56 @@ direction controls are drawn only at sites of more than one dimension. Second ru
 weight-shuffled networks); the swapped variant is rejected (IIA 0.13 and 0.03). M4,3's verdicts are unchanged after
 the fix (near-copy certified; c928 rejected, 22 of 27 parts). So, on a toy: found by the search, certified by the
 checker, end to end.
+
+## Session 2 (Nov 27, 2026; four more hours, from 05:21)
+
+**05:21.** Shreyas (05:21): no frontier model (DeepSeek V4.1 Flash only, through Luminal); Colab units as needed; the
+tag cannot be created ("work with what we've got"); all other decisions approved or left to the builder's
+recommendation; four more hours, and by the end "something that works like the vision". Decisions taken on that
+approval: the bench-writer is launched by the builder as a separate agent (BENCH_BRIEF.md plus a section of facts:
+no private repositories, sealed material in `/home/claude/bench_private/` and `bench/accept/sealed/`, its own branch
+`bench-v2`, deadline 09:00), and the builder never opens its sealed files; R9 stays as written (copies caught by R9's
+own tests); the reader test runs with DeepSeek Flash, noted as weaker than the spec's reader; commit f0b3b680 is the
+frozen vocabulary.
+
+**05:23 to 05:35. The box on compiled transformers, blind (`box/tracr_box.py`, `box/tok_fast.py`; output
+`results/build/tracr_blind_session2.txt`).** Given only the compiled network (weights, token interface, outputs when
+run), the box maps the residual directions each sublayer writes into variables (one-hot groups are categorical, other
+directions numerical), reads from the weights which directions each sublayer reads and whether it is attention or an
+MLP, defines each variable in order from the vocabulary and earlier parts, invents operations when nothing matches,
+assembles the blueprint and certifies it with the checker. Translation errors found and fixed on the way, in order:
+input parts (the tokens and positions at the embedding) cannot be tested by swaps, since positions are the same in
+every input: they are now reported as the network's inputs; invented operations were not compiled in the Tracr checker;
+the output part must reproduce the decoded output itself, not just match it one to one; candidates that average token
+values were proposed (token-valued atoms are now only compared, selected on and carried); a variable written by an MLP
+was defined with an attention operation (operations are now restricted by the sublayer that wrote the variable);
+internal categorical labelings are fixed only by how later parts compare them, so each categorical variable now offers
+its other exact labelings (ranked: non-negative, starting at 0, short) as atoms, and a later part that uses one commits
+it, recursively; candidates undefined at some positions scored on the rest (full coverage is now required).
+Result: **5 of 5 programs recovered and certified**, every variable defined exactly. Reverse comes out as Tracr's own
+program (length, length minus position, minus one, read the token there). For selector width, Tracr stores
+1/(count + 1) in an attention output; the vocabulary has no such operation, and the operation search invented
+`1/(x+1)` and its inverse `1/x - 1` (provenance recorded in each blueprint).
+
+**05:38 to 06:00. Readable blueprints, the live reader test, and the box on Leela.**
+- `box/report.py` writes each blueprint as a reader sees it (top level, parts with location, definition, wiring and
+  intervention result, invented primitives with provenance, unresolved ledger, how to read the notation):
+  `results/build/blueprints/*.md`.
+- **Reader test, live (DeepSeek V4.1 Flash, low effort; `box/reader.py`, `box/run_tracr_reader.py`,
+  `box/run_reader_swap.py`; outputs `results/build/reader_tracr_session2.json`, `reader_swap_session2.json` and the
+  answers in `results/build/blueprints/*_reader_*.txt`).** Eight fresh inputs per program. With the box's blueprint:
+  100% of outputs correct on all five programs. Controls fixed before the run: no blueprint 0% to 67%; definitions
+  rotated between parts 0% to 48% on three programs but 100% on reverse and sort (the task can be guessed from the
+  inputs, so that control is weak there). A stronger control, added after reading those answers: another program's
+  certified blueprint, 0% (reverse), 19% (sort), 0% (hist) against the true network. The reader follows the blueprint.
+- **Translation error fixed in the Tracr checker:** a swap took the source input's padded positions beyond its length;
+  it now swaps only the source's real positions. Known cases still 45 of 45.
+- **The box on Leela LD2 (`box/leela_box.py`; `results/build/leela_box_session2.json`,
+  `results/build/blueprints/leela_ld2.md`).** Top level: LD2's value is a linear readout (an invented operation, four
+  weights and an offset) of four block-10 dictionary variables (434, 193, 304, 493), held-out R2 0.806; control line,
+  the same search over 16 variables drawn from outside the 64 most important, best of three draws, 0.445. Certified by
+  interventions: swapping each variable's board map between positions moves LD2's value as the top level predicts,
+  correlation 0.752 to 0.813 against a line of 0.191 (controls swap an outside variable instead). The four parts cannot
+  be defined from the board within L (held-out correlation 0.05 to 0.43 against a control line of 0.46): all four are
+  unresolved. Next level down started: block 8 (`box/leela_levels.py`).
+- `box/run.py`: one entry point (`python3 -m box.run tracr <program> | staged | leela`).
