@@ -1,0 +1,44 @@
+# Suppression or Deletion: A Restoration-Based Representation-Level Analysis of Machine Unlearning
+
+- **Key:** arxiv-2602.18505
+- **Authors / organisation:** Yurim Jang, Jaeung Lee, Dohyun Kim, Jaemin Jo, Simon S. Woo (Sungkyunkwan University, Suwon)
+- **Date:** 2026-02-18
+- **Link:** https://arxiv.org/abs/2602.18505
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 3 (central)
+
+## What they wanted, and why
+Unlearning methods are graded by what the model now outputs — forget-set accuracy, membership-inference scores — and a method that takes forget accuracy to zero is reported as having removed the knowledge. The authors point out that this measures the decision boundary, not the representation, and that a class whose features are still present in an intermediate layer but are gated off at the output is a very different object from one whose features are gone: the first can be re-opened, the second cannot. They want a test that decides between those two cases without retraining anything, and they want it to work on already-published models. The larger goal is an evaluation criterion for privacy claims, on the argument that models with recoverable internal representations are being redistributed as if they were safe.
+
+## What they studied
+Models: a ViT-B/16 pretrained on ImageNet-21K, fine-tuned separately on CIFAR-10 and ImageNette (a 10-class ImageNet subset); unlearning is class-wise, one forget class per dataset (CIFAR-10 class 2, bird; ImageNette class 7, gas pump). Unit of analysis: the **SAE feature at an intermediate layer**, and through it the class-specific "expert" feature set. Twelve unlearning arms: Retrain (from the pretrained checkpoint, retain data only), Finetune, AdvNegGrad, RandomLabel, Bad-T, SCRUB, SalUn, CF-K, EU-K, L1-Sparse, SSD, UNSIR. SAEs are TopK with K = 16 for CIFAR-10 and K = 32 for ImageNette; evaluation layers are 8, 9 and 10 of the ViT.
+
+## How they did it
+1. Train an SAE on each intermediate layer's patch-token activations and collect its activations over the clean model. 2. Drop features that never fire and features that always fire, then score the rest by **F1 for the forget class** — precision being the chance the image is that class given the feature fires, recall being the chance the feature fires on that class — and take the top 5K/4 per class (K the SAE sparsity level). 3. Match feature indices between the clean and unlearned SAEs with the Hungarian algorithm, so the same slot in both dictionaries is assumed to mean the same thing and the unlearned dictionary's permuted ordering does not break the comparison. 4. Ablate the selected features in the *clean* model as a validity check that they are class-specific rather than generic. 5. For each unlearned model, encode its layer-ℓ activation with its matched SAE and edit only the selected indices toward the clean model's values: each selected latent becomes the unlearned value plus a coefficient α times the gap to the original, with α = 10. 6. Decode, continue through the remaining layers of the unlearned model itself, and read out forget-class accuracy; a rise means the information was still there and merely suppressed. 7. Sweep the layer at which the restoration is injected, since where the semantic information sits is the paper's second variable.
+
+## What counts as an explanation here
+Not a description of the mechanism and not a circuit: a **stress test plus a two-way verdict**. The explanatory object is the pair (class-specific feature set, restoration curve across layers), and its output is one of two labels per method — *suppression* (features present, behaviour recoverable by editing them) or *deletion* (features gone, editing the matched slots does not bring the behaviour back). It is deliberately partial: the authors treat SAE features as a lens of convenience, concede the lens has known problems, and claim nothing about the internal structure beyond "recoverable at this site by this edit".
+
+## How they judged success
+Primary metric: **restored forget-class accuracy** after the coefficient-10 restoration at a given layer, compared against the unlearned model's own forget accuracy (printed as the change in percentage points); the shared 80% threshold for what counts as recovered is marked in their table. Secondary: the ablation check on the clean model (forget-class accuracy drop and retain-class accuracy change). Two datasets with different complexity, three layers each, twelve methods — a design that is a grid rather than a statistical study: no seeds, no intervals and no repetitions are reported anywhere in the text.
+
+## What they found
+- **The validity check holds on the clean model.** Ablating the expert features costs the forget class 95.00 points at layer 8, 98.60 at layer 9 and 99.00 at layer 10 on CIFAR-10, and 82.80, 96.44 and 98.80 on ImageNette, while retain accuracy moves by at most 0.24 and 0.52 points.
+- **Most methods are recoverable to near-original accuracy.** On CIFAR-10 with forget accuracy at 0.00%, AdvNegGrad, RandomLabel and SCRUB restore to 100.00% at every layer; SalUn to 96.30% at layer 10; L1-Sparse to 99.40%; UNSIR to 86.70% at layers 9 and 10; Finetune, which begins at 46.90%, reaches 94.00% at layer 10.
+- **Retraining is not exempt.** Retrain restores to 99.40% on CIFAR-10 and 98.97% on ImageNette at layer 10 (from 0.00% unlearned), which the authors read as semantic features inherited from pretraining surviving retraining from that checkpoint.
+- **The minority that resists has a structural signature.** EU-K stays at 0.00% restored at every layer on both datasets; Bad-T, CF-K and SSD restore weakly or not at all (SSD 48.30% on CIFAR-10, 38.56% on ImageNette), and these are the arms that damp or reset weights in the middle of the network rather than adjust losses or outputs.
+- **Where the information sits tracks dataset complexity.** Restoration peaks at layers 8-9 on CIFAR-10 and shifts to layers 9-10 on ImageNette; in their table the deep-layer column is where nearly every recoverable method crosses the 80% mark.
+
+## Limits and open problems they name
+Vision only — ViT image classification, class-wise forgetting — with the extension to instance-level forgetting and to language and generative models named as future work rather than attempted. The features depend on SAE hyperparameters, expansion factor and sparsity, and may not exhaust the model's behaviour; the authors cite the finding that SAEs also yield features on randomly initialised models as a reason to want other interpretability methods. There is no statistical treatment at all: one class per dataset, no seeds, no intervals, so a difference of a few points between arms is not distinguished from noise. They also do not test the natural follow-up — whether a restoration that reopens one class also damages the rest of the model — so nothing in the paper bounds the side effects of the edit that makes suppression visible.
+
+## What we take from it
+**A method, and the cheapest one in this thread so far:** the intervention is not an optimisation and not a gradient step; restore the selected latents to the clean model's own values with a single coefficient and see whether the behaviour returns. It is the ε-free version of the previous run's null-space recovery test — where that paper had to project a gradient off the clamped directions to prove the recovery was not just undoing the clamp, this paper sidesteps the question by *aiming* the edit at exactly those directions and reading the downstream layers of the unlearned model. **A framing to carry:** "suppressed" and "deleted" are the two labels our white-box model should be able to assign to any unit it audits, and the decisiveness lives in the fact that deleting a unit from the model and restoring its value are different operations — the paper's EU-K row is the rare arm where restoring the matched slots does nothing. **A warning, and the sharpest one:** the matched-slot assumption is doing a lot of work. The Hungarian alignment presumes the unlearned dictionary's features correspond one-to-one with the clean dictionary's, so an unlearning method that *reassigns* features — turning slot j into a different concept rather than zeroing it — would look deleted to this instrument when it is not; that failure mode is not measured and is exactly the case where a per-feature identity check (comparing the two decoder directions, or scoring the match on a held-out class) would be needed before the verdict is believed. **A second warning:** the restoration's own side effects are unmeasured and the design has one class per dataset, so the ~100% restoration rows should be carried as an existence proof that a strong restore is possible, not as an estimate of how much information survived.
+
+## Tags
+unit: feature
+form: steering
+method: SAE | steering | weight-analysis
+eval: ablation | patching
+goal: safety/auditing | evaluation-of-methods
