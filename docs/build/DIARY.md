@@ -339,3 +339,21 @@ scorer are on `bench-v2`; its report never arrived).
   certification step stopped with an error (an empty sampling range); they were not certified before either.
 - Not done in this session: scoring against the sealed answers (refused, above); the 14 remaining S0 networks (six
   write several variables through one sublayer, which the frame recovery does not split yet); S1 to S7.
+
+## Nov 28, 04:38 onward: Helix evolves the box (evolve/)
+
+Shreyas: set up a Helix Evolve run, DeepSeek Flash, 100 to 200 generations, pointed at ARC's networks, more
+researcher-like than an optimiser, with a black-box evaluator; keep a change only when the evaluator's numbers improve.
+- "ARC's networks" read as ARC's (Alignment Research Center's) AlgZoo: the tiny RNNs in `lab/models/zoo_*`.
+- The box as one file (`evolve/code_zero.py`, explain(net, budget) -> blueprint), a toolkit (`evolve/boxkit.py`), a
+  sealed evaluator (`evolve/black_box.py`, checker v1 on held-out inputs), the Helix adapter (`evolve/helix_problem.py`).
+- Measurement first (`evolve/test_black_box.py`): the known cases found a hole before any run: the answer itself,
+  claimed as one weakly certified variable at the last state, scored 0.53 under the first rule (0.5 a + 0.5 q). The
+  rule became a * q + 0.02 a (0.095). All 10 cases pass. Code Zero: 0.357 training, 0.409 held-out.
+- Helix side (helix_evolve, lean): researcher mode, off by default: an Analyst's diagnosis each generation (limits,
+  evidence, translation or approach error, the deciding test), predictions that name a metric and are checked by code,
+  only improvements built on. Live tests: one generation, then the VM job script end to end (two generations of 6,
+  about 2.5 to 4 minutes each). Three evaluator faults found in those runs and fixed (unresolved parts crashed it; a
+  failed network dropped its metrics; `.remove` was banned).
+- The run goes to the VM (it has GitHub access; this workspace and Colab can't keep a long run and push it):
+  `helix_evolve/docs/jobs/BOX_JOB.md`, with the prompt for Aether.
