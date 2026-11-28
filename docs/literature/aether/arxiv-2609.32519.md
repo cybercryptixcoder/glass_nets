@@ -1,0 +1,40 @@
+# STR: Supervised Transcoder Replacement for Reducing Steering Side Effects
+
+- **Key:** arxiv-2609.32519
+- **Authors / organisation:** Haonan Yu, Junhao Liu, Zhenyu Yan, Haoran Lin, Xin Zhang (corresponding); organisation not stated in the arXiv metadata or body
+- **Date:** 2026-09-26
+- **Link:** https://arxiv.org/abs/2609.32519
+- **Kind:** paper
+- **Read from:** full text
+- **Relevance to us:** 2 (useful)
+
+## What they wanted, and why
+Activation steering buys control of one behaviour at the cost of others: a vector that strengthens a target trait can also loosen safety behaviour or reduce robustness. The authors want side-effect reduction to be available to *existing* steering methods, including the simplest ones whose fitting objective contains no protection term at all. Their diagnosis is representational: target and protected computations can occupy the same coordinates, so an additive edit at one layer perturbs both. The move is to change the computation that receives the edit rather than the edit, training a sparse transcoder to replace one MLP block so that the block itself has learned to stay quiet about protected behaviour when it is steered. This is a step toward making intervention-time control composable — a property of the site, not of each vector-fitting rule.
+
+## What they studied
+Models: Gemma-3-4B-it, Gemma-3-12B-it, Llama-3.1-8B-Instruct. Unit of analysis: one MLP mapping at one layer, replaced by a sparse transcoder (65,536 JumpReLU features at layer 17 for Gemma-3-4B, layer 24 for Gemma-3-12B; 131,072-feature TopK transcoder with k = 128 at layer 15 for Llama, zero-indexed), plus a fixed intervention support of K = 256 latent coordinates. The steering direction — not the MLP — is the thing being kept comparable across conditions. Behaviours: a Corrigibility preference task (choice between accepting and resisting correction) as the target, harmful-request refusal as the protected behaviour.
+
+## How they did it
+Two stages. Stage A trains the transcoder with an auxiliary learnable vector u standing in for a steering direction: the intervention is applied inside the sparse latent, after the encoder nonlinearity and before decoding, with clipping at zero for JumpReLU and signed addition for TopK. Three losses, coefficients all one: a differentiable target loss (negative log of the normalised target-answer probability under intervention) on Corrigibility data; forward KL to the unsteered teacher on protection (SALAD-Bench) data *under the same intervention*; and forward KL to the teacher with the intervention off on target, protection and Alpaca replay text. The auxiliary vector is discarded afterwards. Stage B freezes the replacement and lets each steering method fit its own direction in the latent space under its original rule — CAA as a mean contrast, SSV as CAA-plus-target-loss optimisation, OPIUM with its dual target/protection objective. Strength is fixed at alpha = 2 for every steered condition; latent directions are normalised so the decoded-space perturbation has the same norm as the dense baseline. Controls: the same three methods fitted on the original model, plus unsteered original and unsteered replacement. Seeds 42/43/44 for replacement training and controller fitting.
+
+## What counts as an explanation here
+Not an explanation of behaviour so much as a *repair of the substrate*: a replacement module whose feature space is claimed to separate the coordinates that matter for the target from those that matter for protection, learned by supervision rather than discovered. It is partial by construction — one MLP, one layer, one target behaviour, one protected behaviour family — and it predicts nothing about the network beyond the claim that steering at this site will cost less. The interpretability content is the sparse latent as an intervention surface, not any statement about what the model computes.
+
+## How they judged success
+Target utility U: probability mass on the target-aligned answer, normalised over the two options and averaged over both option orders. Safety side effect E_B: attack success rate on free-form harmful requests, scored by a fixed Qwen3-8B judge, averaged within intent clusters and then across clusters with equal weight. Both are reported as differences from the *same* original unsteered reference, so the STR-minus-original comparison is a paired difference with 95% confidence intervals (Table 3). Splits: 201 Corrigibility development and 716 test items; 256 SALAD development requests in 239 clusters; a 1,073-request unseen pool (240 HarmBench, 520 AdvBench, 313 StrongREJECT) in 481 clusters, used only for testing. Per-benchmark and per-source breakdowns in Appendix B.
+
+## What they found
+The replacements cut safety side effects sharply while keeping the target gain, on the in-distribution split and on unseen sources. Out-of-distribution, target-only SSV goes from 42.46% to 14.42% ASR on Gemma-3-4B (utility 79.74 to 79.57), 34.97% to 12.91% on Gemma-3-12B (utility 82.02 to 84.13), and 20.37% to 15.36% on Llama-3.1-8B while utility rises 74.10 to 84.73. CAA lowers ASR on all three with mixed utility (the Llama utility drop is the only one whose interval excludes zero, −0.91 [−1.52, −0.30]). OPIUM — the one method that already has a protection term — gains most on Gemma-3-12B (+2.74 utility, −13.98 ASR) and barely at all on Llama (−0.86 [−2.79, +1.02]). On SALAD development, SSV ASR falls from 36.12% to 5.72% (Gemma-3-4B) and 29.29% to 3.63% (Gemma-3-12B); the replacement-off baseline is itself slightly better than the original-off baseline on utility in all three models (e.g. Llama 79.60 to 82.55).
+
+## Limits and open problems they name
+No capability-side measurement at all: no perplexity, no general benchmark, no generation-quality number — the only "fidelity" evidence is the teacher-KL training term and the unsteered utility row. One target behaviour and one protected behaviour family, with the target being a two-option preference and the protected side judged by a single LLM judge. Every steered condition is at a single fixed strength (alpha = 2), so nothing here is a curve and no crossover point is shown. The intervention support K = 256 is fixed before training. The paper's own caveats: Llama gains are weak for OPIUM, and the reductions "do not establish safety for unrestricted deployment". Code is promised as anonymised supplementary material, not released in the body.
+
+## What we take from it
+Three transferable items. **(a) Putting the preservation objective into the site, not the vector.** This is the constructive counterpart of the folder's recurring finding that a readout or intervention is tuned on the quantity it later reports: here the authors make the *substrate* carry the constraint, then let the downstream method stay exactly as it was, which is the cleanest way to say that the improvement is not an artefact of a re-fitted direction. **(b) The unsteered-replacement row as a mandatory control.** The off-condition table separates "the transcoder is a good model" from "steering at the transcoder is gentle", and the two rows are reported for every model. **(c) A warning.** The two rows that would license a claim of *no capability cost* — a perplexity or benchmark row on the unsteered replacement — are absent, so the paper can show that steering is less destructive without showing that the replacement is as capable; for our purposes a substrate swap of this kind must carry the three-row fidelity report the folder has settled on (refitted readout, frozen-network divergence, labelled-concept probe) before any protection number is trusted. **Method** for us mostly as framing: if we ever claim a feature is safe to steer along, the claim needs both a protection measurement and an unsteered-substrate measurement, not one of them.
+
+## Tags
+unit: feature | circuit
+form: replacement-model | steering
+method: transcoder | steering | training-interpretable
+eval: ablation | human-rating | downstream-task | benchmark
+goal: control/editing | safety/auditing
